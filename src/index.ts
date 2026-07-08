@@ -185,6 +185,65 @@ export type {
   ValueOf,
 } from './types/utils.js'
 export {
+  type DecodeAbiParametersErrorType,
+  type DecodeAbiParametersReturnType,
+  decodeAbiParameters,
+} from './utils/abi/decodeAbiParameters.js'
+export {
+  type DecodeEventLogErrorType,
+  type DecodeEventLogParameters,
+  type DecodeEventLogReturnType,
+  decodeEventLog,
+} from './utils/abi/decodeEventLog.js'
+export {
+  type DecodeFunctionResultErrorType,
+  type DecodeFunctionResultParameters,
+  type DecodeFunctionResultReturnType,
+  decodeFunctionResult,
+} from './utils/abi/decodeFunctionResult.js'
+export {
+  type EncodeAbiParametersErrorType,
+  type EncodeAbiParametersReturnType,
+  encodeAbiParameters,
+  getArrayComponents,
+} from './utils/abi/encodeAbiParameters.js'
+export {
+  type EncodeEventTopicsErrorType,
+  type EncodeEventTopicsParameters,
+  type EncodeEventTopicsReturnType,
+  encodeEventTopics,
+} from './utils/abi/encodeEventTopics.js'
+export {
+  type EncodeFunctionDataErrorType,
+  type EncodeFunctionDataParameters,
+  type EncodeFunctionDataReturnType,
+  encodeFunctionData,
+} from './utils/abi/encodeFunctionData.js'
+export {
+  type EncodePackedErrorType,
+  encodePacked,
+  type PackedAbiType,
+} from './utils/abi/encodePacked.js'
+export {
+  type FormatAbiItemErrorType,
+  type FormatAbiParamErrorType,
+  type FormatAbiParamsErrorType,
+  formatAbiItem,
+  formatAbiParams,
+} from './utils/abi/formatAbiItem.js'
+export {
+  type GetAbiItemErrorType,
+  type GetAbiItemParameters,
+  type GetAbiItemReturnType,
+  getAbiItem,
+} from './utils/abi/getAbiItem.js'
+export {
+  type PrepareEncodeFunctionDataErrorType,
+  type PrepareEncodeFunctionDataParameters,
+  type PrepareEncodeFunctionDataReturnType,
+  prepareEncodeFunctionData,
+} from './utils/abi/prepareEncodeFunctionData.js'
+export {
   type DecodeBase58CheckErrorType,
   decodeBase58Check,
   type EncodeBase58CheckErrorType,
@@ -343,6 +402,83 @@ export {
   type ToFunctionSelectorErrorType,
   toFunctionSelector,
 } from './utils/hash/toFunctionSelector.js'
+export {
+  type DecodeRawDataErrorType,
+  decodeRawData,
+} from './utils/transaction/decodeRawData.js'
+export {
+  type GenContractAddressErrorType,
+  genContractAddress,
+} from './utils/transaction/genContractAddress.js'
+export {
+  type GetTransactionIdErrorType,
+  getTransactionId,
+} from './utils/transaction/getTransactionId.js'
+export {
+  type BlockRef,
+  type DeriveRefBlockParamsErrorType,
+  defaultExpirationMs,
+  deriveRefBlockParams,
+  type FillBlockHeaderErrorType,
+  fillBlockHeader,
+  type RefBlockParams,
+} from './utils/transaction/prepareTransaction.js'
+export {
+  type ContractCodec,
+  ContractType,
+  contractCodecs,
+  contractTypeUrlPrefix,
+  decodeContractParameter,
+  getContractCodecByType,
+  getContractCodecByTypeUrl,
+} from './utils/transaction/registry.js'
+export {
+  type RawContract,
+  type RawData,
+  type SerializeRawDataErrorType,
+  serializeRawData,
+  type ToRawDataHexErrorType,
+  toRawDataHex,
+} from './utils/transaction/serializeRawData.js'
+export {
+  type TxCheckErrorType,
+  txCheck,
+} from './utils/transaction/txCheck.js'
+export type {
+  AccountPermissionUpdateContract,
+  BytesInput,
+  CancelAllUnfreezeV2Contract,
+  ContractAddressInput,
+  ContractMessage,
+  CreateSmartContract,
+  DelegateResourceContract,
+  FlexInput,
+  FreezeBalanceV2Contract,
+  Permission,
+  PermissionKey,
+  SmartContract,
+  SmartContractAbi,
+  SmartContractAbiEntry,
+  SmartContractAbiParam,
+  TransferAssetContract,
+  TransferContract,
+  TriggerSmartContract,
+  UnDelegateResourceContract,
+  UnfreezeBalanceV2Contract,
+  UnknownContractParameter,
+  UnknownField,
+  Vote,
+  VoteWitnessContract,
+  WithdrawBalanceContract,
+  WithdrawExpireUnfreezeContract,
+  WithUnknownFields,
+} from './utils/transaction/types.js'
+export {
+  EntryType,
+  PermissionType,
+  ResourceCode,
+  StateMutabilityType,
+} from './utils/transaction/types.js'
 export {
   type FormatTrxErrorType,
   formatTrx,

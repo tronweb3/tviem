@@ -1,12 +1,64 @@
 // biome-ignore lint/performance/noBarrelFile: entrypoint module
 export { trxUnits } from '../constants/unit.js'
 export {
+  type DecodeAbiParametersErrorType,
+  type DecodeAbiParametersReturnType,
+  decodeAbiParameters,
+} from './abi/decodeAbiParameters.js'
+export {
+  type DecodeEventLogErrorType,
+  type DecodeEventLogParameters,
+  type DecodeEventLogReturnType,
+  decodeEventLog,
+} from './abi/decodeEventLog.js'
+export {
+  type DecodeFunctionResultErrorType,
+  type DecodeFunctionResultParameters,
+  type DecodeFunctionResultReturnType,
+  decodeFunctionResult,
+} from './abi/decodeFunctionResult.js'
+export {
+  type EncodeAbiParametersErrorType,
+  type EncodeAbiParametersReturnType,
+  encodeAbiParameters,
+  getArrayComponents,
+} from './abi/encodeAbiParameters.js'
+export {
+  type EncodeEventTopicsErrorType,
+  type EncodeEventTopicsParameters,
+  type EncodeEventTopicsReturnType,
+  encodeEventTopics,
+} from './abi/encodeEventTopics.js'
+export {
+  type EncodeFunctionDataErrorType,
+  type EncodeFunctionDataParameters,
+  type EncodeFunctionDataReturnType,
+  encodeFunctionData,
+} from './abi/encodeFunctionData.js'
+export {
+  type EncodePackedErrorType,
+  encodePacked,
+  type PackedAbiType,
+} from './abi/encodePacked.js'
+export {
   type FormatAbiItemErrorType,
   type FormatAbiParamErrorType,
   type FormatAbiParamsErrorType,
   formatAbiItem,
   formatAbiParams,
 } from './abi/formatAbiItem.js'
+export {
+  type GetAbiItemErrorType,
+  type GetAbiItemParameters,
+  type GetAbiItemReturnType,
+  getAbiItem,
+} from './abi/getAbiItem.js'
+export {
+  type PrepareEncodeFunctionDataErrorType,
+  type PrepareEncodeFunctionDataParameters,
+  type PrepareEncodeFunctionDataReturnType,
+  prepareEncodeFunctionData,
+} from './abi/prepareEncodeFunctionData.js'
 export {
   type DecodeBase58CheckErrorType,
   decodeBase58Check,
@@ -159,6 +211,80 @@ export {
   type ToFunctionSelectorErrorType,
   toFunctionSelector,
 } from './hash/toFunctionSelector.js'
+export {
+  type DecodeRawDataErrorType,
+  decodeRawData,
+} from './transaction/decodeRawData.js'
+export {
+  type GenContractAddressErrorType,
+  genContractAddress,
+} from './transaction/genContractAddress.js'
+export {
+  type GetTransactionIdErrorType,
+  getTransactionId,
+} from './transaction/getTransactionId.js'
+export {
+  type BlockRef,
+  type DeriveRefBlockParamsErrorType,
+  defaultExpirationMs,
+  deriveRefBlockParams,
+  type FillBlockHeaderErrorType,
+  fillBlockHeader,
+  type RefBlockParams,
+} from './transaction/prepareTransaction.js'
+export {
+  type ContractCodec,
+  ContractType,
+  contractCodecs,
+  contractTypeUrlPrefix,
+  decodeContractParameter,
+  getContractCodecByType,
+  getContractCodecByTypeUrl,
+} from './transaction/registry.js'
+export {
+  type RawContract,
+  type RawData,
+  type SerializeRawDataErrorType,
+  serializeRawData,
+  type ToRawDataHexErrorType,
+  toRawDataHex,
+} from './transaction/serializeRawData.js'
+export { type TxCheckErrorType, txCheck } from './transaction/txCheck.js'
+export type {
+  AccountPermissionUpdateContract,
+  BytesInput,
+  CancelAllUnfreezeV2Contract,
+  ContractAddressInput,
+  ContractMessage,
+  CreateSmartContract,
+  DelegateResourceContract,
+  FlexInput,
+  FreezeBalanceV2Contract,
+  Permission,
+  PermissionKey,
+  SmartContract,
+  SmartContractAbi,
+  SmartContractAbiEntry,
+  SmartContractAbiParam,
+  TransferAssetContract,
+  TransferContract,
+  TriggerSmartContract,
+  UnDelegateResourceContract,
+  UnfreezeBalanceV2Contract,
+  UnknownContractParameter,
+  UnknownField,
+  Vote,
+  VoteWitnessContract,
+  WithdrawBalanceContract,
+  WithdrawExpireUnfreezeContract,
+  WithUnknownFields,
+} from './transaction/types.js'
+export {
+  EntryType,
+  PermissionType,
+  ResourceCode,
+  StateMutabilityType,
+} from './transaction/types.js'
 export { type FormatTrxErrorType, formatTrx } from './units/formatTrx.js'
 export { type FormatUnitsErrorType, formatUnits } from './units/formatUnits.js'
 export { type ParseTrxErrorType, parseTrx } from './units/parseTrx.js'
