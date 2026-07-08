@@ -1,0 +1,58 @@
+import { expect, test } from 'vitest'
+import * as accounts from './accounts/index.js'
+import * as mod from './index.js'
+import * as utils from './utils/index.js'
+
+test('root barrel exposes public utils', () => {
+  expect(mod.parseTrx('1')).toBe(1000000n)
+  expect(mod.formatTrx(1n)).toBe('0.000001')
+  expect(mod.toBase58('412b5ad5c4795c026514f8317c7a215e218dccd6cf')).toBe(
+    'TDvSsdrNM5eeXNL3czpa6AxLDHZA9nwe9K',
+  )
+  expect(mod.toTronHex('TDvSsdrNM5eeXNL3czpa6AxLDHZA9nwe9K')).toBe(
+    '412b5ad5c4795c026514f8317c7a215e218dccd6cf',
+  )
+  expect(mod.keccak256('0x')).toBe(
+    '0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470',
+  )
+  expect(mod.sha256('0x')).toBe(
+    '0xe3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
+  )
+  expect(mod.toFunctionSelector('function transfer(address,uint256)')).toBe(
+    '0xa9059cbb',
+  )
+  expect(mod.isAddress('TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t')).toBe(true)
+  expect(mod.isAddress('TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6X')).toBe(false)
+  expect(mod.trxUnits.sun).toBe(6)
+})
+
+test('root barrel exposes error classes', () => {
+  expect(new mod.InvalidAddressError({ address: 'T123' })).toBeInstanceOf(
+    mod.BaseError,
+  )
+  expect(mod.BaseError.name).toBe('BaseError')
+})
+
+test('utils barrel exposes public utils', () => {
+  expect(utils.parseTrx('0.000001')).toBe(1n)
+  expect(utils.toBase58('0x2b5ad5c4795c026514f8317c7a215e218dccd6cf')).toBe(
+    'TDvSsdrNM5eeXNL3czpa6AxLDHZA9nwe9K',
+  )
+  expect(
+    utils.formatAbiItem({
+      inputs: [{ type: 'address' }, { type: 'uint256' }],
+      name: 'transfer',
+      outputs: [{ type: 'bool' }],
+      stateMutability: 'nonpayable',
+      type: 'function',
+    }),
+  ).toBe('transfer(address,uint256)')
+})
+
+test('accounts barrel exposes privateKeyToAddress', () => {
+  expect(
+    accounts.privateKeyToAddress(
+      '0x0000000000000000000000000000000000000000000000000000000000000001',
+    ),
+  ).toBe('TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC')
+})
