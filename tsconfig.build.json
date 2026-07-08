@@ -1,0 +1,18 @@
+{
+  // Build config for the ESM + types emit (see package.json `build:esm` / `build:types`).
+  // Excludes all test/bench files.
+  "extends": "./tsconfig.base.json",
+  "include": ["src"],
+  "exclude": [
+    "src/**/*.bench.ts",
+    "src/**/*.bench-d.ts",
+    "src/**/*.test.ts",
+    "src/**/*.test-d.ts"
+  ],
+  "compilerOptions": {
+    // No source/declaration maps: layout B ships only artifacts (not the .ts
+    // sources), so emitted maps would dangle. Re-enable together with shipping
+    // `src/**/*.ts` in package.json `files` if source-level debugging is wanted.
+    "rootDir": "./src"
+  }
+}
