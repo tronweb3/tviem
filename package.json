@@ -1,0 +1,176 @@
+{
+  "name": "@tronweb3/omni",
+  "version": "0.1.0",
+  "description": "Lightweight, type-safe TypeScript SDK for the TRON blockchain",
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": false,
+  "packageManager": "pnpm@9.15.0",
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "tron",
+    "trx",
+    "sdk",
+    "trc20",
+    "web3",
+    "typescript",
+    "tvm"
+  ],
+  "homepage": "https://github.com/tronweb3/omni#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tronweb3/omni.git"
+  },
+  "bugs": {
+    "url": "https://github.com/tronweb3/omni/issues"
+  },
+  "main": "./src/_cjs/index.js",
+  "module": "./src/_esm/index.js",
+  "types": "./src/_types/index.d.ts",
+  "typings": "./src/_types/index.d.ts",
+  "files": [
+    "src/_esm",
+    "src/_cjs",
+    "src/_types",
+    "licenses",
+    "!**/*.test.ts",
+    "!**/*.test-d.ts",
+    "!**/*.bench.ts",
+    "!**/*.tsbuildinfo"
+  ],
+  "exports": {
+    ".": {
+      "types": "./src/_types/index.d.ts",
+      "import": "./src/_esm/index.js",
+      "default": "./src/_cjs/index.js"
+    },
+    "./accounts": {
+      "types": "./src/_types/accounts/index.d.ts",
+      "import": "./src/_esm/accounts/index.js",
+      "default": "./src/_cjs/accounts/index.js"
+    },
+    "./actions": {
+      "types": "./src/_types/actions/index.d.ts",
+      "import": "./src/_esm/actions/index.js",
+      "default": "./src/_cjs/actions/index.js"
+    },
+    "./chains": {
+      "types": "./src/_types/chains/index.d.ts",
+      "import": "./src/_esm/chains/index.js",
+      "default": "./src/_cjs/chains/index.js"
+    },
+    "./utils": {
+      "types": "./src/_types/utils/index.d.ts",
+      "import": "./src/_esm/utils/index.js",
+      "default": "./src/_cjs/utils/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "typesVersions": {
+    "*": {
+      "accounts": [
+        "./src/_types/accounts/index.d.ts"
+      ],
+      "actions": [
+        "./src/_types/actions/index.d.ts"
+      ],
+      "chains": [
+        "./src/_types/chains/index.d.ts"
+      ],
+      "utils": [
+        "./src/_types/utils/index.d.ts"
+      ]
+    }
+  },
+  "peerDependencies": {
+    "typescript": ">=5.4.0"
+  },
+  "peerDependenciesMeta": {
+    "typescript": {
+      "optional": true
+    }
+  },
+  "dependencies": {
+    "@noble/curves": "1.9.1",
+    "@noble/hashes": "1.8.0",
+    "@scure/base": "1.2.6",
+    "@scure/bip32": "1.7.0",
+    "@scure/bip39": "1.6.0",
+    "abitype": "1.2.3"
+  },
+  "devDependencies": {
+    "@arethetypeswrong/cli": "^0.18.2",
+    "@biomejs/biome": "^2.2.4",
+    "@changesets/changelog-github": "^0.5.0",
+    "@changesets/cli": "^2.29.7",
+    "@size-limit/preset-big-lib": "^11.2.0",
+    "@types/node": "^22.13.0",
+    "knip": "^5.64.0",
+    "publint": "^0.2.12",
+    "size-limit": "^11.2.0",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.0"
+  },
+  "scripts": {
+    "clean": "rm -rf *.tsbuildinfo src/*.tsbuildinfo src/_esm src/_cjs src/_types",
+    "build": "pnpm clean && pnpm build:cjs && pnpm build:esm && pnpm build:types",
+    "build:esm": "tsc --project ./tsconfig.build.json --outDir ./src/_esm && printf '{\"type\":\"module\",\"sideEffects\":false}' > ./src/_esm/package.json",
+    "build:cjs": "node scripts/runTsc.js --project ./tsconfig.build.json --module commonjs --moduleResolution node --outDir ./src/_cjs --removeComments --verbatimModuleSyntax false && printf '{\"type\":\"commonjs\"}' > ./src/_cjs/package.json",
+    "build:types": "tsc --project ./tsconfig.build.json --declarationDir ./src/_types --emitDeclarationOnly --declaration",
+    "preconstruct": "node scripts/preconstruct.mjs",
+    "check": "biome check --write --unsafe",
+    "check:types": "tsc --noEmit --project ./tsconfig.json",
+    "check:unused": "pnpm clean && knip --production",
+    "test": "vitest",
+    "test:typecheck": "vitest --typecheck.only",
+    "test:build": "publint --strict . && attw --pack . --ignore-rules false-esm",
+    "size": "size-limit",
+    "changeset:version": "changeset version && pnpm install --lockfile-only",
+    "changeset:publish": "pnpm build && changeset publish"
+  },
+  "size-limit": [
+    {
+      "name": "import * from '@tronweb3/omni' (esm)",
+      "path": "./src/_esm/index.js",
+      "limit": "60 kB",
+      "import": "*"
+    },
+    {
+      "name": "import { parseTrx } from '@tronweb3/omni' (esm)",
+      "path": "./src/_esm/index.js",
+      "limit": "1 kB",
+      "import": "{ parseTrx }"
+    },
+    {
+      "name": "import { toBase58 } from '@tronweb3/omni' (esm)",
+      "path": "./src/_esm/index.js",
+      "limit": "8 kB",
+      "import": "{ toBase58 }"
+    }
+  ],
+  "knip": {
+    "entry": [
+      "src/index.ts!",
+      "src/{accounts,actions,chains,utils}/index.ts!"
+    ],
+    "project": [
+      "src/**/*.ts!",
+      "scripts/*.{ts,mjs,js}"
+    ],
+    "ignoreExportsUsedInFile": true,
+    "ignore": [
+      "**/*.test.ts",
+      "**/*.test-d.ts",
+      "src/utils/cursor.ts",
+      "src/utils/regex.ts",
+      "src/errors/utils.ts"
+    ],
+    "ignoreDependencies": [
+      "@size-limit/preset-big-lib",
+      "@scure/bip32",
+      "@scure/bip39"
+    ]
+  }
+}
