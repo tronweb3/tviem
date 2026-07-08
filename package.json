@@ -107,9 +107,11 @@
     "@changesets/cli": "^2.29.7",
     "@size-limit/preset-big-lib": "^11.2.0",
     "@types/node": "^22.13.0",
+    "ethers": "^6.17.0",
     "knip": "^5.64.0",
     "publint": "^0.2.12",
     "size-limit": "^11.2.0",
+    "tronweb": "^6.4.0",
     "typescript": "^5.9.3",
     "vitest": "^4.0.0"
   },
@@ -163,9 +165,9 @@
     "ignore": [
       "**/*.test.ts",
       "**/*.test-d.ts",
-      "src/utils/cursor.ts",
-      "src/utils/regex.ts",
-      "src/errors/utils.ts"
+      "src/errors/utils.ts",
+      "src/utils/transaction/contracts/**",
+      "src/utils/transaction/protobuf/**"
     ],
     "ignoreDependencies": [
       "@size-limit/preset-big-lib",
