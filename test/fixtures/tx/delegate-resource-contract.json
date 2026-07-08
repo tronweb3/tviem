@@ -1,0 +1,76 @@
+[
+  {
+    "name": "delegate BANDWIDTH lock=false",
+    "contractType": 57,
+    "typeUrl": "type.googleapis.com/protocol.DelegateResourceContract",
+    "params": {
+      "value": {
+        "owner_address": "TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC",
+        "receiver_address": "TDvSsdrNM5eeXNL3czpa6AxLDHZA9nwe9K",
+        "balance": "1000000",
+        "resource": "BANDWIDTH",
+        "lock": false
+      }
+    },
+    "rawData": {
+      "contract": [
+        {
+          "parameter": {
+            "value": {
+              "owner_address": "417e5f4552091a69125d5dfcb7b8c2659029395bdf",
+              "receiver_address": "412b5ad5c4795c026514f8317c7a215e218dccd6cf",
+              "balance": 1000000
+            },
+            "type_url": "type.googleapis.com/protocol.DelegateResourceContract"
+          },
+          "type": "DelegateResourceContract"
+        }
+      ],
+      "ref_block_bytes": "1234",
+      "ref_block_hash": "0102030405060708",
+      "expiration": 1700000060000,
+      "timestamp": 1700000000000
+    },
+    "rawDataHex": "0a0212342208010203040506070840e0a499ffbc315a6f0839126b0a35747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e44656c65676174655265736f75726365436f6e747261637412320a15417e5f4552091a69125d5dfcb7b8c2659029395bdf18c0843d2215412b5ad5c4795c026514f8317c7a215e218dccd6cf7080d095ffbc31",
+    "txID": "c6eaae22b4edbd4ab1c8126a18ae49adaacd304aa0b48337e9d1595f2421d1ac"
+  },
+  {
+    "name": "delegate ENERGY lock=true lock_period=86400",
+    "contractType": 57,
+    "typeUrl": "type.googleapis.com/protocol.DelegateResourceContract",
+    "params": {
+      "value": {
+        "owner_address": "TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC",
+        "receiver_address": "TDvSsdrNM5eeXNL3czpa6AxLDHZA9nwe9K",
+        "balance": "2000000",
+        "resource": "ENERGY",
+        "lock": true,
+        "lock_period": "86400"
+      }
+    },
+    "rawData": {
+      "contract": [
+        {
+          "parameter": {
+            "value": {
+              "owner_address": "417e5f4552091a69125d5dfcb7b8c2659029395bdf",
+              "receiver_address": "412b5ad5c4795c026514f8317c7a215e218dccd6cf",
+              "balance": 2000000,
+              "resource": "ENERGY",
+              "lock": true,
+              "lock_period": 86400
+            },
+            "type_url": "type.googleapis.com/protocol.DelegateResourceContract"
+          },
+          "type": "DelegateResourceContract"
+        }
+      ],
+      "ref_block_bytes": "1234",
+      "ref_block_hash": "0102030405060708",
+      "expiration": 1700000060000,
+      "timestamp": 1700000000000
+    },
+    "rawDataHex": "0a0212342208010203040506070840e0a499ffbc315a77083912730a35747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e44656c65676174655265736f75726365436f6e7472616374123a0a15417e5f4552091a69125d5dfcb7b8c2659029395bdf10011880897a2215412b5ad5c4795c026514f8317c7a215e218dccd6cf28013080a3057080d095ffbc31",
+    "txID": "874d3d771ab62dfbbcc0597a5da6eb1c6a6ded73f22607e14bdbcefb2be37c3c"
+  }
+]

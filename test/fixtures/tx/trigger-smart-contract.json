@@ -1,0 +1,146 @@
+[
+  {
+    "name": "trigger TRC20 transfer with fee_limit",
+    "contractType": 31,
+    "typeUrl": "type.googleapis.com/protocol.TriggerSmartContract",
+    "params": {
+      "value": {
+        "owner_address": "TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC",
+        "contract_address": "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t",
+        "data": "a9059cbb000000000000000000000000a614f803b6fd780986a42c78ec9c7f77e6ded13c00000000000000000000000000000000000000000000000000000000000f4240"
+      },
+      "feeLimit": "100000000"
+    },
+    "rawData": {
+      "contract": [
+        {
+          "parameter": {
+            "value": {
+              "data": "a9059cbb000000000000000000000000a614f803b6fd780986a42c78ec9c7f77e6ded13c00000000000000000000000000000000000000000000000000000000000f4240",
+              "owner_address": "417e5f4552091a69125d5dfcb7b8c2659029395bdf",
+              "contract_address": "41a614f803b6fd780986a42c78ec9c7f77e6ded13c"
+            },
+            "type_url": "type.googleapis.com/protocol.TriggerSmartContract"
+          },
+          "type": "TriggerSmartContract"
+        }
+      ],
+      "ref_block_bytes": "1234",
+      "ref_block_hash": "0102030405060708",
+      "expiration": 1700000060000,
+      "timestamp": 1700000000000,
+      "fee_limit": 100000000
+    },
+    "rawDataHex": "0a0212342208010203040506070840e0a499ffbc315aae01081f12a9010a31747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e54726967676572536d617274436f6e747261637412740a15417e5f4552091a69125d5dfcb7b8c2659029395bdf121541a614f803b6fd780986a42c78ec9c7f77e6ded13c2244a9059cbb000000000000000000000000a614f803b6fd780986a42c78ec9c7f77e6ded13c00000000000000000000000000000000000000000000000000000000000f42407080d095ffbc31900180c2d72f",
+    "txID": "ddd5febbb5ef788933fc151fc1cf89246a35d89cc6607141c4ebf54499a3a5e6"
+  },
+  {
+    "name": "trigger TRC20 transfer without fee_limit",
+    "contractType": 31,
+    "typeUrl": "type.googleapis.com/protocol.TriggerSmartContract",
+    "params": {
+      "value": {
+        "owner_address": "417e5f4552091a69125d5dfcb7b8c2659029395bdf",
+        "contract_address": "41a614f803b6fd780986a42c78ec9c7f77e6ded13c",
+        "data": "a9059cbb000000000000000000000000a614f803b6fd780986a42c78ec9c7f77e6ded13c00000000000000000000000000000000000000000000000000000000000f4240"
+      }
+    },
+    "rawData": {
+      "contract": [
+        {
+          "parameter": {
+            "value": {
+              "data": "a9059cbb000000000000000000000000a614f803b6fd780986a42c78ec9c7f77e6ded13c00000000000000000000000000000000000000000000000000000000000f4240",
+              "owner_address": "417e5f4552091a69125d5dfcb7b8c2659029395bdf",
+              "contract_address": "41a614f803b6fd780986a42c78ec9c7f77e6ded13c"
+            },
+            "type_url": "type.googleapis.com/protocol.TriggerSmartContract"
+          },
+          "type": "TriggerSmartContract"
+        }
+      ],
+      "ref_block_bytes": "1234",
+      "ref_block_hash": "0102030405060708",
+      "expiration": 1700000060000,
+      "timestamp": 1700000000000
+    },
+    "rawDataHex": "0a0212342208010203040506070840e0a499ffbc315aae01081f12a9010a31747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e54726967676572536d617274436f6e747261637412740a15417e5f4552091a69125d5dfcb7b8c2659029395bdf121541a614f803b6fd780986a42c78ec9c7f77e6ded13c2244a9059cbb000000000000000000000000a614f803b6fd780986a42c78ec9c7f77e6ded13c00000000000000000000000000000000000000000000000000000000000f42407080d095ffbc31",
+    "txID": "77026cfff6bc23ac3dd24587e93844abd0c2ee93b723e701e58d5bf289e7ff4a"
+  },
+  {
+    "name": "trigger TRC20 transfer with call_value",
+    "contractType": 31,
+    "typeUrl": "type.googleapis.com/protocol.TriggerSmartContract",
+    "params": {
+      "value": {
+        "owner_address": "TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC",
+        "contract_address": "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t",
+        "data": "a9059cbb000000000000000000000000a614f803b6fd780986a42c78ec9c7f77e6ded13c00000000000000000000000000000000000000000000000000000000000f4240",
+        "call_value": "1000000"
+      },
+      "feeLimit": "100000000"
+    },
+    "rawData": {
+      "contract": [
+        {
+          "parameter": {
+            "value": {
+              "data": "a9059cbb000000000000000000000000a614f803b6fd780986a42c78ec9c7f77e6ded13c00000000000000000000000000000000000000000000000000000000000f4240",
+              "owner_address": "417e5f4552091a69125d5dfcb7b8c2659029395bdf",
+              "contract_address": "41a614f803b6fd780986a42c78ec9c7f77e6ded13c",
+              "call_value": 1000000
+            },
+            "type_url": "type.googleapis.com/protocol.TriggerSmartContract"
+          },
+          "type": "TriggerSmartContract"
+        }
+      ],
+      "ref_block_bytes": "1234",
+      "ref_block_hash": "0102030405060708",
+      "expiration": 1700000060000,
+      "timestamp": 1700000000000,
+      "fee_limit": 100000000
+    },
+    "rawDataHex": "0a0212342208010203040506070840e0a499ffbc315ab201081f12ad010a31747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e54726967676572536d617274436f6e747261637412780a15417e5f4552091a69125d5dfcb7b8c2659029395bdf121541a614f803b6fd780986a42c78ec9c7f77e6ded13c18c0843d2244a9059cbb000000000000000000000000a614f803b6fd780986a42c78ec9c7f77e6ded13c00000000000000000000000000000000000000000000000000000000000f42407080d095ffbc31900180c2d72f",
+    "txID": "6dfae8ce7bc8165531da925bfb159506f22a8df1b0d9f536e747b21e20943a7c"
+  },
+  {
+    "name": "trigger TRC20 transfer with call_token_value + token_id",
+    "contractType": 31,
+    "typeUrl": "type.googleapis.com/protocol.TriggerSmartContract",
+    "params": {
+      "value": {
+        "owner_address": "TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC",
+        "contract_address": "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t",
+        "data": "a9059cbb000000000000000000000000a614f803b6fd780986a42c78ec9c7f77e6ded13c00000000000000000000000000000000000000000000000000000000000f4240",
+        "call_token_value": "5",
+        "token_id": "1002000"
+      },
+      "feeLimit": "100000000"
+    },
+    "rawData": {
+      "contract": [
+        {
+          "parameter": {
+            "value": {
+              "data": "a9059cbb000000000000000000000000a614f803b6fd780986a42c78ec9c7f77e6ded13c00000000000000000000000000000000000000000000000000000000000f4240",
+              "owner_address": "417e5f4552091a69125d5dfcb7b8c2659029395bdf",
+              "contract_address": "41a614f803b6fd780986a42c78ec9c7f77e6ded13c",
+              "call_token_value": 5,
+              "token_id": 1002000
+            },
+            "type_url": "type.googleapis.com/protocol.TriggerSmartContract"
+          },
+          "type": "TriggerSmartContract"
+        }
+      ],
+      "ref_block_bytes": "1234",
+      "ref_block_hash": "0102030405060708",
+      "expiration": 1700000060000,
+      "timestamp": 1700000000000,
+      "fee_limit": 100000000
+    },
+    "rawDataHex": "0a0212342208010203040506070840e0a499ffbc315ab401081f12af010a31747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e54726967676572536d617274436f6e7472616374127a0a15417e5f4552091a69125d5dfcb7b8c2659029395bdf121541a614f803b6fd780986a42c78ec9c7f77e6ded13c2244a9059cbb000000000000000000000000a614f803b6fd780986a42c78ec9c7f77e6ded13c00000000000000000000000000000000000000000000000000000000000f424028053090943d7080d095ffbc31900180c2d72f",
+    "txID": "52e399998a3a6e1dfec698f6c895d46fc8c512331fc8f991a1326979a755ad9d"
+  }
+]

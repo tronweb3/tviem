@@ -1,0 +1,31 @@
+[
+  {
+    "name": "withdraw expired unfrozen balance",
+    "contractType": 56,
+    "typeUrl": "type.googleapis.com/protocol.WithdrawExpireUnfreezeContract",
+    "params": {
+      "value": {
+        "owner_address": "TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC"
+      }
+    },
+    "rawData": {
+      "contract": [
+        {
+          "parameter": {
+            "value": {
+              "owner_address": "417e5f4552091a69125d5dfcb7b8c2659029395bdf"
+            },
+            "type_url": "type.googleapis.com/protocol.WithdrawExpireUnfreezeContract"
+          },
+          "type": "WithdrawExpireUnfreezeContract"
+        }
+      ],
+      "ref_block_bytes": "1234",
+      "ref_block_hash": "0102030405060708",
+      "expiration": 1700000060000,
+      "timestamp": 1700000000000
+    },
+    "rawDataHex": "0a0212342208010203040506070840e0a499ffbc315a5a083812560a3b747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e5769746864726177457870697265556e667265657a65436f6e747261637412170a15417e5f4552091a69125d5dfcb7b8c2659029395bdf7080d095ffbc31",
+    "txID": "ee3c0f5047be4d43c1b6a17b4648d983e6c02569de108a07130c18a82feb64b4"
+  }
+]

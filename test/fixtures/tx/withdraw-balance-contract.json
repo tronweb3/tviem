@@ -1,0 +1,31 @@
+[
+  {
+    "name": "withdraw block rewards",
+    "contractType": 13,
+    "typeUrl": "type.googleapis.com/protocol.WithdrawBalanceContract",
+    "params": {
+      "value": {
+        "owner_address": "TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC"
+      }
+    },
+    "rawData": {
+      "contract": [
+        {
+          "parameter": {
+            "value": {
+              "owner_address": "417e5f4552091a69125d5dfcb7b8c2659029395bdf"
+            },
+            "type_url": "type.googleapis.com/protocol.WithdrawBalanceContract"
+          },
+          "type": "WithdrawBalanceContract"
+        }
+      ],
+      "ref_block_bytes": "1234",
+      "ref_block_hash": "0102030405060708",
+      "expiration": 1700000060000,
+      "timestamp": 1700000000000
+    },
+    "rawDataHex": "0a0212342208010203040506070840e0a499ffbc315a53080d124f0a34747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e576974686472617742616c616e6365436f6e747261637412170a15417e5f4552091a69125d5dfcb7b8c2659029395bdf7080d095ffbc31",
+    "txID": "d3da09d768be8d78f3c12bed08cc1aca427c2a44b40b1b74de0b26708ce5cc93"
+  }
+]

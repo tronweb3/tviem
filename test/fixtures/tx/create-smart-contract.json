@@ -1,0 +1,284 @@
+[
+  {
+    "name": "deploy contract with ABI entrys + bytecode",
+    "contractType": 30,
+    "typeUrl": "type.googleapis.com/protocol.CreateSmartContract",
+    "params": {
+      "value": {
+        "owner_address": "TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC",
+        "abi": [
+          {
+            "inputs": [],
+            "stateMutability": "payable",
+            "type": "constructor"
+          },
+          {
+            "constant": true,
+            "inputs": [
+              {
+                "name": "who",
+                "type": "address"
+              }
+            ],
+            "name": "balanceOf",
+            "outputs": [
+              {
+                "name": "",
+                "type": "uint256"
+              }
+            ],
+            "stateMutability": "view",
+            "type": "function"
+          },
+          {
+            "anonymous": false,
+            "inputs": [
+              {
+                "indexed": true,
+                "name": "from",
+                "type": "address"
+              },
+              {
+                "indexed": true,
+                "name": "to",
+                "type": "address"
+              },
+              {
+                "indexed": false,
+                "name": "value",
+                "type": "uint256"
+              }
+            ],
+            "name": "Transfer",
+            "type": "event"
+          }
+        ],
+        "bytecode": "608060405260088055600a600b",
+        "name": "OmniTest",
+        "consume_user_resource_percent": "30",
+        "origin_energy_limit": "5000000"
+      },
+      "feeLimit": "1000000000"
+    },
+    "rawData": {
+      "contract": [
+        {
+          "parameter": {
+            "value": {
+              "owner_address": "417e5f4552091a69125d5dfcb7b8c2659029395bdf",
+              "new_contract": {
+                "abi": {
+                  "entrys": [
+                    {
+                      "inputs": [],
+                      "stateMutability": "payable",
+                      "type": "constructor"
+                    },
+                    {
+                      "constant": true,
+                      "inputs": [
+                        {
+                          "name": "who",
+                          "type": "address"
+                        }
+                      ],
+                      "name": "balanceOf",
+                      "outputs": [
+                        {
+                          "name": "",
+                          "type": "uint256"
+                        }
+                      ],
+                      "stateMutability": "view",
+                      "type": "function"
+                    },
+                    {
+                      "anonymous": false,
+                      "inputs": [
+                        {
+                          "indexed": true,
+                          "name": "from",
+                          "type": "address"
+                        },
+                        {
+                          "indexed": true,
+                          "name": "to",
+                          "type": "address"
+                        },
+                        {
+                          "indexed": false,
+                          "name": "value",
+                          "type": "uint256"
+                        }
+                      ],
+                      "name": "Transfer",
+                      "type": "event"
+                    }
+                  ]
+                },
+                "consume_user_resource_percent": 30,
+                "origin_energy_limit": 5000000,
+                "origin_address": "417e5f4552091a69125d5dfcb7b8c2659029395bdf",
+                "bytecode": "608060405260088055600a600b",
+                "name": "OmniTest"
+              }
+            },
+            "type_url": "type.googleapis.com/protocol.CreateSmartContract"
+          },
+          "type": "CreateSmartContract"
+        }
+      ],
+      "ref_block_bytes": "1234",
+      "ref_block_hash": "0102030405060708",
+      "expiration": 1700000060000,
+      "timestamp": 1700000000000,
+      "fee_limit": 1000000000
+    },
+    "rawDataHex": "0a0212342208010203040506070840e0a499ffbc315a8502081e1280020a30747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e437265617465536d617274436f6e747261637412cb010a15417e5f4552091a69125d5dfcb7b8c2659029395bdf12b1010a15417e5f4552091a69125d5dfcb7b8c2659029395bdf1a780a04300140040a2c10011a0962616c616e63654f66220e120377686f1a07616464726573732a091a0775696e74323536300240020a421a085472616e7366657222110801120466726f6d1a0761646472657373220f08011202746f1a07616464726573732210120576616c75651a0775696e743235363003220d608060405260088055600a600b301e3a084f6d6e695465737440c096b1027080d095ffbc3190018094ebdc03",
+    "txID": "5d0424804d3c439780580d0cf18ed3144d90e2b4d559eaf59925d80649454983",
+    "contractAddress": "412f117d1c430bb105783474f2d34fd0e12b970441"
+  },
+  {
+    "name": "deploy contract with call_token_value + token_id",
+    "contractType": 30,
+    "typeUrl": "type.googleapis.com/protocol.CreateSmartContract",
+    "params": {
+      "value": {
+        "owner_address": "TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC",
+        "abi": [
+          {
+            "inputs": [],
+            "stateMutability": "payable",
+            "type": "constructor"
+          },
+          {
+            "constant": true,
+            "inputs": [
+              {
+                "name": "who",
+                "type": "address"
+              }
+            ],
+            "name": "balanceOf",
+            "outputs": [
+              {
+                "name": "",
+                "type": "uint256"
+              }
+            ],
+            "stateMutability": "view",
+            "type": "function"
+          },
+          {
+            "anonymous": false,
+            "inputs": [
+              {
+                "indexed": true,
+                "name": "from",
+                "type": "address"
+              },
+              {
+                "indexed": true,
+                "name": "to",
+                "type": "address"
+              },
+              {
+                "indexed": false,
+                "name": "value",
+                "type": "uint256"
+              }
+            ],
+            "name": "Transfer",
+            "type": "event"
+          }
+        ],
+        "bytecode": "608060405260088055600a600b",
+        "name": "OmniTest",
+        "consume_user_resource_percent": "30",
+        "origin_energy_limit": "5000000",
+        "call_token_value": "5",
+        "token_id": "1002000"
+      },
+      "feeLimit": "1000000000"
+    },
+    "rawData": {
+      "contract": [
+        {
+          "parameter": {
+            "value": {
+              "owner_address": "417e5f4552091a69125d5dfcb7b8c2659029395bdf",
+              "call_token_value": 5,
+              "token_id": 1002000,
+              "new_contract": {
+                "abi": {
+                  "entrys": [
+                    {
+                      "inputs": [],
+                      "stateMutability": "payable",
+                      "type": "constructor"
+                    },
+                    {
+                      "constant": true,
+                      "inputs": [
+                        {
+                          "name": "who",
+                          "type": "address"
+                        }
+                      ],
+                      "name": "balanceOf",
+                      "outputs": [
+                        {
+                          "name": "",
+                          "type": "uint256"
+                        }
+                      ],
+                      "stateMutability": "view",
+                      "type": "function"
+                    },
+                    {
+                      "anonymous": false,
+                      "inputs": [
+                        {
+                          "indexed": true,
+                          "name": "from",
+                          "type": "address"
+                        },
+                        {
+                          "indexed": true,
+                          "name": "to",
+                          "type": "address"
+                        },
+                        {
+                          "indexed": false,
+                          "name": "value",
+                          "type": "uint256"
+                        }
+                      ],
+                      "name": "Transfer",
+                      "type": "event"
+                    }
+                  ]
+                },
+                "consume_user_resource_percent": 30,
+                "origin_energy_limit": 5000000,
+                "origin_address": "417e5f4552091a69125d5dfcb7b8c2659029395bdf",
+                "bytecode": "608060405260088055600a600b",
+                "name": "OmniTest"
+              }
+            },
+            "type_url": "type.googleapis.com/protocol.CreateSmartContract"
+          },
+          "type": "CreateSmartContract"
+        }
+      ],
+      "ref_block_bytes": "1234",
+      "ref_block_hash": "0102030405060708",
+      "expiration": 1700000060000,
+      "timestamp": 1700000000000,
+      "fee_limit": 1000000000
+    },
+    "rawDataHex": "0a0212342208010203040506070840e0a499ffbc315a8b02081e1286020a30747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e437265617465536d617274436f6e747261637412d1010a15417e5f4552091a69125d5dfcb7b8c2659029395bdf12b1010a15417e5f4552091a69125d5dfcb7b8c2659029395bdf1a780a04300140040a2c10011a0962616c616e63654f66220e120377686f1a07616464726573732a091a0775696e74323536300240020a421a085472616e7366657222110801120466726f6d1a0761646472657373220f08011202746f1a07616464726573732210120576616c75651a0775696e743235363003220d608060405260088055600a600b301e3a084f6d6e695465737440c096b10218052090943d7080d095ffbc3190018094ebdc03",
+    "txID": "10e2441b9c8883d3e814440fce33cdea93d6d82003d1457d5dbfee68f7ec5f06",
+    "contractAddress": "41c32a953e8d148ec674986837c24a9326ca854559"
+  }
+]

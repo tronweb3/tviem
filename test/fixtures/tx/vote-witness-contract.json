@@ -1,0 +1,51 @@
+[
+  {
+    "name": "vote for two witnesses",
+    "contractType": 4,
+    "typeUrl": "type.googleapis.com/protocol.VoteWitnessContract",
+    "params": {
+      "value": {
+        "owner_address": "TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC",
+        "votes": [
+          {
+            "vote_address": "TDvSsdrNM5eeXNL3czpa6AxLDHZA9nwe9K",
+            "vote_count": "5"
+          },
+          {
+            "vote_address": "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t",
+            "vote_count": "10"
+          }
+        ]
+      }
+    },
+    "rawData": {
+      "contract": [
+        {
+          "parameter": {
+            "value": {
+              "owner_address": "417e5f4552091a69125d5dfcb7b8c2659029395bdf",
+              "votes": [
+                {
+                  "vote_address": "412b5ad5c4795c026514f8317c7a215e218dccd6cf",
+                  "vote_count": 5
+                },
+                {
+                  "vote_address": "41a614f803b6fd780986a42c78ec9c7f77e6ded13c",
+                  "vote_count": 10
+                }
+              ]
+            },
+            "type_url": "type.googleapis.com/protocol.VoteWitnessContract"
+          },
+          "type": "VoteWitnessContract"
+        }
+      ],
+      "ref_block_bytes": "1234",
+      "ref_block_hash": "0102030405060708",
+      "expiration": 1700000060000,
+      "timestamp": 1700000000000
+    },
+    "rawDataHex": "0a0212342208010203040506070840e0a499ffbc315a860108041281010a30747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e566f74655769746e657373436f6e7472616374124d0a15417e5f4552091a69125d5dfcb7b8c2659029395bdf12190a15412b5ad5c4795c026514f8317c7a215e218dccd6cf100512190a1541a614f803b6fd780986a42c78ec9c7f77e6ded13c100a7080d095ffbc31",
+    "txID": "6a544ce118e09919d4c8a058b1dd9f4455dc74ec2426d57f8b6f30a1c62a8644"
+  }
+]

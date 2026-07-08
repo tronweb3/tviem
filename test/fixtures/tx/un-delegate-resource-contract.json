@@ -1,0 +1,37 @@
+[
+  {
+    "name": "undelegate ENERGY",
+    "contractType": 58,
+    "typeUrl": "type.googleapis.com/protocol.UnDelegateResourceContract",
+    "params": {
+      "value": {
+        "owner_address": "TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC",
+        "receiver_address": "TDvSsdrNM5eeXNL3czpa6AxLDHZA9nwe9K",
+        "balance": "1000000",
+        "resource": "ENERGY"
+      }
+    },
+    "rawData": {
+      "contract": [
+        {
+          "parameter": {
+            "value": {
+              "owner_address": "417e5f4552091a69125d5dfcb7b8c2659029395bdf",
+              "receiver_address": "412b5ad5c4795c026514f8317c7a215e218dccd6cf",
+              "balance": 1000000,
+              "resource": "ENERGY"
+            },
+            "type_url": "type.googleapis.com/protocol.UnDelegateResourceContract"
+          },
+          "type": "UnDelegateResourceContract"
+        }
+      ],
+      "ref_block_bytes": "1234",
+      "ref_block_hash": "0102030405060708",
+      "expiration": 1700000060000,
+      "timestamp": 1700000000000
+    },
+    "rawDataHex": "0a0212342208010203040506070840e0a499ffbc315a73083a126f0a37747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e556e44656c65676174655265736f75726365436f6e747261637412340a15417e5f4552091a69125d5dfcb7b8c2659029395bdf100118c0843d2215412b5ad5c4795c026514f8317c7a215e218dccd6cf7080d095ffbc31",
+    "txID": "ab3790313a1c2c91380d12381c246a9d2752ba459c1057844b0debc5c0d95866"
+  }
+]

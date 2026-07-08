@@ -1,0 +1,67 @@
+[
+  {
+    "name": "unfreeze v2 BANDWIDTH",
+    "contractType": 55,
+    "typeUrl": "type.googleapis.com/protocol.UnfreezeBalanceV2Contract",
+    "params": {
+      "value": {
+        "owner_address": "TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC",
+        "unfreeze_balance": "500000",
+        "resource": "BANDWIDTH"
+      }
+    },
+    "rawData": {
+      "contract": [
+        {
+          "parameter": {
+            "value": {
+              "owner_address": "417e5f4552091a69125d5dfcb7b8c2659029395bdf",
+              "unfreeze_balance": 500000
+            },
+            "type_url": "type.googleapis.com/protocol.UnfreezeBalanceV2Contract"
+          },
+          "type": "UnfreezeBalanceV2Contract"
+        }
+      ],
+      "ref_block_bytes": "1234",
+      "ref_block_hash": "0102030405060708",
+      "expiration": 1700000060000,
+      "timestamp": 1700000000000
+    },
+    "rawDataHex": "0a0212342208010203040506070840e0a499ffbc315a59083712550a36747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e556e667265657a6542616c616e63655632436f6e7472616374121b0a15417e5f4552091a69125d5dfcb7b8c2659029395bdf10a0c21e7080d095ffbc31",
+    "txID": "8062de36e3a8d5a355d471aa297ebb119cd00b0871ffef464ae0fcc906b3476c"
+  },
+  {
+    "name": "unfreeze v2 ENERGY",
+    "contractType": 55,
+    "typeUrl": "type.googleapis.com/protocol.UnfreezeBalanceV2Contract",
+    "params": {
+      "value": {
+        "owner_address": "TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC",
+        "unfreeze_balance": "250000",
+        "resource": "ENERGY"
+      }
+    },
+    "rawData": {
+      "contract": [
+        {
+          "parameter": {
+            "value": {
+              "owner_address": "417e5f4552091a69125d5dfcb7b8c2659029395bdf",
+              "unfreeze_balance": 250000,
+              "resource": "ENERGY"
+            },
+            "type_url": "type.googleapis.com/protocol.UnfreezeBalanceV2Contract"
+          },
+          "type": "UnfreezeBalanceV2Contract"
+        }
+      ],
+      "ref_block_bytes": "1234",
+      "ref_block_hash": "0102030405060708",
+      "expiration": 1700000060000,
+      "timestamp": 1700000000000
+    },
+    "rawDataHex": "0a0212342208010203040506070840e0a499ffbc315a5b083712570a36747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e556e667265657a6542616c616e63655632436f6e7472616374121d0a15417e5f4552091a69125d5dfcb7b8c2659029395bdf1090a10f18017080d095ffbc31",
+    "txID": "f84c786f1a17fdd15bc5267fdb5f939180a25d7a444e355416cad029567ffb68"
+  }
+]

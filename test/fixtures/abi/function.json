@@ -1,0 +1,318 @@
+[
+  {
+    "name": "trc20-transfer",
+    "abi": [
+      {
+        "type": "function",
+        "name": "transfer",
+        "inputs": [
+          {
+            "name": "to",
+            "type": "address"
+          },
+          {
+            "name": "value",
+            "type": "uint256"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "",
+            "type": "bool"
+          }
+        ],
+        "stateMutability": "nonpayable"
+      }
+    ],
+    "functionName": "transfer",
+    "args": ["TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t", "1000000"],
+    "calldata": "0xa9059cbb000000000000000000000000a614f803b6fd780986a42c78ec9c7f77e6ded13c00000000000000000000000000000000000000000000000000000000000f4240",
+    "result": {
+      "returnData": "0x0000000000000000000000000000000000000000000000000000000000000001",
+      "decoded": true
+    }
+  },
+  {
+    "name": "trc20-balanceOf",
+    "abi": [
+      {
+        "type": "function",
+        "name": "balanceOf",
+        "inputs": [
+          {
+            "name": "owner",
+            "type": "address"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "",
+            "type": "uint256"
+          }
+        ],
+        "stateMutability": "view"
+      }
+    ],
+    "functionName": "balanceOf",
+    "args": ["TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC"],
+    "calldata": "0x70a082310000000000000000000000007e5f4552091a69125d5dfcb7b8c2659029395bdf",
+    "result": {
+      "returnData": "0x000000000000000000000000000000000000000000661efdf12d1653cf340000",
+      "decoded": "123456789000000000000000000"
+    }
+  },
+  {
+    "name": "no-args-totalSupply",
+    "abi": [
+      {
+        "type": "function",
+        "name": "totalSupply",
+        "inputs": [],
+        "outputs": [
+          {
+            "name": "",
+            "type": "uint256"
+          }
+        ],
+        "stateMutability": "view"
+      }
+    ],
+    "functionName": "totalSupply",
+    "args": [],
+    "calldata": "0x18160ddd",
+    "result": {
+      "returnData": "0x000000000000000000000000000000000000000000000000000000e8d4a51000",
+      "decoded": "1000000000000"
+    }
+  },
+  {
+    "name": "no-args-owner-returns-address",
+    "abi": [
+      {
+        "type": "function",
+        "name": "owner",
+        "inputs": [],
+        "outputs": [
+          {
+            "name": "",
+            "type": "address"
+          }
+        ],
+        "stateMutability": "view"
+      }
+    ],
+    "functionName": "owner",
+    "args": [],
+    "calldata": "0x8da5cb5b",
+    "result": {
+      "returnData": "0x0000000000000000000000002b5ad5c4795c026514f8317c7a215e218dccd6cf",
+      "decoded": "TDvSsdrNM5eeXNL3czpa6AxLDHZA9nwe9K"
+    }
+  },
+  {
+    "name": "no-return-burn",
+    "abi": [
+      {
+        "type": "function",
+        "name": "burn",
+        "inputs": [
+          {
+            "name": "amount",
+            "type": "uint256"
+          }
+        ],
+        "outputs": [],
+        "stateMutability": "nonpayable"
+      }
+    ],
+    "functionName": "burn",
+    "args": ["1000000"],
+    "calldata": "0x42966c6800000000000000000000000000000000000000000000000000000000000f4240",
+    "result": {
+      "returnData": "0x",
+      "decoded": null
+    }
+  },
+  {
+    "name": "multi-return-getReserves",
+    "abi": [
+      {
+        "type": "function",
+        "name": "getReserves",
+        "inputs": [],
+        "outputs": [
+          {
+            "name": "reserve0",
+            "type": "uint112"
+          },
+          {
+            "name": "reserve1",
+            "type": "uint112"
+          },
+          {
+            "name": "blockTimestampLast",
+            "type": "uint32"
+          }
+        ],
+        "stateMutability": "view"
+      }
+    ],
+    "functionName": "getReserves",
+    "args": [],
+    "calldata": "0x0902f1ac",
+    "result": {
+      "returnData": "0x00000000000000000000000000000000000000000000000000000000000f424000000000000000000000000000000000000000000000000000000000001e8480000000000000000000000000000000000000000000000000000000006553f100",
+      "decoded": ["1000000", "2000000", "1700000000"]
+    }
+  },
+  {
+    "name": "overload-safeTransferFrom-3args",
+    "abi": [
+      {
+        "type": "function",
+        "name": "safeTransferFrom",
+        "inputs": [
+          {
+            "name": "from",
+            "type": "address"
+          },
+          {
+            "name": "to",
+            "type": "address"
+          },
+          {
+            "name": "tokenId",
+            "type": "uint256"
+          }
+        ],
+        "outputs": [],
+        "stateMutability": "nonpayable"
+      },
+      {
+        "type": "function",
+        "name": "safeTransferFrom",
+        "inputs": [
+          {
+            "name": "from",
+            "type": "address"
+          },
+          {
+            "name": "to",
+            "type": "address"
+          },
+          {
+            "name": "tokenId",
+            "type": "uint256"
+          },
+          {
+            "name": "data",
+            "type": "bytes"
+          }
+        ],
+        "outputs": [],
+        "stateMutability": "nonpayable"
+      }
+    ],
+    "functionName": "safeTransferFrom",
+    "args": [
+      "TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC",
+      "TDvSsdrNM5eeXNL3czpa6AxLDHZA9nwe9K",
+      "1"
+    ],
+    "calldata": "0x42842e0e0000000000000000000000007e5f4552091a69125d5dfcb7b8c2659029395bdf0000000000000000000000002b5ad5c4795c026514f8317c7a215e218dccd6cf0000000000000000000000000000000000000000000000000000000000000001"
+  },
+  {
+    "name": "overload-safeTransferFrom-4args",
+    "abi": [
+      {
+        "type": "function",
+        "name": "safeTransferFrom",
+        "inputs": [
+          {
+            "name": "from",
+            "type": "address"
+          },
+          {
+            "name": "to",
+            "type": "address"
+          },
+          {
+            "name": "tokenId",
+            "type": "uint256"
+          }
+        ],
+        "outputs": [],
+        "stateMutability": "nonpayable"
+      },
+      {
+        "type": "function",
+        "name": "safeTransferFrom",
+        "inputs": [
+          {
+            "name": "from",
+            "type": "address"
+          },
+          {
+            "name": "to",
+            "type": "address"
+          },
+          {
+            "name": "tokenId",
+            "type": "uint256"
+          },
+          {
+            "name": "data",
+            "type": "bytes"
+          }
+        ],
+        "outputs": [],
+        "stateMutability": "nonpayable"
+      }
+    ],
+    "functionName": "safeTransferFrom",
+    "args": [
+      "TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC",
+      "TDvSsdrNM5eeXNL3czpa6AxLDHZA9nwe9K",
+      "1",
+      "0x0102"
+    ],
+    "calldata": "0xb88d4fde0000000000000000000000007e5f4552091a69125d5dfcb7b8c2659029395bdf0000000000000000000000002b5ad5c4795c026514f8317c7a215e218dccd6cf0000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000020102000000000000000000000000000000000000000000000000000000000000"
+  },
+  {
+    "name": "trcToken-transferToken",
+    "abi": [
+      {
+        "type": "function",
+        "name": "transferToken",
+        "inputs": [
+          {
+            "name": "to",
+            "type": "address"
+          },
+          {
+            "name": "tokenId",
+            "type": "trcToken"
+          },
+          {
+            "name": "amount",
+            "type": "uint256"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "",
+            "type": "bool"
+          }
+        ],
+        "stateMutability": "payable"
+      }
+    ],
+    "functionName": "transferToken",
+    "args": ["TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC", "1002000", "9"],
+    "calldata": "0x4dd52d8b0000000000000000000000007e5f4552091a69125d5dfcb7b8c2659029395bdf00000000000000000000000000000000000000000000000000000000000f4a100000000000000000000000000000000000000000000000000000000000000009",
+    "result": {
+      "returnData": "0x0000000000000000000000000000000000000000000000000000000000000001",
+      "decoded": true
+    }
+  }
+]

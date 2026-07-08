@@ -1,0 +1,107 @@
+[
+  {
+    "name": "transfer canonical (reference vector)",
+    "contractType": 1,
+    "typeUrl": "type.googleapis.com/protocol.TransferContract",
+    "params": {
+      "value": {
+        "owner_address": "TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC",
+        "to_address": "TPL66VK2gCXNCD7EJg9pgJRfqcRazjhUZY",
+        "amount": "1000000"
+      }
+    },
+    "rawData": {
+      "contract": [
+        {
+          "parameter": {
+            "value": {
+              "to_address": "41928c9af0651632157ef27a2cf17ca72c575a4d21",
+              "owner_address": "417e5f4552091a69125d5dfcb7b8c2659029395bdf",
+              "amount": 1000000
+            },
+            "type_url": "type.googleapis.com/protocol.TransferContract"
+          },
+          "type": "TransferContract"
+        }
+      ],
+      "ref_block_bytes": "1234",
+      "ref_block_hash": "0102030405060708",
+      "expiration": 1700000060000,
+      "timestamp": 1700000000000
+    },
+    "rawDataHex": "0a0212342208010203040506070840e0a499ffbc315a67080112630a2d747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e5472616e73666572436f6e747261637412320a15417e5f4552091a69125d5dfcb7b8c2659029395bdf121541928c9af0651632157ef27a2cf17ca72c575a4d2118c0843d7080d095ffbc31",
+    "txID": "407ec75dad4545890e5788ef78555ecab9dc72d56df29da4ebbd508022bdbaba"
+  },
+  {
+    "name": "transfer with Permission_id=2",
+    "contractType": 1,
+    "typeUrl": "type.googleapis.com/protocol.TransferContract",
+    "params": {
+      "value": {
+        "owner_address": "TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC",
+        "to_address": "TPL66VK2gCXNCD7EJg9pgJRfqcRazjhUZY",
+        "amount": "1000000"
+      },
+      "permissionId": 2
+    },
+    "rawData": {
+      "contract": [
+        {
+          "parameter": {
+            "value": {
+              "to_address": "41928c9af0651632157ef27a2cf17ca72c575a4d21",
+              "owner_address": "417e5f4552091a69125d5dfcb7b8c2659029395bdf",
+              "amount": 1000000
+            },
+            "type_url": "type.googleapis.com/protocol.TransferContract"
+          },
+          "type": "TransferContract",
+          "Permission_id": 2
+        }
+      ],
+      "ref_block_bytes": "1234",
+      "ref_block_hash": "0102030405060708",
+      "expiration": 1700000060000,
+      "timestamp": 1700000000000
+    },
+    "rawDataHex": "0a0212342208010203040506070840e0a499ffbc315a69080112630a2d747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e5472616e73666572436f6e747261637412320a15417e5f4552091a69125d5dfcb7b8c2659029395bdf121541928c9af0651632157ef27a2cf17ca72c575a4d2118c0843d28027080d095ffbc31",
+    "txID": "2e8b73373f830f8a100b11291c5e169a079552c212eb94b6c722247320adb698"
+  },
+  {
+    "name": "transfer with memo data + fee_limit",
+    "contractType": 1,
+    "typeUrl": "type.googleapis.com/protocol.TransferContract",
+    "params": {
+      "value": {
+        "owner_address": "417e5f4552091a69125d5dfcb7b8c2659029395bdf",
+        "to_address": "41928c9af0651632157ef27a2cf17ca72c575a4d21",
+        "amount": "1000000"
+      },
+      "data": "6f6d6e69",
+      "feeLimit": "10000000"
+    },
+    "rawData": {
+      "contract": [
+        {
+          "parameter": {
+            "value": {
+              "owner_address": "417e5f4552091a69125d5dfcb7b8c2659029395bdf",
+              "to_address": "41928c9af0651632157ef27a2cf17ca72c575a4d21",
+              "amount": 1000000
+            },
+            "type_url": "type.googleapis.com/protocol.TransferContract"
+          },
+          "type": "TransferContract"
+        }
+      ],
+      "ref_block_bytes": "1234",
+      "ref_block_hash": "0102030405060708",
+      "expiration": 1700000060000,
+      "data": "6f6d6e69",
+      "timestamp": 1700000000000,
+      "fee_limit": 10000000
+    },
+    "rawDataHex": "0a0212342208010203040506070840e0a499ffbc3152046f6d6e695a67080112630a2d747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e5472616e73666572436f6e747261637412320a15417e5f4552091a69125d5dfcb7b8c2659029395bdf121541928c9af0651632157ef27a2cf17ca72c575a4d2118c0843d7080d095ffbc31900180ade204",
+    "txID": "a3164e0e305862c4647efec591285e07df5f8a084f3efa1ed17857d0b6db909c"
+  }
+]

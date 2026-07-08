@@ -1,0 +1,90 @@
+[
+  {
+    "name": "update permissions: owner (2 keys) + active (operations bitmap)",
+    "contractType": 46,
+    "typeUrl": "type.googleapis.com/protocol.AccountPermissionUpdateContract",
+    "params": {
+      "value": {
+        "owner_address": "TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC",
+        "owner": {
+          "type": 0,
+          "permission_name": "owner",
+          "threshold": "2",
+          "keys": [
+            {
+              "address": "TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC",
+              "weight": "1"
+            },
+            {
+              "address": "TDvSsdrNM5eeXNL3czpa6AxLDHZA9nwe9K",
+              "weight": "1"
+            }
+          ]
+        },
+        "actives": [
+          {
+            "type": 2,
+            "id": 2,
+            "permission_name": "active0",
+            "threshold": "1",
+            "operations": "7fff1fc0033e0300000000000000000000000000000000000000000000000000",
+            "keys": [
+              {
+                "address": "TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC",
+                "weight": "1"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "rawData": {
+      "contract": [
+        {
+          "parameter": {
+            "value": {
+              "owner_address": "417e5f4552091a69125d5dfcb7b8c2659029395bdf",
+              "owner": {
+                "permission_name": "owner",
+                "threshold": 2,
+                "keys": [
+                  {
+                    "address": "417e5f4552091a69125d5dfcb7b8c2659029395bdf",
+                    "weight": 1
+                  },
+                  {
+                    "address": "412b5ad5c4795c026514f8317c7a215e218dccd6cf",
+                    "weight": 1
+                  }
+                ]
+              },
+              "actives": [
+                {
+                  "type": "Active",
+                  "id": 2,
+                  "permission_name": "active0",
+                  "threshold": 1,
+                  "operations": "7fff1fc0033e0300000000000000000000000000000000000000000000000000",
+                  "keys": [
+                    {
+                      "address": "417e5f4552091a69125d5dfcb7b8c2659029395bdf",
+                      "weight": 1
+                    }
+                  ]
+                }
+              ]
+            },
+            "type_url": "type.googleapis.com/protocol.AccountPermissionUpdateContract"
+          },
+          "type": "AccountPermissionUpdateContract"
+        }
+      ],
+      "ref_block_bytes": "1234",
+      "ref_block_hash": "0102030405060708",
+      "expiration": 1700000060000,
+      "timestamp": 1700000000000
+    },
+    "rawDataHex": "0a0212342208010203040506070840e0a499ffbc315aec01082e12e7010a3c747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e4163636f756e745065726d697373696f6e557064617465436f6e747261637412a6010a15417e5f4552091a69125d5dfcb7b8c2659029395bdf123f1a056f776e657220023a190a15417e5f4552091a69125d5dfcb7b8c2659029395bdf10013a190a15412b5ad5c4795c026514f8317c7a215e218dccd6cf1001224c080210021a0761637469766530200132207fff1fc0033e03000000000000000000000000000000000000000000000000003a190a15417e5f4552091a69125d5dfcb7b8c2659029395bdf10017080d095ffbc31",
+    "txID": "328a219d9fe9eaca61e4b1b30525b24d9acca8a083c7d301ffb40d0fdb0e05f2"
+  }
+]

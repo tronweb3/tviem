@@ -1,0 +1,67 @@
+[
+  {
+    "name": "freeze v2 BANDWIDTH",
+    "contractType": 54,
+    "typeUrl": "type.googleapis.com/protocol.FreezeBalanceV2Contract",
+    "params": {
+      "value": {
+        "owner_address": "TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC",
+        "frozen_balance": "1000000",
+        "resource": "BANDWIDTH"
+      }
+    },
+    "rawData": {
+      "contract": [
+        {
+          "parameter": {
+            "value": {
+              "owner_address": "417e5f4552091a69125d5dfcb7b8c2659029395bdf",
+              "frozen_balance": 1000000
+            },
+            "type_url": "type.googleapis.com/protocol.FreezeBalanceV2Contract"
+          },
+          "type": "FreezeBalanceV2Contract"
+        }
+      ],
+      "ref_block_bytes": "1234",
+      "ref_block_hash": "0102030405060708",
+      "expiration": 1700000060000,
+      "timestamp": 1700000000000
+    },
+    "rawDataHex": "0a0212342208010203040506070840e0a499ffbc315a57083612530a34747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e467265657a6542616c616e63655632436f6e7472616374121b0a15417e5f4552091a69125d5dfcb7b8c2659029395bdf10c0843d7080d095ffbc31",
+    "txID": "751f38400d9104691ce5bd3a62b49ec6eb0f01badcb6bbcc6a3e34f7c66fdd4d"
+  },
+  {
+    "name": "freeze v2 ENERGY",
+    "contractType": 54,
+    "typeUrl": "type.googleapis.com/protocol.FreezeBalanceV2Contract",
+    "params": {
+      "value": {
+        "owner_address": "TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC",
+        "frozen_balance": "2000000",
+        "resource": "ENERGY"
+      }
+    },
+    "rawData": {
+      "contract": [
+        {
+          "parameter": {
+            "value": {
+              "owner_address": "417e5f4552091a69125d5dfcb7b8c2659029395bdf",
+              "frozen_balance": 2000000,
+              "resource": "ENERGY"
+            },
+            "type_url": "type.googleapis.com/protocol.FreezeBalanceV2Contract"
+          },
+          "type": "FreezeBalanceV2Contract"
+        }
+      ],
+      "ref_block_bytes": "1234",
+      "ref_block_hash": "0102030405060708",
+      "expiration": 1700000060000,
+      "timestamp": 1700000000000
+    },
+    "rawDataHex": "0a0212342208010203040506070840e0a499ffbc315a59083612550a34747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e467265657a6542616c616e63655632436f6e7472616374121d0a15417e5f4552091a69125d5dfcb7b8c2659029395bdf1080897a18017080d095ffbc31",
+    "txID": "dd1047b0b0afa49dabecd11f6860605dbc07d4800ad6abe3751d88fa64f1fa75"
+  }
+]

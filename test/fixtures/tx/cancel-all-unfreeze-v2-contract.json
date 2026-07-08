@@ -1,0 +1,31 @@
+[
+  {
+    "name": "cancel all unfreeze v2",
+    "contractType": 59,
+    "typeUrl": "type.googleapis.com/protocol.CancelAllUnfreezeV2Contract",
+    "params": {
+      "value": {
+        "owner_address": "TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC"
+      }
+    },
+    "rawData": {
+      "contract": [
+        {
+          "parameter": {
+            "value": {
+              "owner_address": "417e5f4552091a69125d5dfcb7b8c2659029395bdf"
+            },
+            "type_url": "type.googleapis.com/protocol.CancelAllUnfreezeV2Contract"
+          },
+          "type": "CancelAllUnfreezeV2Contract"
+        }
+      ],
+      "ref_block_bytes": "1234",
+      "ref_block_hash": "0102030405060708",
+      "expiration": 1700000060000,
+      "timestamp": 1700000000000
+    },
+    "rawDataHex": "0a0212342208010203040506070840e0a499ffbc315a57083b12530a38747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e43616e63656c416c6c556e667265657a655632436f6e747261637412170a15417e5f4552091a69125d5dfcb7b8c2659029395bdf7080d095ffbc31",
+    "txID": "beae114366a5d2237eaee85a31d86ae8563575f7bb11d1dfd3ad2133f37a67d9"
+  }
+]
