@@ -516,3 +516,16 @@ export class UnsupportedPackedAbiType extends BaseError {
     })
   }
 }
+
+export type InvalidAbiParameterValueErrorType =
+  InvalidAbiParameterValueError & {
+    name: 'InvalidAbiParameterValueError'
+  }
+export class InvalidAbiParameterValueError extends BaseError {
+  constructor({ type, value }: { type: string; value: unknown }) {
+    super(
+      `Value "${String(value)}" is not a valid value for ABI type "${type}".`,
+      { name: 'InvalidAbiParameterValueError' },
+    )
+  }
+}

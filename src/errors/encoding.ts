@@ -88,3 +88,25 @@ export class SizeOverflowError extends BaseError {
     )
   }
 }
+
+export type VarintOverflowErrorType = VarintOverflowError & {
+  name: 'VarintOverflowError'
+}
+export class VarintOverflowError extends BaseError {
+  constructor() {
+    super('Varint exceeds the maximum size of a 64-bit unsigned integer.', {
+      name: 'VarintOverflowError',
+    })
+  }
+}
+
+export type UnsupportedWireTypeErrorType = UnsupportedWireTypeError & {
+  name: 'UnsupportedWireTypeError'
+}
+export class UnsupportedWireTypeError extends BaseError {
+  constructor({ wireType }: { wireType: number }) {
+    super(`Wire type \`${wireType}\` is not supported.`, {
+      name: 'UnsupportedWireTypeError',
+    })
+  }
+}
