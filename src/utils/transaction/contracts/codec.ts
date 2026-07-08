@@ -1,0 +1,272 @@
+import type { ErrorType } from '../../../errors/utils.js'
+import type { TronHexAddress } from '../../../types/address.js'
+import type { ByteArray, Hex } from '../../../types/misc.js'
+import { concatBytes } from '../../data/concat.js'
+import { bytesToString } from '../../encoding/fromBytes.js'
+import {
+  type HexToBytesErrorType,
+  hexToBytes,
+  stringToBytes,
+} from '../../encoding/toBytes.js'
+import { bytesToHex } from '../../encoding/toHex.js'
+import {
+  type FlexErrorType,
+  flex,
+  type NormalizeAddressErrorType,
+  normalizeAddress,
+} from '../normalize.js'
+import {
+  type ProtoField,
+  type ReadFieldsErrorType,
+  readMessageFields,
+} from '../protobuf/reader.js'
+import {
+  type FBoolErrorType,
+  type FBytesErrorType,
+  type FIntErrorType,
+  fBool,
+  fBytes,
+  fInt,
+  fMessage,
+} from '../protobuf/writer.js'
+import type {
+  BytesInput,
+  ContractAddressInput,
+  FlexInput,
+  UnknownField,
+} from '../types.js'
+
+/**
+ * Declarative schema of a single protobuf field of a contract message.
+ *
+ * Scalar kinds map to wire types as follows: `i64`/`i32`/`enum`/`bool` →
+ * `VARINT` (0); `address`/`bytes`/`string`/`flex`/`message`/
+ * `repeated-message` → `LEN` (2).
+ */
+export type FieldSpec =
+  | {
+      no: number
+      name: string
+      kind:
+        | 'address'
+        | 'bytes'
+        | 'string'
+        | 'flex'
+        | 'i64'
+        | 'i32'
+        | 'enum'
+        | 'bool'
+    }
+  | { no: number; name: string; kind: 'message'; spec: MessageSpec }
+  | { no: number; name: string; kind: 'repeated-message'; spec: MessageSpec }
+
+/** Declarative schema of a contract message (one entry per field). */
+export type MessageSpec = readonly FieldSpec[]
+
+/** Maximum value of a two's-complement 64-bit signed integer (`2^63 - 1`). */
+const maxInt64 = 9223372036854775807n
+/** Offset used to decode negative `int64` values from two's complement. */
+const twoPow64 = 18446744073709551616n
+
+export type EncodeMessageErrorType =
+  | NormalizeAddressErrorType
+  | FlexErrorType
+  | HexToBytesErrorType
+  | FBytesErrorType
+  | FIntErrorType
+  | FBoolErrorType
+  | ErrorType
+
+/**
+ * Encodes a message object against its field schema, in canonical form:
+ * fields in ascending field-number order, proto3 defaults (zero/empty/false)
+ * omitted. `undefined`/`null` values are omitted. The `__unknown` property
+ * (produced by `decodeMessage`) is ignored.
+ *
+ * @param spec Message field schema.
+ * @param message Message object (keyed by `FieldSpec.name`).
+ * @returns Encoded message body.
+ */
+export function encodeMessage(
+  spec: MessageSpec,
+  message: Record<string, unknown>,
+): ByteArray {
+  const parts: ByteArray[] = []
+  for (const field of [...spec].sort((a, b) => a.no - b.no)) {
+    const value = message[field.name]
+    if (value === undefined || value === null) continue
+    parts.push(encodeField(field, value))
+  }
+  return concatBytes(parts)
+}
+
+/** Encodes one field per its schema entry. */
+function encodeField(field: FieldSpec, value: unknown): ByteArray {
+  switch (field.kind) {
+    case 'address':
+      return fBytes(field.no, normalizeAddress(value as ContractAddressInput))
+    case 'bytes':
+      return fBytes(field.no, bytesInputToBytes(value as BytesInput))
+    case 'string':
+      return fBytes(field.no, stringToBytes(value as string))
+    case 'flex':
+      return fBytes(field.no, flex(value as FlexInput))
+    case 'i64':
+    case 'i32':
+    case 'enum':
+      return fInt(field.no, value as bigint | number)
+    case 'bool':
+      return fBool(field.no, Boolean(value))
+    case 'message':
+      return fMessage(
+        field.no,
+        encodeMessage(field.spec, value as Record<string, unknown>),
+        { emitDefault: true },
+      )
+    case 'repeated-message':
+      return concatBytes(
+        (value as readonly Record<string, unknown>[]).map((item) =>
+          fMessage(field.no, encodeMessage(field.spec, item), {
+            emitDefault: true,
+          }),
+        ),
+      )
+  }
+}
+
+/** Converts a bytes field input (hex or raw bytes) to bytes. */
+function bytesInputToBytes(value: BytesInput): ByteArray {
+  if (value instanceof Uint8Array) return value
+  return hexToBytes((value.startsWith('0x') ? value : `0x${value}`) as Hex)
+}
+
+export type DecodeMessageErrorType = ReadFieldsErrorType | ErrorType
+
+/**
+ * Decodes a message body against its field schema. Tolerant by design:
+ *
+ * - Wire fields outside the schema (or with an unexpected wire type) are
+ *   collected into `__unknown` instead of throwing.
+ * - Missing scalar fields are filled with their proto3 defaults (`0n`, `0`,
+ *   `false`, `''`, `'0x'`); missing repeated fields become `[]`; missing
+ *   `address` and `message` fields stay absent.
+ * - Duplicated non-repeated fields follow last-one-wins.
+ *
+ * Addresses decode to the TRON hex form (`41…`, no `0x`); bytes decode to
+ * `0x`-prefixed hex; `int64` decodes to a signed `bigint`.
+ *
+ * @param spec Message field schema.
+ * @param bytes Encoded message body.
+ * @returns Decoded message object.
+ */
+export function decodeMessage(
+  spec: MessageSpec,
+  bytes: ByteArray,
+): Record<string, unknown> {
+  const message: Record<string, unknown> = {}
+  const unknown: UnknownField[] = []
+  const specByNo = new Map<number, FieldSpec>()
+  for (const field of spec) specByNo.set(field.no, field)
+
+  for (const wire of readMessageFields(bytes)) {
+    const field = specByNo.get(wire.fieldNo)
+    if (!field || wireTypeOf(field.kind) !== wire.wireType) {
+      unknown.push(toUnknownField(wire))
+      continue
+    }
+    switch (field.kind) {
+      case 'i64':
+        message[field.name] = toInt64(wire.value as bigint)
+        break
+      case 'i32':
+      case 'enum':
+        message[field.name] = Number(toInt64(wire.value as bigint))
+        break
+      case 'bool':
+        message[field.name] = (wire.value as bigint) !== 0n
+        break
+      case 'address':
+        message[field.name] = bytesToHex(wire.value as ByteArray).slice(
+          2,
+        ) as TronHexAddress
+        break
+      case 'bytes':
+      case 'flex':
+        message[field.name] = bytesToHex(wire.value as ByteArray)
+        break
+      case 'string':
+        message[field.name] = bytesToString(wire.value as ByteArray)
+        break
+      case 'message':
+        message[field.name] = decodeMessage(field.spec, wire.value as ByteArray)
+        break
+      case 'repeated-message': {
+        const list = (message[field.name] as unknown[] | undefined) ?? []
+        list.push(decodeMessage(field.spec, wire.value as ByteArray))
+        message[field.name] = list
+        break
+      }
+    }
+  }
+
+  for (const field of spec) {
+    if (field.name in message) continue
+    switch (field.kind) {
+      case 'i64':
+        message[field.name] = 0n
+        break
+      case 'i32':
+      case 'enum':
+        message[field.name] = 0
+        break
+      case 'bool':
+        message[field.name] = false
+        break
+      case 'string':
+        message[field.name] = ''
+        break
+      case 'bytes':
+      case 'flex':
+        message[field.name] = '0x'
+        break
+      case 'repeated-message':
+        message[field.name] = []
+        break
+      // 'address' and 'message' fields stay absent when not on the wire.
+      default:
+        break
+    }
+  }
+
+  if (unknown.length > 0) message.__unknown = unknown
+  return message
+}
+
+/** Wire type a field kind is expected to arrive with. */
+function wireTypeOf(kind: FieldSpec['kind']): 0 | 2 {
+  switch (kind) {
+    case 'i64':
+    case 'i32':
+    case 'enum':
+    case 'bool':
+      return 0
+    default:
+      return 2
+  }
+}
+
+/** Reinterprets a raw unsigned varint as a signed two's-complement `int64`. */
+function toInt64(value: bigint): bigint {
+  return value > maxInt64 ? value - twoPow64 : value
+}
+
+/** Converts a raw wire field into its `__unknown` representation. */
+function toUnknownField(wire: ProtoField): UnknownField {
+  if (wire.wireType === 0)
+    return { fieldNo: wire.fieldNo, wireType: 0, value: wire.value }
+  return {
+    fieldNo: wire.fieldNo,
+    wireType: wire.wireType,
+    value: bytesToHex(wire.value),
+  }
+}
