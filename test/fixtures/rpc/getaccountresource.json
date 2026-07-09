@@ -1,0 +1,27 @@
+{
+  "endpoint": "getaccountresource",
+  "description": "Hand-crafted getaccountresource (FullNode) response for the pk=1 address TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC (41-hex 417e5f4552091a69125d5dfcb7b8c2659029395bdf). Deterministic resource budget; freeNetUsed is intentionally omitted to exercise the missing-field -> 0n default.",
+  "request": {
+    "node": "full",
+    "path": "getaccountresource",
+    "method": "POST",
+    "body": {
+      "address": "417e5f4552091a69125d5dfcb7b8c2659029395bdf"
+    }
+  },
+  "response": {
+    "freeNetLimit": 5000,
+    "NetLimit": 1500,
+    "NetUsed": 200,
+    "EnergyLimit": 1801,
+    "EnergyUsed": 300,
+    "tronPowerLimit": 100,
+    "tronPowerUsed": 25,
+    "TotalNetLimit": 43200000000,
+    "TotalNetWeight": 1234567,
+    "TotalEnergyLimit": 180000000000,
+    "TotalEnergyWeight": 9876543
+  },
+  "recordedAt": "2026-07-09T00:00:00.000Z",
+  "source": "hand-crafted"
+}

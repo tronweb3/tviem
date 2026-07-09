@@ -59,6 +59,7 @@ export const rpcFixtureNames = [
   'getnowblock.fixed',
   'getchainparameters',
   'getaccount',
+  'getaccountresource',
   'getblockbynum',
   'gettransactioninfobyid.success',
   'gettransactioninfobyid.reverted',
