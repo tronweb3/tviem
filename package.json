@@ -150,6 +150,18 @@
       "path": "./src/_esm/index.js",
       "limit": "8 kB",
       "import": "{ toBase58 }"
+    },
+    {
+      "name": "import { generatePrivateKey } from '@tronweb3/omni' (esm)",
+      "path": "./src/_esm/index.js",
+      "limit": "16 kB",
+      "import": "{ generatePrivateKey }"
+    },
+    {
+      "name": "import { privateKeyToAccount } from '@tronweb3/omni' (esm)",
+      "path": "./src/_esm/index.js",
+      "limit": "25 kB",
+      "import": "{ privateKeyToAccount }"
     }
   ],
   "knip": {
