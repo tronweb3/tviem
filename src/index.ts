@@ -35,6 +35,93 @@ export {
   type SignTransactionErrorType,
   signTransaction,
 } from './accounts/utils/signTransaction.js'
+// Read (public) actions — also available via the `@tronweb3/omni/actions` subpath.
+export {
+  type GetBalanceParameters,
+  type GetBalanceReturnType,
+  getBalance,
+} from './actions/public/getBalance.js'
+export {
+  type GetBlockParameters,
+  type GetBlockReturnType,
+  getBlock,
+} from './actions/public/getBlock.js'
+export {
+  type GetChainParametersReturnType,
+  getChainParameters,
+  getEnergyFee,
+  getTransactionFee,
+} from './actions/public/getChainParameters.js'
+export {
+  type GetNowBlockReturnType,
+  getNowBlock,
+} from './actions/public/getNowBlock.js'
+export {
+  type GetTransactionInfoParameters,
+  type GetTransactionInfoReturnType,
+  getTransactionInfo,
+} from './actions/public/getTransactionInfo.js'
+export {
+  type ReadContractParameters,
+  type ReadContractReturnType,
+  readContract,
+} from './actions/public/readContract.js'
+export {
+  type TransactionReceipt,
+  type WaitForTransactionReceiptParameters,
+  type WaitForTransactionReceiptReturnType,
+  waitForTransactionReceipt,
+} from './actions/public/waitForTransactionReceipt.js'
+export {
+  type DefineChainReturnType,
+  defineChain,
+} from './chains/defineChain.js'
+export { mainnet } from './chains/definitions/mainnet.js'
+export { nile } from './chains/definitions/nile.js'
+export { shasta } from './chains/definitions/shasta.js'
+// ---------------------------------------------------------------------------
+// v0.1b — clients / transports / chains / read actions (read-path slice)
+// Write (wallet) actions — sendTrx / writeContract / broadcastTransaction —
+// are T5 stubs and intentionally NOT re-exported here yet.
+// ---------------------------------------------------------------------------
+export {
+  type Client,
+  type ClientConfig,
+  type CreateClientErrorType,
+  createClient,
+} from './clients/createClient.js'
+export {
+  type CreatePublicClientErrorType,
+  createPublicClient,
+  type PublicClient,
+  type PublicClientConfig,
+} from './clients/createPublicClient.js'
+export {
+  type CreateWalletClientErrorType,
+  createWalletClient,
+  type WalletClient,
+  type WalletClientConfig,
+} from './clients/createWalletClient.js'
+export {
+  type PublicActions,
+  publicActions,
+} from './clients/decorators/public.js'
+export {
+  type WalletActions,
+  walletActions,
+} from './clients/decorators/wallet.js'
+export {
+  type CreateTransportErrorType,
+  createTransport,
+  type Transport,
+  type TransportConfig,
+} from './clients/transports/createTransport.js'
+export {
+  type HttpTransport,
+  type HttpTransportConfig,
+  http,
+  normalizeTronError,
+} from './clients/transports/http.js'
 export { trxUnits } from './constants/unit.js'
 export {
   AbiConstructorNotFoundError,
@@ -129,16 +216,72 @@ export {
   FilterTypeNotSupportedError,
   type FilterTypeNotSupportedErrorType,
 } from './errors/log.js'
+// TRON node error family (transport-level, error normalization).
+export {
+  TronBroadcastError,
+  type TronBroadcastErrorType,
+  TronContractValidateError,
+  type TronContractValidateErrorType,
+  TronNodeError,
+  type TronNodeErrorParameters,
+  type TronNodeErrorType,
+  TronValidationError,
+  type TronValidationErrorType,
+  UnknownNodeError,
+  type UnknownNodeErrorType,
+} from './errors/node.js'
+export {
+  HttpRequestError,
+  type HttpRequestErrorType,
+  TimeoutError,
+  type TimeoutErrorType,
+} from './errors/request.js'
+// Action-level (RPC) error family.
+export {
+  AccountNotFoundError,
+  type AccountNotFoundErrorType,
+  BlockNotFoundError,
+  type BlockNotFoundErrorType,
+  CallExecutionError,
+  type CallExecutionErrorType,
+  ContractFunctionRevertedError,
+  type ContractFunctionRevertedErrorType,
+  TransactionExpiredError,
+  type TransactionExpiredErrorType,
+  TronRpcError,
+  type TronRpcErrorType,
+  WaitForTransactionReceiptTimeoutError,
+  type WaitForTransactionReceiptTimeoutErrorType,
+} from './errors/rpc.js'
+export {
+  UrlRequiredError,
+  type UrlRequiredErrorType,
+} from './errors/transport.js'
 export {
   InvalidDecimalNumberError,
   type InvalidDecimalNumberErrorType,
 } from './errors/unit.js'
+export {
+  type ParseAccount,
+  type ParseAccountErrorType,
+  parseAccount,
+} from './types/account.js'
 export type {
   Address,
   AddressInput,
   EvmAddress,
   TronHexAddress,
 } from './types/address.js'
+export type { Block } from './types/block.js'
+export type {
+  Chain,
+  ChainConfig,
+  ExtendChain,
+  TronContract,
+  TronNativeCurrency,
+  TronRpcEndpoint,
+  TronRpcUrls,
+} from './types/chain.js'
 export type {
   AbiEventParametersToPrimitiveTypes,
   AbiEventParameterToPrimitiveType,
@@ -176,6 +319,17 @@ export type {
   LogTopic,
   SignableMessage,
 } from './types/misc.js'
+export type {
+  TransactionInfo,
+  TransactionLog,
+  TransactionStatus,
+} from './types/transaction.js'
+export type {
+  TronNode,
+  TronRequestArgs,
+  TronRequestFn,
+  TronRequestOptions,
+} from './types/transport.js'
 export type {
   Assign,
   Branded,

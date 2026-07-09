@@ -13,7 +13,7 @@ export default defineConfig({
         replacement: join(__dirname, './src/$1'),
       },
     ],
-    include: ['src/**/*.test.ts'],
+    include: ['src/**/*.test.ts', 'test/**/*.test.ts'],
     typecheck: {
       include: ['src/**/*.test-d.ts'],
     },

@@ -3,14 +3,22 @@ import { privateKeyToAddress } from './accounts/index.js'
 import type {
   Address,
   ByteArray,
+  Chain,
+  Client,
   ContractFunctionName,
   EvmAddress,
   Hex,
+  PublicClient,
+  Transport,
   TronHexAddress,
+  TronRequestFn,
 } from './index.js'
 import {
+  createPublicClient,
+  http,
   isAddress,
   keccak256,
+  nile,
   parseTrx,
   toBase58,
   toEvm,
@@ -77,4 +85,17 @@ test('ContractFunctionName resolves against a const abi', () => {
   expectTypeOf<ContractFunctionName<typeof trc20Abi>>().toEqualTypeOf<
     'balanceOf' | 'transfer'
   >()
+})
+
+test('root barrel exposes the client / transport / chain type surface', () => {
+  const client = createPublicClient({ chain: nile, transport: http() })
+  // Client carries the read action set and a wrapped request fn.
+  expectTypeOf(client).toMatchTypeOf<PublicClient>()
+  expectTypeOf(client).toMatchTypeOf<Client>()
+  expectTypeOf(client.request).toEqualTypeOf<TronRequestFn>()
+  expectTypeOf(client.readContract).toBeFunction()
+  expectTypeOf(client.getBalance).toBeFunction()
+  // Chain / Transport are re-exported as types.
+  expectTypeOf(nile).toMatchTypeOf<Chain>()
+  expectTypeOf(http).returns.toMatchTypeOf<Transport>()
 })

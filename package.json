@@ -158,6 +158,12 @@
       "import": "{ generatePrivateKey }"
     },
     {
+      "name": "import { createPublicClient, http } from '@tronweb3/omni' (esm)",
+      "path": "./src/_esm/index.js",
+      "limit": "32 kB",
+      "import": "{ createPublicClient, http }"
+    },
+    {
       "name": "import { privateKeyToAccount } from '@tronweb3/omni' (esm)",
       "path": "./src/_esm/index.js",
       "limit": "25 kB",
@@ -178,6 +184,7 @@
       "**/*.test.ts",
       "**/*.test-d.ts",
       "src/errors/utils.ts",
+      "src/actions/utils/normalizeResponse.ts",
       "src/utils/transaction/contracts/**",
       "src/utils/transaction/protobuf/**"
     ],

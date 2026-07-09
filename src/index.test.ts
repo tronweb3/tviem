@@ -56,3 +56,39 @@ test('accounts barrel exposes privateKeyToAddress', () => {
     ),
   ).toBe('TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC')
 })
+
+test('root barrel exposes chains and defineChain', () => {
+  expect(mod.mainnet.id).toBe(728126428)
+  expect(mod.nile.id).toBe(3448148188)
+  expect(mod.shasta.id).toBe(2494104990)
+  expect(typeof mod.defineChain).toBe('function')
+  expect(mod.nile.rpcUrls.default.full.http.length).toBeGreaterThan(0)
+})
+
+test('root barrel wires the read-path client (createPublicClient + http)', () => {
+  const client = mod.createPublicClient({
+    chain: mod.nile,
+    transport: mod.http(),
+  })
+  expect(client.key).toBe('public')
+  expect(client.chain?.id).toBe(3448148188)
+  // Read action set is bound onto the Client.
+  for (const name of [
+    'getBalance',
+    'getBlock',
+    'getNowBlock',
+    'getTransactionInfo',
+    'getChainParameters',
+    'readContract',
+    'waitForTransactionReceipt',
+  ] as const)
+    expect(typeof client[name]).toBe('function')
+})
+
+test('root barrel exposes createTransport / createWalletClient / node errors', () => {
+  expect(typeof mod.createTransport).toBe('function')
+  expect(typeof mod.createWalletClient).toBe('function')
+  expect(typeof mod.createClient).toBe('function')
+  expect(new mod.TronNodeError('boom')).toBeInstanceOf(mod.BaseError)
+  expect(new mod.AccountNotFoundError()).toBeInstanceOf(mod.BaseError)
+})
