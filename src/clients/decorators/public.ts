@@ -8,6 +8,11 @@ import {
   estimateEnergy,
 } from '../../actions/public/estimateEnergy.js'
 import {
+  type GetAccountResourcesParameters,
+  type GetAccountResourcesReturnType,
+  getAccountResources,
+} from '../../actions/public/getAccountResources.js'
+import {
   type GetBalanceParameters,
   type GetBalanceReturnType,
   getBalance,
@@ -48,6 +53,10 @@ export type PublicActions = {
   getBalance: (
     parameters: GetBalanceParameters,
   ) => Promise<GetBalanceReturnType>
+  /** Reads an account's resource (bandwidth/energy/TRON-power) usage/limits. */
+  getAccountResources: (
+    parameters: GetAccountResourcesParameters,
+  ) => Promise<GetAccountResourcesReturnType>
   /** Fetches a block by number. */
   getBlock: (parameters: GetBlockParameters) => Promise<GetBlockReturnType>
   /** Fetches the latest (unconfirmed) block. */
@@ -81,6 +90,8 @@ export function publicActions(client: Client): PublicActions {
   return {
     getBalance: (parameters) =>
       getAction(client, getBalance, 'getBalance')(parameters),
+    getAccountResources: (parameters) =>
+      getAction(client, getAccountResources, 'getAccountResources')(parameters),
     getBlock: (parameters) =>
       getAction(client, getBlock, 'getBlock')(parameters),
     getNowBlock: () =>
