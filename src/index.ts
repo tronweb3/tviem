@@ -8,6 +8,33 @@ export type {
   AbiStateMutability,
 } from 'abitype'
 // biome-ignore lint/performance/noBarrelFile: entrypoint module
+export {
+  type GeneratePrivateKeyErrorType,
+  generatePrivateKey,
+} from './accounts/generatePrivateKey.js'
+export {
+  type PrivateKeyToAccountErrorType,
+  privateKeyToAccount,
+} from './accounts/privateKeyToAccount.js'
+export { type ToAccountErrorType, toAccount } from './accounts/toAccount.js'
+export type {
+  AccountSignMessageParameters,
+  AccountSignParameters,
+  AccountSource,
+  SignableTransaction,
+  TronAccount,
+  TronCustomAccount,
+  TronCustomSource,
+  TronLocalAccount,
+} from './accounts/types.js'
+export {
+  type PrivateKeyToAddressErrorType,
+  privateKeyToAddress,
+} from './accounts/utils/privateKeyToAddress.js'
+export {
+  type SignTransactionErrorType,
+  signTransaction,
+} from './accounts/utils/signTransaction.js'
 export { trxUnits } from './constants/unit.js'
 export {
   AbiConstructorNotFoundError,
@@ -148,7 +175,6 @@ export type {
   Hex,
   LogTopic,
   SignableMessage,
-  Signature,
 } from './types/misc.js'
 export type {
   Assign,
@@ -402,6 +428,35 @@ export {
   type ToFunctionSelectorErrorType,
   toFunctionSelector,
 } from './utils/hash/toFunctionSelector.js'
+export {
+  type HashMessageErrorType,
+  hashMessage,
+  presignMessagePrefix,
+} from './utils/signature/hashMessage.js'
+export {
+  type SerializeSignatureErrorType,
+  type Signature,
+  type SignErrorType,
+  type SignParameters,
+  serializeSignature,
+  sign,
+} from './utils/signature/sign.js'
+export {
+  type SignMessageErrorType,
+  type SignMessageParameters,
+  signMessage,
+} from './utils/signature/signMessage.js'
+export {
+  type RecoverMessageAddressErrorType,
+  type RecoverMessageAddressParameters,
+  type RecoverPublicKeyErrorType,
+  recoverMessageAddress,
+  recoverPublicKey,
+  type SignatureInput,
+  type VerifyMessageErrorType,
+  type VerifyMessageParameters,
+  verifyMessage,
+} from './utils/signature/verifyMessage.js'
 export {
   type DecodeRawDataErrorType,
   decodeRawData,

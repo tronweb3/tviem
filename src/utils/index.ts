@@ -212,6 +212,35 @@ export {
   toFunctionSelector,
 } from './hash/toFunctionSelector.js'
 export {
+  type HashMessageErrorType,
+  hashMessage,
+  presignMessagePrefix,
+} from './signature/hashMessage.js'
+export {
+  type SerializeSignatureErrorType,
+  type Signature,
+  type SignErrorType,
+  type SignParameters,
+  serializeSignature,
+  sign,
+} from './signature/sign.js'
+export {
+  type SignMessageErrorType,
+  type SignMessageParameters,
+  signMessage,
+} from './signature/signMessage.js'
+export {
+  type RecoverMessageAddressErrorType,
+  type RecoverMessageAddressParameters,
+  type RecoverPublicKeyErrorType,
+  recoverMessageAddress,
+  recoverPublicKey,
+  type SignatureInput,
+  type VerifyMessageErrorType,
+  type VerifyMessageParameters,
+  verifyMessage,
+} from './signature/verifyMessage.js'
+export {
   type DecodeRawDataErrorType,
   decodeRawData,
 } from './transaction/decodeRawData.js'
