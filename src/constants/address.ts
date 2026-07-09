@@ -15,8 +15,6 @@ export const zeroAddress: Address = 'T9yD14Nj9j7xAB4dbGeiX9h8unkKHxuWwb'
  * `feeLimit` is part of the signed `raw_data`, so it must be chosen at build
  * time; a write may override it (e.g. after `estimateEnergy`).
  *
- * @public
- * @remarks Consumed by the T5 write pipeline (`writeContract`); tagged
- * `@public` so knip does not flag it before the write path is wired.
+ * @remarks Consumed by the write pipeline (`writeContract`).
  */
 export const defaultFeeLimit = 150_000_000n

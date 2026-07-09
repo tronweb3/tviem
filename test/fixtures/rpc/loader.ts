@@ -63,8 +63,10 @@ export const rpcFixtureNames = [
   'gettransactioninfobyid.success',
   'gettransactioninfobyid.reverted',
   'triggerconstantcontract.trc20-balanceof',
+  'broadcasttransaction.ok',
   'errors/contract-validate',
   'errors/tapos-expired',
+  'errors/bandwidth-insufficient',
 ] as const
 
 function readJson<request = unknown, response = unknown>(

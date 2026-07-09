@@ -1,6 +1,12 @@
 // Structure vendored (de-branded) and adapted for TRON: the action set is
 // TRON's read pipeline and each method is bound through `getAction` so a
 // consumer can override any action on the Client.
+
+import {
+  type EstimateEnergyParameters,
+  type EstimateEnergyReturnType,
+  estimateEnergy,
+} from '../../actions/public/estimateEnergy.js'
 import {
   type GetBalanceParameters,
   type GetBalanceReturnType,
@@ -56,6 +62,10 @@ export type PublicActions = {
   readContract: (
     parameters: ReadContractParameters,
   ) => Promise<ReadContractReturnType>
+  /** Estimates the energy a contract call would consume. */
+  estimateEnergy: (
+    parameters: EstimateEnergyParameters,
+  ) => Promise<EstimateEnergyReturnType>
   /** Polls for a transaction's receipt. */
   waitForTransactionReceipt: (
     parameters: WaitForTransactionReceiptParameters,
@@ -85,6 +95,8 @@ export function publicActions(client: Client): PublicActions {
       )(undefined as never),
     readContract: (parameters) =>
       getAction(client, readContract, 'readContract')(parameters),
+    estimateEnergy: (parameters) =>
+      getAction(client, estimateEnergy, 'estimateEnergy')(parameters),
     waitForTransactionReceipt: (parameters) =>
       getAction(
         client,

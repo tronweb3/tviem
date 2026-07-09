@@ -1,0 +1,17 @@
+{
+  "endpoint": "broadcasttransaction",
+  "description": "Broadcast rejected because the account has insufficient bandwidth/energy. Hand-crafted form-3 rejection (`result:false` + `code` + hex `message`) — the transport normalizer decodes it to a `TronBroadcastError`. Message hex decodes to 'Account resource insufficient error.'.",
+  "request": {
+    "node": "full",
+    "path": "broadcasttransaction",
+    "method": "POST"
+  },
+  "response": {
+    "result": false,
+    "code": "BANDWIDTH_ERROR",
+    "message": "4163636f756e74207265736f7572636520696e73756666696369656e74206572726f722e",
+    "txid": "407ec75dad4545890e5788ef78555ecab9dc72d56df29da4ebbd508022bdbaba"
+  },
+  "recordedAt": "2026-07-09T00:00:00.000Z",
+  "source": "hand-crafted"
+}

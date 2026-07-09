@@ -1,5 +1,7 @@
 import { expect, test } from 'vitest'
 
+import { rpc } from '../../test/fixtures/rpc/loader.js'
+import { createMockTransport } from '../../test/mock/createMockTransport.js'
 import { AccountNotFoundError } from '../errors/rpc.js'
 import { createWalletClient } from './createWalletClient.js'
 import {
@@ -47,20 +49,35 @@ test('sendTrx throws AccountNotFoundError when no account is available', async (
   )
 })
 
-test('sendTrx passes the account guard when the client hoists an account', async () => {
-  const client = createWalletClient({ account: pk1, transport })
-  // The T5 stub throws "not implemented"; reaching it proves the account guard
-  // passed (a missing account would have thrown AccountNotFoundError first).
-  await expect(client.sendTrx({ to, amount: 1n })).rejects.toThrow(
-    /not implemented/,
-  )
+test('sendTrx runs the full pipeline when the client hoists an account', async () => {
+  // A hoisted account passes the guard and the local build → sign → broadcast
+  // pipeline completes, returning a locally computed txID.
+  const { transport: mock } = createMockTransport({
+    responses: {
+      getnowblock: { response: rpc('getnowblock.fixed') },
+      broadcasttransaction: { response: rpc('broadcasttransaction.ok') },
+    },
+  })
+  const client = createWalletClient({ account: pk1, transport: mock })
+  const { txID } = await client.sendTrx({ to, amount: 1n, now: 1700000000000n })
+  expect(txID).toMatch(/^[0-9a-f]{64}$/)
 })
 
 test('a per-call account satisfies the guard on an account-less client', async () => {
-  const client = createWalletClient({ transport })
-  await expect(
-    client.sendTrx({ account: pk1, to, amount: 1n }),
-  ).rejects.toThrow(/not implemented/)
+  const { transport: mock } = createMockTransport({
+    responses: {
+      getnowblock: { response: rpc('getnowblock.fixed') },
+      broadcasttransaction: { response: rpc('broadcasttransaction.ok') },
+    },
+  })
+  const client = createWalletClient({ transport: mock })
+  const { txID } = await client.sendTrx({
+    account: pk1,
+    to,
+    amount: 1n,
+    now: 1700000000000n,
+  })
+  expect(txID).toMatch(/^[0-9a-f]{64}$/)
 })
 
 test('writeContract throws AccountNotFoundError when no account is available', async () => {

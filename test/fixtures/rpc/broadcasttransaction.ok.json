@@ -1,0 +1,22 @@
+{
+  "endpoint": "broadcasttransaction",
+  "description": "Successful broadcast acknowledgement. The node echoes a `txid` that is DELIBERATELY not the transaction's real id (all zeros) to prove the write pipeline returns the locally computed txID, never the node's. Request body derived from the canonical transfer gold vectors (tx/transfer-contract[0] + sig/transaction[0]).",
+  "request": {
+    "node": "full",
+    "path": "broadcasttransaction",
+    "method": "POST",
+    "body": {
+      "txID": "407ec75dad4545890e5788ef78555ecab9dc72d56df29da4ebbd508022bdbaba",
+      "raw_data_hex": "0a0212342208010203040506070840e0a499ffbc315a67080112630a2d747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e5472616e73666572436f6e747261637412320a15417e5f4552091a69125d5dfcb7b8c2659029395bdf121541928c9af0651632157ef27a2cf17ca72c575a4d2118c0843d7080d095ffbc31",
+      "signature": [
+        "4d6f1e54ea593e5118c2d1b3701a4cab4d5235a418e9e46dba8c5f033bc4af0f6c04a08241de23936dffdedc869eac45533f9479a6bf372a38382b168b65ae001c"
+      ]
+    }
+  },
+  "response": {
+    "result": true,
+    "txid": "0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "recordedAt": "2026-07-09T00:00:00.000Z",
+  "source": "derived-from-tx-fixture"
+}
