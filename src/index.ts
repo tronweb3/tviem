@@ -35,7 +35,19 @@ export {
   type SignTransactionErrorType,
   signTransaction,
 } from './accounts/utils/signTransaction.js'
-// Read (public) actions — also available via the `@tronweb3/omni/actions` subpath.
+// Contract facade + read (public) & write (wallet) actions — also available via
+// the `@tronweb3/omni/actions` subpath.
+export {
+  type GetContractErrorType,
+  type GetContractParameters,
+  type GetContractReturnType,
+  getContract,
+} from './actions/getContract.js'
+export {
+  type EstimateEnergyParameters,
+  type EstimateEnergyReturnType,
+  estimateEnergy,
+} from './actions/public/estimateEnergy.js'
 export {
   type GetBalanceParameters,
   type GetBalanceReturnType,
@@ -72,6 +84,22 @@ export {
   type WaitForTransactionReceiptReturnType,
   waitForTransactionReceipt,
 } from './actions/public/waitForTransactionReceipt.js'
+// Write (wallet) actions — local build → sign → broadcast pipeline.
+export {
+  type BroadcastTransactionParameters,
+  type BroadcastTransactionReturnType,
+  broadcastTransaction,
+} from './actions/wallet/broadcastTransaction.js'
+export {
+  type SendTrxParameters,
+  type SendTrxReturnType,
+  sendTrx,
+} from './actions/wallet/sendTrx.js'
+export {
+  type WriteContractParameters,
+  type WriteContractReturnType,
+  writeContract,
+} from './actions/wallet/writeContract.js'
 export {
   type DefineChainReturnType,
   defineChain,
@@ -80,9 +108,7 @@ export { mainnet } from './chains/definitions/mainnet.js'
 export { nile } from './chains/definitions/nile.js'
 export { shasta } from './chains/definitions/shasta.js'
 // ---------------------------------------------------------------------------
-// v0.1b — clients / transports / chains / read actions (read-path slice)
-// Write (wallet) actions — sendTrx / writeContract / broadcastTransaction —
-// are T5 stubs and intentionally NOT re-exported here yet.
+// v0.1b — clients / transports / chains
 // ---------------------------------------------------------------------------
 export {
   type Client,
@@ -230,6 +256,10 @@ export {
   UnknownNodeError,
   type UnknownNodeErrorType,
 } from './errors/node.js'
+export {
+  NotImplementedError,
+  type NotImplementedErrorType,
+} from './errors/notImplemented.js'
 export {
   HttpRequestError,
   type HttpRequestErrorType,

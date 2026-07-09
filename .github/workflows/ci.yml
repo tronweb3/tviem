@@ -74,8 +74,9 @@ jobs:
         run: pnpm test -- --run
 
   # Live sign+broadcast smoke against the Nile testnet. Gated to `main` and
-  # reads a funded key from secrets. Placeholder until v0.1b ships transport +
-  # actions; kept here so the job shape / secret wiring is in place.
+  # reads a funded key from secrets. The `*.e2e.test.ts` suites `skipIf` no
+  # `NILE_E2E_PRIVATE_KEY` is present, so this job is an inert placeholder until
+  # a funded secret is wired — the job shape / secret plumbing is in place.
   e2e-nile:
     name: E2E (Nile testnet)
     needs: [build, types, test]
@@ -92,6 +93,6 @@ jobs:
         with:
           timeout_minutes: 10
           max_attempts: 3
-          command: 'echo "TODO(v0.1b): Nile sign+broadcast e2e smoke"'
+          command: 'pnpm test:e2e --run'
         env:
-          TRON_NILE_PRIVATE_KEY: ${{ secrets.TRON_NILE_PRIVATE_KEY }}
+          NILE_E2E_PRIVATE_KEY: ${{ secrets.NILE_E2E_PRIVATE_KEY }}

@@ -1,8 +1,16 @@
-// Read (public) action surface. The write (wallet) actions — `sendTrx`,
-// `writeContract`, `broadcastTransaction` — are intentionally NOT re-exported
-// yet: they are T5 stubs (throw `NotImplemented`) and are wired into this
-// barrel and the wallet decorator once T5 lands.
+// Read (public) + write (wallet) action surface, plus the `getContract` facade.
 // biome-ignore lint/performance/noBarrelFile: entrypoint module
+export {
+  type GetContractErrorType,
+  type GetContractParameters,
+  type GetContractReturnType,
+  getContract,
+} from './getContract.js'
+export {
+  type EstimateEnergyParameters,
+  type EstimateEnergyReturnType,
+  estimateEnergy,
+} from './public/estimateEnergy.js'
 export {
   type GetBalanceParameters,
   type GetBalanceReturnType,
@@ -39,3 +47,18 @@ export {
   type WaitForTransactionReceiptReturnType,
   waitForTransactionReceipt,
 } from './public/waitForTransactionReceipt.js'
+export {
+  type BroadcastTransactionParameters,
+  type BroadcastTransactionReturnType,
+  broadcastTransaction,
+} from './wallet/broadcastTransaction.js'
+export {
+  type SendTrxParameters,
+  type SendTrxReturnType,
+  sendTrx,
+} from './wallet/sendTrx.js'
+export {
+  type WriteContractParameters,
+  type WriteContractReturnType,
+  writeContract,
+} from './wallet/writeContract.js'

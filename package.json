@@ -126,6 +126,7 @@
     "check:types": "tsc --noEmit --project ./tsconfig.json",
     "check:unused": "pnpm clean && knip --production",
     "test": "vitest",
+    "test:e2e": "vitest --project e2e",
     "test:typecheck": "vitest --typecheck.only",
     "test:build": "publint --strict . && attw --pack . --ignore-rules false-esm",
     "size": "size-limit",
@@ -164,6 +165,18 @@
       "import": "{ createPublicClient, http }"
     },
     {
+      "name": "import { createWalletClient, http } from '@tronweb3/omni' (esm)",
+      "path": "./src/_esm/index.js",
+      "limit": "32 kB",
+      "import": "{ createWalletClient, http }"
+    },
+    {
+      "name": "import { getContract } from '@tronweb3/omni' (esm)",
+      "path": "./src/_esm/index.js",
+      "limit": "32 kB",
+      "import": "{ getContract }"
+    },
+    {
       "name": "import { privateKeyToAccount } from '@tronweb3/omni' (esm)",
       "path": "./src/_esm/index.js",
       "limit": "25 kB",
@@ -183,8 +196,8 @@
     "ignore": [
       "**/*.test.ts",
       "**/*.test-d.ts",
+      "**/*.e2e.test.ts",
       "src/errors/utils.ts",
-      "src/actions/utils/normalizeResponse.ts",
       "src/utils/transaction/contracts/**",
       "src/utils/transaction/protobuf/**"
     ],
