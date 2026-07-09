@@ -1,0 +1,40 @@
+{
+  "endpoint": "gettransactioninfobyid",
+  "description": "Hand-crafted successful TRC20 transfer receipt (SolidityNode). receipt.result SUCCESS -> status success. One Transfer(address,address,uint256) log: contract 41928c9af0651632157ef27a2cf17ca72c575a4d21 -> Base58 TPL66VK2gCXNCD7EJg9pgJRfqcRazjhUZY; topics/data are bare hex and must come out 0x-prefixed. contract_address maps 41-hex -> Base58.",
+  "request": {
+    "node": "solidity",
+    "path": "gettransactioninfobyid",
+    "method": "POST",
+    "body": {
+      "value": "407ec75dad4545890e5788ef78555ecab9dc72d56df29da4ebbd508022bdbaba"
+    }
+  },
+  "response": {
+    "id": "407ec75dad4545890e5788ef78555ecab9dc72d56df29da4ebbd508022bdbaba",
+    "blockNumber": 4660,
+    "blockTimeStamp": 1700000000000,
+    "contractResult": [
+      "0000000000000000000000000000000000000000000000000000000000000001"
+    ],
+    "contract_address": "41928c9af0651632157ef27a2cf17ca72c575a4d21",
+    "receipt": {
+      "energy_usage_total": 13000,
+      "energy_fee": 2730000,
+      "net_usage": 345,
+      "result": "SUCCESS"
+    },
+    "log": [
+      {
+        "address": "41928c9af0651632157ef27a2cf17ca72c575a4d21",
+        "topics": [
+          "ddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef",
+          "0000000000000000000000007e5f4552091a69125d5dfcb7b8c2659029395bdf",
+          "000000000000000000000000928c9af0651632157ef27a2cf17ca72c575a4d21"
+        ],
+        "data": "00000000000000000000000000000000000000000000000000000000000f4240"
+      }
+    ]
+  },
+  "recordedAt": "2026-07-09T00:00:00.000Z",
+  "source": "hand-crafted"
+}

@@ -1,0 +1,25 @@
+{
+  "endpoint": "triggersmartcontract",
+  "description": "HTTP-200 body carrying a build-time contract validation rejection (Form 2: { result: { code, message } }, message hex-encoded). Normalizes to TronContractValidateError with the decoded message in shortMessage.",
+  "request": {
+    "node": "full",
+    "path": "triggersmartcontract",
+    "method": "POST",
+    "body": {
+      "owner_address": "417e5f4552091a69125d5dfcb7b8c2659029395bdf",
+      "contract_address": "41a614f803b6fd780986a42c78ec9c7f77e6ded13c",
+      "function_selector": "transfer(address,uint256)",
+      "parameter": "",
+      "fee_limit": 15000000000,
+      "call_value": 0
+    }
+  },
+  "response": {
+    "result": {
+      "code": "CONTRACT_VALIDATE_ERROR",
+      "message": "56616c6964617465205472616e73666572436f6e7472616374206572726f722c2062616c616e6365206973206e6f742073756666696369656e74"
+    }
+  },
+  "recordedAt": "2026-07-09T00:00:00.000Z",
+  "source": "hand-crafted"
+}

@@ -1,0 +1,31 @@
+{
+  "endpoint": "gettransactioninfobyid",
+  "description": "Hand-crafted reverted TRC20 transfer receipt (SolidityNode). receipt.result REVERT and top-level result FAILED -> status reverted. contractResult carries the Error(string) revert payload (selector 08c379a0). No logs.",
+  "request": {
+    "node": "solidity",
+    "path": "gettransactioninfobyid",
+    "method": "POST",
+    "body": {
+      "value": "2e8b73373f830f8a100b11291c5e169a079552c212eb94b6c722247320adb698"
+    }
+  },
+  "response": {
+    "id": "2e8b73373f830f8a100b11291c5e169a079552c212eb94b6c722247320adb698",
+    "blockNumber": 4661,
+    "blockTimeStamp": 1700000003000,
+    "contractResult": [
+      "08c379a00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000001445524332303a20696e73756666696369656e742062616c616e6365000000000000"
+    ],
+    "contract_address": "41928c9af0651632157ef27a2cf17ca72c575a4d21",
+    "receipt": {
+      "energy_usage_total": 5000,
+      "energy_fee": 1050000,
+      "net_usage": 345,
+      "result": "REVERT"
+    },
+    "result": "FAILED",
+    "resMessage": "4552433230"
+  },
+  "recordedAt": "2026-07-09T00:00:00.000Z",
+  "source": "hand-crafted"
+}

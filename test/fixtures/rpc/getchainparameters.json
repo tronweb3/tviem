@@ -1,0 +1,27 @@
+{
+  "endpoint": "getchainparameters",
+  "description": "Hand-crafted, deterministic subset of the on-chain dynamic parameters, in node key/value form. `getEnergyFee` and `getTransactionFee` drive resource pricing; absent `value` fields (as returned by the node for zero-valued parameters) map to 0.",
+  "request": {
+    "node": "full",
+    "path": "getchainparameters",
+    "method": "POST",
+    "body": {}
+  },
+  "response": {
+    "chainParameter": [
+      { "key": "getMaxCpuTimeOfOneTx", "value": 80 },
+      { "key": "getTransactionFee", "value": 1000 },
+      { "key": "getEnergyFee", "value": 210 },
+      { "key": "getCreateAccountFee", "value": 100000 },
+      { "key": "getCreateNewAccountFeeInSystemContract", "value": 1000000 },
+      { "key": "getFreeNetLimit", "value": 600 },
+      { "key": "getTotalEnergyCurrentLimit", "value": 180000000000 },
+      { "key": "getAllowSameTokenName", "value": 1 },
+      { "key": "getAllowTvmTransferTrc10", "value": 1 },
+      { "key": "getMaxFeeLimit", "value": 15000000000 },
+      { "key": "getAllowAdaptiveEnergy" }
+    ]
+  },
+  "recordedAt": "2026-07-09T00:00:00.000Z",
+  "source": "hand-crafted"
+}

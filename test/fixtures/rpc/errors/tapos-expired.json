@@ -1,0 +1,22 @@
+{
+  "endpoint": "broadcasttransaction",
+  "description": "HTTP-200 body carrying a broadcast rejection for an expired transaction (Form 3: { result: false, code, message } with an optional txid, message hex-encoded). Normalizes to TronBroadcastError carrying the txid and the decoded message.",
+  "request": {
+    "node": "full",
+    "path": "broadcasttransaction",
+    "method": "POST",
+    "body": {
+      "raw_data_hex": "0a021234220801020304050607084080d0dbc3f43150808098d6c3f431",
+      "txID": "407ec75dad4545890e5788ef78555ecab9dc72d56df29da4ebbd508022bdbaba",
+      "signature": ["00"]
+    }
+  },
+  "response": {
+    "result": false,
+    "code": "TRANSACTION_EXPIRATION_ERROR",
+    "txid": "407ec75dad4545890e5788ef78555ecab9dc72d56df29da4ebbd508022bdbaba",
+    "message": "5472616e73616374696f6e2065787069726564"
+  },
+  "recordedAt": "2026-07-09T00:00:00.000Z",
+  "source": "hand-crafted"
+}

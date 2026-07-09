@@ -1,0 +1,25 @@
+{
+  "endpoint": "getnowblock",
+  "description": "Deterministic latest block pinned for zero-drift TaPoS. Block 4660 (0x1234) with a blockID whose bytes 8..16 are 0102030405060708 yields ref_block_bytes=1234 and ref_block_hash=0102030405060708, matching the canonical transfer transaction fixture (tx/transfer-contract.json).",
+  "request": {
+    "node": "full",
+    "path": "getnowblock",
+    "method": "GET"
+  },
+  "response": {
+    "blockID": "00000000000012340102030405060708090a0b0c0d0e0f101112131415161718",
+    "block_header": {
+      "raw_data": {
+        "number": 4660,
+        "txTrieRoot": "0000000000000000000000000000000000000000000000000000000000000000",
+        "witness_address": "41928c9af0651632157ef27a2cf17ca72c575a4d21",
+        "parentHash": "00000000000012331112131415161718090a0b0c0d0e0f100102030405060708",
+        "version": 28,
+        "timestamp": 1700000000000
+      },
+      "witness_signature": "00"
+    }
+  },
+  "recordedAt": "2026-07-09T00:00:00.000Z",
+  "source": "derived-from-tx-fixture"
+}

@@ -1,0 +1,22 @@
+{
+  "endpoint": "getaccount",
+  "description": "Hand-crafted getaccount (SolidityNode) response for the pk=1 address TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC (41-hex 417e5f4552091a69125d5dfcb7b8c2659029395bdf). Balance 1234567890 SUN. The request body address is the 41-hex form (Base58 -> 41-hex boundary).",
+  "request": {
+    "node": "solidity",
+    "path": "getaccount",
+    "method": "POST",
+    "body": {
+      "address": "417e5f4552091a69125d5dfcb7b8c2659029395bdf"
+    }
+  },
+  "response": {
+    "address": "417e5f4552091a69125d5dfcb7b8c2659029395bdf",
+    "balance": 1234567890,
+    "create_time": 1700000000000,
+    "account_resource": {
+      "energy_window_size": 28800
+    }
+  },
+  "recordedAt": "2026-07-09T00:00:00.000Z",
+  "source": "hand-crafted"
+}

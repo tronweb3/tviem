@@ -1,0 +1,29 @@
+{
+  "endpoint": "getblockbynum",
+  "description": "Hand-crafted getblockbynum (FullNode) response for block 4660. Witness address 41928c9af0651632157ef27a2cf17ca72c575a4d21 maps to Base58 TPL66VK2gCXNCD7EJg9pgJRfqcRazjhUZY. The request body num is the plain integer block number.",
+  "request": {
+    "node": "full",
+    "path": "getblockbynum",
+    "method": "POST",
+    "body": {
+      "num": 4660
+    }
+  },
+  "response": {
+    "blockID": "00000000000012340102030405060708090a0b0c0d0e0f101112131415161718",
+    "block_header": {
+      "raw_data": {
+        "number": 4660,
+        "txTrieRoot": "0000000000000000000000000000000000000000000000000000000000000000",
+        "witness_address": "41928c9af0651632157ef27a2cf17ca72c575a4d21",
+        "parentHash": "00000000000012331112131415161718090a0b0c0d0e0f100102030405060708",
+        "version": 28,
+        "timestamp": 1700000000000
+      },
+      "witness_signature": "00"
+    },
+    "transactions": []
+  },
+  "recordedAt": "2026-07-09T00:00:00.000Z",
+  "source": "hand-crafted"
+}
