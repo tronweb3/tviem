@@ -15,7 +15,10 @@
 import { expect, test } from 'vitest'
 import { rpc } from '../../../test/fixtures/rpc/loader.js'
 import { loadSigTransactionFixtures } from '../../../test/fixtures/sig/loader.js'
-import { loadTxFixtureFile } from '../../../test/fixtures/tx/loader.js'
+import {
+  loadTxFixtureFile,
+  type TxFixture,
+} from '../../../test/fixtures/tx/loader.js'
 import { createMockTransport } from '../../../test/mock/createMockTransport.js'
 import { privateKeyToAccount } from '../../accounts/privateKeyToAccount.js'
 import { createWalletClient } from '../../clients/createWalletClient.js'
@@ -171,4 +174,226 @@ test.each(
   expect(body.txID).toBe(gold.txID)
   expect(body.signature).toEqual([goldSig])
   expect(body.raw_data.feeLimit).toBe(feeLimit)
+})
+
+// ---------------------------------------------------------------------------
+// v0.1b-② native staking / resource / governance / TRC10 write actions.
+//
+// Each of the nine actions (freeze / unfreeze / cancelAll / withdrawExpire /
+// delegate / undelegate / vote / withdraw / sendTrc10) builds the SAME shape of
+// transaction as sendTrx — only the wrapped contract differs — through the
+// shared buildAndBroadcast pipeline. Every reproducible gold vector's
+// `owner_address` is pk=1, so for each we assert the locally built
+// raw_data_hex / txID AND the appended pk=1 signature equal the v0.1a gold
+// byte-for-byte: proof the v0.1b write actions have zero drift from the Track D
+// codecs / signer they sit on top of.
+// ---------------------------------------------------------------------------
+
+// Non-owner addresses the gold vectors encode (41-hex bodies verified against
+// the fixtures): receiver 412b5ad5…d6cf, witness2 41a614f8…d13c.
+const receiver = 'TDvSsdrNM5eeXNL3czpa6AxLDHZA9nwe9K' as Address
+const witness2 = 'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t' as Address
+
+const freezeCases = loadTxFixtureFile('freeze-balance-v2-contract.json')
+const unfreezeCases = loadTxFixtureFile('unfreeze-balance-v2-contract.json')
+const cancelAllCases = loadTxFixtureFile('cancel-all-unfreeze-v2-contract.json')
+const withdrawExpireCases = loadTxFixtureFile(
+  'withdraw-expire-unfreeze-contract.json',
+)
+const delegateCases = loadTxFixtureFile('delegate-resource-contract.json')
+const undelegateCases = loadTxFixtureFile('un-delegate-resource-contract.json')
+const voteCases = loadTxFixtureFile('vote-witness-contract.json')
+const withdrawBalanceCases = loadTxFixtureFile('withdraw-balance-contract.json')
+const transferAssetCases = loadTxFixtureFile('transfer-asset-contract.json')
+
+/** Resolves a fixture case by its `name`, failing loudly if renamed/removed. */
+function goldByName(cases: TxFixture[], name: string): TxFixture {
+  const gold = cases.find((c) => c.name === name)
+  if (!gold) throw new Error(`missing fixture case: ${name}`)
+  return gold
+}
+
+/** A pk=1 wallet client over the fixed-block / broadcast-ack mock. */
+function makeClient(transport: ReturnType<typeof writeMock>['transport']) {
+  return createWalletClient({ account: pk1, transport })
+}
+type WriteClient = ReturnType<typeof makeClient>
+
+/**
+ * Drives one write action against a fresh mock and asserts the broadcast body
+ * (bytes + txID + pk=1 signature) equals the loaded gold vector byte-for-byte,
+ * and that the pipeline hit exactly getnowblock → broadcasttransaction.
+ */
+async function driveAndAssertGold(
+  gold: TxFixture,
+  invoke: (client: WriteClient) => Promise<{ txID: string }>,
+) {
+  const goldSig = sigByTxId.get(gold.txID)
+  expect(goldSig, `sig fixture for "${gold.name}"`).toBeDefined()
+
+  const { transport, calls, bodyOf } = writeMock()
+  const client = makeClient(transport)
+
+  const { txID } = await invoke(client)
+
+  // Returned id is the LOCAL txID and equals the gold vector.
+  expect(txID).toBe(gold.txID)
+  expect(calls.map((c) => c.path)).toEqual([
+    'getnowblock',
+    'broadcasttransaction',
+  ])
+
+  const body = bodyOf('broadcasttransaction') as BroadcastBody
+  // Zero-drift: locally built bytes === v0.1a tx gold; sig === v0.1a sig gold.
+  expect(body.raw_data_hex).toBe(gold.rawDataHex)
+  expect(body.txID).toBe(gold.txID)
+  expect(body.signature).toEqual([goldSig])
+}
+
+// One row per reproducible native-action gold vector. `invoke` declares the
+// action's PARAMS; `gold` is the vector its output must reproduce. All nine
+// v0.1b-② actions are exercised (freeze/unfreeze/delegate each carry two rows).
+const nativeCases: {
+  label: string
+  gold: TxFixture
+  invoke: (client: WriteClient) => Promise<{ txID: string }>
+}[] = [
+  {
+    label: 'freezeBalanceV2 BANDWIDTH',
+    gold: goldByName(freezeCases, 'freeze v2 BANDWIDTH'),
+    invoke: (c) =>
+      c.freezeBalanceV2({
+        frozenBalance: 1000000n,
+        resource: 'BANDWIDTH',
+        now,
+      }),
+  },
+  {
+    label: 'freezeBalanceV2 ENERGY',
+    gold: goldByName(freezeCases, 'freeze v2 ENERGY'),
+    invoke: (c) =>
+      c.freezeBalanceV2({ frozenBalance: 2000000n, resource: 'ENERGY', now }),
+  },
+  {
+    label: 'unfreezeBalanceV2 BANDWIDTH',
+    gold: goldByName(unfreezeCases, 'unfreeze v2 BANDWIDTH'),
+    invoke: (c) =>
+      c.unfreezeBalanceV2({
+        unfreezeBalance: 500000n,
+        resource: 'BANDWIDTH',
+        now,
+      }),
+  },
+  {
+    label: 'unfreezeBalanceV2 ENERGY',
+    gold: goldByName(unfreezeCases, 'unfreeze v2 ENERGY'),
+    invoke: (c) =>
+      c.unfreezeBalanceV2({
+        unfreezeBalance: 250000n,
+        resource: 'ENERGY',
+        now,
+      }),
+  },
+  {
+    label: 'cancelAllUnfreezeV2',
+    gold: goldByName(cancelAllCases, 'cancel all unfreeze v2'),
+    invoke: (c) => c.cancelAllUnfreezeV2({ now }),
+  },
+  {
+    label: 'withdrawExpireUnfreeze',
+    gold: goldByName(withdrawExpireCases, 'withdraw expired unfrozen balance'),
+    invoke: (c) => c.withdrawExpireUnfreeze({ now }),
+  },
+  {
+    label: 'delegateResource BANDWIDTH lock=false',
+    gold: goldByName(delegateCases, 'delegate BANDWIDTH lock=false'),
+    invoke: (c) =>
+      c.delegateResource({
+        receiverAddress: receiver,
+        balance: 1000000n,
+        resource: 'BANDWIDTH',
+        lock: false,
+        now,
+      }),
+  },
+  {
+    label: 'delegateResource ENERGY lock=true lock_period=86400',
+    gold: goldByName(
+      delegateCases,
+      'delegate ENERGY lock=true lock_period=86400',
+    ),
+    invoke: (c) =>
+      c.delegateResource({
+        receiverAddress: receiver,
+        balance: 2000000n,
+        resource: 'ENERGY',
+        lock: true,
+        lockPeriod: 86400n,
+        now,
+      }),
+  },
+  {
+    label: 'undelegateResource ENERGY',
+    gold: goldByName(undelegateCases, 'undelegate ENERGY'),
+    invoke: (c) =>
+      c.undelegateResource({
+        receiverAddress: receiver,
+        balance: 1000000n,
+        resource: 'ENERGY',
+        now,
+      }),
+  },
+  {
+    label: 'voteWitness (two witnesses)',
+    gold: goldByName(voteCases, 'vote for two witnesses'),
+    invoke: (c) =>
+      c.voteWitness({
+        votes: [
+          { voteAddress: receiver, voteCount: 5n },
+          { voteAddress: witness2, voteCount: 10n },
+        ],
+        now,
+      }),
+  },
+  {
+    label: 'withdrawBalance',
+    gold: goldByName(withdrawBalanceCases, 'withdraw block rewards'),
+    invoke: (c) => c.withdrawBalance({ now }),
+  },
+  {
+    label: 'sendTrc10 (asset_name UTF-8 id)',
+    gold: goldByName(
+      transferAssetCases,
+      'transfer-asset visible=true (asset_name UTF-8, Base58 addresses)',
+    ),
+    invoke: (c) =>
+      c.sendTrc10({ to: receiver, assetName: '1002000', amount: 1000n, now }),
+  },
+]
+
+test.each(
+  nativeCases,
+)('$label reproduces its gold vector byte-for-byte (bytes + txID + pk=1 sig)', async ({
+  gold,
+  invoke,
+}) => {
+  await driveAndAssertGold(gold, invoke)
+})
+
+// Cross-check the flex asset_name path: passing the 0x-hex form of "1002000"
+// must normalize to the IDENTICAL wire bytes as the UTF-8 id form above.
+test('sendTrc10 asset_name flex: 0x-hex form equals the UTF-8-id gold vector', async () => {
+  const gold = goldByName(
+    transferAssetCases,
+    'transfer-asset visible=false (asset_name ASCII-hex)',
+  )
+  await driveAndAssertGold(gold, (c) =>
+    // 0x31303032303030 === utf8("1002000"); both encode the same asset_name.
+    c.sendTrc10({
+      to: receiver,
+      assetName: '0x31303032303030',
+      amount: 1000n,
+      now,
+    }),
+  )
 })
