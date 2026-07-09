@@ -1,0 +1,88 @@
+// TRON-specific, clean-room implementation for @tronweb3/omni.
+import type { Address } from '../types/address.js'
+import type { ByteArray, Hex, SignableMessage } from '../types/misc.js'
+import type { Signature } from '../utils/signature/sign.js'
+import type { RawData } from '../utils/transaction/serializeRawData.js'
+
+export type { SignableMessage } from '../types/misc.js'
+
+/**
+ * A transaction in signable shape: it carries a `txID` and/or a `raw_data`
+ * model (from which the id is derived when `txID` is absent), plus the running
+ * `signature` list. `signTransaction` appends its signature to `signature` and
+ * returns a new object — the input is never mutated.
+ */
+export type SignableTransaction = {
+  /**
+   * Transaction id (64 hex chars, no `0x` prefix). Derived from `raw_data`
+   * when omitted.
+   */
+  txID?: string | undefined
+  /** The `Transaction.raw_data` model. */
+  raw_data?: RawData | undefined
+  /** Serialized `raw_data` bytes (bare hex), passed through untouched. */
+  raw_data_hex?: string | undefined
+  /** Accumulated signatures (TRON wire form, bare lowercase hex). */
+  signature?: string[] | undefined
+}
+
+/** Parameters for an account's low-level `sign`. */
+export type AccountSignParameters = {
+  /** The 32-byte digest to sign, as `0x`-prefixed hex or bytes. */
+  hash: Hex | ByteArray
+}
+
+/** Parameters for an account's `signMessage`. */
+export type AccountSignMessageParameters = {
+  /** The message to sign — a UTF-8 string or `{ raw }`. */
+  message: SignableMessage
+}
+
+/**
+ * The signing surface shared by every account. Local (private-key) accounts
+ * are implemented today; remote/delegated signers land in v0.1c. All methods
+ * are synchronous for locally held keys.
+ */
+export type TronCustomSource = {
+  /** The account's canonical Base58Check address. */
+  address: Address
+  /** The uncompressed secp256k1 public key (`0x04…`, 65 bytes). */
+  publicKey: Hex
+  /** Signs a 32-byte digest, returning a TRON-wire {@link Signature}. */
+  sign: (parameters: AccountSignParameters) => Signature
+  /** Signs a message per TIP-191. */
+  signMessage: (parameters: AccountSignMessageParameters) => Signature
+  /** Signs a transaction, appending to its `signature` list. */
+  signTransaction: (transaction: SignableTransaction) => SignableTransaction
+}
+
+/** How an account holds its signing material. */
+export type AccountSource = 'privateKey' | 'custom'
+
+/** A locally-signing account backed by a raw secp256k1 private key. */
+export type TronLocalAccount = TronCustomSource & {
+  /** Signing source. `'privateKey'` = a locally held key. */
+  source: 'privateKey'
+  /** Discriminant for the account union. */
+  type: 'local'
+}
+
+/**
+ * An account backed by a caller-supplied signing source (its own `sign`
+ * functions) rather than a raw private key held by this SDK. Produced by
+ * `toAccount` from a {@link TronCustomSource}; the reserved shape that v0.1c
+ * delegated/remote signers plug into.
+ */
+export type TronCustomAccount = TronCustomSource & {
+  /** Signing source. `'custom'` = caller-supplied signing functions. */
+  source: 'custom'
+  /** Discriminant for the account union. */
+  type: 'local'
+}
+
+/**
+ * Any account this SDK can produce: a private-key-backed
+ * {@link TronLocalAccount} or a caller-supplied {@link TronCustomAccount}.
+ * v0.1c widens this further with delegated/remote signers.
+ */
+export type TronAccount = TronLocalAccount | TronCustomAccount
