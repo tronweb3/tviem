@@ -1,0 +1,140 @@
+[
+  {
+    "name": "transfer canonical (reference vector)",
+    "txID": "407ec75dad4545890e5788ef78555ecab9dc72d56df29da4ebbd508022bdbaba",
+    "privateKeyLabel": "pk1",
+    "signature": "4d6f1e54ea593e5118c2d1b3701a4cab4d5235a418e9e46dba8c5f033bc4af0f6c04a08241de23936dffdedc869eac45533f9479a6bf372a38382b168b65ae001c"
+  },
+  {
+    "name": "transfer with Permission_id=2",
+    "txID": "2e8b73373f830f8a100b11291c5e169a079552c212eb94b6c722247320adb698",
+    "privateKeyLabel": "pk1",
+    "signature": "1f0b13b816b0dbe2d542a8ef2ea39e0584141d7c9b43e4f4082a3b8bfc9c5da5353e9ac04c5f99e2a054ed0959ba44720f222a2873660c1ff2c7eaad61a6e58a1c"
+  },
+  {
+    "name": "transfer with memo data + fee_limit",
+    "txID": "a3164e0e305862c4647efec591285e07df5f8a084f3efa1ed17857d0b6db909c",
+    "privateKeyLabel": "pk1",
+    "signature": "af436a37bac393eb41a21fc09af5a538cae7c8ae7dc963b825e92ce3fb52bc2f6fd9def1efc2715b22c2b0f28a6f5de2f13d6379a59436f7e247096023f658651b"
+  },
+  {
+    "name": "transfer-asset visible=false (asset_name ASCII-hex)",
+    "txID": "1e4c3553e36eda2081c90baaaf6dedebf56dbbf68df83ddf85e3a5d040464e03",
+    "privateKeyLabel": "pk1",
+    "signature": "3752c303c37f94a1e63eedad5e8c775e49bbd95b96832bcd31f26d6b537b884c1d47e6c9bd067957055073719b16190d13415729eeb4532651f2af084d8244bf1c"
+  },
+  {
+    "name": "transfer-asset visible=true (asset_name UTF-8, Base58 addresses)",
+    "txID": "1e4c3553e36eda2081c90baaaf6dedebf56dbbf68df83ddf85e3a5d040464e03",
+    "privateKeyLabel": "pk1",
+    "signature": "3752c303c37f94a1e63eedad5e8c775e49bbd95b96832bcd31f26d6b537b884c1d47e6c9bd067957055073719b16190d13415729eeb4532651f2af084d8244bf1c"
+  },
+  {
+    "name": "vote for two witnesses",
+    "txID": "6a544ce118e09919d4c8a058b1dd9f4455dc74ec2426d57f8b6f30a1c62a8644",
+    "privateKeyLabel": "pk1",
+    "signature": "9f5f38e5309fb0edb37af0d54706af8f7c643df5429b934eea9c9a3b41475d66139588cd4eef100661404c9ca99ee5999d7c8ad1f6e497c499c0f61ca988da941b"
+  },
+  {
+    "name": "withdraw block rewards",
+    "txID": "d3da09d768be8d78f3c12bed08cc1aca427c2a44b40b1b74de0b26708ce5cc93",
+    "privateKeyLabel": "pk1",
+    "signature": "0688a1c80502d0d40b9cc49fbc55fc9d3ab62b41b7ef1253422180e6ac57975d107bc30920524f48404f27c52e4d18ee078ce5c8c4141dfc0f390d2fc8d3a4c81b"
+  },
+  {
+    "name": "deploy contract with ABI entrys + bytecode",
+    "txID": "5d0424804d3c439780580d0cf18ed3144d90e2b4d559eaf59925d80649454983",
+    "privateKeyLabel": "pk1",
+    "signature": "7c3c622e7fb1ad1449ac7ce130c0b7a0f2024958c4f13b6cc5e75be9074076ef3049b85f26ff165b3f3bf44c93c8aa7b1810284b270fbff22d0eee21af8224ee1c"
+  },
+  {
+    "name": "deploy contract with call_token_value + token_id",
+    "txID": "10e2441b9c8883d3e814440fce33cdea93d6d82003d1457d5dbfee68f7ec5f06",
+    "privateKeyLabel": "pk1",
+    "signature": "eaad07ea1acc7e3b27ab94edfd90029b7e6106478dd8884f1cb38f8af0dbb4376571298bc085a07eef799b659d509f7f8da5e2b43b9a42181eba7994ba183d2f1b"
+  },
+  {
+    "name": "trigger TRC20 transfer with fee_limit",
+    "txID": "ddd5febbb5ef788933fc151fc1cf89246a35d89cc6607141c4ebf54499a3a5e6",
+    "privateKeyLabel": "pk1",
+    "signature": "a3d238b761eeca2cf73b7378a187bac8466141096bcae7b5a9f21eca35977ff626c39f79edadf8d25f55f3301cfd9f07f17becf5683bbe64fdebee2eef27a38c1c"
+  },
+  {
+    "name": "trigger TRC20 transfer without fee_limit",
+    "txID": "77026cfff6bc23ac3dd24587e93844abd0c2ee93b723e701e58d5bf289e7ff4a",
+    "privateKeyLabel": "pk1",
+    "signature": "1f3cc1909b244f283e63bf88ea31968a75ad7126be121d40e03b66e97cdd62223e4b996d389ba7f7ee6b85d0b2ede50d7a573b8c05ff6ee8ce5e8f35d67d4e431b"
+  },
+  {
+    "name": "trigger TRC20 transfer with call_value",
+    "txID": "6dfae8ce7bc8165531da925bfb159506f22a8df1b0d9f536e747b21e20943a7c",
+    "privateKeyLabel": "pk1",
+    "signature": "ef7213f81ace06f18e43ae1b0fbd3cbf433d58d507cc773144c14209f92682692e37df2ad9c19c65bfd883005605d8a2bcbfee8bbd83b1adc897b342e043f3481c"
+  },
+  {
+    "name": "trigger TRC20 transfer with call_token_value + token_id",
+    "txID": "52e399998a3a6e1dfec698f6c895d46fc8c512331fc8f991a1326979a755ad9d",
+    "privateKeyLabel": "pk1",
+    "signature": "0b12d811de5d1b0952f8ceeb418295e06e84aacc91e48ceed9138ccba604488933d7c5353ddfec4b9938d7bf27919f7de4174d508c7897b695c406a8514a155b1b"
+  },
+  {
+    "name": "update permissions: owner (2 keys) + active (operations bitmap)",
+    "txID": "328a219d9fe9eaca61e4b1b30525b24d9acca8a083c7d301ffb40d0fdb0e05f2",
+    "privateKeyLabel": "pk1",
+    "signature": "3727a8efd8d37a154a409de0b9e7255be81c5b60cbd855814277246d1654fc1676224448fa6b502db60b1f28d95411a25af22e4479ded4776be6a2c96295e4241b"
+  },
+  {
+    "name": "freeze v2 BANDWIDTH",
+    "txID": "751f38400d9104691ce5bd3a62b49ec6eb0f01badcb6bbcc6a3e34f7c66fdd4d",
+    "privateKeyLabel": "pk1",
+    "signature": "25ed17355ec0c95be0db466b1719b1e6021555e743f669e1ff9cb44b3a0a2e4c5285dd7cd685a2eabf04d170a7c9dae69dfd8b6ef0d58987c81987764222cefb1b"
+  },
+  {
+    "name": "freeze v2 ENERGY",
+    "txID": "dd1047b0b0afa49dabecd11f6860605dbc07d4800ad6abe3751d88fa64f1fa75",
+    "privateKeyLabel": "pk1",
+    "signature": "f2fdf5d074d5ef05f643f0ce5f43531148752f9e6fc159ec2d7ab7f3fde8f4da21843db4eb9430e8c1dafb862bd1bf5856a55a946d9119c41ef242339999b0a71b"
+  },
+  {
+    "name": "unfreeze v2 BANDWIDTH",
+    "txID": "8062de36e3a8d5a355d471aa297ebb119cd00b0871ffef464ae0fcc906b3476c",
+    "privateKeyLabel": "pk1",
+    "signature": "28cac0f8881f4c137348bc40bc60e9c4eb71edff78520b10690e29fbf1494cc65bfb48bddc3760ada58b77b0f56bdc6f375d619fdb9a4ae47cb0c236b409770d1c"
+  },
+  {
+    "name": "unfreeze v2 ENERGY",
+    "txID": "f84c786f1a17fdd15bc5267fdb5f939180a25d7a444e355416cad029567ffb68",
+    "privateKeyLabel": "pk1",
+    "signature": "7a8df8ce5dc6963c91c5865ea46e2050d41d501d038d1a63d19e6b2554aae03f1da3982592dd612115ca2058e16eb770a12353001b9a85bcb6b1187c61cb07391c"
+  },
+  {
+    "name": "withdraw expired unfrozen balance",
+    "txID": "ee3c0f5047be4d43c1b6a17b4648d983e6c02569de108a07130c18a82feb64b4",
+    "privateKeyLabel": "pk1",
+    "signature": "f8442f3e7c4e8cb3db6e8fc89e9fa3f82d5836be0f86b0300dbbe93de1cb660e6a577ffd0b864dfe86110f55b0c6dd2fb736ab69aca1786f974e18a11736ec5b1b"
+  },
+  {
+    "name": "delegate BANDWIDTH lock=false",
+    "txID": "c6eaae22b4edbd4ab1c8126a18ae49adaacd304aa0b48337e9d1595f2421d1ac",
+    "privateKeyLabel": "pk1",
+    "signature": "e51aea1d970332560faedcc76631eb3c2c563fe76af5acf258ed88c9532ef6a626dcd6096839f791f06a6b1eea3ada6eaa624ac4abc87bddb849bd736585cfe41c"
+  },
+  {
+    "name": "delegate ENERGY lock=true lock_period=86400",
+    "txID": "874d3d771ab62dfbbcc0597a5da6eb1c6a6ded73f22607e14bdbcefb2be37c3c",
+    "privateKeyLabel": "pk1",
+    "signature": "4fbf536ed378a7a3399b4385d30641abc03c717cca0dfdbabd6dd02ea26f5b4b5210188fe8a080fcab7ed8f30971250be6c8512d88c1f64d04dcfab3e0e307c51c"
+  },
+  {
+    "name": "undelegate ENERGY",
+    "txID": "ab3790313a1c2c91380d12381c246a9d2752ba459c1057844b0debc5c0d95866",
+    "privateKeyLabel": "pk1",
+    "signature": "9d805fc5a573c72628c42e96587e038056d43bbcb37626f4b62a04c0c761931b22f710508640f3f676fc66f598d440683235cdf4ea4c0b03ddd1f4fabffef7cd1c"
+  },
+  {
+    "name": "cancel all unfreeze v2",
+    "txID": "beae114366a5d2237eaee85a31d86ae8563575f7bb11d1dfd3ad2133f37a67d9",
+    "privateKeyLabel": "pk1",
+    "signature": "1a2ec2e16668bb96a1fcda009c654c33e7b97c25c329a1170c905adfdbf0ef1a5d33a6c71a95949270d2f9f0f2b968d73a5b8d3265dc592080b1fab106fb2ad11b"
+  }
+]

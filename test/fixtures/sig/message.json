@@ -1,0 +1,66 @@
+[
+  {
+    "name": "canonical (pk=1)",
+    "privateKeyLabel": "pk1",
+    "message": "hello @tronweb3/omni",
+    "digest": "0x068a2c93df26c5f19fb1d6b74abe50efc69cbff8b70a9cc9b915058e0ed9a18e",
+    "signature": "0x855e95dd49d937f13c6cbc5293db9b6fdfab8780d7c27c6eff9b12f8f3d3d56d792f34efe0adb183778c8e6f4c8f1cf66e19bd06be967bc7874613f4ee135dea1b",
+    "address": "TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC"
+  },
+  {
+    "name": "canonical message with pk=2",
+    "privateKeyLabel": "pk2",
+    "message": "hello @tronweb3/omni",
+    "digest": "0x068a2c93df26c5f19fb1d6b74abe50efc69cbff8b70a9cc9b915058e0ed9a18e",
+    "signature": "0x9e8f0201c632e6caa178fe579a4fbd6742f594e7f3bbc8189f2061e2ead5182c05617dce1e69d63007aed55099870af52bfa59c6c912489bc6f5b61e5a04dc701b",
+    "address": "TDvSsdrNM5eeXNL3czpa6AxLDHZA9nwe9K"
+  },
+  {
+    "name": "empty string",
+    "privateKeyLabel": "pk1",
+    "message": "",
+    "digest": "0x5beedb3d65d99ecaf9857d8695e750cc56278093f4ccbd1cc4e561fc82b1d189",
+    "signature": "0x5fc8883facaeb9dbebe71ec179c2744f83dc0e4868c6c9a6d63d47b949f33ae4317dc553f28a9c64b06838dc1adf7f24da330394f05e4ea6318d18608293ffe91b",
+    "address": "TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC"
+  },
+  {
+    "name": "ascii pangram",
+    "privateKeyLabel": "pk2",
+    "message": "The quick brown fox jumps over the lazy dog",
+    "digest": "0x64202fca7f48fa7239bfec91c869789cfe8bdee45d599d84fa645c80678c549b",
+    "signature": "0x2f19724758a1d151212a23805ae39cacaeed219cab1cdafd57302942c54ac0f36a50d5db1e8167f49e01962c31a98e1b8b52142a72004708b88f5a80c15bdb131c",
+    "address": "TDvSsdrNM5eeXNL3czpa6AxLDHZA9nwe9K"
+  },
+  {
+    "name": "multibyte UTF-8 (CJK)",
+    "privateKeyLabel": "pk1",
+    "message": "TRON 波场 测试消息",
+    "digest": "0x29b1d541c84c11bd4f1eb7bcc546a315575742808ba8eadae2a4c8249e62321d",
+    "signature": "0x6d112669c532fa567c40b746390b4eadb852c62e2934842a7ea3731fa680b3002647de9112a228c779430653313a4430f2e86c07a721261867c3928d3393d40f1b",
+    "address": "TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC"
+  },
+  {
+    "name": "multibyte UTF-8 (emoji)",
+    "privateKeyLabel": "pk2",
+    "message": "gm to the moon 🚀🌕",
+    "digest": "0xa4171369cf0e52b7e6f51fdb2085802565bda5ddae1c40d2d8e6bd28e68ecd7a",
+    "signature": "0x2a027c81eb043971dee50248f4c25167950c0d4a4178f290f028fc060d58ff1668f781de0ac0c7927114c84c76c904272484c7f61dd3621350e3ff8805ba6aa31c",
+    "address": "TDvSsdrNM5eeXNL3czpa6AxLDHZA9nwe9K"
+  },
+  {
+    "name": "raw bytes (short)",
+    "privateKeyLabel": "pk1",
+    "rawHex": "0xdeadbeef",
+    "digest": "0x4bd3e266403d9d165b171c63d954f5b65f64ff223688406cb94979212569d12d",
+    "signature": "0xaa57ed57b209808912c156530f9d287aa17d2331483e8862fefaff745a1ad842727ea7944be314bc179343ec50430a82b33cde428d4f451b5fbd2e03aae493e51c",
+    "address": "TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC"
+  },
+  {
+    "name": "raw bytes (32-byte digest-like)",
+    "privateKeyLabel": "pk2",
+    "rawHex": "0x0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20",
+    "digest": "0x78cbbb7e1a36ca882c9a8d23d847a73f00a058b37d625177c92d6cb82bc3fc88",
+    "signature": "0x18babb9383a267e904ac49dfbfe313562eb07f2f31043392a919aa7193a7054f25ce471efd6772119b7faffe19ec583884a781e37455361754e2415003bed22b1c",
+    "address": "TDvSsdrNM5eeXNL3czpa6AxLDHZA9nwe9K"
+  }
+]
