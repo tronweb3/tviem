@@ -1,0 +1,260 @@
+import {
+  TronBroadcastError,
+  TronContractValidateError,
+  TronNodeError,
+  TronValidationError,
+} from '../../errors/node.js'
+import { HttpRequestError, TimeoutError } from '../../errors/request.js'
+import { UrlRequiredError } from '../../errors/transport.js'
+import { isAbortError } from '../../errors/utils.js'
+import type { Hex } from '../../types/misc.js'
+import type { TronNode, TronRequestArgs } from '../../types/transport.js'
+import { hexToString } from '../../utils/encoding/fromHex.js'
+import { stringify } from '../../utils/stringify.js'
+import {
+  createTransport,
+  type Transport,
+  type TransportConfig,
+} from './createTransport.js'
+
+export type HttpTransportConfig = {
+  /** API key sent as the `TRON-PRO-API-KEY` request header. */
+  apiKey?: string | undefined
+  /** Custom `fetch` implementation (primarily for testing). */
+  fetchFn?: typeof fetch | undefined
+  /** Extra request options passed to `fetch` (merged; headers are extended). */
+  fetchOptions?: Omit<RequestInit, 'body' | 'method' | 'signal'> | undefined
+  /** The key of the HTTP transport. */
+  key?: TransportConfig['key'] | undefined
+  /** The name of the HTTP transport. */
+  name?: TransportConfig['name'] | undefined
+  /** Return the raw node body without error normalization. */
+  raw?: boolean | undefined
+  /** The max number of times to retry. */
+  retryCount?: TransportConfig['retryCount'] | undefined
+  /** The base delay (in ms) between retries. */
+  retryDelay?: TransportConfig['retryDelay'] | undefined
+  /** SolidityNode base URL. Defaults to the chain's solidity host, else `url`. */
+  solidityUrl?: string | undefined
+  /** The timeout (in ms) for the HTTP request. @default 10_000 */
+  timeout?: TransportConfig['timeout'] | undefined
+}
+
+export type HttpTransport = Transport<
+  'http',
+  {
+    fullUrl: string
+    solidityUrl: string
+    fetchOptions?: HttpTransportConfig['fetchOptions'] | undefined
+  }
+>
+
+/** Resolves a request's absolute URL from a node base, role and path. */
+function resolveUrl(base: string, node: TronNode, path: string): string {
+  const b = base.replace(/\/+$/, '')
+  // A leading `/` is a host-root absolute escape (e.g. `/jsonrpc`, `/v1/*`).
+  if (path.startsWith('/')) return `${b}${path}`
+  const prefix = node === 'solidity' ? '/walletsolidity/' : '/wallet/'
+  return `${b}${prefix}${path}`
+}
+
+/** TRON node message fields are hex-encoded; decode to UTF-8 (or pass through). */
+function decodeNodeMessage(message: unknown): string {
+  if (typeof message !== 'string' || message.length === 0) return ''
+  const hex = message.startsWith('0x') ? message : `0x${message}`
+  if (/^0x[0-9a-fA-F]*$/.test(hex) && (hex.length - 2) % 2 === 0) {
+    try {
+      return hexToString(hex as Hex)
+    } catch {}
+  }
+  return message
+}
+
+function isSuccessCode(code: unknown): boolean {
+  return code === 'SUCCESS' || code === 0 || code === '0' || code === 200
+}
+
+/**
+ * Normalizes a TRON node response body (usually delivered over HTTP 200).
+ *
+ * Detects the four documented error shapes and throws the matching error;
+ * a `{ result: true }` / `{ result: { result: true } }` / normal business
+ * object is returned unchanged. Called at the transport's `config.request`
+ * layer (skipped in `raw` mode).
+ */
+export function normalizeTronError(
+  body: unknown,
+  { node, path }: { node: TronNode; path: string },
+): unknown {
+  if (!body || typeof body !== 'object') return body
+  const b = body as Record<string, any>
+
+  // Form 1: { Error: string } — plaintext validation error.
+  if (typeof b.Error === 'string')
+    throw new TronValidationError(b.Error, { node, path, response: body })
+
+  // Form 2: { result: { code, message } } — contract validate rejection.
+  if (
+    b.result &&
+    typeof b.result === 'object' &&
+    b.result.code &&
+    b.result.message
+  )
+    throw new TronContractValidateError(decodeNodeMessage(b.result.message), {
+      code: String(b.result.code),
+      node,
+      path,
+      response: body,
+    })
+
+  // Form 3: { result: false, code } — broadcast rejection.
+  if (b.result === false && b.code)
+    throw new TronBroadcastError(decodeNodeMessage(b.message), {
+      code: String(b.code),
+      txid: typeof b.txid === 'string' ? b.txid : undefined,
+      node,
+      path,
+      response: body,
+    })
+
+  // Form 4: top-level { code } that is not a success code.
+  if (b.code && !isSuccessCode(b.code))
+    throw new TronNodeError(decodeNodeMessage(b.message), {
+      code: String(b.code),
+      node,
+      path,
+      response: body,
+    })
+
+  // Success / normal business object.
+  return body
+}
+
+/**
+ * Creates an HTTP transport that connects to a TRON node's REST API.
+ *
+ * @param url FullNode base URL. Defaults to the chain's `full` RPC URL.
+ */
+export function http(
+  url?: string | undefined,
+  config: HttpTransportConfig = {},
+): HttpTransport {
+  const {
+    apiKey,
+    fetchFn,
+    fetchOptions,
+    key = 'http',
+    name = 'HTTP REST',
+    raw,
+    retryDelay,
+  } = config
+  return ({ chain, retryCount: retryCount_, timeout: timeout_ }) => {
+    const retryCount = config.retryCount ?? retryCount_
+    const timeout = timeout_ ?? config.timeout ?? 10_000
+    const fullUrl = url || chain?.rpcUrls.default.full.http[0]
+    if (!fullUrl) throw new UrlRequiredError()
+    const solidityUrl =
+      config.solidityUrl || chain?.rpcUrls.default.solidity.http[0] || fullUrl
+
+    const headers = {
+      'Content-Type': 'application/json',
+      ...(fetchOptions?.headers as Record<string, string> | undefined),
+      ...(apiKey ? { 'TRON-PRO-API-KEY': apiKey } : {}),
+    }
+    const mergedFetchOptions = { ...fetchOptions, headers }
+
+    return createTransport(
+      {
+        key,
+        name,
+        async request(args: TronRequestArgs, options) {
+          const node: TronNode = args.node ?? 'full'
+          const method = args.method ?? 'POST'
+          const base = node === 'solidity' ? solidityUrl : fullUrl
+          const requestUrl = resolveUrl(base, node, args.path)
+          const requestBody =
+            method === 'POST' ? stringify(args.body ?? {}) : undefined
+
+          const controller = new AbortController()
+          const externalSignal = options?.signal
+          const onExternalAbort = () => controller.abort()
+          if (externalSignal) {
+            if (externalSignal.aborted) controller.abort()
+            else
+              externalSignal.addEventListener('abort', onExternalAbort, {
+                once: true,
+              })
+          }
+          const timer = setTimeout(() => controller.abort(), timeout)
+
+          const fetchImpl = fetchFn ?? globalThis.fetch
+          let response: Response
+          try {
+            response = await fetchImpl(requestUrl, {
+              ...mergedFetchOptions,
+              method,
+              ...(requestBody !== undefined ? { body: requestBody } : {}),
+              signal: controller.signal,
+            })
+          } catch (err) {
+            // Timeout aborts the controller without the caller's signal firing.
+            if (controller.signal.aborted && !externalSignal?.aborted)
+              throw new TimeoutError({
+                body: (args.body ?? {}) as Record<string, unknown>,
+                url: requestUrl,
+              })
+            if (isAbortError(err)) throw err
+            throw new HttpRequestError({
+              body: args.body as Record<string, unknown> | undefined,
+              cause: err as Error,
+              url: requestUrl,
+            })
+          } finally {
+            clearTimeout(timer)
+            externalSignal?.removeEventListener('abort', onExternalAbort)
+          }
+
+          if (!response.ok) {
+            let details: string | undefined
+            try {
+              details = await response.text()
+            } catch {}
+            throw new HttpRequestError({
+              body: args.body as Record<string, unknown> | undefined,
+              details,
+              headers: response.headers,
+              status: response.status,
+              url: requestUrl,
+            })
+          }
+
+          let body: any
+          try {
+            const text = await response.text()
+            body = text ? JSON.parse(text) : {}
+          } catch (err) {
+            throw new HttpRequestError({
+              body: args.body as Record<string, unknown> | undefined,
+              cause: err as Error,
+              headers: response.headers,
+              status: response.status,
+              url: requestUrl,
+            })
+          }
+
+          if (raw) return body
+          return normalizeTronError(body, { node, path: args.path })
+        },
+        retryCount,
+        retryDelay,
+        timeout,
+        type: 'http',
+      },
+      {
+        fetchOptions: mergedFetchOptions,
+        fullUrl,
+        solidityUrl,
+      },
+    )
+  }
+}
