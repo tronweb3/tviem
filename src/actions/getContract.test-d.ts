@@ -99,7 +99,7 @@ test('write.<fn> / estimateEnergy.<fn> parameter inference (Wallet Client)', () 
   ).returns.resolves.toEqualTypeOf<bigint>()
 })
 
-test('getEvents placeholder is always present', () => {
+test('getEvents is always present', () => {
   const client = {} as Client
   const contract = getContract({ abi: trc20Abi, address, client })
   expectTypeOf(contract).toHaveProperty('getEvents')

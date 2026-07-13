@@ -6,7 +6,6 @@ import { privateKeyToAccount } from '../accounts/privateKeyToAccount.js'
 import { createPublicClient } from '../clients/createPublicClient.js'
 import { createWalletClient } from '../clients/createWalletClient.js'
 import { walletActions } from '../clients/decorators/wallet.js'
-import { NotImplementedError } from '../errors/notImplemented.js'
 import type { Address } from '../types/address.js'
 import { getContract, getFunctionParameters } from './getContract.js'
 
@@ -286,9 +285,28 @@ describe('getContract', () => {
     })
   })
 
-  describe('getEvents placeholder', () => {
-    test('accessing any event throws NotImplementedError', () => {
-      const { transport } = createMockTransport({ responses: {} })
+  describe('getEvents', () => {
+    test('dispatches to getContractEvents against the /v1 event index', async () => {
+      const rawEvent = {
+        block_number: 1,
+        block_timestamp: 1_700_000_000_000,
+        contract_address: contractAddress,
+        event_index: 0,
+        event_name: 'Transfer',
+        result: {
+          from: '0xafb6ccdb345bc36c69a618b66c1693f36213622b',
+          to: '0x2e5531459778bee382355ab73bc93ee763f5ed94',
+          value: '5',
+        },
+        result_type: { from: 'address', to: 'address', value: 'uint256' },
+        transaction_id: 'ab'.repeat(32),
+      }
+      const { transport, calls } = createMockTransport({
+        responses: {},
+        onUnmatched: {
+          response: { data: [rawEvent], success: true, meta: { page_size: 1 } },
+        },
+      })
       const client = createPublicClient({ transport })
       const contract = getContract({
         abi: trc20Abi,
@@ -296,7 +314,21 @@ describe('getContract', () => {
         client,
       })
       expect('getEvents' in contract).toBe(true)
-      expect(() => contract.getEvents.Transfer()).toThrow(NotImplementedError)
+
+      const { events } = await contract.getEvents.Transfer({
+        onlyConfirmed: true,
+        limit: 50,
+      })
+      expect(events).toHaveLength(1)
+      expect(events[0]?.eventName).toBe('Transfer')
+      expect(events[0]?.args.value).toBe(5n)
+
+      const call = calls[0]
+      expect(call?.node).toBe('event')
+      expect(call?.method).toBe('GET')
+      expect(call?.path).toContain(`/v1/contracts/${contractAddress}/events`)
+      expect(call?.path).toContain('event_name=Transfer')
+      expect(call?.path).toContain('only_confirmed=true')
     })
   })
 

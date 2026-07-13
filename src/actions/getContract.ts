@@ -1,9 +1,9 @@
 // Structure vendored (de-branded) and adapted for TRON: the contract facade is
 // trimmed to TRON's read / write pipeline. `read` maps `view`/`pure` functions
 // to `readContract`; `write` + `estimateEnergy` map `nonpayable`/`payable`
-// functions to `writeContract` / `estimateEnergy`; `getEvents` is a reserved
-// placeholder that throws `NotImplementedError` (events land in a later
-// increment). EVM-only groups (`simulate`, `createEventFilter`, `watchEvent`)
+// functions to `writeContract` / `estimateEnergy`; `getEvents.<Event>(options?)`
+// maps to `getContractEvents` against the TronGrid `/v1` index. EVM-only groups
+// (`simulate`, `createEventFilter`, `watchEvent`)
 // and the split public/wallet keyed-client are dropped. Method groups are
 // mounted by capability probing (`'readContract' in client`,
 // `'writeContract' in client`) and every dispatch goes through `getAction` so a
@@ -17,7 +17,6 @@ import type {
 } from 'abitype'
 
 import type { Client } from '../clients/createClient.js'
-import { NotImplementedError } from '../errors/notImplemented.js'
 import type { ErrorType } from '../errors/utils.js'
 import type { Address } from '../types/address.js'
 import type { ContractFunctionName } from '../types/contract.js'
@@ -28,6 +27,11 @@ import {
   type EstimateEnergyParameters,
   estimateEnergy,
 } from './public/estimateEnergy.js'
+import {
+  type GetContractEventsParameters,
+  type GetContractEventsReturnType,
+  getContractEvents,
+} from './public/getContractEvents.js'
 import {
   type ReadContractParameters,
   readContract,
@@ -130,12 +134,26 @@ type GetEstimateFunction<
     : [args: _args, options?: EstimateOptions]
 ) => Promise<bigint>
 
-/** The reserved `getEvents` placeholder: any event access yields a function
- * that throws {@link NotImplementedError} (event support lands later). */
+/** Facade `getEvents.<Event>(options?)` filters — everything `getContractEvents`
+ * takes except `abi` / `address` / `eventName` (which the facade binds). */
+export type GetEventsOptions = Omit<
+  GetContractEventsParameters,
+  'abi' | 'address' | 'eventName'
+>
+
+/** `getEvents.<Event>(options?)` → the events matching that event name. */
 type GetEventsGroup<_eventNames extends string> =
   IsNever<_eventNames> extends true
-    ? { [eventName: string]: (...args: readonly unknown[]) => never }
-    : { [eventName in _eventNames]: (...args: readonly unknown[]) => never }
+    ? {
+        [eventName: string]: (
+          options?: GetEventsOptions,
+        ) => Promise<GetContractEventsReturnType>
+      }
+    : {
+        [eventName in _eventNames]: (
+          options?: GetEventsOptions,
+        ) => Promise<GetContractEventsReturnType>
+      }
 
 export type GetContractReturnType<
   abi extends Abi | readonly unknown[] = Abi,
@@ -362,11 +380,17 @@ export function getContract<
     {},
     {
       get(_, eventName: string) {
-        return () => {
-          throw new NotImplementedError({
-            feature: `getContract(...).getEvents.${String(eventName)}`,
-          })
-        }
+        return (options?: GetEventsOptions) =>
+          getAction(
+            client,
+            getContractEvents,
+            'getContractEvents',
+          )({
+            abi,
+            address,
+            eventName,
+            ...options,
+          } as GetContractEventsParameters)
       },
     },
   )
