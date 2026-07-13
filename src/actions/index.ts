@@ -38,6 +38,32 @@ export {
   getTransactionFee,
 } from './public/getChainParameters.js'
 export {
+  type GetContractEventsParameters,
+  type GetContractEventsReturnType,
+  getContractEvents,
+} from './public/getContractEvents.js'
+export {
+  type GetEventsByBlockNumberParameters,
+  type GetEventsByBlockNumberReturnType,
+  getEventsByBlockNumber,
+} from './public/getEventsByBlockNumber.js'
+export {
+  type EventOrderBy,
+  type GetEventsByContractAddressParameters,
+  type GetEventsByContractAddressReturnType,
+  getEventsByContractAddress,
+} from './public/getEventsByContractAddress.js'
+export {
+  type GetEventsByTransactionIDParameters,
+  type GetEventsByTransactionIDReturnType,
+  getEventsByTransactionID,
+} from './public/getEventsByTransactionID.js'
+export {
+  type GetEventsOfLatestBlockParameters,
+  type GetEventsOfLatestBlockReturnType,
+  getEventsOfLatestBlock,
+} from './public/getEventsOfLatestBlock.js'
+export {
   type GetNowBlockReturnType,
   getNowBlock,
 } from './public/getNowBlock.js'
@@ -62,6 +88,10 @@ export {
   type WaitForTransactionReceiptReturnType,
   waitForTransactionReceipt,
 } from './public/waitForTransactionReceipt.js'
+export type {
+  EventPageMeta,
+  TronEvent,
+} from './utils/formatEvent.js'
 export {
   type AccountPermissionUpdateParameters,
   type AccountPermissionUpdateReturnType,

@@ -75,6 +75,32 @@ export {
   getTransactionFee,
 } from './actions/public/getChainParameters.js'
 export {
+  type GetContractEventsParameters,
+  type GetContractEventsReturnType,
+  getContractEvents,
+} from './actions/public/getContractEvents.js'
+export {
+  type GetEventsByBlockNumberParameters,
+  type GetEventsByBlockNumberReturnType,
+  getEventsByBlockNumber,
+} from './actions/public/getEventsByBlockNumber.js'
+export {
+  type EventOrderBy,
+  type GetEventsByContractAddressParameters,
+  type GetEventsByContractAddressReturnType,
+  getEventsByContractAddress,
+} from './actions/public/getEventsByContractAddress.js'
+export {
+  type GetEventsByTransactionIDParameters,
+  type GetEventsByTransactionIDReturnType,
+  getEventsByTransactionID,
+} from './actions/public/getEventsByTransactionID.js'
+export {
+  type GetEventsOfLatestBlockParameters,
+  type GetEventsOfLatestBlockReturnType,
+  getEventsOfLatestBlock,
+} from './actions/public/getEventsOfLatestBlock.js'
+export {
   type GetNowBlockReturnType,
   getNowBlock,
 } from './actions/public/getNowBlock.js'
@@ -99,6 +125,10 @@ export {
   type WaitForTransactionReceiptReturnType,
   waitForTransactionReceipt,
 } from './actions/public/waitForTransactionReceipt.js'
+export type {
+  EventPageMeta,
+  TronEvent,
+} from './actions/utils/formatEvent.js'
 // Write (wallet) actions — local build → sign → broadcast pipeline.
 export {
   type AccountPermissionUpdateParameters,
