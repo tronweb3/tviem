@@ -20,6 +20,11 @@ export type {
   TronLocalAccount,
 } from './types.js'
 export {
+  type MultiSignErrorType,
+  type MultiSignParameters,
+  multiSign,
+} from './utils/multiSign.js'
+export {
   type PrivateKeyToAddressErrorType,
   privateKeyToAddress,
 } from './utils/privateKeyToAddress.js'
