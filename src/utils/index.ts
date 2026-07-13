@@ -6,11 +6,29 @@ export {
   decodeAbiParameters,
 } from './abi/decodeAbiParameters.js'
 export {
+  type DecodeDeployDataErrorType,
+  type DecodeDeployDataParameters,
+  type DecodeDeployDataReturnType,
+  decodeDeployData,
+} from './abi/decodeDeployData.js'
+export {
+  type DecodeErrorResultErrorType,
+  type DecodeErrorResultParameters,
+  type DecodeErrorResultReturnType,
+  decodeErrorResult,
+} from './abi/decodeErrorResult.js'
+export {
   type DecodeEventLogErrorType,
   type DecodeEventLogParameters,
   type DecodeEventLogReturnType,
   decodeEventLog,
 } from './abi/decodeEventLog.js'
+export {
+  type DecodeFunctionDataErrorType,
+  type DecodeFunctionDataParameters,
+  type DecodeFunctionDataReturnType,
+  decodeFunctionData,
+} from './abi/decodeFunctionData.js'
 export {
   type DecodeFunctionResultErrorType,
   type DecodeFunctionResultParameters,
@@ -23,6 +41,18 @@ export {
   encodeAbiParameters,
   getArrayComponents,
 } from './abi/encodeAbiParameters.js'
+export {
+  type EncodeDeployDataErrorType,
+  type EncodeDeployDataParameters,
+  type EncodeDeployDataReturnType,
+  encodeDeployData,
+} from './abi/encodeDeployData.js'
+export {
+  type EncodeErrorResultErrorType,
+  type EncodeErrorResultParameters,
+  type EncodeErrorResultReturnType,
+  encodeErrorResult,
+} from './abi/encodeErrorResult.js'
 export {
   type EncodeEventTopicsErrorType,
   type EncodeEventTopicsParameters,

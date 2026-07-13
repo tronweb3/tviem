@@ -453,11 +453,29 @@ export {
   decodeAbiParameters,
 } from './utils/abi/decodeAbiParameters.js'
 export {
+  type DecodeDeployDataErrorType,
+  type DecodeDeployDataParameters,
+  type DecodeDeployDataReturnType,
+  decodeDeployData,
+} from './utils/abi/decodeDeployData.js'
+export {
+  type DecodeErrorResultErrorType,
+  type DecodeErrorResultParameters,
+  type DecodeErrorResultReturnType,
+  decodeErrorResult,
+} from './utils/abi/decodeErrorResult.js'
+export {
   type DecodeEventLogErrorType,
   type DecodeEventLogParameters,
   type DecodeEventLogReturnType,
   decodeEventLog,
 } from './utils/abi/decodeEventLog.js'
+export {
+  type DecodeFunctionDataErrorType,
+  type DecodeFunctionDataParameters,
+  type DecodeFunctionDataReturnType,
+  decodeFunctionData,
+} from './utils/abi/decodeFunctionData.js'
 export {
   type DecodeFunctionResultErrorType,
   type DecodeFunctionResultParameters,
@@ -470,6 +488,18 @@ export {
   encodeAbiParameters,
   getArrayComponents,
 } from './utils/abi/encodeAbiParameters.js'
+export {
+  type EncodeDeployDataErrorType,
+  type EncodeDeployDataParameters,
+  type EncodeDeployDataReturnType,
+  encodeDeployData,
+} from './utils/abi/encodeDeployData.js'
+export {
+  type EncodeErrorResultErrorType,
+  type EncodeErrorResultParameters,
+  type EncodeErrorResultReturnType,
+  encodeErrorResult,
+} from './utils/abi/encodeErrorResult.js'
 export {
   type EncodeEventTopicsErrorType,
   type EncodeEventTopicsParameters,
