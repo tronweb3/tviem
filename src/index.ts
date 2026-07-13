@@ -91,6 +91,11 @@ export {
 } from './actions/public/waitForTransactionReceipt.js'
 // Write (wallet) actions — local build → sign → broadcast pipeline.
 export {
+  type AccountPermissionUpdateParameters,
+  type AccountPermissionUpdateReturnType,
+  accountPermissionUpdate,
+} from './actions/wallet/accountPermissionUpdate.js'
+export {
   type BroadcastTransactionParameters,
   type BroadcastTransactionReturnType,
   broadcastTransaction,

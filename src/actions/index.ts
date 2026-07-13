@@ -53,6 +53,11 @@ export {
   waitForTransactionReceipt,
 } from './public/waitForTransactionReceipt.js'
 export {
+  type AccountPermissionUpdateParameters,
+  type AccountPermissionUpdateReturnType,
+  accountPermissionUpdate,
+} from './wallet/accountPermissionUpdate.js'
+export {
   type BroadcastTransactionParameters,
   type BroadcastTransactionReturnType,
   broadcastTransaction,

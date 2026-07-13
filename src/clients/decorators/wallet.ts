@@ -6,6 +6,11 @@
 
 import type { TronAccount } from '../../accounts/types.js'
 import {
+  type AccountPermissionUpdateParameters,
+  type AccountPermissionUpdateReturnType,
+  accountPermissionUpdate,
+} from '../../actions/wallet/accountPermissionUpdate.js'
+import {
   type BroadcastTransactionParameters,
   type BroadcastTransactionReturnType,
   broadcastTransaction,
@@ -86,6 +91,10 @@ export type WalletActions = {
   deployContract: (
     parameters: DeployContractParameters,
   ) => Promise<DeployContractReturnType>
+  /** Updates the account's owner/witness/active permissions (multi-sig setup). */
+  accountPermissionUpdate: (
+    parameters: AccountPermissionUpdateParameters,
+  ) => Promise<AccountPermissionUpdateReturnType>
   /** Broadcasts a locally-signed transaction. */
   broadcastTransaction: (
     parameters: BroadcastTransactionParameters,
@@ -164,6 +173,12 @@ export function walletActions(client: Client): WalletActions {
         client,
         deployContract,
         'deployContract',
+      )(requireAccount(client, parameters)),
+    accountPermissionUpdate: async (parameters) =>
+      getAction(
+        client,
+        accountPermissionUpdate,
+        'accountPermissionUpdate',
       )(requireAccount(client, parameters)),
     broadcastTransaction: (parameters) =>
       getAction(
