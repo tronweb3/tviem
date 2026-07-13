@@ -17,6 +17,11 @@ export {
   getAccountResources,
 } from './public/getAccountResources.js'
 export {
+  type GetApprovedListParameters,
+  type GetApprovedListReturnType,
+  getApprovedList,
+} from './public/getApprovedList.js'
+export {
   type GetBalanceParameters,
   type GetBalanceReturnType,
   getBalance,
@@ -36,6 +41,11 @@ export {
   type GetNowBlockReturnType,
   getNowBlock,
 } from './public/getNowBlock.js'
+export {
+  type GetSignWeightParameters,
+  type GetSignWeightReturnType,
+  getSignWeight,
+} from './public/getSignWeight.js'
 export {
   type GetTransactionInfoParameters,
   type GetTransactionInfoReturnType,

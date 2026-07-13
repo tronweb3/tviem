@@ -176,3 +176,42 @@ export class TransactionExpiredError extends BaseError {
     )
   }
 }
+
+/**
+ * Thrown when a node echoes back a transaction (e.g. from `getSignWeight` /
+ * `getApprovedList`) whose `raw_data_hex` or `txID` does not byte-for-byte
+ * match the locally built one. A malicious or man-in-the-middled node can
+ * substitute a tampered `raw_data`; this SDK never signs or trusts the
+ * node-supplied transaction, and surfaces the mismatch here so a multi-sig
+ * flow fails closed instead of approving something other than what was built.
+ */
+export type TransactionTamperedErrorType = TransactionTamperedError & {
+  name: 'TransactionTamperedError'
+}
+export class TransactionTamperedError extends BaseError {
+  constructor({
+    localTxId,
+    nodeTxId,
+    path,
+  }: {
+    localTxId?: string | undefined
+    nodeTxId?: string | undefined
+    path?: string | undefined
+  } = {}) {
+    super(
+      [
+        'The node returned a transaction that does not match the locally built one.',
+        'This can indicate transaction tampering by a malicious or man-in-the-middled node.',
+        'No signature was produced over the node-supplied transaction.',
+      ].join('\n'),
+      {
+        name: 'TransactionTamperedError',
+        metaMessages: [
+          localTxId ? `Local txID: ${localTxId}` : undefined,
+          nodeTxId ? `Node txID:  ${nodeTxId}` : undefined,
+          path ? `Path: ${path}` : undefined,
+        ].filter((m): m is string => Boolean(m)),
+      },
+    )
+  }
+}

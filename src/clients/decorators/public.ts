@@ -13,6 +13,11 @@ import {
   getAccountResources,
 } from '../../actions/public/getAccountResources.js'
 import {
+  type GetApprovedListParameters,
+  type GetApprovedListReturnType,
+  getApprovedList,
+} from '../../actions/public/getApprovedList.js'
+import {
   type GetBalanceParameters,
   type GetBalanceReturnType,
   getBalance,
@@ -30,6 +35,11 @@ import {
   type GetNowBlockReturnType,
   getNowBlock,
 } from '../../actions/public/getNowBlock.js'
+import {
+  type GetSignWeightParameters,
+  type GetSignWeightReturnType,
+  getSignWeight,
+} from '../../actions/public/getSignWeight.js'
 import {
   type GetTransactionInfoParameters,
   type GetTransactionInfoReturnType,
@@ -79,6 +89,14 @@ export type PublicActions = {
   waitForTransactionReceipt: (
     parameters: WaitForTransactionReceiptParameters,
   ) => Promise<WaitForTransactionReceiptReturnType>
+  /** Reads the accumulated signature weight of a multi-sig transaction. */
+  getSignWeight: (
+    parameters: GetSignWeightParameters,
+  ) => Promise<GetSignWeightReturnType>
+  /** Reads which addresses have signed a multi-sig transaction. */
+  getApprovedList: (
+    parameters: GetApprovedListParameters,
+  ) => Promise<GetApprovedListReturnType>
 }
 
 /**
@@ -114,5 +132,9 @@ export function publicActions(client: Client): PublicActions {
         waitForTransactionReceipt,
         'waitForTransactionReceipt',
       )(parameters),
+    getSignWeight: (parameters) =>
+      getAction(client, getSignWeight, 'getSignWeight')(parameters),
+    getApprovedList: (parameters) =>
+      getAction(client, getApprovedList, 'getApprovedList')(parameters),
   }
 }

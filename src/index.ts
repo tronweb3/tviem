@@ -59,6 +59,11 @@ export {
   getAccountResources,
 } from './actions/public/getAccountResources.js'
 export {
+  type GetApprovedListParameters,
+  type GetApprovedListReturnType,
+  getApprovedList,
+} from './actions/public/getApprovedList.js'
+export {
   type GetBalanceParameters,
   type GetBalanceReturnType,
   getBalance,
@@ -78,6 +83,11 @@ export {
   type GetNowBlockReturnType,
   getNowBlock,
 } from './actions/public/getNowBlock.js'
+export {
+  type GetSignWeightParameters,
+  type GetSignWeightReturnType,
+  getSignWeight,
+} from './actions/public/getSignWeight.js'
 export {
   type GetTransactionInfoParameters,
   type GetTransactionInfoReturnType,
@@ -346,6 +356,8 @@ export {
   type ContractFunctionRevertedErrorType,
   TransactionExpiredError,
   type TransactionExpiredErrorType,
+  TransactionTamperedError,
+  type TransactionTamperedErrorType,
   TronRpcError,
   type TronRpcErrorType,
   WaitForTransactionReceiptTimeoutError,
