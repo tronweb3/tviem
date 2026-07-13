@@ -7,16 +7,18 @@
  */
 
 /** The node role a request is routed to. */
-export type TronNode = 'full' | 'solidity'
+export type TronNode = 'full' | 'solidity' | 'event'
 
 /**
  * A single transport request.
  *
- * - `node` — `'full'` (FullNode `/wallet/*`) or `'solidity'`
- *   (SolidityNode `/walletsolidity/*`). Defaults to `'full'`.
+ * - `node` — `'full'` (FullNode `/wallet/*`), `'solidity'`
+ *   (SolidityNode `/walletsolidity/*`), or `'event'` (TronGrid `/v1/*` event
+ *   index host). Defaults to `'full'`.
  * - `path` — endpoint path **without** host or node prefix (e.g. `getaccount`).
  *   A path starting with `/` is treated as a host-root absolute escape
- *   (e.g. `/jsonrpc`, `/v1/*`) and bypasses the node prefix.
+ *   (e.g. `/jsonrpc`, `/v1/*`) and bypasses the node prefix — event reads use
+ *   this with a `/v1/...` path.
  * - `body` — JSON request body (omitted for `GET`).
  * - `method` — HTTP verb. Defaults to `'POST'`.
  */

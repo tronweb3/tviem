@@ -14,6 +14,7 @@ export const shasta = defineChain({
     default: {
       full: { http: ['https://api.shasta.trongrid.io'] },
       solidity: { http: ['https://api.shasta.trongrid.io'] },
+      event: { http: ['https://api.shasta.trongrid.io'] },
     },
   },
   blockTime: 3000,

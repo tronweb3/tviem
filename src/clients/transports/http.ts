@@ -28,6 +28,11 @@ export type HttpTransportConfig = {
   key?: TransportConfig['key'] | undefined
   /** The name of the HTTP transport. */
   name?: TransportConfig['name'] | undefined
+  /**
+   * Event index (TronGrid `/v1/*`) base URL. Defaults to the chain's `event`
+   * host, else `url` (public TronGrid hosts serve `/wallet` and `/v1` alike).
+   */
+  eventUrl?: string | undefined
   /** Return the raw node body without error normalization. */
   raw?: boolean | undefined
   /** The max number of times to retry. */
@@ -45,6 +50,7 @@ export type HttpTransport = Transport<
   {
     fullUrl: string
     solidityUrl: string
+    eventUrl: string
     fetchOptions?: HttpTransportConfig['fetchOptions'] | undefined
   }
 >
@@ -155,6 +161,8 @@ export function http(
     if (!fullUrl) throw new UrlRequiredError()
     const solidityUrl =
       config.solidityUrl || chain?.rpcUrls.default.solidity.http[0] || fullUrl
+    const eventUrl =
+      config.eventUrl || chain?.rpcUrls.default.event?.http[0] || fullUrl
 
     const headers = {
       'Content-Type': 'application/json',
@@ -170,7 +178,12 @@ export function http(
         async request(args: TronRequestArgs, options) {
           const node: TronNode = args.node ?? 'full'
           const method = args.method ?? 'POST'
-          const base = node === 'solidity' ? solidityUrl : fullUrl
+          const base =
+            node === 'solidity'
+              ? solidityUrl
+              : node === 'event'
+                ? eventUrl
+                : fullUrl
           const requestUrl = resolveUrl(base, node, args.path)
           const requestBody =
             method === 'POST' ? stringify(args.body ?? {}) : undefined
@@ -254,6 +267,7 @@ export function http(
         fetchOptions: mergedFetchOptions,
         fullUrl,
         solidityUrl,
+        eventUrl,
       },
     )
   }

@@ -14,6 +14,7 @@ export const nile = defineChain({
     default: {
       full: { http: ['https://api.nileex.io'] },
       solidity: { http: ['https://api.nileex.io'] },
+      event: { http: ['https://event.nileex.io'] },
     },
   },
   blockTime: 3000,

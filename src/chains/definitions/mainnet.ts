@@ -14,6 +14,7 @@ export const mainnet = defineChain({
     default: {
       full: { http: ['https://api.trongrid.io'] },
       solidity: { http: ['https://api.trongrid.io'] },
+      event: { http: ['https://api.trongrid.io'] },
     },
   },
   blockTime: 3000,

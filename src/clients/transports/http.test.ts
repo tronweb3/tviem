@@ -60,6 +60,19 @@ test('solidity node routes to the /walletsolidity prefix', async () => {
   expect(url).toBe(`${HOST}/walletsolidity/getaccount`)
 })
 
+test('event node routes a /v1 path to the event host root (no wallet prefix)', async () => {
+  const t = transport({ eventUrl: 'https://event.example' })
+  await t.config.request({
+    node: 'event',
+    path: '/v1/contracts/TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t/events',
+    method: 'GET',
+  })
+  const [url] = fetchMock.mock.calls[0] as [string]
+  expect(url).toBe(
+    'https://event.example/v1/contracts/TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t/events',
+  )
+})
+
 test('node defaults to full; GET sends no body', async () => {
   const t = transport()
   await t.config.request({ path: 'getnowblock', method: 'GET' })
@@ -208,6 +221,13 @@ test('value exposes fullUrl / solidityUrl / fetchOptions', () => {
 test('solidityUrl defaults to the full url', () => {
   const t = http(HOST)({})
   expect(t.value?.solidityUrl).toBe(HOST)
+})
+
+test('eventUrl comes from config, else defaults to the full url', () => {
+  expect(
+    http(HOST, { eventUrl: 'https://event.example' })({}).value?.eventUrl,
+  ).toBe('https://event.example')
+  expect(http(HOST)({}).value?.eventUrl).toBe(HOST)
 })
 
 test('normalizeTronError returns non-object bodies unchanged', () => {
