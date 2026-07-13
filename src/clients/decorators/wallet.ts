@@ -21,6 +21,11 @@ import {
   delegateResource,
 } from '../../actions/wallet/delegateResource.js'
 import {
+  type DeployContractParameters,
+  type DeployContractReturnType,
+  deployContract,
+} from '../../actions/wallet/deployContract.js'
+import {
   type FreezeBalanceV2Parameters,
   type FreezeBalanceV2ReturnType,
   freezeBalanceV2,
@@ -77,6 +82,10 @@ export type WalletActions = {
   writeContract: (
     parameters: WriteContractParameters,
   ) => Promise<WriteContractReturnType>
+  /** Deploys a smart contract (local build → sign → broadcast). */
+  deployContract: (
+    parameters: DeployContractParameters,
+  ) => Promise<DeployContractReturnType>
   /** Broadcasts a locally-signed transaction. */
   broadcastTransaction: (
     parameters: BroadcastTransactionParameters,
@@ -149,6 +158,12 @@ export function walletActions(client: Client): WalletActions {
         client,
         writeContract,
         'writeContract',
+      )(requireAccount(client, parameters)),
+    deployContract: async (parameters) =>
+      getAction(
+        client,
+        deployContract,
+        'deployContract',
       )(requireAccount(client, parameters)),
     broadcastTransaction: (parameters) =>
       getAction(

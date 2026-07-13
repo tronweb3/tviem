@@ -107,6 +107,11 @@ export {
   delegateResource,
 } from './actions/wallet/delegateResource.js'
 export {
+  type DeployContractParameters,
+  type DeployContractReturnType,
+  deployContract,
+} from './actions/wallet/deployContract.js'
+export {
   type FreezeBalanceV2Parameters,
   type FreezeBalanceV2ReturnType,
   freezeBalanceV2,
