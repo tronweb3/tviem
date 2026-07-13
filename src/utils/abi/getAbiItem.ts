@@ -120,7 +120,10 @@ export function getAbiItem<
             { abiItem: matchedAbiItem, type: ambiguousTypes[1]! },
           )
       }
-      if (!matchedAbiItem) matchedAbiItem = abiItem
+      // Advance to this match so the next candidate is disambiguated against
+      // the immediately-previous match (and the last structural match wins),
+      // matching the reference overload-resolution semantics.
+      matchedAbiItem = abiItem
     }
   }
 
