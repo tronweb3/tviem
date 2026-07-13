@@ -36,6 +36,11 @@ import {
   freezeBalanceV2,
 } from '../../actions/wallet/freezeBalanceV2.js'
 import {
+  type MultiSignParameters,
+  type MultiSignReturnType,
+  multiSign,
+} from '../../actions/wallet/multiSign.js'
+import {
   type SendTrc10Parameters,
   type SendTrc10ReturnType,
   sendTrc10,
@@ -95,6 +100,8 @@ export type WalletActions = {
   accountPermissionUpdate: (
     parameters: AccountPermissionUpdateParameters,
   ) => Promise<AccountPermissionUpdateReturnType>
+  /** Co-signs a multi-sig transaction under a permission id (signs locally). */
+  multiSign: (parameters: MultiSignParameters) => Promise<MultiSignReturnType>
   /** Broadcasts a locally-signed transaction. */
   broadcastTransaction: (
     parameters: BroadcastTransactionParameters,
@@ -180,6 +187,9 @@ export function walletActions(client: Client): WalletActions {
         accountPermissionUpdate,
         'accountPermissionUpdate',
       )(requireAccount(client, parameters)),
+    // Takes a raw `privateKey` (not an account), so it bypasses `requireAccount`.
+    multiSign: (parameters) =>
+      getAction(client, multiSign, 'multiSign')(parameters),
     broadcastTransaction: (parameters) =>
       getAction(
         client,

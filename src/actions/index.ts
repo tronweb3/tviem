@@ -95,6 +95,12 @@ export {
   type StakeResource,
 } from './wallet/freezeBalanceV2.js'
 export {
+  type MultiSignErrorType,
+  type MultiSignParameters,
+  type MultiSignReturnType,
+  multiSign,
+} from './wallet/multiSign.js'
+export {
   type SendTrc10Parameters,
   type SendTrc10ReturnType,
   sendTrc10,

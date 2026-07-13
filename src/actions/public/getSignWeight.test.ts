@@ -2,7 +2,7 @@ import { expect, test } from 'vitest'
 import { loadTxFixtureFile } from '../../../test/fixtures/tx/loader.js'
 import { createMockTransport } from '../../../test/mock/createMockTransport.js'
 import type { SignableTransaction } from '../../accounts/types.js'
-import { multiSign } from '../../accounts/utils/multiSign.js'
+import { signTransaction } from '../../accounts/utils/signTransaction.js'
 import { createPublicClient } from '../../clients/createPublicClient.js'
 import { BaseError } from '../../errors/base.js'
 import { TransactionTamperedError } from '../../errors/rpc.js'
@@ -12,7 +12,7 @@ const pk1 = `0x${'0'.repeat(63)}1` as const
 const [transfer] = loadTxFixtureFile('transfer-contract.json')
 
 // A locally built, partially-signed multi-sig transaction.
-const tx = multiSign({
+const tx = signTransaction({
   transaction: { raw_data_hex: transfer!.rawDataHex },
   privateKey: pk1,
   permissionId: 2,

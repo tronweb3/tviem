@@ -28,11 +28,6 @@ export type {
   TronLocalAccount,
 } from './accounts/types.js'
 export {
-  type MultiSignErrorType,
-  type MultiSignParameters,
-  multiSign,
-} from './accounts/utils/multiSign.js'
-export {
   type PrivateKeyToAddressErrorType,
   privateKeyToAddress,
 } from './accounts/utils/privateKeyToAddress.js'
@@ -137,6 +132,12 @@ export {
   freezeBalanceV2,
   type StakeResource,
 } from './actions/wallet/freezeBalanceV2.js'
+export {
+  type MultiSignErrorType,
+  type MultiSignParameters,
+  type MultiSignReturnType,
+  multiSign,
+} from './actions/wallet/multiSign.js'
 export {
   type SendTrc10Parameters,
   type SendTrc10ReturnType,

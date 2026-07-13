@@ -1,7 +1,7 @@
 import { expect, test } from 'vitest'
 import { loadTxFixtureFile } from '../../../test/fixtures/tx/loader.js'
 import { createMockTransport } from '../../../test/mock/createMockTransport.js'
-import { multiSign } from '../../accounts/utils/multiSign.js'
+import { signTransaction } from '../../accounts/utils/signTransaction.js'
 import { createPublicClient } from '../../clients/createPublicClient.js'
 import { TransactionTamperedError } from '../../errors/rpc.js'
 import { getApprovedList } from './getApprovedList.js'
@@ -9,7 +9,7 @@ import { getApprovedList } from './getApprovedList.js'
 const pk1 = `0x${'0'.repeat(63)}1` as const
 const [transfer] = loadTxFixtureFile('transfer-contract.json')
 
-const tx = multiSign({
+const tx = signTransaction({
   transaction: { raw_data_hex: transfer!.rawDataHex },
   privateKey: pk1,
   permissionId: 2,
