@@ -16,6 +16,7 @@ import { isAddressEqual } from '../../utils/address/isAddressEqual.js'
 import { getAction } from '../../utils/getAction.js'
 import { decodeRawData } from '../../utils/transaction/decodeRawData.js'
 import { getSignWeight } from '../public/getSignWeight.js'
+import type { AssertUnchangedTransactionErrorType } from '../utils/assertUnchangedTransaction.js'
 
 export type MultiSignParameters = {
   /** The transaction to co-sign — fresh or already carrying other signatures. */
@@ -31,6 +32,8 @@ export type MultiSignReturnType = SignableTransaction
 export type MultiSignErrorType =
   | SignTransactionErrorType
   | PrivateKeyToAddressErrorType
+  // The bundled `getSignWeight` pre-check fails closed on a tampered echo.
+  | AssertUnchangedTransactionErrorType
   | BaseErrorType
   | ErrorType
 
