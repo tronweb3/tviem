@@ -247,6 +247,14 @@ export {
   presignMessagePrefix,
 } from './signature/hashMessage.js'
 export {
+  type HashTypedDataErrorType,
+  type HashTypedDataParameters,
+  hashDomain,
+  hashTypedData,
+  type TypedDataDomain,
+  type TypedDataTypes,
+} from './signature/hashTypedData.js'
+export {
   type SerializeSignatureErrorType,
   type Signature,
   type SignErrorType,
@@ -260,6 +268,11 @@ export {
   signMessage,
 } from './signature/signMessage.js'
 export {
+  type SignTypedDataErrorType,
+  type SignTypedDataParameters,
+  signTypedData,
+} from './signature/signTypedData.js'
+export {
   type RecoverMessageAddressErrorType,
   type RecoverMessageAddressParameters,
   type RecoverPublicKeyErrorType,
@@ -270,6 +283,14 @@ export {
   type VerifyMessageParameters,
   verifyMessage,
 } from './signature/verifyMessage.js'
+export {
+  type RecoverTypedDataAddressErrorType,
+  type RecoverTypedDataAddressParameters,
+  recoverTypedDataAddress,
+  type VerifyTypedDataErrorType,
+  type VerifyTypedDataParameters,
+  verifyTypedData,
+} from './signature/verifyTypedData.js'
 export {
   type DecodeRawDataErrorType,
   decodeRawData,
