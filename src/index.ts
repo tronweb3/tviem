@@ -20,6 +20,7 @@ export { type ToAccountErrorType, toAccount } from './accounts/toAccount.js'
 export type {
   AccountSignMessageParameters,
   AccountSignParameters,
+  AccountSignTypedDataParameters,
   AccountSource,
   SignableTransaction,
   TronAccount,
@@ -759,6 +760,14 @@ export {
   presignMessagePrefix,
 } from './utils/signature/hashMessage.js'
 export {
+  type HashTypedDataErrorType,
+  type HashTypedDataParameters,
+  hashDomain,
+  hashTypedData,
+  type TypedDataDomain,
+  type TypedDataTypes,
+} from './utils/signature/hashTypedData.js'
+export {
   type SerializeSignatureErrorType,
   type Signature,
   type SignErrorType,
@@ -772,6 +781,11 @@ export {
   signMessage,
 } from './utils/signature/signMessage.js'
 export {
+  type SignTypedDataErrorType,
+  type SignTypedDataParameters,
+  signTypedData,
+} from './utils/signature/signTypedData.js'
+export {
   type RecoverMessageAddressErrorType,
   type RecoverMessageAddressParameters,
   type RecoverPublicKeyErrorType,
@@ -782,6 +796,14 @@ export {
   type VerifyMessageParameters,
   verifyMessage,
 } from './utils/signature/verifyMessage.js'
+export {
+  type RecoverTypedDataAddressErrorType,
+  type RecoverTypedDataAddressParameters,
+  recoverTypedDataAddress,
+  type VerifyTypedDataErrorType,
+  type VerifyTypedDataParameters,
+  verifyTypedData,
+} from './utils/signature/verifyTypedData.js'
 export {
   type DecodeRawDataErrorType,
   decodeRawData,

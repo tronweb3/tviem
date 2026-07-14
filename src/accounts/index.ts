@@ -11,6 +11,7 @@ export { type ToAccountErrorType, toAccount } from './toAccount.js'
 export type {
   AccountSignMessageParameters,
   AccountSignParameters,
+  AccountSignTypedDataParameters,
   AccountSource,
   SignableMessage,
   SignableTransaction,

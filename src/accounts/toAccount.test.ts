@@ -33,6 +33,7 @@ describe('toAccount', () => {
       publicKey: base.publicKey,
       sign: base.sign,
       signMessage: base.signMessage,
+      signTypedData: base.signTypedData,
       signTransaction: base.signTransaction,
     }
     const account = toAccount(source)
@@ -49,6 +50,7 @@ describe('toAccount', () => {
       publicKey: base.publicKey,
       sign: base.sign,
       signMessage: base.signMessage,
+      signTypedData: base.signTypedData,
       signTransaction: base.signTransaction,
     })
     expect(account.sign({ hash: `0x${txID}` }).hex).toBe(canonicalSig)

@@ -17,6 +17,10 @@ import {
   type SignMessageErrorType,
   signMessage,
 } from '../utils/signature/signMessage.js'
+import {
+  type SignTypedDataErrorType,
+  signTypedData,
+} from '../utils/signature/signTypedData.js'
 import type { SignableTransaction, TronLocalAccount } from './types.js'
 import {
   type PrivateKeyToAddressErrorType,
@@ -32,6 +36,7 @@ export type PrivateKeyToAccountErrorType =
   | BytesToHexErrorType
   | SignErrorType
   | SignMessageErrorType
+  | SignTypedDataErrorType
   | SignTransactionErrorType
   | BaseErrorType
   | ErrorType
@@ -71,6 +76,8 @@ export function privateKeyToAccount(
     sign: ({ hash }): Signature => sign({ hash, privateKey: keyHex }),
     signMessage: ({ message }): Signature =>
       signMessage({ message, privateKey: keyHex }),
+    signTypedData: (parameters): Signature =>
+      signTypedData({ ...parameters, privateKey: keyHex }),
     signTransaction: (transaction: SignableTransaction): SignableTransaction =>
       signTransaction({ transaction, privateKey: keyHex, address }),
   }

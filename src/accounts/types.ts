@@ -1,6 +1,7 @@
 // TRON-specific, clean-room implementation for @tronweb3/omni.
 import type { Address } from '../types/address.js'
 import type { ByteArray, Hex, SignableMessage } from '../types/misc.js'
+import type { HashTypedDataParameters } from '../utils/signature/hashTypedData.js'
 import type { Signature } from '../utils/signature/sign.js'
 import type { RawData } from '../utils/transaction/serializeRawData.js'
 
@@ -39,6 +40,12 @@ export type AccountSignMessageParameters = {
 }
 
 /**
+ * Parameters for an account's `signTypedData`: the TIP-712 `domain`, `types`,
+ * `primaryType` and `message` (the private key is supplied by the account).
+ */
+export type AccountSignTypedDataParameters = HashTypedDataParameters
+
+/**
  * The signing surface shared by every account. Local (private-key) accounts
  * are implemented today; remote/delegated signers land in v0.1c. All methods
  * are synchronous for locally held keys.
@@ -52,6 +59,8 @@ export type TronCustomSource = {
   sign: (parameters: AccountSignParameters) => Signature
   /** Signs a message per TIP-191. */
   signMessage: (parameters: AccountSignMessageParameters) => Signature
+  /** Signs TIP-712 typed structured data. */
+  signTypedData: (parameters: AccountSignTypedDataParameters) => Signature
   /** Signs a transaction, appending to its `signature` list. */
   signTransaction: (transaction: SignableTransaction) => SignableTransaction
 }

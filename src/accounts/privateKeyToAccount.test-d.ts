@@ -7,6 +7,7 @@ import { privateKeyToAccount } from './privateKeyToAccount.js'
 import type {
   AccountSignMessageParameters,
   AccountSignParameters,
+  AccountSignTypedDataParameters,
   SignableTransaction,
   TronLocalAccount,
 } from './types.js'
@@ -69,6 +70,18 @@ test('privateKeyToAccount: signMessage method signature', () => {
   expectTypeOf<
     AccountSignMessageParameters['message']
   >().toEqualTypeOf<SignableMessage>()
+})
+
+test('privateKeyToAccount: signTypedData method signature', () => {
+  const account = privateKeyToAccount(pk0x)
+
+  expectTypeOf(account.signTypedData).toEqualTypeOf<
+    (parameters: AccountSignTypedDataParameters) => Signature
+  >()
+  expectTypeOf(account.signTypedData)
+    .parameter(0)
+    .toEqualTypeOf<AccountSignTypedDataParameters>()
+  expectTypeOf(account.signTypedData).returns.toEqualTypeOf<Signature>()
 })
 
 test('privateKeyToAccount: signTransaction method signature', () => {
