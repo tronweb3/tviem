@@ -4,6 +4,7 @@
     "messageCount": 160,
     "transactionCount": 46,
     "typedDataCount": 38,
+    "hdCount": 34,
     "boundaries": [
       0, 1, 9, 10, 11, 99, 100, 101, 127, 128, 255, 256, 257, 300, 512
     ]
@@ -4960,6 +4961,248 @@
       "digest": "0x73a3864711553db41f42c8fc0a8b3ee38abff214c4c18622445fb2583c5cedce",
       "signature": "0xaf45d5156dd85f795d4fcbaf51de06e3f383dba62b35cc6fc31446da5a9e8a540b46365199e917b1f6cd0980748fb4b150c02443fa7e1003608244e04c5b91081b",
       "address": "TDvSsdrNM5eeXNL3czpa6AxLDHZA9nwe9K"
+    }
+  ],
+  "hd": [
+    {
+      "name": "16B/00000000 m/44'/195'/0'/0/0",
+      "entropyHex": "00000000000000000000000000000000",
+      "path": "m/44'/195'/0'/0/0",
+      "address": "TUEZSdKsoDHQMeZwihtdoBiN46zxhGWYdH",
+      "publicKey": "0x04ff21f8e64d3a3c0198edfbb7afdc79be959432e92e2f8a1984bb436a414b8edcec0345aad0c1bf7da04fd036dd7f9f617e30669224283d950fab9dd84831dc83"
+    },
+    {
+      "name": "16B/00000000 m/44'/195'/0'/0/1",
+      "entropyHex": "00000000000000000000000000000000",
+      "path": "m/44'/195'/0'/0/1",
+      "address": "TSeJkUh4Qv67VNFwY8LaAxERygNdy6NQZK",
+      "publicKey": "0x0409b9854ad6e016c5d72aee08f763821bd5e32489c12bcc078a935a14f29dbed6e7c7aaba49725e62564697335d58f63b831f43d9d61b8c83771aebc74d62660c"
+    },
+    {
+      "name": "16B/00000000 m/44'/195'/0'/0/2",
+      "entropyHex": "00000000000000000000000000000000",
+      "path": "m/44'/195'/0'/0/2",
+      "address": "TYJPRrdB5APNeRs4R7fYZSwW3TcrTKw2gx",
+      "publicKey": "0x04f988243bb0c75357d9d269098b08fe8a8f18a470a37e250528c67600272bd06f6bfd1b455f1d7430aed14eea9aab3970759144228e67d66a1943680932652090"
+    },
+    {
+      "name": "16B/00000000 m/44'/195'/1'/0/0",
+      "entropyHex": "00000000000000000000000000000000",
+      "path": "m/44'/195'/1'/0/0",
+      "address": "TLrpNTBuCpGMrB9TyVwgEhNVRhtWEQPHh4",
+      "publicKey": "0x04bef135218be23cdf409ff01bcf79ef503db9b381797f5e0512384d033472e58995e72a2587c22488da08eb5b60f0ed6552d156bf3215d2f1b48da73903189bf9"
+    },
+    {
+      "name": "16B/00000000 m/44'/195'/2'/0/0",
+      "entropyHex": "00000000000000000000000000000000",
+      "path": "m/44'/195'/2'/0/0",
+      "address": "TZJ9qkoxUB1SGdbtChgAjUphBmkJwAeBaW",
+      "publicKey": "0x04166cf5a05e3bc8ef01d2b266b88aec6ceccae975ade89e2e63d887aecfe018192f2ea58173ae5c5ded5ebf98a2946a1b98c72830f3540355ea613133ee2b265f"
+    },
+    {
+      "name": "16B/00000000 m/44'/195'/0'/1/0",
+      "entropyHex": "00000000000000000000000000000000",
+      "path": "m/44'/195'/0'/1/0",
+      "address": "THLNguYKN3S8RUzVyi9ErynW4YmXLU5c8n",
+      "publicKey": "0x04afb5edc9856aea9c7f40d3b5c8f4b46ba2e27b03f84c7879e2f38cb47eb1c9224b5cc52fba4dfe7deb947e4a23deb45baae8d989e38e9f28846679efcb30a1d0"
+    },
+    {
+      "name": "16B/00000000 m/44'/195'/0'/1/1",
+      "entropyHex": "00000000000000000000000000000000",
+      "path": "m/44'/195'/0'/1/1",
+      "address": "TN6bXdkzGdtkSzn5obMqi67ZseqyHLnd3q",
+      "publicKey": "0x04fed0961c5305612f4aa5f1e4e123893422aa4772f7e9861d4373c7b3fc71c391d6d29f09b8ccfd80ac0eb31137aed91516d1a898035fa2109d4eb1ae56c1229f"
+    },
+    {
+      "name": "16B/00000000 m/44'/195'/5'/0/9",
+      "entropyHex": "00000000000000000000000000000000",
+      "path": "m/44'/195'/5'/0/9",
+      "address": "THh2HrBYfEGBujZVFK8j33ckR9cDkMwVaf",
+      "publicKey": "0x043032692919e54f1e37708df0b84e9a95a3b92a30091db199e04531a60611459528419aa3d83cb1537029640a5bdce7ae5a1db1ef72e81e9e2d6278a856277cfb"
+    },
+    {
+      "name": "16B/00000001 m/44'/195'/0'/0/0",
+      "entropyHex": "00000000000000000000000000000001",
+      "path": "m/44'/195'/0'/0/0",
+      "address": "TWsvmkK2uFVAm9Dn29pvNah4AA3kUub6G5",
+      "publicKey": "0x04070c7101eb3f765a005134c597be06645d8fead330ebd29da5863fccae958f9f8df838ed110ee90103c5c481c9243797dec5ec5d8ab4283f8ac1cdaea8e907d4"
+    },
+    {
+      "name": "16B/00000001 m/44'/195'/0'/0/1",
+      "entropyHex": "00000000000000000000000000000001",
+      "path": "m/44'/195'/0'/0/1",
+      "address": "TEXzph1pA4y9VKChohLvL68AqFbJkn3gaf",
+      "publicKey": "0x045d73eecc666d3554b53adcaa2a20aab4da0e7a94f64a93f82eaaac9f9e46a46a2b41d7ef5988edce27518115b7ba37e975c8fce21defd20dd531776ddfec0b03"
+    },
+    {
+      "name": "16B/00000001 m/44'/195'/0'/0/2",
+      "entropyHex": "00000000000000000000000000000001",
+      "path": "m/44'/195'/0'/0/2",
+      "address": "TBmJy5tc9YviBdedu7QbjArjeGiHcCDnMS",
+      "publicKey": "0x048f3668d0e176e8a5876e8be40d1ccb042600364a65f89a3fe5f7d61fc5e2ecf96f710eafc3900758de3d8c2bc1c5a2bd80bfb20e19d15992bd5bf961c9206975"
+    },
+    {
+      "name": "16B/00000001 m/44'/195'/1'/0/0",
+      "entropyHex": "00000000000000000000000000000001",
+      "path": "m/44'/195'/1'/0/0",
+      "address": "TNDStJwF3KxRFEMp5g7VFiQRsXgsRfq3Zr",
+      "publicKey": "0x0403b2d3c9432b234ce94f85a4bd17320e6b4f21be1506b23e2914c9f4aeb2801cd2f9d0da7fd45843343fd8c44a388a09d10b8b1281da8a7ea4d74bce7ac3f9ff"
+    },
+    {
+      "name": "16B/00000001 m/44'/195'/2'/0/0",
+      "entropyHex": "00000000000000000000000000000001",
+      "path": "m/44'/195'/2'/0/0",
+      "address": "TSRoa8PV3hbnLcPWypL2ZJRDmjDXvsBHQK",
+      "publicKey": "0x041d0eacca69e32c4c96e45f67376bd4623e7fcc00e24e2b5534fd921d051e5f50c2bfcbd412ea464645213243e39af7d4d994feeb485bbfb304054e7ec80c8130"
+    },
+    {
+      "name": "16B/00000001 m/44'/195'/0'/1/0",
+      "entropyHex": "00000000000000000000000000000001",
+      "path": "m/44'/195'/0'/1/0",
+      "address": "TFbhXgFmAQAWdNthmPVaQXhzPS69Ms5vG2",
+      "publicKey": "0x045595e0053246c9fc41c5c5886cfebb682242e19ad1bc68b676756a559e16fc3f1f029a79a3af2aa675e718e978b56ae637e0eaa45206c8e28b73a3717e6c4c6c"
+    },
+    {
+      "name": "16B/00000001 m/44'/195'/0'/1/1",
+      "entropyHex": "00000000000000000000000000000001",
+      "path": "m/44'/195'/0'/1/1",
+      "address": "TSsabtEKXJmEZqzigw9DnoT7CRanfmSUe7",
+      "publicKey": "0x041ba85e25fdf305cb6060a58e08b9522e2a6ffa3960dc805d50942cd788e0f2c072d7443a46723755a2c12c95796cc4d6765de011823591825dd697c9edff2939"
+    },
+    {
+      "name": "16B/00000001 m/44'/195'/5'/0/9",
+      "entropyHex": "00000000000000000000000000000001",
+      "path": "m/44'/195'/5'/0/9",
+      "address": "TEQ3fTVzEiR4EbAundB4pqbwn7sqSA9faG",
+      "publicKey": "0x044867932c69278cbccf0c02b0fd18baa197e562567ca3d37c730813d7d321d3a5f043e3dae03c63ac30a70786701a18329eb24de9daffd1252d996962ea0dbf50"
+    },
+    {
+      "name": "16B/ffffffff m/44'/195'/0'/0/0",
+      "entropyHex": "ffffffffffffffffffffffffffffffff",
+      "path": "m/44'/195'/0'/0/0",
+      "address": "TCp2vg4MrkHQqTQLtCfGktdgaH99MFR88g",
+      "publicKey": "0x0443c11abd4c510fce55fe3158a917c0043ed9578f36f6ae5d493941d0d7c8fcd73a6b31661c647aeae394124fafdff161664fa2d2b3e99b5968fb0d0501d13a88"
+    },
+    {
+      "name": "16B/ffffffff m/44'/195'/0'/0/1",
+      "entropyHex": "ffffffffffffffffffffffffffffffff",
+      "path": "m/44'/195'/0'/0/1",
+      "address": "TVkXR6ETQKD9dXCT4pmdX8prZRknEwQ5EK",
+      "publicKey": "0x04dbd8429b4e6284c04f465b81eb2372a9a93a0c255f7b817dcc8e5a8254f97564f9d1ac0b511ed601d97b5d29c747a355640a878f2536e2f15f50973b357cbab4"
+    },
+    {
+      "name": "16B/ffffffff m/44'/195'/0'/0/2",
+      "entropyHex": "ffffffffffffffffffffffffffffffff",
+      "path": "m/44'/195'/0'/0/2",
+      "address": "TCTcY6Z3omFFF2mqR2rWcixhCEGXZyEV5a",
+      "publicKey": "0x04f66fde02746c1f742ab09fa1bc11100436b0a3401979f13056aaaf4a74e93f4b64af6a897ea8bc1a43c44d0333130d38282bdba3dcae7f6c0a9f702251bbc769"
+    },
+    {
+      "name": "16B/ffffffff m/44'/195'/1'/0/0",
+      "entropyHex": "ffffffffffffffffffffffffffffffff",
+      "path": "m/44'/195'/1'/0/0",
+      "address": "TPmCyVJAmop65xxLYAjJd5E7GJVH2JhxuB",
+      "publicKey": "0x04e947203949ac491ae4cd251bbabc8ebe7f953c71a44ba2f67fe5aef83db345df61944b536ed5119965bc5041c278e3729089c72c60cf5b9ef6dea9ab93cc1d8c"
+    },
+    {
+      "name": "16B/ffffffff m/44'/195'/2'/0/0",
+      "entropyHex": "ffffffffffffffffffffffffffffffff",
+      "path": "m/44'/195'/2'/0/0",
+      "address": "TC9aX66QW6vWhcGDdny8RqKQk22fNiouJA",
+      "publicKey": "0x04fd5323942a154b9e5008699bdbcede28644e8c39b9e2553cc01e3823f2d240e9637001fdbc71dd627886ec79042f75e2596a27b23eab7b7510e778e37e7b62a7"
+    },
+    {
+      "name": "16B/ffffffff m/44'/195'/0'/1/0",
+      "entropyHex": "ffffffffffffffffffffffffffffffff",
+      "path": "m/44'/195'/0'/1/0",
+      "address": "TMRJBdaZTEEWXLu4BEGiur2ENkJndtVLTU",
+      "publicKey": "0x04e9e3f70410838e675052d70cb914d2034cdc73187a30dbee37c01bd4d952874d563bfb3d74f6bf331dd56ba7db7c796b64eb35f51edbf70ebf86e3c6296753c0"
+    },
+    {
+      "name": "16B/ffffffff m/44'/195'/0'/1/1",
+      "entropyHex": "ffffffffffffffffffffffffffffffff",
+      "path": "m/44'/195'/0'/1/1",
+      "address": "TJyUHApcmntwkpgD7P5rDEbQc8jZTWYaHT",
+      "publicKey": "0x04a889c6a57084b20898ba389cc845c6413d64e18f9c7acd5f0fb985cd38ef5a1da16f7c8aac503a81ac2e7c649a3a7ce8fabe099f71f03120c71263d36010b60f"
+    },
+    {
+      "name": "16B/ffffffff m/44'/195'/5'/0/9",
+      "entropyHex": "ffffffffffffffffffffffffffffffff",
+      "path": "m/44'/195'/5'/0/9",
+      "address": "TMX8zeiCCRWSEkemZ5QadaVmeszdtqeuPN",
+      "publicKey": "0x04999954b21df22fd8ca9b16827b5bb0a99c963e0e8b124951102d869f9ad59c97a22cad22a9226d38be3c2204b7f3db072f7d8bb7574ee1636773750fe93ae4e5"
+    },
+    {
+      "name": "32B/00000000 m/44'/195'/0'/0/0",
+      "entropyHex": "0000000000000000000000000000000000000000000000000000000000000000",
+      "path": "m/44'/195'/0'/0/0",
+      "address": "TEfhiqsW1SdN44DeHrAWVmbyr8ZbvChrtS",
+      "publicKey": "0x046de71b829451772b77b4c6de3bdf67eaf22794bccfb73dc64fb35ff0af32ed2c3b140b652c02eadc07cc1da9a4ad99918250351681a2f03a1ede655ae6cd70f8"
+    },
+    {
+      "name": "32B/00000000 m/44'/195'/0'/0/1",
+      "entropyHex": "0000000000000000000000000000000000000000000000000000000000000000",
+      "path": "m/44'/195'/0'/0/1",
+      "address": "TBNqMYHXhL8hH3Ruj2VtXimvpEtNTzWi28",
+      "publicKey": "0x045331b830149f4dc30da1e76b389901e6970398f40252b9b79298a2a90106ceef7821bdb058dfb26502160392a2aa5d9f8abddbc81f652b924604b3f8620ca99d"
+    },
+    {
+      "name": "32B/00000000 m/44'/195'/0'/0/2",
+      "entropyHex": "0000000000000000000000000000000000000000000000000000000000000000",
+      "path": "m/44'/195'/0'/0/2",
+      "address": "TMHhocXoejLPStMBtLaHVThQXEam9V1kuU",
+      "publicKey": "0x040629d872c4bbdd5440d8615a0a0800ed75c4e00ffa423e5ce95ec72ea947240c2dd4f5f331c99dc0678cc1daa34f0c8ae76185ad92f89c6fece13073de88621c"
+    },
+    {
+      "name": "32B/00000000 m/44'/195'/1'/0/0",
+      "entropyHex": "0000000000000000000000000000000000000000000000000000000000000000",
+      "path": "m/44'/195'/1'/0/0",
+      "address": "TUeQNhjUcQwjB2epWHip6E6UJ7uhUJLUWV",
+      "publicKey": "0x04fff3c8812d301d917a63f67df3eca408db609276910f8ff1883e6cfa4a9a530b5ee7a62b589f501d1a413a1311883914aca1698ecc79795f4c18db87a76a43f8"
+    },
+    {
+      "name": "32B/00000000 m/44'/195'/2'/0/0",
+      "entropyHex": "0000000000000000000000000000000000000000000000000000000000000000",
+      "path": "m/44'/195'/2'/0/0",
+      "address": "TW8M745hsFzm6mabs7vGKTDF2wHaGRGgdR",
+      "publicKey": "0x04f7bb57004d253f03c28680b9454f62ee0899a65148c1cf9a615d2f426056cc0b7d46f5833e0e4eee0a803792f6a400728c2f3115eeb452518b398601b7f203a7"
+    },
+    {
+      "name": "32B/00000000 m/44'/195'/0'/1/0",
+      "entropyHex": "0000000000000000000000000000000000000000000000000000000000000000",
+      "path": "m/44'/195'/0'/1/0",
+      "address": "TAjuSzHMPyxJ6rm46rWZrQyYt4re4BY6uT",
+      "publicKey": "0x04f576757693bd27554c2e897d0cb74c1db04f3802fc5590bf5c6de75a8de57dd84ce01a2076ac482e6d97128b4e31b2588423e0f0f37b338b3d555203fdd914a3"
+    },
+    {
+      "name": "32B/00000000 m/44'/195'/0'/1/1",
+      "entropyHex": "0000000000000000000000000000000000000000000000000000000000000000",
+      "path": "m/44'/195'/0'/1/1",
+      "address": "TQ9BarUDyZAz9drcUyCaxDFrUbBS9fZRF5",
+      "publicKey": "0x04fa3d21efbb1f70f5a3cca2ca5721c18c655e842106422cb1c7debb562b421ac6e0c5b32276cfd612279e687cfa1644acf196fb3df784845c110d72af87b11b8b"
+    },
+    {
+      "name": "32B/00000000 m/44'/195'/5'/0/9",
+      "entropyHex": "0000000000000000000000000000000000000000000000000000000000000000",
+      "path": "m/44'/195'/5'/0/9",
+      "address": "TNHdV7GieJQ4jDT47GhAwDGZYYyWB7hREJ",
+      "publicKey": "0x042874e5c806124122857ac3fea42b0ea4f240aefbb764df8e13d19ef755411fe5fc049b12c87219d07288cde097a607fee268e19929be80d7f9f94be03e267afd"
+    },
+    {
+      "name": "16B/00000000 m/44'/195'/0'/0/0 +pp:omni-\ud83d",
+      "entropyHex": "00000000000000000000000000000000",
+      "passphrase": "omni-🚀",
+      "path": "m/44'/195'/0'/0/0",
+      "address": "TD6CLmNTvqUzGQt6aDZyMSjg6eT1t8uQza",
+      "publicKey": "0x04506e87a16ccc1c729d7b585126de7a4eaae4f7483d6ac0981e68c3c3727c285019b6b0a54ae5283dae9204da79a3a780241da0ec4b7e8ddcbea44a638b05bfc7"
+    },
+    {
+      "name": "16B/00000000 m/44'/195'/0'/0/0 +pp:correc",
+      "entropyHex": "00000000000000000000000000000000",
+      "passphrase": "correct horse battery staple",
+      "path": "m/44'/195'/0'/0/0",
+      "address": "TNypHWywMbtNLVbDcGL8hTpmp5Juak4gPQ",
+      "publicKey": "0x049a6f4a6386b760dd2c4da1bd4b757b6e4b8522a76b203446a693f7b1278a5cb381ce0dc586355a7e94686c2f60cab1de7686775fbf9eff4612ef2dec5c17964f"
     }
   ]
 }

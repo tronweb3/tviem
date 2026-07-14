@@ -28,7 +28,9 @@
 //   }
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
-import { utils } from 'tronweb'
+import { entropyToMnemonic } from '@scure/bip39'
+import { wordlist as bip39English } from '@scure/bip39/wordlists/english'
+import { TronWeb, utils } from 'tronweb'
 
 const { crypto, message: messageUtils, typedData } = utils
 const { TypedDataEncoder } = typedData
@@ -556,6 +558,78 @@ assert(
 )
 
 // ---------------------------------------------------------------------------
+// HD (BIP-39/BIP-32) derivation vectors — differential vs TronWeb.fromMnemonic.
+// Sweeps trivial-entropy mnemonics across TRON paths (coin type 195), pinning
+// the derived Base58 address + uncompressed public key. No secret is embedded:
+// the phrase is derived from OBVIOUSLY-trivial entropy (all-zero, all-one,
+// all-ones), and only public address/pubkey are stored — never a private key.
+// ---------------------------------------------------------------------------
+
+/** Obviously-trivial BIP-39 entropies (bare hex): 16-byte and 32-byte. */
+const HD_ENTROPIES = [
+  '00000000000000000000000000000000', // 16B zero → "abandon…about"
+  '00000000000000000000000000000001', // 16B one
+  'ffffffffffffffffffffffffffffffff', // 16B all-ones
+  '0000000000000000000000000000000000000000000000000000000000000000', // 32B zero (24 words)
+]
+
+/** TRON derivation paths swept per entropy. */
+const HD_PATHS = [
+  "m/44'/195'/0'/0/0",
+  "m/44'/195'/0'/0/1",
+  "m/44'/195'/0'/0/2",
+  "m/44'/195'/1'/0/0",
+  "m/44'/195'/2'/0/0",
+  "m/44'/195'/0'/1/0",
+  "m/44'/195'/0'/1/1",
+  "m/44'/195'/5'/0/9",
+]
+
+const hdCases = []
+const seenHdNames = new Set()
+
+/** Builds + records an HD derivation fixture (TronWeb is authoritative). */
+function pushHd(entropyHex, path, passphrase) {
+  const name = `${entropyHex.length / 2}B/${entropyHex.slice(
+    0,
+    4,
+  )}${entropyHex.slice(-4)} ${path}${
+    passphrase !== undefined ? ` +pp:${passphrase.slice(0, 6)}` : ''
+  }`
+  assert(!seenHdNames.has(name), `duplicate HD case name: ${name}`)
+  seenHdNames.add(name)
+  const mnemonic = entropyToMnemonic(hexToBytes(entropyHex), bip39English)
+  const acct =
+    passphrase !== undefined
+      ? TronWeb.fromMnemonic(mnemonic, path, passphrase)
+      : TronWeb.fromMnemonic(mnemonic, path)
+  assert(
+    typeof acct.address === 'string' && acct.address.startsWith('T'),
+    `${name}: unexpected address ${acct.address}`,
+  )
+  assert(
+    /^0x04[0-9a-f]{128}$/.test(acct.publicKey),
+    `${name}: unexpected public key ${acct.publicKey}`,
+  )
+  hdCases.push({
+    name,
+    entropyHex,
+    ...(passphrase !== undefined ? { passphrase } : {}),
+    path,
+    address: acct.address,
+    publicKey: acct.publicKey,
+  })
+}
+
+for (const entropyHex of HD_ENTROPIES)
+  for (const path of HD_PATHS) pushHd(entropyHex, path)
+// Passphrase (BIP-39 "25th word") variants on the default path.
+pushHd(HD_ENTROPIES[0], "m/44'/195'/0'/0/0", 'omni-\u{1f680}')
+pushHd(HD_ENTROPIES[0], "m/44'/195'/0'/0/0", 'correct horse battery staple')
+
+assert(hdCases.length >= 30, `need >=30 HD cases, got ${hdCases.length}`)
+
+// ---------------------------------------------------------------------------
 // Write
 // ---------------------------------------------------------------------------
 
@@ -565,16 +639,18 @@ const out = {
     messageCount: messages.length,
     transactionCount: transactions.length,
     typedDataCount: typedDataCases.length,
+    hdCount: hdCases.length,
     boundaries: BOUNDARIES,
   },
   messages,
   transactions,
   typedData: typedDataCases,
+  hd: hdCases,
 }
 
 const outDir = resolve(import.meta.dirname, '../test/fixtures/sig')
 mkdirSync(outDir, { recursive: true })
 writeFileSync(resolve(outDir, 'fuzz.json'), `${JSON.stringify(out, null, 2)}\n`)
 console.log(
-  `fuzz.json: ${messages.length} message + ${transactions.length} tx + ${typedDataCases.length} typed-data case(s)`,
+  `fuzz.json: ${messages.length} message + ${transactions.length} tx + ${typedDataCases.length} typed-data + ${hdCases.length} HD case(s)`,
 )

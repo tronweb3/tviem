@@ -91,18 +91,36 @@ export type SigFuzzTypedDataFixture = {
   address: string
 }
 
-/** The whole `fuzz.json` corpus (message + transaction + typed-data vectors). */
+/** One deterministic-fuzz HD (BIP-39/BIP-32) derivation case. */
+export type SigFuzzHdFixture = {
+  /** Human-readable case name. */
+  name: string
+  /** BIP-39 entropy (bare hex) — obviously trivial (all-zero/one/ones). */
+  entropyHex: string
+  /** BIP-39 passphrase, when the case exercises one. */
+  passphrase?: string
+  /** The TRON derivation path (coin type 195). */
+  path: string
+  /** Derived Base58Check address. */
+  address: string
+  /** Derived uncompressed public key (`0x04…`). */
+  publicKey: string
+}
+
+/** The whole `fuzz.json` corpus (message + transaction + typed-data + HD). */
 export type SigFuzzFixtures = {
   meta: {
     seed: number
     messageCount: number
     transactionCount: number
     typedDataCount: number
+    hdCount: number
     boundaries: number[]
   }
   messages: SigFuzzMessageFixture[]
   transactions: SigFuzzTransactionFixture[]
   typedData: SigFuzzTypedDataFixture[]
+  hd: SigFuzzHdFixture[]
 }
 
 function readJson<T>(fileName: string): T[] {
