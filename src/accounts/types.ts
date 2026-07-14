@@ -1,4 +1,5 @@
 // TRON-specific, clean-room implementation for @tronweb3/omni.
+import type { HDKey } from '@scure/bip32'
 import type { Address } from '../types/address.js'
 import type { ByteArray, Hex, SignableMessage } from '../types/misc.js'
 import type { HashTypedDataParameters } from '../utils/signature/hashTypedData.js'
@@ -66,7 +67,7 @@ export type TronCustomSource = {
 }
 
 /** How an account holds its signing material. */
-export type AccountSource = 'privateKey' | 'custom'
+export type AccountSource = 'privateKey' | 'custom' | 'hd'
 
 /** A locally-signing account backed by a raw secp256k1 private key. */
 export type TronLocalAccount = TronCustomSource & {
@@ -74,6 +75,21 @@ export type TronLocalAccount = TronCustomSource & {
   source: 'privateKey'
   /** Discriminant for the account union. */
   type: 'local'
+}
+
+/**
+ * A locally-signing account derived from a BIP-39 mnemonic / BIP-32 HD node
+ * (via {@link mnemonicToAccount} / {@link hdKeyToAccount}). Signs with the
+ * derived private key; `getHdKey` exposes the derived node for further
+ * derivation or extended-key export.
+ */
+export type TronHDAccount = TronCustomSource & {
+  /** Signing source. `'hd'` = derived from an HD key. */
+  source: 'hd'
+  /** Discriminant for the account union. */
+  type: 'local'
+  /** Returns the derived BIP-32 HD node (`@scure/bip32`). */
+  getHdKey: () => HDKey
 }
 
 /**
@@ -91,7 +107,7 @@ export type TronCustomAccount = TronCustomSource & {
 
 /**
  * Any account this SDK can produce: a private-key-backed
- * {@link TronLocalAccount} or a caller-supplied {@link TronCustomAccount}.
- * v0.1c widens this further with delegated/remote signers.
+ * {@link TronLocalAccount}, an HD-derived {@link TronHDAccount}, or a
+ * caller-supplied {@link TronCustomAccount}.
  */
-export type TronAccount = TronLocalAccount | TronCustomAccount
+export type TronAccount = TronLocalAccount | TronHDAccount | TronCustomAccount

@@ -202,9 +202,7 @@
       "src/utils/transaction/protobuf/**"
     ],
     "ignoreDependencies": [
-      "@size-limit/preset-big-lib",
-      "@scure/bip32",
-      "@scure/bip39"
+      "@size-limit/preset-big-lib"
     ]
   }
 }

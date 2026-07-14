@@ -1,3 +1,5 @@
+// biome-ignore lint/performance/noBarrelFile: entrypoint module
+export { HDKey } from '@scure/bip32'
 export type {
   Abi,
   AbiEvent,
@@ -7,11 +9,24 @@ export type {
   AbiParameterToPrimitiveType,
   AbiStateMutability,
 } from 'abitype'
-// biome-ignore lint/performance/noBarrelFile: entrypoint module
+export {
+  type GenerateMnemonicErrorType,
+  generateMnemonic,
+} from './accounts/generateMnemonic.js'
 export {
   type GeneratePrivateKeyErrorType,
   generatePrivateKey,
 } from './accounts/generatePrivateKey.js'
+export {
+  type HDOptions,
+  type HdKeyToAccountErrorType,
+  hdKeyToAccount,
+} from './accounts/hdKeyToAccount.js'
+export {
+  type MnemonicToAccountErrorType,
+  type MnemonicToAccountOptions,
+  mnemonicToAccount,
+} from './accounts/mnemonicToAccount.js'
 export {
   type PrivateKeyToAccountErrorType,
   privateKeyToAccount,
@@ -26,6 +41,7 @@ export type {
   TronAccount,
   TronCustomAccount,
   TronCustomSource,
+  TronHDAccount,
   TronLocalAccount,
 } from './accounts/types.js'
 export {
