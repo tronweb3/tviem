@@ -7,24 +7,41 @@ import { describe, expect, test } from 'vitest'
 import {
   loadSigFuzzFixtures,
   type SigFuzzMessageFixture,
+  type SigFuzzTypedDataFixture,
 } from '../../../test/fixtures/sig/loader.js'
 import type { Address } from '../../types/address.js'
 import type { Hex, SignableMessage } from '../../types/misc.js'
 import { hashMessage } from './hashMessage.js'
+import { type HashTypedDataParameters, hashTypedData } from './hashTypedData.js'
 import { signMessage } from './signMessage.js'
+import { signTypedData } from './signTypedData.js'
 import { recoverMessageAddress, verifyMessage } from './verifyMessage.js'
+import { recoverTypedDataAddress, verifyTypedData } from './verifyTypedData.js'
 
 const PRIVATE_KEY = {
   pk1: '0x0000000000000000000000000000000000000000000000000000000000000001',
   pk2: '0x0000000000000000000000000000000000000000000000000000000000000002',
 } as const
 
-const { meta, messages } = loadSigFuzzFixtures()
+const { meta, messages, typedData } = loadSigFuzzFixtures()
 
 /** Reconstructs the {@link SignableMessage} input for a fixture. */
 function messageInput(fixture: SigFuzzMessageFixture): SignableMessage {
   if (fixture.rawHex !== undefined) return { raw: fixture.rawHex as Hex }
   return fixture.message as string
+}
+
+/** Reconstructs the omni {@link HashTypedDataParameters} for a fixture. */
+function typedDataInput(
+  fixture: SigFuzzTypedDataFixture,
+  alt = false,
+): HashTypedDataParameters {
+  return {
+    domain: alt ? fixture.domainAlt : fixture.domain,
+    types: fixture.types,
+    primaryType: fixture.primaryType,
+    message: alt ? fixture.valueAlt : fixture.value,
+  } as HashTypedDataParameters
 }
 
 describe('signature message fuzz (differential vs TronWeb)', () => {
@@ -63,5 +80,43 @@ describe('signature message fuzz (differential vs TronWeb)', () => {
         address: fixture.address as Address,
       }),
     ).toBe(true)
+  })
+})
+
+describe('typed-data fuzz (differential vs TronWeb)', () => {
+  test('the corpus covers nested structs, arrays, scalars and trcToken', () => {
+    expect(typedData.length).toBe(meta.typedDataCount)
+    expect(typedData.length).toBeGreaterThanOrEqual(30)
+  })
+
+  test.each(
+    typedData.map((t) => [t.name, t] as const),
+  )('typed-data %s', (_name, fixture: SigFuzzTypedDataFixture) => {
+    const params = typedDataInput(fixture)
+    const privateKey = PRIVATE_KEY[fixture.privateKeyLabel]
+
+    // Digest matches the gold standard.
+    expect(hashTypedData(params)).toBe(fixture.digest)
+
+    // Our signature is byte-identical to TronWeb's.
+    const signed = signTypedData({ ...params, privateKey })
+    expect(signed.serialized).toBe(fixture.signature)
+
+    // Recovery from the gold-standard signature yields the right signer.
+    expect(
+      recoverTypedDataAddress({ ...params, signature: fixture.signature }),
+    ).toBe(fixture.address)
+
+    // Round-trip: verify our own signature against the expected address.
+    expect(
+      verifyTypedData({
+        ...params,
+        signature: signed.serialized,
+        address: fixture.address as Address,
+      }),
+    ).toBe(true)
+
+    // TRON address-form invariance: base58 domain/message digest identically.
+    expect(hashTypedData(typedDataInput(fixture, true))).toBe(fixture.digest)
   })
 })

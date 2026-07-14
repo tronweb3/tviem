@@ -30,7 +30,8 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { utils } from 'tronweb'
 
-const { crypto, message: messageUtils } = utils
+const { crypto, message: messageUtils, typedData } = utils
+const { TypedDataEncoder } = typedData
 
 // ---------------------------------------------------------------------------
 // Fixed constants (never derived from clock / network / randomness).
@@ -330,6 +331,231 @@ assert(
 )
 
 // ---------------------------------------------------------------------------
+// TIP-712 typed-data fuzz vectors (differential vs TronWeb `utils.typedData`).
+// Each case pins the oracle digest, `0x||r||s||v` signature and recovered
+// signer. Covers nested structs, fixed/dynamic arrays, arrays of structs,
+// every scalar width, bytes/bytesN, bool and the TRON-native `trcToken`.
+// Addresses are stored in 0x EVM form (`value`/`domain`, what the oracle saw)
+// AND base58 form (`valueAlt`/`domainAlt`) so the diff test proves omni's
+// TRON address-form invariance yields the same digest.
+// ---------------------------------------------------------------------------
+
+/** Address pool (data values, not signer keys) with all TRON forms. */
+const ADDR_POOL = [
+  { evm: `0x${HEX_ADDRESS.pk1.slice(2)}`, base58: ADDRESS.pk1 },
+  { evm: `0x${HEX_ADDRESS.pk2.slice(2)}`, base58: ADDRESS.pk2 },
+]
+const EVM_TO_BASE58 = new Map(ADDR_POOL.map((a) => [a.evm, a.base58]))
+
+/** A deterministic 0x-hex byte string of exactly `nBytes` bytes. */
+function randHex(nBytes) {
+  const b = new Uint8Array(nBytes)
+  for (let i = 0; i < nBytes; i++) b[i] = randInt(0, 256)
+  return bytesToHex(b)
+}
+/** A deterministic unsigned integer of `bits` bits, as a decimal string. */
+function randUintStr(bits) {
+  let v = 0n
+  for (let i = 0; i < bits / 8; i++) v = (v << 8n) | BigInt(randInt(0, 256))
+  return v.toString()
+}
+/** A deterministic signed integer of `bits` bits, as a decimal string. */
+function randIntStr(bits) {
+  const u = BigInt(randUintStr(bits))
+  const mod = 1n << BigInt(bits)
+  const half = 1n << BigInt(bits - 1)
+  return (u >= half ? u - mod : u).toString()
+}
+/** Picks a pool address (0x EVM form). */
+function randAddr() {
+  return ADDR_POOL[randInt(0, ADDR_POOL.length)].evm
+}
+/** Deep-rewrites known 0x EVM pool addresses to their base58 form. */
+function toAltForm(x) {
+  if (typeof x === 'string') return EVM_TO_BASE58.get(x) ?? x
+  if (Array.isArray(x)) return x.map(toAltForm)
+  if (x && typeof x === 'object') {
+    const o = {}
+    for (const k of Object.keys(x)) o[k] = toAltForm(x[k])
+    return o
+  }
+  return x
+}
+
+/** Domain templates cycled across cases (±verifyingContract, ±salt, chainId). */
+const TD_DOMAINS = [
+  {
+    name: 'Omni TIP-712',
+    version: '1',
+    chainId: 728126428,
+    verifyingContract: ADDR_POOL[0].evm,
+  },
+  {
+    name: 'Omni',
+    version: '2',
+    chainId: 1,
+    verifyingContract: ADDR_POOL[1].evm,
+    salt: randHex(32),
+  },
+  { name: 'NoContract', version: '1', chainId: 3448148188 },
+  {
+    name: 'Zero',
+    version: '1',
+    chainId: 0,
+    verifyingContract: ADDR_POOL[0].evm,
+  },
+]
+
+const typedDataCases = []
+const seenTdNames = new Set()
+
+/** Builds + records a differential typed-data fixture. */
+function pushTyped(name, label, types, value) {
+  assert(!seenTdNames.has(name), `duplicate typed-data case name: ${name}`)
+  seenTdNames.add(name)
+  const domain = TD_DOMAINS[typedDataCases.length % TD_DOMAINS.length]
+  const primaryType = TypedDataEncoder.getPrimaryType(types)
+  const key = keyHex(label)
+  const digest = TypedDataEncoder.hash(domain, types, value)
+  const signature = typedData.signTypedData(domain, types, value, key)
+  const recovered = typedData.verifyTypedData(domain, types, value, signature)
+  const expectedEvm = `0x${HEX_ADDRESS[label].slice(2)}`
+  assert(
+    recovered.toLowerCase() === expectedEvm,
+    `${name}: recovered ${recovered}, expected ${expectedEvm}`,
+  )
+  assert(
+    signature.endsWith('1b') || signature.endsWith('1c'),
+    `${name}: unexpected recovery byte`,
+  )
+  typedDataCases.push({
+    name,
+    privateKeyLabel: label,
+    domain,
+    domainAlt: toAltForm(domain),
+    types,
+    primaryType,
+    value,
+    valueAlt: toAltForm(value),
+    digest,
+    signature,
+    address: ADDRESS[label],
+  })
+}
+
+// --- A. Nested Mail (Person structs, string, address). ---------------------
+const mailTypes = {
+  Person: [
+    { name: 'name', type: 'string' },
+    { name: 'wallet', type: 'address' },
+  ],
+  Mail: [
+    { name: 'from', type: 'Person' },
+    { name: 'to', type: 'Person' },
+    { name: 'contents', type: 'string' },
+  ],
+}
+for (let i = 0; i < 10; i++) {
+  const label = i % 2 === 0 ? 'pk1' : 'pk2'
+  pushTyped(`mail #${i} (${label})`, label, mailTypes, {
+    from: { name: asciiString(randInt(1, 10)), wallet: randAddr() },
+    to: { name: asciiString(randInt(1, 10)), wallet: randAddr() },
+    contents: asciiString(randInt(0, 20)),
+  })
+}
+
+// --- B. Kitchen sink: every scalar width, bytes/bytesN, bool. --------------
+const sinkTypes = {
+  Sink: [
+    { name: 'u8', type: 'uint8' },
+    { name: 'u16', type: 'uint16' },
+    { name: 'u32', type: 'uint32' },
+    { name: 'u64', type: 'uint64' },
+    { name: 'u128', type: 'uint128' },
+    { name: 'u256', type: 'uint256' },
+    { name: 'i8', type: 'int8' },
+    { name: 'i128', type: 'int128' },
+    { name: 'i256', type: 'int256' },
+    { name: 'flag', type: 'bool' },
+    { name: 'raw', type: 'bytes' },
+    { name: 'b1', type: 'bytes1' },
+    { name: 'b4', type: 'bytes4' },
+    { name: 'b32', type: 'bytes32' },
+    { name: 'who', type: 'address' },
+    { name: 'note', type: 'string' },
+  ],
+}
+for (let i = 0; i < 10; i++) {
+  const label = i % 2 === 0 ? 'pk1' : 'pk2'
+  pushTyped(`sink #${i} (${label})`, label, sinkTypes, {
+    u8: randUintStr(8),
+    u16: randUintStr(16),
+    u32: randUintStr(32),
+    u64: randUintStr(64),
+    u128: randUintStr(128),
+    u256: randUintStr(256),
+    i8: randIntStr(8),
+    i128: randIntStr(128),
+    i256: randIntStr(256),
+    flag: randInt(0, 2) === 1,
+    raw: randHex(randInt(0, 33)),
+    b1: randHex(1),
+    b4: randHex(4),
+    b32: randHex(32),
+    who: randAddr(),
+    note: asciiString(randInt(0, 16)),
+  })
+}
+
+// --- C. Batch: dynamic/fixed arrays, arrays of structs, bytesN. ------------
+const batchTypes = {
+  Item: [
+    { name: 'id', type: 'uint256' },
+    { name: 'tag', type: 'bytes4' },
+  ],
+  Batch: [
+    { name: 'items', type: 'Item[]' },
+    { name: 'amounts', type: 'uint256[]' },
+    { name: 'addrs', type: 'address[2]' },
+    { name: 'blobs', type: 'bytes[]' },
+  ],
+}
+for (let i = 0; i < 10; i++) {
+  const label = i % 2 === 0 ? 'pk1' : 'pk2'
+  pushTyped(`batch #${i} (${label})`, label, batchTypes, {
+    items: Array.from({ length: randInt(1, 4) }, () => ({
+      id: randUintStr(64),
+      tag: randHex(4),
+    })),
+    amounts: Array.from({ length: randInt(0, 4) }, () => randUintStr(128)),
+    addrs: [randAddr(), randAddr()],
+    blobs: Array.from({ length: randInt(0, 3) }, () => randHex(randInt(0, 19))),
+  })
+}
+
+// --- D. Pay: TRON-native trcToken. -----------------------------------------
+const payTypes = {
+  Pay: [
+    { name: 'token', type: 'trcToken' },
+    { name: 'amount', type: 'uint256' },
+    { name: 'to', type: 'address' },
+  ],
+}
+for (let i = 0; i < 8; i++) {
+  const label = i % 2 === 0 ? 'pk1' : 'pk2'
+  pushTyped(`pay #${i} (${label})`, label, payTypes, {
+    token: randUintStr(32),
+    amount: randUintStr(96),
+    to: randAddr(),
+  })
+}
+
+assert(
+  typedDataCases.length >= 30,
+  `need >=30 typed-data cases, got ${typedDataCases.length}`,
+)
+
+// ---------------------------------------------------------------------------
 // Write
 // ---------------------------------------------------------------------------
 
@@ -338,15 +564,17 @@ const out = {
     seed: SEED,
     messageCount: messages.length,
     transactionCount: transactions.length,
+    typedDataCount: typedDataCases.length,
     boundaries: BOUNDARIES,
   },
   messages,
   transactions,
+  typedData: typedDataCases,
 }
 
 const outDir = resolve(import.meta.dirname, '../test/fixtures/sig')
 mkdirSync(outDir, { recursive: true })
 writeFileSync(resolve(outDir, 'fuzz.json'), `${JSON.stringify(out, null, 2)}\n`)
 console.log(
-  `fuzz.json: ${messages.length} message + ${transactions.length} tx case(s)`,
+  `fuzz.json: ${messages.length} message + ${transactions.length} tx + ${typedDataCases.length} typed-data case(s)`,
 )

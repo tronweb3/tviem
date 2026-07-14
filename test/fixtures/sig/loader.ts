@@ -59,16 +59,50 @@ export type SigFuzzTransactionFixture = SigTransactionFixture & {
   ownerMatches: boolean
 }
 
-/** The whole `fuzz.json` corpus (message + transaction differential vectors). */
+/** A TIP-712 struct type map (struct name -> ordered fields). */
+export type SigFuzzTypedDataTypes = Record<
+  string,
+  { name: string; type: string }[]
+>
+
+/** One deterministic-fuzz TIP-712 typed-data signing case. */
+export type SigFuzzTypedDataFixture = {
+  /** Human-readable case name. */
+  name: string
+  /** Which trivial key produced the signature. */
+  privateKeyLabel: PrivateKeyLabel
+  /** The signing domain (addresses in 0x EVM form, what the oracle saw). */
+  domain: Record<string, unknown>
+  /** Same domain with pool addresses rewritten to base58 (invariance check). */
+  domainAlt: Record<string, unknown>
+  /** The struct type definitions (excludes `EIP712Domain`). */
+  types: SigFuzzTypedDataTypes
+  /** The struct being signed. */
+  primaryType: string
+  /** The struct value (addresses in 0x EVM form). */
+  value: Record<string, unknown>
+  /** Same value with pool addresses rewritten to base58 (invariance check). */
+  valueAlt: Record<string, unknown>
+  /** TIP-712 keccak digest (`0x` hex). */
+  digest: string
+  /** `0x||r||s||v` signature (`0x` hex, v ∈ {0x1b,0x1c}). */
+  signature: string
+  /** Base58Check address recovered from the signature. */
+  address: string
+}
+
+/** The whole `fuzz.json` corpus (message + transaction + typed-data vectors). */
 export type SigFuzzFixtures = {
   meta: {
     seed: number
     messageCount: number
     transactionCount: number
+    typedDataCount: number
     boundaries: number[]
   }
   messages: SigFuzzMessageFixture[]
   transactions: SigFuzzTransactionFixture[]
+  typedData: SigFuzzTypedDataFixture[]
 }
 
 function readJson<T>(fileName: string): T[] {
