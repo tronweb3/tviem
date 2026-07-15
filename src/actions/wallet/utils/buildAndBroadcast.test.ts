@@ -2,6 +2,7 @@ import { expect, test } from 'vitest'
 import { rpc } from '../../../../test/fixtures/rpc/loader.js'
 import { loadTxFixtureFile } from '../../../../test/fixtures/tx/loader.js'
 import { createMockTransport } from '../../../../test/mock/createMockTransport.js'
+import { parseBroadcast } from '../../../../test/mock/parseBroadcast.js'
 import { createPublicClient } from '../../../clients/createPublicClient.js'
 import { parseAccount } from '../../../types/account.js'
 import { toHex } from '../../../utils/address/toHex.js'
@@ -22,7 +23,7 @@ function writeMock() {
   return createMockTransport({
     responses: {
       getnowblock: { response: rpc('getnowblock.fixed') },
-      broadcasttransaction: { response: rpc('broadcasttransaction.ok') },
+      broadcasthex: { response: rpc('broadcasttransaction.ok') },
     },
   })
 }
@@ -52,14 +53,11 @@ test('runs getNowBlock → sign → broadcast and returns the local txID', async
 
   // Byte-for-byte gold: the helper produces the same bytes as the action.
   expect(txID).toBe(bandwidth?.txID)
-  expect(calls.map((c) => c.path)).toEqual([
-    'getnowblock',
-    'broadcasttransaction',
-  ])
+  expect(calls.map((c) => c.path)).toEqual(['getnowblock', 'broadcasthex'])
   expect(calls[0]?.method).toBe('GET')
   expect(calls[1]?.method).toBe('POST')
 
-  const body = bodyOf('broadcasttransaction') as {
+  const body = parseBroadcast(bodyOf('broadcasthex')) as {
     txID: string
     raw_data_hex: string
     raw_data: { feeLimit?: bigint | undefined }
@@ -84,7 +82,7 @@ test('writes fee_limit into raw_data when supplied', async () => {
     feeLimit: 15000000n,
   })
 
-  const body = bodyOf('broadcasttransaction') as {
+  const body = parseBroadcast(bodyOf('broadcasthex')) as {
     raw_data: { feeLimit?: bigint | undefined }
   }
   expect(body.raw_data.feeLimit).toBe(15000000n)
@@ -98,7 +96,7 @@ test('defaults now to the wall clock when omitted', async () => {
 
   await buildAndBroadcast(client, { contract: freezeContract(), account })
 
-  const body = bodyOf('broadcasttransaction') as {
+  const body = parseBroadcast(bodyOf('broadcasthex')) as {
     raw_data: { timestamp: bigint }
   }
   const after = BigInt(Date.now())

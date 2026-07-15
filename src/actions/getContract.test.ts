@@ -2,6 +2,7 @@ import { describe, expect, test } from 'vitest'
 
 import { rpc } from '../../test/fixtures/rpc/loader.js'
 import { createMockTransport } from '../../test/mock/createMockTransport.js'
+import { parseBroadcast } from '../../test/mock/parseBroadcast.js'
 import { privateKeyToAccount } from '../accounts/privateKeyToAccount.js'
 import { createPublicClient } from '../clients/createPublicClient.js'
 import { createWalletClient } from '../clients/createWalletClient.js'
@@ -149,7 +150,7 @@ describe('getContract', () => {
       const { transport, calls, bodyOf } = createMockTransport({
         responses: {
           getnowblock: { response: rpc('getnowblock.fixed') },
-          broadcasttransaction: { response: { result: true } },
+          broadcasthex: { response: { result: true } },
         },
       })
       const client = createWalletClient({ transport, account })
@@ -166,12 +167,9 @@ describe('getContract', () => {
       // Local txID is authoritative and deterministic (fixed block + `now`).
       expect(result.txID).toMatch(/^[0-9a-f]{64}$/)
       // Both node round-trips happened: fetch block, then broadcast.
-      expect(calls.map((c) => c.path)).toEqual([
-        'getnowblock',
-        'broadcasttransaction',
-      ])
+      expect(calls.map((c) => c.path)).toEqual(['getnowblock', 'broadcasthex'])
       // The broadcast body is the whole signed transaction.
-      const body = bodyOf('broadcasttransaction') as {
+      const body = parseBroadcast(bodyOf('broadcasthex')) as {
         signature: string[]
         txID: string
       }

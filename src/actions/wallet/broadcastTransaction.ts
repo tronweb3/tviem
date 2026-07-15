@@ -3,6 +3,7 @@ import type { SignableTransaction } from '../../accounts/types.js'
 import type { Client } from '../../clients/createClient.js'
 import { TronNodeError } from '../../errors/node.js'
 import { TransactionExpiredError, TronRpcError } from '../../errors/rpc.js'
+import { toBroadcastHex } from '../../utils/transaction/serializeTransaction.js'
 import { assertRpcSuccess } from '../utils/normalizeResponse.js'
 
 export type BroadcastTransactionParameters = {
@@ -11,13 +12,8 @@ export type BroadcastTransactionParameters = {
 }
 export type BroadcastTransactionReturnType = { txid: string }
 
-/** The broadcast request body: the whole signed transaction. */
-type BroadcastBody = {
-  txID?: string | undefined
-  raw_data?: unknown
-  raw_data_hex?: string | undefined
-  signature: string[]
-}
+/** The `broadcasthex` request body: the full signed `Transaction` protobuf. */
+type BroadcastBody = { transaction: string }
 
 /**
  * TRON broadcast rejection codes that mean the transaction's reference block
@@ -27,8 +23,12 @@ type BroadcastBody = {
 const expirationCodes = new Set(['TRANSACTION_EXPIRATION_ERROR', 'TAPOS_ERROR'])
 
 /**
- * Broadcasts an already-signed transaction via `broadcasttransaction` (full
- * node). The body is the whole signed transaction.
+ * Broadcasts an already-signed transaction via `broadcasthex` (full node): the
+ * body is the full signed `Transaction` protobuf as hex, which the node relays
+ * verbatim without re-parsing any JSON. This is what lets a locally-built
+ * transaction reach a real java-tron node — `broadcasttransaction` rebuilds the
+ * transaction from a snake_case `raw_data` JSON and ignores `raw_data_hex`, so
+ * the SDK's camelCase model would not deserialize there.
  *
  * Trustless invariant: the returned `txid` is the transaction's **local**
  * `txID` (recomputed at signing time by the four sign guards), never the value
@@ -49,23 +49,23 @@ export async function broadcastTransaction(
   parameters: BroadcastTransactionParameters,
 ): Promise<BroadcastTransactionReturnType> {
   const { signedTransaction } = parameters
-  const { txID, raw_data, raw_data_hex, signature } = signedTransaction
+  const { txID, signature } = signedTransaction
 
   // Pre-condition: never broadcast an unsigned transaction.
   if (!signature || signature.length === 0)
     throw new TronRpcError(
       'Cannot broadcast a transaction without a signature.',
-      { metaMessages: ['Path: broadcasttransaction'] },
+      { metaMessages: ['Path: broadcasthex'] },
     )
 
-  const body: BroadcastBody = { txID, raw_data, raw_data_hex, signature }
+  const body: BroadcastBody = { transaction: toBroadcastHex(signedTransaction) }
 
   let response: unknown
   try {
     response = await client.request({
       node: 'full',
       method: 'POST',
-      path: 'broadcasttransaction',
+      path: 'broadcasthex',
       body,
     })
   } catch (error) {
@@ -81,7 +81,7 @@ export async function broadcastTransaction(
 
   // Secondary guard: a `{ result: false }` rejection without a `code` passes
   // through the transport normalizer untouched.
-  assertRpcSuccess(response, { path: 'broadcasttransaction' })
+  assertRpcSuccess(response, { path: 'broadcasthex' })
 
   // Trustless invariant: the local txID is authoritative.
   return { txid: txID ?? '' }

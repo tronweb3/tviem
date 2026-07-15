@@ -20,6 +20,7 @@ import {
   type TxFixture,
 } from '../../../test/fixtures/tx/loader.js'
 import { createMockTransport } from '../../../test/mock/createMockTransport.js'
+import { parseBroadcast } from '../../../test/mock/parseBroadcast.js'
 import { privateKeyToAccount } from '../../accounts/privateKeyToAccount.js'
 import { createWalletClient } from '../../clients/createWalletClient.js'
 import type { Address } from '../../types/address.js'
@@ -69,7 +70,7 @@ function writeMock() {
   return createMockTransport({
     responses: {
       getnowblock: { response: rpc('getnowblock.fixed') },
-      broadcasttransaction: { response: rpc('broadcasttransaction.ok') },
+      broadcasthex: { response: rpc('broadcasttransaction.ok') },
     },
   })
 }
@@ -106,12 +107,9 @@ test('sendTrx reproduces the canonical TransferContract gold vector byte-for-byt
 
   // Returned id is the LOCAL txID and equals the gold vector.
   expect(txID).toBe(gold.txID)
-  expect(calls.map((c) => c.path)).toEqual([
-    'getnowblock',
-    'broadcasttransaction',
-  ])
+  expect(calls.map((c) => c.path)).toEqual(['getnowblock', 'broadcasthex'])
 
-  const body = bodyOf('broadcasttransaction') as BroadcastBody
+  const body = parseBroadcast(bodyOf('broadcasthex')) as BroadcastBody
   // Zero-drift: locally built bytes === v0.1a tx gold; sig === v0.1a sig gold.
   expect(body.raw_data_hex).toBe(gold.rawDataHex)
   expect(body.txID).toBe(gold.txID)
@@ -162,12 +160,9 @@ test.each(
   })
 
   expect(txID).toBe(gold.txID)
-  expect(calls.map((c) => c.path)).toEqual([
-    'getnowblock',
-    'broadcasttransaction',
-  ])
+  expect(calls.map((c) => c.path)).toEqual(['getnowblock', 'broadcasthex'])
 
-  const body = bodyOf('broadcasttransaction') as BroadcastBody
+  const body = parseBroadcast(bodyOf('broadcasthex')) as BroadcastBody
   // Zero-drift across the writeContract build path: calldata + feeLimit (in
   // the signed hash) + TaPoS + txID + signature all match the v0.1a gold.
   expect(body.raw_data_hex).toBe(gold.rawDataHex)
@@ -222,7 +217,7 @@ type WriteClient = ReturnType<typeof makeClient>
 /**
  * Drives one write action against a fresh mock and asserts the broadcast body
  * (bytes + txID + pk=1 signature) equals the loaded gold vector byte-for-byte,
- * and that the pipeline hit exactly getnowblock → broadcasttransaction.
+ * and that the pipeline hit exactly getnowblock → broadcasthex.
  */
 async function driveAndAssertGold(
   gold: TxFixture,
@@ -238,12 +233,9 @@ async function driveAndAssertGold(
 
   // Returned id is the LOCAL txID and equals the gold vector.
   expect(txID).toBe(gold.txID)
-  expect(calls.map((c) => c.path)).toEqual([
-    'getnowblock',
-    'broadcasttransaction',
-  ])
+  expect(calls.map((c) => c.path)).toEqual(['getnowblock', 'broadcasthex'])
 
-  const body = bodyOf('broadcasttransaction') as BroadcastBody
+  const body = parseBroadcast(bodyOf('broadcasthex')) as BroadcastBody
   // Zero-drift: locally built bytes === v0.1a tx gold; sig === v0.1a sig gold.
   expect(body.raw_data_hex).toBe(gold.rawDataHex)
   expect(body.txID).toBe(gold.txID)

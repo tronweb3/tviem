@@ -55,7 +55,7 @@ test('sendTrx runs the full pipeline when the client hoists an account', async (
   const { transport: mock } = createMockTransport({
     responses: {
       getnowblock: { response: rpc('getnowblock.fixed') },
-      broadcasttransaction: { response: rpc('broadcasttransaction.ok') },
+      broadcasthex: { response: rpc('broadcasttransaction.ok') },
     },
   })
   const client = createWalletClient({ account: pk1, transport: mock })
@@ -67,7 +67,7 @@ test('a per-call account satisfies the guard on an account-less client', async (
   const { transport: mock } = createMockTransport({
     responses: {
       getnowblock: { response: rpc('getnowblock.fixed') },
-      broadcasttransaction: { response: rpc('broadcasttransaction.ok') },
+      broadcasthex: { response: rpc('broadcasttransaction.ok') },
     },
   })
   const client = createWalletClient({ transport: mock })

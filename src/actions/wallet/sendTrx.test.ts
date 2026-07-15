@@ -1,6 +1,7 @@
 import { expect, test } from 'vitest'
 import { rpc } from '../../../test/fixtures/rpc/loader.js'
 import { createMockTransport } from '../../../test/mock/createMockTransport.js'
+import { parseBroadcast } from '../../../test/mock/parseBroadcast.js'
 import { createPublicClient } from '../../clients/createPublicClient.js'
 import { createWalletClient } from '../../clients/createWalletClient.js'
 import { AccountNotFoundError } from '../../errors/rpc.js'
@@ -23,7 +24,7 @@ function writeMock() {
   return createMockTransport({
     responses: {
       getnowblock: { response: rpc('getnowblock.fixed') },
-      broadcasttransaction: { response: rpc('broadcasttransaction.ok') },
+      broadcasthex: { response: rpc('broadcasttransaction.ok') },
     },
   })
 }
@@ -38,17 +39,14 @@ test('builds, signs and broadcasts the canonical transfer byte-for-byte', async 
   expect(txID).toBe(TX_ID)
 
   // It fetched the latest block first (TaPoS), then broadcast.
-  expect(calls.map((c) => c.path)).toEqual([
-    'getnowblock',
-    'broadcasttransaction',
-  ])
+  expect(calls.map((c) => c.path)).toEqual(['getnowblock', 'broadcasthex'])
   expect(calls[0]?.node).toBe('full')
   expect(calls[0]?.method).toBe('GET')
   expect(calls[1]?.node).toBe('full')
   expect(calls[1]?.method).toBe('POST')
 
   // The broadcast body is the whole signed transaction, byte-for-byte gold.
-  const body = bodyOf('broadcasttransaction') as {
+  const body = parseBroadcast(bodyOf('broadcasthex')) as {
     txID: string
     raw_data: unknown
     raw_data_hex: string
@@ -80,7 +78,8 @@ test('accepts a per-call account overriding the (absent) client account', async 
   })
   expect(txID).toBe(TX_ID)
   expect(
-    (bodyOf('broadcasttransaction') as { raw_data_hex: string }).raw_data_hex,
+    (parseBroadcast(bodyOf('broadcasthex')) as { raw_data_hex: string })
+      .raw_data_hex,
   ).toBe(RAW_DATA_HEX)
 })
 
@@ -88,7 +87,9 @@ test('writes a memo into raw_data.data', async () => {
   const { transport, bodyOf } = writeMock()
   const client = createWalletClient({ account: pk1, transport })
   await client.sendTrx({ to, amount: 1000000n, now, memo: '0x6f6d6e69' })
-  const body = bodyOf('broadcasttransaction') as { raw_data: { data?: string } }
+  const body = parseBroadcast(bodyOf('broadcasthex')) as {
+    raw_data: { data?: string }
+  }
   expect(body.raw_data.data).toBe('6f6d6e69')
 })
 

@@ -2,6 +2,7 @@ import { expect, test } from 'vitest'
 import { rpc } from '../../../test/fixtures/rpc/loader.js'
 import { loadTxFixtureFile } from '../../../test/fixtures/tx/loader.js'
 import { createMockTransport } from '../../../test/mock/createMockTransport.js'
+import { parseBroadcast } from '../../../test/mock/parseBroadcast.js'
 import { createPublicClient } from '../../clients/createPublicClient.js'
 import { createWalletClient } from '../../clients/createWalletClient.js'
 import { AccountNotFoundError } from '../../errors/rpc.js'
@@ -17,7 +18,7 @@ function writeMock() {
   return createMockTransport({
     responses: {
       getnowblock: { response: rpc('getnowblock.fixed') },
-      broadcasttransaction: { response: rpc('broadcasttransaction.ok') },
+      broadcasthex: { response: rpc('broadcasttransaction.ok') },
     },
   })
 }
@@ -29,12 +30,9 @@ test('withdraws expired unfreeze byte-for-byte against the gold vector', async (
   const { txID } = await withdrawExpireUnfreeze(client, { now })
 
   expect(txID).toBe(fixture?.txID)
-  expect(calls.map((c) => c.path)).toEqual([
-    'getnowblock',
-    'broadcasttransaction',
-  ])
+  expect(calls.map((c) => c.path)).toEqual(['getnowblock', 'broadcasthex'])
 
-  const body = bodyOf('broadcasttransaction') as {
+  const body = parseBroadcast(bodyOf('broadcasthex')) as {
     txID: string
     raw_data_hex: string
     signature: string[]
@@ -52,7 +50,8 @@ test('resolves the per-call account when the client hoists none', async () => {
   const { txID } = await withdrawExpireUnfreeze(client, { account: pk1, now })
   expect(txID).toBe(fixture?.txID)
   expect(
-    (bodyOf('broadcasttransaction') as { raw_data_hex: string }).raw_data_hex,
+    (parseBroadcast(bodyOf('broadcasthex')) as { raw_data_hex: string })
+      .raw_data_hex,
   ).toBe(fixture?.rawDataHex)
 })
 
