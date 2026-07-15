@@ -329,6 +329,12 @@ export {
   type ToRawDataHexErrorType,
   toRawDataHex,
 } from './transaction/serializeRawData.js'
+export {
+  type SerializableTransaction,
+  type SerializeTransactionErrorType,
+  serializeTransaction,
+  toBroadcastHex,
+} from './transaction/serializeTransaction.js'
 export { type TxCheckErrorType, txCheck } from './transaction/txCheck.js'
 export type {
   AccountPermissionUpdateContract,

@@ -859,6 +859,12 @@ export {
   toRawDataHex,
 } from './utils/transaction/serializeRawData.js'
 export {
+  type SerializableTransaction,
+  type SerializeTransactionErrorType,
+  serializeTransaction,
+  toBroadcastHex,
+} from './utils/transaction/serializeTransaction.js'
+export {
   type TxCheckErrorType,
   txCheck,
 } from './utils/transaction/txCheck.js'
