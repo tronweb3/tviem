@@ -103,14 +103,10 @@
   "devDependencies": {
     "@arethetypeswrong/cli": "^0.18.2",
     "@biomejs/biome": "^2.2.4",
-    "@changesets/changelog-github": "^0.5.0",
-    "@changesets/cli": "^2.29.7",
-    "@size-limit/preset-big-lib": "^11.2.0",
     "@types/node": "^22.13.0",
     "ethers": "^6.17.0",
     "knip": "^5.64.0",
     "publint": "^0.2.12",
-    "size-limit": "^11.2.0",
     "tronweb": "^6.4.0",
     "typescript": "^5.9.3",
     "vitest": "^4.0.0"
@@ -130,61 +126,8 @@
     "tre:up": "node scripts/tre-up.mjs",
     "tre:down": "docker rm -f omni-tre",
     "test:typecheck": "vitest --typecheck.only",
-    "test:build": "publint --strict . && attw --pack . --ignore-rules false-esm",
-    "size": "size-limit",
-    "changeset:version": "changeset version && pnpm install --lockfile-only",
-    "changeset:publish": "pnpm build && changeset publish"
+    "test:build": "publint --strict . && attw --pack . --ignore-rules false-esm"
   },
-  "size-limit": [
-    {
-      "name": "import * from '@tronweb3/omni' (esm)",
-      "path": "./src/_esm/index.js",
-      "limit": "60 kB",
-      "import": "*"
-    },
-    {
-      "name": "import { parseTrx } from '@tronweb3/omni' (esm)",
-      "path": "./src/_esm/index.js",
-      "limit": "1 kB",
-      "import": "{ parseTrx }"
-    },
-    {
-      "name": "import { toBase58 } from '@tronweb3/omni' (esm)",
-      "path": "./src/_esm/index.js",
-      "limit": "8 kB",
-      "import": "{ toBase58 }"
-    },
-    {
-      "name": "import { generatePrivateKey } from '@tronweb3/omni' (esm)",
-      "path": "./src/_esm/index.js",
-      "limit": "16 kB",
-      "import": "{ generatePrivateKey }"
-    },
-    {
-      "name": "import { createPublicClient, http } from '@tronweb3/omni' (esm)",
-      "path": "./src/_esm/index.js",
-      "limit": "32 kB",
-      "import": "{ createPublicClient, http }"
-    },
-    {
-      "name": "import { createWalletClient, http } from '@tronweb3/omni' (esm)",
-      "path": "./src/_esm/index.js",
-      "limit": "32 kB",
-      "import": "{ createWalletClient, http }"
-    },
-    {
-      "name": "import { getContract } from '@tronweb3/omni' (esm)",
-      "path": "./src/_esm/index.js",
-      "limit": "32 kB",
-      "import": "{ getContract }"
-    },
-    {
-      "name": "import { privateKeyToAccount } from '@tronweb3/omni' (esm)",
-      "path": "./src/_esm/index.js",
-      "limit": "25 kB",
-      "import": "{ privateKeyToAccount }"
-    }
-  ],
   "knip": {
     "entry": [
       "src/index.ts!",
@@ -202,9 +145,6 @@
       "src/errors/utils.ts",
       "src/utils/transaction/contracts/**",
       "src/utils/transaction/protobuf/**"
-    ],
-    "ignoreDependencies": [
-      "@size-limit/preset-big-lib"
     ]
   }
 }
