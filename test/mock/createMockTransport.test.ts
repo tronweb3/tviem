@@ -1,8 +1,8 @@
 import {
   TronBroadcastError,
   TronContractValidateError,
-} from '@tronweb3/omni/errors/node.js'
-import type { TronRequestFn } from '@tronweb3/omni/types/transport.js'
+} from '../../src/errors/node.js'
+import type { TronRequestFn } from '../../src/types/transport.js'
 import { describe, expect, test } from 'vitest'
 import { rpc } from '../fixtures/rpc/loader.js'
 import { createMockTransport } from './createMockTransport.js'
@@ -109,7 +109,7 @@ describe('createMockTransport', () => {
     })
     const promise = request({ path: 'triggersmartcontract', body: {} })
     await expect(promise).rejects.toBeInstanceOf(TronContractValidateError)
-    const error = await promise.catch((e) => e as TronContractValidateError)
+    const error = (await promise.catch((e: unknown) => e)) as TronContractValidateError
     expect(error.code).toBe('CONTRACT_VALIDATE_ERROR')
     expect(error.node).toBe('full')
     expect(error.path).toBe('triggersmartcontract')
@@ -129,7 +129,7 @@ describe('createMockTransport', () => {
     })
     const promise = request({ path: 'broadcasttransaction', body: {} })
     await expect(promise).rejects.toBeInstanceOf(TronBroadcastError)
-    const error = await promise.catch((e) => e as TronBroadcastError)
+    const error = (await promise.catch((e: unknown) => e)) as TronBroadcastError
     expect(error.code).toBe('TRANSACTION_EXPIRATION_ERROR')
     expect(error.txid).toBe(
       '407ec75dad4545890e5788ef78555ecab9dc72d56df29da4ebbd508022bdbaba',

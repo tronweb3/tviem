@@ -1,4 +1,4 @@
-import { deriveRefBlockParams } from '@tronweb3/omni/utils/transaction/prepareTransaction.js'
+import { deriveRefBlockParams } from '../../../src/utils/transaction/prepareTransaction.js'
 import { describe, expect, test } from 'vitest'
 import { loadTxFixtureFile } from '../tx/loader.js'
 import { rpc, rpcFixture, rpcFixtureNames, rpcReq } from './loader.js'

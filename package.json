@@ -135,6 +135,7 @@
     ],
     "project": [
       "src/**/*.ts!",
+      "test/**/*.ts",
       "scripts/*.{ts,mjs,js}"
     ],
     "ignoreExportsUsedInFile": true,

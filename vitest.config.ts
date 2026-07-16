@@ -14,16 +14,16 @@ export default defineConfig({
         resolve: { alias },
         test: {
           name: 'unit',
-          include: ['src/**/*.test.ts', 'test/**/*.test.ts'],
+          include: ['test/**/*.test.ts'],
           exclude: [...configDefaults.exclude, '**/*.e2e.test.ts'],
-          typecheck: { enabled: true, include: ['src/**/*.test-d.ts'] },
+          typecheck: { enabled: true, include: ['test/**/*.test-d.ts'] },
         },
       },
       {
         resolve: { alias },
         test: {
           name: 'e2e',
-          include: ['src/**/*.e2e.test.ts'],
+          include: ['test/**/*.e2e.test.ts'],
         },
       },
     ],

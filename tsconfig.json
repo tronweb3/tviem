@@ -1,7 +1,7 @@
 {
   // Type-check config (`pnpm check:types`). Checks source + tests, emits nothing.
   "extends": "./tsconfig.base.json",
-  "include": ["src"],
+  "include": ["src", "test"],
   "compilerOptions": {
     "noEmit": true
   }
