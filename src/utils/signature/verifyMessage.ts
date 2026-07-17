@@ -61,6 +61,15 @@ function bytesToBigInt(bytes: ByteArray): bigint {
   return BigInt(`0x${hex}`)
 }
 
+export type RecoverPublicKeyParameters = {
+  /** The 32-byte digest that was signed (`0x`-prefixed hex or bytes). */
+  hash: Hex | ByteArray
+  /** The signature over `hash`. */
+  signature: SignatureInput
+}
+
+export type RecoverPublicKeyReturnType = Hex
+
 export type RecoverPublicKeyErrorType = BaseErrorType | ErrorType
 
 /**
@@ -72,10 +81,7 @@ export type RecoverPublicKeyErrorType = BaseErrorType | ErrorType
 export function recoverPublicKey({
   hash,
   signature,
-}: {
-  hash: Hex | ByteArray
-  signature: SignatureInput
-}): Hex {
+}: RecoverPublicKeyParameters): RecoverPublicKeyReturnType {
   const { r, s, recovery } = toComponents(signature)
   const digest =
     typeof hash === 'string'

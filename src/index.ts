@@ -561,7 +561,6 @@ export {
   type EncodeAbiParametersErrorType,
   type EncodeAbiParametersReturnType,
   encodeAbiParameters,
-  getArrayComponents,
 } from './utils/abi/encodeAbiParameters.js'
 export {
   type EncodeDeployDataErrorType,
@@ -805,6 +804,8 @@ export {
   type RecoverMessageAddressErrorType,
   type RecoverMessageAddressParameters,
   type RecoverPublicKeyErrorType,
+  type RecoverPublicKeyParameters,
+  type RecoverPublicKeyReturnType,
   recoverMessageAddress,
   recoverPublicKey,
   type SignatureInput,

@@ -23,6 +23,11 @@ export {
   privateKeyToAccount,
 } from './privateKeyToAccount.js'
 export { type ToAccountErrorType, toAccount } from './toAccount.js'
+export {
+  type ParseAccount,
+  type ParseAccountErrorType,
+  parseAccount,
+} from '../types/account.js'
 export type {
   AccountSignMessageParameters,
   AccountSignParameters,
