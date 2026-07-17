@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "description": "Lightweight, type-safe TypeScript SDK for the TRON blockchain",
   "license": "MIT",
+  "private": true,
   "type": "module",
   "sideEffects": false,
   "packageManager": "pnpm@9.15.0",
@@ -115,7 +116,7 @@
     "build": "pnpm clean && pnpm build:cjs && pnpm build:esm && pnpm build:types",
     "build:esm": "tsc --project ./tsconfig.build.json --outDir ./src/_esm && printf '{\"type\":\"module\",\"sideEffects\":false}' > ./src/_esm/package.json",
     "build:cjs": "node scripts/runTsc.js --project ./tsconfig.build.json --module commonjs --moduleResolution node --outDir ./src/_cjs --removeComments --verbatimModuleSyntax false && printf '{\"type\":\"commonjs\"}' > ./src/_cjs/package.json",
-    "build:types": "tsc --project ./tsconfig.build.json --declarationDir ./src/_types --emitDeclarationOnly --declaration",
+    "build:types": "tsc --project ./tsconfig.build.json --declarationDir ./src/_types --emitDeclarationOnly --declaration --declarationMap",
     "preconstruct": "node scripts/preconstruct.mjs",
     "check": "biome check --write --unsafe",
     "check:types": "tsc --noEmit --project ./tsconfig.json",
@@ -125,7 +126,7 @@
     "tre:up": "node scripts/tre-up.mjs",
     "tre:down": "docker rm -f omni-tre",
     "test:typecheck": "vitest --typecheck.only",
-    "test:build": "publint --strict . && attw --pack . --ignore-rules false-esm"
+    "test:build": "cd src && publint --strict . && attw --pack . --ignore-rules false-esm"
   },
   "knip": {
     "entry": [

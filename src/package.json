@@ -1,0 +1,102 @@
+{
+  "name": "@tronweb3/omni",
+  "version": "0.1.0",
+  "description": "Lightweight, type-safe TypeScript SDK for the TRON blockchain",
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": false,
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "tron",
+    "trx",
+    "sdk",
+    "trc20",
+    "web3",
+    "typescript",
+    "tvm"
+  ],
+  "homepage": "https://github.com/tronweb3/omni#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tronweb3/omni.git"
+  },
+  "bugs": {
+    "url": "https://github.com/tronweb3/omni/issues"
+  },
+  "main": "./_cjs/index.js",
+  "module": "./_esm/index.js",
+  "types": "./_types/index.d.ts",
+  "typings": "./_types/index.d.ts",
+  "files": [
+    "*",
+    "!**/*.bench.ts",
+    "!**/*.bench-d.ts",
+    "!**/*.test.ts",
+    "!**/*.test.ts.snap",
+    "!**/*.test-d.ts",
+    "!**/*.tsbuildinfo",
+    "!tsconfig.build.json"
+  ],
+  "exports": {
+    ".": {
+      "types": "./_types/index.d.ts",
+      "import": "./_esm/index.js",
+      "default": "./_cjs/index.js"
+    },
+    "./accounts": {
+      "types": "./_types/accounts/index.d.ts",
+      "import": "./_esm/accounts/index.js",
+      "default": "./_cjs/accounts/index.js"
+    },
+    "./actions": {
+      "types": "./_types/actions/index.d.ts",
+      "import": "./_esm/actions/index.js",
+      "default": "./_cjs/actions/index.js"
+    },
+    "./chains": {
+      "types": "./_types/chains/index.d.ts",
+      "import": "./_esm/chains/index.js",
+      "default": "./_cjs/chains/index.js"
+    },
+    "./utils": {
+      "types": "./_types/utils/index.d.ts",
+      "import": "./_esm/utils/index.js",
+      "default": "./_cjs/utils/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "typesVersions": {
+    "*": {
+      "accounts": [
+        "./_types/accounts/index.d.ts"
+      ],
+      "actions": [
+        "./_types/actions/index.d.ts"
+      ],
+      "chains": [
+        "./_types/chains/index.d.ts"
+      ],
+      "utils": [
+        "./_types/utils/index.d.ts"
+      ]
+    }
+  },
+  "peerDependencies": {
+    "typescript": ">=5.4.0"
+  },
+  "peerDependenciesMeta": {
+    "typescript": {
+      "optional": true
+    }
+  },
+  "dependencies": {
+    "@noble/curves": "1.9.1",
+    "@noble/hashes": "1.8.0",
+    "@scure/base": "1.2.6",
+    "@scure/bip32": "1.7.0",
+    "@scure/bip39": "1.6.0",
+    "abitype": "1.2.3"
+  }
+}

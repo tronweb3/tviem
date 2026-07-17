@@ -10,9 +10,10 @@
     "src/**/*.test-d.ts"
   ],
   "compilerOptions": {
-    // No source/declaration maps: layout B ships only artifacts (not the .ts
-    // sources), so emitted maps would dangle. Re-enable together with shipping
-    // `src/**/*.ts` in package.json `files` if source-level debugging is wanted.
+    // The package is published from `src/` (viem-style): the `.ts` sources ship
+    // alongside the artifacts (src/package.json `files: ["*"]`), so `build:types`
+    // emits `--declarationMap` and the `.d.ts.map` files resolve to the shipped
+    // sources for go-to-definition. rootDir keeps the emit rooted at `src/`.
     "rootDir": "./src"
   }
 }
