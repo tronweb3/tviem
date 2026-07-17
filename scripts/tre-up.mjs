@@ -1,5 +1,5 @@
 // Dev-only: bring up a local TronBox TRE node (a real java-tron) and fund pk=1,
-// so the gated live e2e (src/actions/wallet/sendTrx.e2e.test.ts) can prove the
+// so the gated live e2e (test/actions/wallet/sendTrx.e2e.test.ts) can prove the
 // broadcasthex write path against a real node. Never published.
 //
 //   pnpm tre:up      # start TRE on :9090 and fund pk=1

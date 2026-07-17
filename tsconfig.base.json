@@ -1,5 +1,5 @@
 {
-  // Shared config consumed by the build (tsconfig.build.json / tsconfig.build.cjs.json)
+  // Shared config consumed by the build (tsconfig.build.json)
   // and the type-check (tsconfig.json) configs.
   "include": [],
   "compilerOptions": {
