@@ -11,9 +11,11 @@
   ],
   "compilerOptions": {
     // The package is published from `src/` (viem-style): the `.ts` sources ship
-    // alongside the artifacts (src/package.json `files: ["*"]`), so `build:types`
-    // emits `--declarationMap` and the `.d.ts.map` files resolve to the shipped
-    // sources for go-to-definition. rootDir keeps the emit rooted at `src/`.
+    // alongside the artifacts (src/package.json `files: ["*"]`), so the emitted
+    // maps resolve to the shipped sources. `sourceMap` gives `_esm`/`_cjs` their
+    // `.js.map` (runtime debugging); `build:types --declarationMap` gives
+    // `_types` its `.d.ts.map` (go-to-definition). rootDir roots the emit at `src/`.
+    "sourceMap": true,
     "rootDir": "./src"
   }
 }
