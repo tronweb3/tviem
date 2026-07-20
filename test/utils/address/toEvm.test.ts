@@ -52,6 +52,21 @@ describe('toEvm', () => {
     expect(() => toEvm('T123')).toThrow(InvalidAddressError)
     expect(() => toEvm('' as `T${string}`)).toThrow(InvalidAddressError)
   })
+
+  // GAP 1 (CRITICAL — security regression guard). Disambiguation pivots on
+  // LENGTH, NOT on the `41` prefix. A 40-hex EVM address whose FIRST BYTE is
+  // 0x41 must round-trip losslessly (all 20 bytes preserved) — never be
+  // misread as a TRON 41-prefixed address that drops a byte. The sibling
+  // `codeex` impl had exactly this silent fund-corruption bug; this pins
+  // codeex-bug immunity / length-not-prefix disambiguation.
+  test('round-trips a 40-hex EVM address whose first byte is 0x41 losslessly', () => {
+    const evmBody = '0x41abcdef0123456789abcdef0123456789abcdef' // 40 hex chars
+    expect(toEvm(evmBody)).toBe(evmBody)
+    // Contrast: a REAL TRON 42-hex `0x41…` DOES strip its `41` version byte.
+    expect(toEvm('0x417e5f4552091a69125d5dfcb7b8c2659029395bdf')).toBe(
+      '0x7e5f4552091a69125d5dfcb7b8c2659029395bdf',
+    )
+  })
 })
 
 describe('addressToHex (ABI adapter)', () => {

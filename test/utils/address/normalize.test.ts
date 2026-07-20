@@ -93,4 +93,57 @@ describe('normalizeAddress', () => {
       InvalidAddressError,
     )
   })
+
+  // GAP 1 (CRITICAL — security regression guard). Disambiguation pivots on
+  // LENGTH (40-hex+`0x` → EVM, 42-hex+`41` → TRON), NOT on the `41` prefix.
+  // A 40-hex EVM address whose FIRST BYTE is 0x41 must be kept as a full
+  // 20-byte EVM body (0x41 version byte prepended to ALL 20 bytes) — never
+  // misread as a TRON 41-prefixed address (that would silently drop a byte
+  // and corrupt funds; the sibling `codeex` impl had exactly this bug).
+  // This pins codeex-bug immunity / length-not-prefix disambiguation.
+  test('keeps all 20 bytes of a 40-hex EVM address whose first byte is 0x41', () => {
+    const evmBody = '0x41abcdef0123456789abcdef0123456789abcdef' // 40 hex chars
+    const result = normalizeAddress(evmBody)
+    // 0x41 version byte prepended to the FULL 20-byte body: [0x41, 0x41, 0xab, …].
+    expect(result).toHaveLength(21)
+    expect(result[0]).toBe(0x41) // version byte
+    expect(result[1]).toBe(0x41) // first body byte — preserved, not consumed as a prefix
+    // The trailing 20 bytes equal the input body exactly (no byte dropped).
+    expect(bytesToHex(result.subarray(1))).toBe(evmBody)
+    // Bare 40-hex (no `0x`) is rejected as ambiguous — both a 41-leading one
+    // and a non-41 one throw, since only the `0x` prefix marks the EVM form.
+    expect(() =>
+      normalizeAddress('41abcdef0123456789abcdef0123456789abcdef'),
+    ).toThrow(InvalidAddressError)
+    expect(() =>
+      normalizeAddress(
+        '2b5ad5c4795c026514f8317c7a215e218dccd6cf' as `41${string}`,
+      ),
+    ).toThrow(InvalidAddressError)
+  })
+
+  // GAP 3. The parser regex is [0-9a-fA-F] — mixed-case hex is accepted and
+  // normalized case-insensitively to the same lowercase-output pivot.
+  test('normalizes mixed-case TRON hex identically to its lowercase form', () => {
+    const mixed = '0x417E5f4552091a69125D5dfCB7b8c2659029395BdF' // mixed upper/lower
+    const lower = '0x417e5f4552091a69125d5dfcb7b8c2659029395bdf'
+    expect(bytesToHex(normalizeAddress(mixed))).toBe(lower)
+    expect(bytesToHex(normalizeAddress(mixed))).toBe(
+      bytesToHex(normalizeAddress(lower)),
+    )
+  })
+
+  // GAP 4. Over-length hex STRING forms (only Uint8Array(22) over-length was
+  // tested before). 44- and 43-char hex bodies match neither the 42-char TRON
+  // nor the 40-char EVM length → rejected.
+  test('throws InvalidAddressError on over-length (43/44-char) hex strings', () => {
+    // 44 hex chars (42-char TRON hex + 2 extra).
+    expect(() =>
+      normalizeAddress('0x417e5f4552091a69125d5dfcb7b8c2659029395bdfab'),
+    ).toThrow(InvalidAddressError)
+    // 43 hex chars (42-char TRON hex + 1 extra).
+    expect(() =>
+      normalizeAddress('0x417e5f4552091a69125d5dfcb7b8c2659029395bdfa'),
+    ).toThrow(InvalidAddressError)
+  })
 })
