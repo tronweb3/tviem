@@ -47,6 +47,42 @@ test('TronBroadcastError carries txid', () => {
   expect(err.message).toContain('Txid: deadbeef')
 })
 
+test('TronValidationError carries code / node / path / response', () => {
+  const response = { Error: 'contract validate error' }
+  const err = new TronValidationError('contract validate error', {
+    code: 'CONTRACT_VALIDATE_ERROR',
+    node: 'full',
+    path: 'broadcasttransaction',
+    response,
+  })
+  expect(err).toBeInstanceOf(TronNodeError)
+  expect(err.name).toBe('TronValidationError')
+  expect(err.code).toBe('CONTRACT_VALIDATE_ERROR')
+  expect(err.node).toBe('full')
+  expect(err.path).toBe('broadcasttransaction')
+  expect(err.response).toEqual(response)
+  expect(err.shortMessage).toBe('contract validate error')
+})
+
+test('TronContractValidateError carries code / node / path / response', () => {
+  const response = {
+    result: { code: 'CONTRACT_VALIDATE_ERROR', message: 'insufficient balance' },
+  }
+  const err = new TronContractValidateError('insufficient balance', {
+    code: 'CONTRACT_VALIDATE_ERROR',
+    node: 'full',
+    path: 'triggersmartcontract',
+    response,
+  })
+  expect(err).toBeInstanceOf(TronNodeError)
+  expect(err.name).toBe('TronContractValidateError')
+  expect(err.code).toBe('CONTRACT_VALIDATE_ERROR')
+  expect(err.node).toBe('full')
+  expect(err.path).toBe('triggersmartcontract')
+  expect(err.response).toEqual(response)
+  expect(err.shortMessage).toBe('insufficient balance')
+})
+
 test('UnknownNodeError wraps an unexpected cause and is not a TronNodeError', () => {
   const err = new UnknownNodeError({ cause: new Error('weird') })
   expect(err).toBeInstanceOf(BaseError)

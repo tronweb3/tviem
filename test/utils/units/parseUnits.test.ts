@@ -1,5 +1,7 @@
 import { expect, test } from 'vitest'
 
+import { InvalidDecimalNumberError } from '../../../src/errors/unit.js'
+import { formatUnits } from '../../../src/utils/units/formatUnits.js'
 import { parseUnits } from '../../../src/utils/units/parseUnits.js'
 
 test('converts number to unit of a given length', () => {
@@ -99,4 +101,50 @@ test('decimals < fraction length', () => {
   expect(parseUnits('69.00000000059', 9)).toMatchInlineSnapshot('69000000001n')
   expect(parseUnits('69.59000000059', 9)).toMatchInlineSnapshot('69590000001n')
   expect(parseUnits('69.59000002359', 9)).toMatchInlineSnapshot('69590000024n')
+})
+
+test('rejects non-decimal input with InvalidDecimalNumberError', () => {
+  // scientific / hex / alpha / multi-dot all fail /^(-?)([0-9]*)\.?([0-9]*)$/.
+  expect(() => parseUnits('1e6', 6)).toThrow(InvalidDecimalNumberError)
+  expect(() => parseUnits('0x10', 6)).toThrow(InvalidDecimalNumberError)
+  expect(() => parseUnits('abc', 6)).toThrow(InvalidDecimalNumberError)
+  expect(() => parseUnits('5.5.5', 6)).toThrow(InvalidDecimalNumberError)
+})
+
+test('permissive inputs do not throw (viem-inherited permissiveness)', () => {
+  expect(parseUnits('', 6)).toBe(0n)
+  expect(parseUnits('.', 6)).toBe(0n)
+  expect(parseUnits('-', 6)).toBe(0n)
+  expect(parseUnits('.5', 6)).toBe(500000n)
+  expect(parseUnits('5.', 6)).toBe(5000000n)
+})
+
+test('large-value precision (pure bigint, no float loss)', () => {
+  const trx64 = 18446744073709551616n // 2^64
+  expect(trx64).toBe(2n ** 64n)
+  expect(parseUnits(trx64.toString(), 6)).toBe(trx64 * 10n ** 6n)
+  expect(parseUnits(trx64.toString(), 6)).toBe(18446744073709551616000000n)
+  expect(formatUnits(trx64 * 10n ** 6n, 6)).toBe(trx64.toString())
+
+  const trx256 =
+    115792089237316195423570985008687907853269984665640564039457584007913129639936n // 2^256
+  expect(trx256).toBe(2n ** 256n)
+  expect(parseUnits(trx256.toString(), 6)).toBe(trx256 * 10n ** 6n)
+  expect(formatUnits(trx256 * 10n ** 6n, 6)).toBe(trx256.toString())
+})
+
+test('round-trip: formatUnits(parseUnits(x, 6), 6) === normalized x', () => {
+  const vectors: [string, string][] = [
+    ['1', '1'],
+    ['0.5', '0.5'],
+    ['0.000001', '0.000001'],
+    ['6942069420.123456', '6942069420.123456'],
+    ['1.230000', '1.23'], // trailing fraction zeros trimmed
+    ['0.100000', '0.1'],
+    ['-1', '-1'],
+    ['-0.5', '-0.5'],
+    ['-6942069420.123456', '-6942069420.123456'],
+  ]
+  for (const [input, normalized] of vectors)
+    expect(formatUnits(parseUnits(input, 6), 6)).toBe(normalized)
 })

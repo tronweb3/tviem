@@ -1,5 +1,7 @@
 import { expect, test } from 'vitest'
 
+import { InvalidDecimalNumberError } from '../../../src/errors/unit.js'
+import { formatTrx } from '../../../src/utils/units/formatTrx.js'
 import { parseTrx } from '../../../src/utils/units/parseTrx.js'
 
 test('converts trx to sun', () => {
@@ -44,4 +46,33 @@ test('converts to rounded sun', () => {
 test('§2.4 vectors', () => {
   expect(parseTrx('1') === 1000000n).toBe(true)
   expect(parseTrx('0.000001') === 1n).toBe(true)
+})
+
+test('rejects non-decimal input with InvalidDecimalNumberError', () => {
+  expect(() => parseTrx('1e6')).toThrow(InvalidDecimalNumberError)
+  expect(() => parseTrx('0x10')).toThrow(InvalidDecimalNumberError)
+})
+
+test('large-value precision (pure bigint, no float loss)', () => {
+  const trx64 = 18446744073709551616n // 2^64
+  expect(parseTrx(trx64.toString())).toBe(trx64 * 10n ** 6n)
+
+  const trx256 =
+    115792089237316195423570985008687907853269984665640564039457584007913129639936n // 2^256
+  expect(parseTrx(trx256.toString())).toBe(trx256 * 10n ** 6n)
+})
+
+test('round-trip: formatTrx(parseTrx(x)) === normalized x', () => {
+  const vectors: [string, string][] = [
+    ['1', '1'],
+    ['0.5', '0.5'],
+    ['0.000001', '0.000001'],
+    ['6942069420.123456', '6942069420.123456'],
+    ['1.100000', '1.1'],
+    ['-1', '-1'],
+    ['-0.5', '-0.5'],
+    ['-6942069420.123456', '-6942069420.123456'],
+  ]
+  for (const [input, normalized] of vectors)
+    expect(formatTrx(parseTrx(input))).toBe(normalized)
 })

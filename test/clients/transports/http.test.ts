@@ -8,6 +8,7 @@ import {
 import { HttpRequestError } from '../../../src/errors/request.js'
 import { UrlRequiredError } from '../../../src/errors/transport.js'
 import { http, normalizeTronError } from '../../../src/clients/transports/http.js'
+import { stringToHex } from '../../../src/utils/encoding/toHex.js'
 
 const HOST = 'https://node.example'
 const API_KEY = 'super-secret-key'
@@ -233,4 +234,112 @@ test('eventUrl comes from config, else defaults to the full url', () => {
 test('normalizeTronError returns non-object bodies unchanged', () => {
   expect(normalizeTronError(null, { node: 'full', path: 'x' })).toBe(null)
   expect(normalizeTronError('ok', { node: 'full', path: 'x' })).toBe('ok')
+})
+
+// --- normalizeTronError (called directly): hex decode + graceful passthrough.
+// `'full'` is the valid TronNode role (the task's `'fullNode'` isn't a member).
+const NODE = { node: 'full', path: '/wallet/triggersmartcontract' } as const
+
+/** Runs `fn`, returning the error it throws (fails if it doesn't throw). */
+function caught(fn: () => unknown): any {
+  try {
+    fn()
+  } catch (e) {
+    return e
+  }
+  throw new Error('expected the call to throw')
+}
+
+test('normalizeTronError form 2: hex message → TronContractValidateError (decoded)', () => {
+  const err = caught(() =>
+    normalizeTronError(
+      {
+        result: {
+          code: 'CONTRACT_VALIDATE_ERROR',
+          message: stringToHex('insufficient balance'),
+        },
+      },
+      NODE,
+    ),
+  )
+  expect(err).toBeInstanceOf(TronContractValidateError)
+  expect(err.code).toBe('CONTRACT_VALIDATE_ERROR')
+  expect(err.shortMessage).toBe('insufficient balance')
+  expect(err.node).toBe('full')
+  expect(err.path).toBe('/wallet/triggersmartcontract')
+})
+
+test('normalizeTronError form 3: { result:false, code, hex message, txid } → TronBroadcastError', () => {
+  const err = caught(() =>
+    normalizeTronError(
+      {
+        result: false,
+        code: 'SIGERROR',
+        message: stringToHex('signature error'),
+        txid: 'deadbeef01',
+      },
+      NODE,
+    ),
+  )
+  expect(err).toBeInstanceOf(TronBroadcastError)
+  expect(err.code).toBe('SIGERROR')
+  expect(err.txid).toBe('deadbeef01')
+  expect(err.shortMessage).toBe('signature error')
+})
+
+test('normalizeTronError form 4: non-success top-level code + hex message → TronNodeError', () => {
+  const err = caught(() =>
+    normalizeTronError(
+      { code: 'SOME_ERR', message: stringToHex('some node error') },
+      NODE,
+    ),
+  )
+  expect(err).toBeInstanceOf(TronNodeError)
+  expect(err.code).toBe('SOME_ERR')
+  expect(err.shortMessage).toBe('some node error')
+})
+
+test('normalizeTronError decodes a message with the 0x prefix stripped', () => {
+  const err = caught(() =>
+    normalizeTronError(
+      { code: 'SOME_ERR', message: stringToHex('no prefix').slice(2) },
+      NODE,
+    ),
+  )
+  expect(err.shortMessage).toBe('no prefix')
+})
+
+test('normalizeTronError passes a non-hex message through undecoded', () => {
+  const err = caught(() =>
+    normalizeTronError(
+      { code: 'SOME_ERR', message: 'CONTRACT_VALIDATE_ERROR' },
+      NODE,
+    ),
+  )
+  expect(err.shortMessage).toBe('CONTRACT_VALIDATE_ERROR')
+})
+
+test('normalizeTronError passes an odd-length hex message through undecoded', () => {
+  const err = caught(() =>
+    normalizeTronError({ code: 'SOME_ERR', message: 'abc' }, NODE),
+  )
+  expect(err.shortMessage).toBe('abc')
+})
+
+test('normalizeTronError decodes an empty message to "" (falls back to default text)', () => {
+  const err = caught(() =>
+    normalizeTronError({ code: 'SOME_ERR', message: '' }, NODE),
+  )
+  expect(err.code).toBe('SOME_ERR')
+  expect(err.shortMessage).toBe('The node returned an error.')
+})
+
+test('normalizeTronError returns { result: true } unchanged (no throw)', () => {
+  const body = { result: true, txid: 'ab' }
+  expect(normalizeTronError(body, NODE)).toBe(body)
+})
+
+test('normalizeTronError returns a SUCCESS-code body unchanged (no throw)', () => {
+  const body = { code: 'SUCCESS', result: true }
+  expect(normalizeTronError(body, NODE)).toBe(body)
 })
