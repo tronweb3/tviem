@@ -436,3 +436,33 @@ test('@tronweb3/omni: numberToHex(1000000n, { size: 32 })', () => {
     '0x00000000000000000000000000000000000000000000000000000000000f4240',
   )
 })
+
+test('@tronweb3/omni: max uint256 boundary', () => {
+  // 2**256 - 1 encodes to exactly 64 "f" nibbles
+  expect(numberToHex(2n ** 256n - 1n, { size: 32 })).toBe(
+    '0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff',
+  )
+  expect(() =>
+    numberToHex(2n ** 256n, { size: 32 }),
+  ).toThrowErrorMatchingInlineSnapshot(`
+    [IntegerOutOfRangeError: Number "115792089237316195423570985008687907853269984665640564039457584007913129639936n" is not in safe 256-bit unsigned integer range (0n to 115792089237316195423570985008687907853269984665640564039457584007913129639935n)
+
+    Version: @tronweb3/omni@0.1.0]
+  `)
+})
+
+test('@tronweb3/omni: int256 extremes', () => {
+  expect(numberToHex(-(2n ** 255n), { size: 32, signed: true })).toBe(
+    '0x8000000000000000000000000000000000000000000000000000000000000000',
+  )
+  expect(numberToHex(2n ** 255n - 1n, { size: 32, signed: true })).toBe(
+    '0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff',
+  )
+  expect(() =>
+    numberToHex(2n ** 255n, { size: 32, signed: true }),
+  ).toThrowErrorMatchingInlineSnapshot(`
+    [IntegerOutOfRangeError: Number "57896044618658097711785492504343953926634992332820282019728792003956564819968n" is not in safe 256-bit signed integer range (-57896044618658097711785492504343953926634992332820282019728792003956564819968n to 57896044618658097711785492504343953926634992332820282019728792003956564819967n)
+
+    Version: @tronweb3/omni@0.1.0]
+  `)
+})

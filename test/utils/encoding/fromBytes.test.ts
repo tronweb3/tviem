@@ -285,3 +285,40 @@ describe('converts bytes to hex', () => {
     `)
   })
 })
+
+test('@tronweb3/omni: uint256/int256 boundary round-trips', () => {
+  const maxUint256 = 2n ** 256n - 1n
+  expect(bytesToBigInt(numberToBytes(maxUint256, { size: 32 }))).toBe(
+    maxUint256,
+  )
+
+  const minInt256 = -(2n ** 255n)
+  const maxInt256 = 2n ** 255n - 1n
+  expect(
+    bytesToBigInt(numberToBytes(minInt256, { size: 32, signed: true }), {
+      signed: true,
+    }),
+  ).toBe(minInt256)
+  expect(
+    bytesToBigInt(numberToBytes(maxInt256, { size: 32, signed: true }), {
+      signed: true,
+    }),
+  ).toBe(maxInt256)
+})
+
+test('@tronweb3/omni: ~16KB payload round-trips through hex', () => {
+  // deterministic pseudo-random-looking payload (no Math.random/Date)
+  const size = 16384
+  const bytes = new Uint8Array(size)
+  for (let i = 0; i < size; i++) bytes[i] = (i * 31 + 7) % 256
+  const hex = bytesToHex(bytes)
+  expect(hex.length).toBe(2 + size * 2)
+  const decoded = hexToBytes(hex)
+  expect(decoded.length).toBe(size)
+  expect(decoded).toEqual(bytes)
+})
+
+test('@tronweb3/omni: bytesToBool on empty bytes', () => {
+  // pins viem-aligned behavior: empty byte array coerces to false rather than throwing
+  expect(bytesToBool(new Uint8Array([]))).toBe(false)
+})

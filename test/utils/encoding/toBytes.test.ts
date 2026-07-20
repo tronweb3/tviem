@@ -1216,3 +1216,148 @@ describe('converts string to bytes', () => {
     `)
   })
 })
+
+test('@tronweb3/omni: max uint256 boundary', () => {
+  // 2**256 - 1 encodes to 32 bytes of 0xff
+  expect(numberToBytes(2n ** 256n - 1n, { size: 32 })).toMatchInlineSnapshot(`
+    Uint8Array [
+      255,
+      255,
+      255,
+      255,
+      255,
+      255,
+      255,
+      255,
+      255,
+      255,
+      255,
+      255,
+      255,
+      255,
+      255,
+      255,
+      255,
+      255,
+      255,
+      255,
+      255,
+      255,
+      255,
+      255,
+      255,
+      255,
+      255,
+      255,
+      255,
+      255,
+      255,
+      255,
+    ]
+  `)
+  expect(() =>
+    numberToBytes(2n ** 256n, { size: 32 }),
+  ).toThrowErrorMatchingInlineSnapshot(`
+    [IntegerOutOfRangeError: Number "115792089237316195423570985008687907853269984665640564039457584007913129639936n" is not in safe 256-bit unsigned integer range (0n to 115792089237316195423570985008687907853269984665640564039457584007913129639935n)
+
+    Version: @tronweb3/omni@0.1.0]
+  `)
+})
+
+test('@tronweb3/omni: int256 extremes', () => {
+  // -(2**255) encodes to 0x80 followed by 31 zero bytes
+  expect(
+    numberToBytes(-(2n ** 255n), { size: 32, signed: true }),
+  ).toMatchInlineSnapshot(`
+    Uint8Array [
+      128,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+    ]
+  `)
+  // 2**255 - 1 encodes to 0x7f followed by 31 0xff bytes
+  expect(
+    numberToBytes(2n ** 255n - 1n, { size: 32, signed: true }),
+  ).toMatchInlineSnapshot(`
+    Uint8Array [
+      127,
+      255,
+      255,
+      255,
+      255,
+      255,
+      255,
+      255,
+      255,
+      255,
+      255,
+      255,
+      255,
+      255,
+      255,
+      255,
+      255,
+      255,
+      255,
+      255,
+      255,
+      255,
+      255,
+      255,
+      255,
+      255,
+      255,
+      255,
+      255,
+      255,
+      255,
+      255,
+    ]
+  `)
+  expect(() =>
+    numberToBytes(2n ** 255n, { size: 32, signed: true }),
+  ).toThrowErrorMatchingInlineSnapshot(`
+    [IntegerOutOfRangeError: Number "57896044618658097711785492504343953926634992332820282019728792003956564819968n" is not in safe 256-bit signed integer range (-57896044618658097711785492504343953926634992332820282019728792003956564819968n to 57896044618658097711785492504343953926634992332820282019728792003956564819967n)
+
+    Version: @tronweb3/omni@0.1.0]
+  `)
+})
+
+test('@tronweb3/omni: odd-length hex', () => {
+  // pins viem-aligned behavior: odd-length hex is padded with a zero left nibble
+  expect(hexToBytes('0xabc')).toMatchInlineSnapshot(`
+    Uint8Array [
+      10,
+      188,
+    ]
+  `)
+})

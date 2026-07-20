@@ -9,6 +9,18 @@ test('bar(uint foo)', () => {
   expect(normalizeSignature('bar(uint foo)')).toBe('bar(uint)')
 })
 
+// pins viem-aligned behavior: bare 'int' is NOT expanded to 'int256'
+test('bar(int foo)', () => {
+  expect(normalizeSignature('bar(int foo)')).toBe('bar(int)')
+})
+
+// pins viem-aligned behavior: bare aliases stay bare alongside qualified types
+test('bar(uint foo, uint256 bar, int baz, int256 qux)', () => {
+  expect(normalizeSignature('bar(uint foo, uint256 bar, int baz, int256 qux)')).toBe(
+    'bar(uint,uint256,int,int256)',
+  )
+})
+
 test('processAccount(uint256 , address )', () => {
   expect(normalizeSignature('processAccount(uint256 , address )')).toBe(
     'processAccount(uint256,address)',

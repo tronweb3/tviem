@@ -149,4 +149,17 @@ test('@tronweb3/omni: TRC-20 selectors', () => {
   )
   expect(toFunctionSelector('transfer(address,uint256)')).toBe('0xa9059cbb')
   expect(toFunctionSelector('balanceOf(address)')).toBe('0x70a08231')
+  expect(toFunctionSelector('approve(address,uint256)')).toBe('0x095ea7b3')
+  expect(toFunctionSelector('transferFrom(address,address,uint256)')).toBe(
+    '0x23b872dd',
+  )
+})
+
+test('bare Solidity type aliases are NOT canonicalized', () => {
+  // pins viem-aligned behavior: bare 'uint' is hashed as-is (not expanded to
+  // 'uint256'), so callers must pass canonical types to get canonical selectors.
+  expect(toFunctionSelector('foo(uint)')).not.toBe(
+    toFunctionSelector('foo(uint256)'),
+  )
+  expect(toFunctionSelector('foo(uint256)')).toBe('0x2fbebd38')
 })

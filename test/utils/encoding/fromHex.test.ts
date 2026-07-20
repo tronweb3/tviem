@@ -376,3 +376,21 @@ test('@tronweb3/omni: hexToBigInt inverts numberToHex', () => {
   expect(hexToBigInt(numberToHex(1000000n, { size: 32 }))).toBe(1000000n)
   expect(hexToBigInt(numberToHex(0n, { size: 32 }))).toBe(0n)
 })
+
+test('@tronweb3/omni: uint256/int256 boundary round-trips', () => {
+  const maxUint256 = 2n ** 256n - 1n
+  expect(hexToBigInt(numberToHex(maxUint256, { size: 32 }))).toBe(maxUint256)
+
+  const minInt256 = -(2n ** 255n)
+  const maxInt256 = 2n ** 255n - 1n
+  expect(
+    hexToBigInt(numberToHex(minInt256, { size: 32, signed: true }), {
+      signed: true,
+    }),
+  ).toBe(minInt256)
+  expect(
+    hexToBigInt(numberToHex(maxInt256, { size: 32, signed: true }), {
+      signed: true,
+    }),
+  ).toBe(maxInt256)
+})

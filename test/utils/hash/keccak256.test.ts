@@ -1,5 +1,6 @@
 import { expect, test } from 'vitest'
 
+import { stringToBytes } from '../../../src/utils/encoding/toBytes.js'
 import { keccak256 } from '../../../src/utils/hash/keccak256.js'
 
 test('to hex', () => {
@@ -104,5 +105,12 @@ test('to bytes', () => {
 test('@tronweb3/omni: keccak256 of empty bytes (0x)', () => {
   expect(keccak256('0x')).toBe(
     '0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470',
+  )
+})
+
+test('@tronweb3/omni: 0x-prefixed non-hex input hashes as utf8, not rejected (pins viem-aligned dispatch)', () => {
+  expect(keccak256('0xZZ')).toBe(keccak256(stringToBytes('0xZZ')))
+  expect(keccak256('0xdeadbeef')).not.toBe(
+    keccak256(stringToBytes('0xdeadbeef')),
   )
 })
