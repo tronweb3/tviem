@@ -94,10 +94,14 @@ export function sign({
     privateKey.startsWith('0x') ? privateKey.slice(2) : privateKey
   ).padStart(64, '0')
 
+  // The advertised hex form is decoded here — noble rejects 0x-prefixed hex.
+  const entropy =
+    typeof extraEntropy === 'string' ? hexToBytes(extraEntropy) : extraEntropy
+
   const { r, s, recovery } = secp256k1.sign(
     hashBytes,
     keyHex,
-    extraEntropy !== undefined ? { extraEntropy } : {},
+    entropy !== undefined ? { extraEntropy: entropy } : {},
   )
 
   const v = recovery + 27

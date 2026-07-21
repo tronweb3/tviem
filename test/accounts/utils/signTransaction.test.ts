@@ -137,6 +137,19 @@ describe('signTransaction', () => {
     expect(twice.signature).toEqual([canonicalSig])
   })
 
+  test('de-duplicates the same signature bytes across hex case (Day 5 fix)', () => {
+    // TronWeb renders the trailing recovery byte uppercase ('…1B'/'…1C');
+    // the 65 signature bytes are identical, so re-signing must not append a
+    // duplicate (the node rejects duplicate-key signatures at broadcast).
+    const foreignCased =
+      canonicalSig.slice(0, 128) + canonicalSig.slice(128).toUpperCase()
+    const signed = signTransaction({
+      transaction: { raw_data: canonicalRawData, signature: [foreignCased] },
+      privateKey: pk1,
+    })
+    expect(signed.signature).toEqual([foreignCased])
+  })
+
   test('appends to an existing foreign signature without dropping it', () => {
     const signed = signTransaction({
       transaction: { raw_data: canonicalRawData, signature: ['deadbeef'] },

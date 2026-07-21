@@ -90,7 +90,8 @@ function ownerAddressOf(rawData: RawData): ContractAddressInput | undefined {
  *    is set (the signer need not be the owner in a multi-sig flow).
  * 4. The serialized transaction must pass {@link txCheck} (decode ∘
  *    re-serialize is self-consistent and matches the id).
- * 5. If this key's signature is already present it is not appended twice.
+ * 5. If this key's signature is already present it is not appended twice
+ *    (compared hex-case-insensitively — the wire value is bytes).
  *
  * When only a `txID` (and no `raw_data`/`raw_data_hex`) is supplied, guards
  * 3 and 4 are not applicable and the supplied id is signed as-is.
@@ -147,10 +148,15 @@ export function signTransaction(
       )
   }
 
-  // Guard 5: sign and append, de-duplicating this key's signature.
+  // Guard 5: sign and append, de-duplicating this key's signature. The wire
+  // value is bytes, so the compare ignores hex case — TronWeb renders the
+  // trailing recovery byte uppercase ('…1B'/'…1C') where ours is lowercase,
+  // and a duplicate-key signature makes the node reject the broadcast.
   const sig = sign({ hash: `0x${txID}`, privateKey }).hex
   const existing = transaction.signature ?? []
-  const signature = existing.includes(sig) ? [...existing] : [...existing, sig]
+  const signature = existing.some((s) => s.toLowerCase() === sig)
+    ? [...existing]
+    : [...existing, sig]
 
   const result: SignableTransaction = { ...transaction, txID, signature }
   if (rawData) {

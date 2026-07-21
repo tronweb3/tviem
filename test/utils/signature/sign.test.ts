@@ -60,6 +60,24 @@ describe('sign', () => {
     expect([27, 28]).toContain(randomized.v)
   })
 
+  test('accepts the advertised 0x-hex form of extraEntropy (Day 5 fix)', () => {
+    const deterministic = sign({ hash: txId, privateKey: pk1 })
+    const salted = sign({
+      hash: txId,
+      privateKey: pk1,
+      extraEntropy: '0xdeadbeef',
+    })
+    expect(salted.hex).not.toBe(deterministic.hex)
+    expect(salted.hex).toHaveLength(130)
+    // RFC 6979 with fixed extra entropy stays deterministic.
+    const again = sign({
+      hash: txId,
+      privateKey: pk1,
+      extraEntropy: '0xdeadbeef',
+    })
+    expect(again.hex).toBe(salted.hex)
+  })
+
   test('r/s components are 0x-prefixed 32-byte hex', () => {
     const signature = sign({ hash: txId, privateKey: pk1 })
     expect(signature.r).toBe(`0x${txSignature.slice(0, 64)}`)
