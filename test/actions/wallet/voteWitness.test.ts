@@ -1,18 +1,17 @@
 import { expect, test } from 'vitest'
-import { rpc } from '../../fixtures/rpc/loader.js'
-import { loadTxFixtureFile } from '../../fixtures/tx/loader.js'
-import { createMockTransport } from '../../mock/createMockTransport.js'
-import { parseBroadcast } from '../../mock/parseBroadcast.js'
+import { voteWitness } from '../../../src/actions/wallet/voteWitness.js'
 import { createPublicClient } from '../../../src/clients/createPublicClient.js'
 import { createWalletClient } from '../../../src/clients/createWalletClient.js'
 import { AccountNotFoundError } from '../../../src/errors/rpc.js'
 import type { Address } from '../../../src/types/address.js'
-import { voteWitness } from '../../../src/actions/wallet/voteWitness.js'
+import { rpc } from '../../fixtures/rpc/loader.js'
+import { loadTxFixtureFile } from '../../fixtures/tx/loader.js'
+import { createMockTransport } from '../../mock/createMockTransport.js'
+import { parseBroadcast } from '../../mock/parseBroadcast.js'
 
 // pk = 1 (permitted trivial key) → address TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC,
 // which is exactly the fixture `owner_address`.
 const pk1 = `0x${'0'.repeat(63)}1` as const
-const now = 1700000000000n
 
 // The two witnesses (with vote counts) pinned by the gold vector.
 const votes = [
@@ -41,7 +40,7 @@ test('votes for two witnesses byte-for-byte against the gold vector', async () =
   const { transport, calls, bodyOf } = writeMock()
   const client = createWalletClient({ account: pk1, transport })
 
-  const { txID } = await voteWitness(client, { votes, now })
+  const { txID } = await voteWitness(client, { votes })
 
   expect(txID).toBe(twoVotes?.txID)
   expect(calls.map((c) => c.path)).toEqual(['getnowblock', 'broadcasthex'])
@@ -60,7 +59,7 @@ test('votes for two witnesses byte-for-byte against the gold vector', async () =
 test('resolves the per-call account when the client hoists none', async () => {
   const { transport, bodyOf } = writeMock()
   const client = createWalletClient({ transport })
-  const { txID } = await voteWitness(client, { account: pk1, votes, now })
+  const { txID } = await voteWitness(client, { account: pk1, votes })
   expect(txID).toBe(twoVotes?.txID)
   expect(
     (parseBroadcast(bodyOf('broadcasthex')) as { raw_data_hex: string })
@@ -71,7 +70,7 @@ test('resolves the per-call account when the client hoists none', async () => {
 test('throws AccountNotFoundError when no account is available', async () => {
   const { transport } = writeMock()
   const client = createPublicClient({ transport })
-  await expect(voteWitness(client, { votes, now })).rejects.toBeInstanceOf(
+  await expect(voteWitness(client, { votes })).rejects.toBeInstanceOf(
     AccountNotFoundError,
   )
 })

@@ -1,16 +1,15 @@
 import { expect, test } from 'vitest'
+import { unfreezeBalanceV2 } from '../../../src/actions/wallet/unfreezeBalanceV2.js'
+import { createPublicClient } from '../../../src/clients/createPublicClient.js'
+import { createWalletClient } from '../../../src/clients/createWalletClient.js'
+import { AccountNotFoundError } from '../../../src/errors/rpc.js'
 import { rpc } from '../../fixtures/rpc/loader.js'
 import { loadTxFixtureFile } from '../../fixtures/tx/loader.js'
 import { createMockTransport } from '../../mock/createMockTransport.js'
 import { parseBroadcast } from '../../mock/parseBroadcast.js'
-import { createPublicClient } from '../../../src/clients/createPublicClient.js'
-import { createWalletClient } from '../../../src/clients/createWalletClient.js'
-import { AccountNotFoundError } from '../../../src/errors/rpc.js'
-import { unfreezeBalanceV2 } from '../../../src/actions/wallet/unfreezeBalanceV2.js'
 
 // pk = 1 → address TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC (the fixture owner).
 const pk1 = `0x${'0'.repeat(63)}1` as const
-const now = 1700000000000n
 
 const [bandwidth, energy] = loadTxFixtureFile(
   'unfreeze-balance-v2-contract.json',
@@ -32,7 +31,6 @@ test('unfreezes for BANDWIDTH byte-for-byte against the gold vector', async () =
   const { txID } = await unfreezeBalanceV2(client, {
     unfreezeBalance: 500000n,
     resource: 'BANDWIDTH',
-    now,
   })
 
   expect(txID).toBe(bandwidth?.txID)
@@ -56,7 +54,6 @@ test('unfreezes for ENERGY byte-for-byte against the gold vector', async () => {
   const { txID } = await unfreezeBalanceV2(client, {
     unfreezeBalance: 250000n,
     resource: 'ENERGY',
-    now,
   })
 
   expect(txID).toBe(energy?.txID)
@@ -73,7 +70,6 @@ test('throws AccountNotFoundError when no account is available', async () => {
     unfreezeBalanceV2(client, {
       unfreezeBalance: 1n,
       resource: 'BANDWIDTH',
-      now,
     }),
   ).rejects.toBeInstanceOf(AccountNotFoundError)
 })

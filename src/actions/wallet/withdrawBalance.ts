@@ -10,38 +10,46 @@ import {
   contractTypeUrlPrefix,
 } from '../../utils/transaction/registry.js'
 import type { RawContract } from '../../utils/transaction/serializeRawData.js'
+import {
+  type NodeTransaction,
+  toNodeTransaction,
+} from '../../utils/transaction/toNodeTransaction.js'
 import type { WithdrawBalanceContract } from '../../utils/transaction/types.js'
 import {
   type BuildAndBroadcastReturnType,
   buildAndBroadcast,
 } from './utils/buildAndBroadcast.js'
+import {
+  buildTransaction,
+  type TransactionHeader,
+} from './utils/buildTransaction.js'
 
 export type WithdrawBalanceParameters = {
   /** The signing account (falls back to `client.account`). */
   account?: TronAccount | Hex | undefined
-  /** Injectable clock (ms since epoch) for deterministic tests. */
-  now?: bigint | undefined
+  /**
+   * A pre-derived TaPoS + timing header. When supplied the transaction is built
+   * fully offline against it; otherwise it is derived from the latest block.
+   */
+  blockHeader?: TransactionHeader | undefined
 }
 export type WithdrawBalanceReturnType = BuildAndBroadcastReturnType
 
-/**
- * Withdraws accrued staking/voting rewards to the account's spendable balance
- * by locally building, signing and broadcasting a `WithdrawBalanceContract`
- * (§ type 13).
- *
- * @param client The Client to use.
- * @param parameters Optional account/clock.
- * @returns `{ txID }` — the locally computed transaction id.
- */
-export async function withdrawBalance(
+export type BuildWithdrawBalanceParameters = WithdrawBalanceParameters & {
+  /** Multi-sig permission id (`Contract.Permission_id`). */
+  permissionId?: number | undefined
+}
+export type BuildWithdrawBalanceReturnType = NodeTransaction
+
+/** The signing account plus the assembled `WithdrawBalanceContract`. */
+function assemble(
   client: Client,
-  parameters: WithdrawBalanceParameters = {},
-): Promise<WithdrawBalanceReturnType> {
+  parameters: WithdrawBalanceParameters,
+): { account: TronAccount; contract: RawContract } {
+  // Resolve the owner/signing account (per-call, else hoisted on the Client).
   const source = parameters.account ?? client.account
   if (!source) throw new AccountNotFoundError()
   const account = parseAccount(source)
-
-  const now = parameters.now ?? BigInt(Date.now())
 
   const value: WithdrawBalanceContract = {
     ownerAddress: toHex(account.address),
@@ -55,5 +63,47 @@ export async function withdrawBalance(
     },
   }
 
-  return buildAndBroadcast(client, { contract, account, now })
+  return { account, contract }
+}
+
+/**
+ * Builds an **unsigned** `WithdrawBalanceContract` transaction (§ type 13) and
+ * returns it in java-tron's HTTP JSON shape (TronWeb-compatible `{ visible,
+ * txID, raw_data, raw_data_hex }`) — the build half of {@link withdrawBalance},
+ * without signing or broadcasting. Pass `permissionId` to bind it to an
+ * active/owner permission. The node is used only to fetch the latest block
+ * (TaPoS).
+ *
+ * @param client The Client to use.
+ * @param parameters Optional account/permissionId/blockHeader.
+ * @returns A TronWeb-shaped unsigned {@link NodeTransaction}.
+ */
+export async function buildWithdrawBalance(
+  client: Client,
+  parameters: BuildWithdrawBalanceParameters = {},
+): Promise<BuildWithdrawBalanceReturnType> {
+  const { contract } = assemble(client, parameters)
+  const unsigned = await buildTransaction(client, {
+    contract,
+    permissionId: parameters.permissionId,
+    blockHeader: parameters.blockHeader,
+  })
+  return toNodeTransaction(unsigned)
+}
+
+/**
+ * Withdraws accrued staking/voting rewards to the account's spendable balance
+ * by locally building, signing and broadcasting a `WithdrawBalanceContract`
+ * (§ type 13).
+ *
+ * @param client The Client to use.
+ * @param parameters Optional account/blockHeader.
+ * @returns `{ txID }` — the locally computed transaction id.
+ */
+export async function withdrawBalance(
+  client: Client,
+  parameters: WithdrawBalanceParameters = {},
+): Promise<WithdrawBalanceReturnType> {
+  const { account, contract } = assemble(client, parameters)
+  return buildAndBroadcast(client, { contract, account, blockHeader: parameters.blockHeader })
 }

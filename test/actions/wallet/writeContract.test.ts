@@ -1,17 +1,16 @@
 import { expect, test } from 'vitest'
-import { rpc } from '../../fixtures/rpc/loader.js'
-import { createMockTransport } from '../../mock/createMockTransport.js'
-import { parseBroadcast } from '../../mock/parseBroadcast.js'
+import { writeContract } from '../../../src/actions/wallet/writeContract.js'
 import { createPublicClient } from '../../../src/clients/createPublicClient.js'
 import { createWalletClient } from '../../../src/clients/createWalletClient.js'
 import { defaultFeeLimit } from '../../../src/constants/address.js'
 import { AccountNotFoundError } from '../../../src/errors/rpc.js'
 import type { Address } from '../../../src/types/address.js'
-import { writeContract } from '../../../src/actions/wallet/writeContract.js'
+import { rpc } from '../../fixtures/rpc/loader.js'
+import { createMockTransport } from '../../mock/createMockTransport.js'
+import { parseBroadcast } from '../../mock/parseBroadcast.js'
 
 // pk = 1 (permitted trivial key) → address TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC.
 const pk1 = `0x${'0'.repeat(63)}1` as const
-const now = 1700000000000n
 
 const trc20Abi = [
   {
@@ -67,7 +66,6 @@ test('builds, signs and broadcasts a TRC20 transfer byte-for-byte (feeLimit)', a
     functionName: 'transfer',
     args: [recipient, 1000000n],
     feeLimit: FEE_LIMIT,
-    now,
   })
 
   expect(txID).toBe(TX_ID_FEELIMIT)
@@ -96,7 +94,6 @@ test('attaches callValue to the TriggerSmartContract byte-for-byte', async () =>
     args: [recipient, 1000000n],
     feeLimit: FEE_LIMIT,
     callValue: 1000000n,
-    now,
   })
 
   expect(txID).toBe(TX_ID_CALLVALUE)
@@ -117,7 +114,6 @@ test('defaults feeLimit to defaultFeeLimit when omitted', async () => {
     abi: trc20Abi,
     functionName: 'transfer',
     args: [recipient, 1000000n],
-    now,
   })
 
   const body = parseBroadcast(bodyOf('broadcasthex')) as {
@@ -135,7 +131,6 @@ test('throws AccountNotFoundError when no account is available (bare action)', a
       abi: trc20Abi,
       functionName: 'transfer',
       args: [recipient, 1000000n],
-      now,
     }),
   ).rejects.toBeInstanceOf(AccountNotFoundError)
 })

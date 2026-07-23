@@ -1,17 +1,16 @@
 import { expect, test } from 'vitest'
-import { rpc } from '../../fixtures/rpc/loader.js'
-import { createMockTransport } from '../../mock/createMockTransport.js'
-import { parseBroadcast } from '../../mock/parseBroadcast.js'
+import { sendTrx } from '../../../src/actions/wallet/sendTrx.js'
 import { createPublicClient } from '../../../src/clients/createPublicClient.js'
 import { createWalletClient } from '../../../src/clients/createWalletClient.js'
 import { AccountNotFoundError } from '../../../src/errors/rpc.js'
 import type { Address } from '../../../src/types/address.js'
-import { sendTrx } from '../../../src/actions/wallet/sendTrx.js'
+import { rpc } from '../../fixtures/rpc/loader.js'
+import { createMockTransport } from '../../mock/createMockTransport.js'
+import { parseBroadcast } from '../../mock/parseBroadcast.js'
 
 // pk = 1 (permitted trivial key) → address TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC.
 const pk1 = `0x${'0'.repeat(63)}1` as const
 const to = 'TPL66VK2gCXNCD7EJg9pgJRfqcRazjhUZY' as Address
-const now = 1700000000000n
 
 // Canonical transfer gold vectors (tx/transfer-contract[0] + sig/transaction[0]).
 const TX_ID = '407ec75dad4545890e5788ef78555ecab9dc72d56df29da4ebbd508022bdbaba'
@@ -33,7 +32,7 @@ test('builds, signs and broadcasts the canonical transfer byte-for-byte', async 
   const { transport, calls, bodyOf } = writeMock()
   const client = createWalletClient({ account: pk1, transport })
 
-  const { txID } = await client.sendTrx({ to, amount: 1000000n, now })
+  const { txID } = await client.sendTrx({ to, amount: 1000000n })
 
   // The returned id is the locally computed txID.
   expect(txID).toBe(TX_ID)
@@ -62,7 +61,7 @@ test('returns the local txID even when the node echoes a different one', async (
   // broadcasttransaction.ok replies with an all-zero txid on purpose.
   const { transport } = writeMock()
   const client = createWalletClient({ account: pk1, transport })
-  const { txID } = await client.sendTrx({ to, amount: 1000000n, now })
+  const { txID } = await client.sendTrx({ to, amount: 1000000n })
   expect(txID).toBe(TX_ID)
   expect(txID).not.toBe(`0${'0'.repeat(63)}`)
 })
@@ -74,7 +73,6 @@ test('accepts a per-call account overriding the (absent) client account', async 
     account: pk1,
     to,
     amount: 1000000n,
-    now,
   })
   expect(txID).toBe(TX_ID)
   expect(
@@ -86,7 +84,7 @@ test('accepts a per-call account overriding the (absent) client account', async 
 test('writes a memo into raw_data.data', async () => {
   const { transport, bodyOf } = writeMock()
   const client = createWalletClient({ account: pk1, transport })
-  await client.sendTrx({ to, amount: 1000000n, now, memo: '0x6f6d6e69' })
+  await client.sendTrx({ to, amount: 1000000n, memo: '0x6f6d6e69' })
   const body = parseBroadcast(bodyOf('broadcasthex')) as {
     raw_data: { data?: string }
   }
@@ -97,6 +95,6 @@ test('throws AccountNotFoundError when no account is available (bare action)', a
   const { transport } = writeMock()
   const client = createPublicClient({ transport })
   await expect(
-    sendTrx(client, { to, amount: 1000000n, now }),
+    sendTrx(client, { to, amount: 1000000n }),
   ).rejects.toBeInstanceOf(AccountNotFoundError)
 })

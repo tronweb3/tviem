@@ -1,16 +1,15 @@
 import { expect, test } from 'vitest'
+import { withdrawExpireUnfreeze } from '../../../src/actions/wallet/withdrawExpireUnfreeze.js'
+import { createPublicClient } from '../../../src/clients/createPublicClient.js'
+import { createWalletClient } from '../../../src/clients/createWalletClient.js'
+import { AccountNotFoundError } from '../../../src/errors/rpc.js'
 import { rpc } from '../../fixtures/rpc/loader.js'
 import { loadTxFixtureFile } from '../../fixtures/tx/loader.js'
 import { createMockTransport } from '../../mock/createMockTransport.js'
 import { parseBroadcast } from '../../mock/parseBroadcast.js'
-import { createPublicClient } from '../../../src/clients/createPublicClient.js'
-import { createWalletClient } from '../../../src/clients/createWalletClient.js'
-import { AccountNotFoundError } from '../../../src/errors/rpc.js'
-import { withdrawExpireUnfreeze } from '../../../src/actions/wallet/withdrawExpireUnfreeze.js'
 
 // pk = 1 → address TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC (the fixture owner).
 const pk1 = `0x${'0'.repeat(63)}1` as const
-const now = 1700000000000n
 
 const [fixture] = loadTxFixtureFile('withdraw-expire-unfreeze-contract.json')
 
@@ -27,7 +26,7 @@ test('withdraws expired unfreeze byte-for-byte against the gold vector', async (
   const { transport, calls, bodyOf } = writeMock()
   const client = createWalletClient({ account: pk1, transport })
 
-  const { txID } = await withdrawExpireUnfreeze(client, { now })
+  const { txID } = await withdrawExpireUnfreeze(client, {})
 
   expect(txID).toBe(fixture?.txID)
   expect(calls.map((c) => c.path)).toEqual(['getnowblock', 'broadcasthex'])
@@ -47,7 +46,7 @@ test('withdraws expired unfreeze byte-for-byte against the gold vector', async (
 test('resolves the per-call account when the client hoists none', async () => {
   const { transport, bodyOf } = writeMock()
   const client = createWalletClient({ transport })
-  const { txID } = await withdrawExpireUnfreeze(client, { account: pk1, now })
+  const { txID } = await withdrawExpireUnfreeze(client, { account: pk1 })
   expect(txID).toBe(fixture?.txID)
   expect(
     (parseBroadcast(bodyOf('broadcasthex')) as { raw_data_hex: string })
@@ -58,7 +57,7 @@ test('resolves the per-call account when the client hoists none', async () => {
 test('throws AccountNotFoundError when no account is available', async () => {
   const { transport } = writeMock()
   const client = createPublicClient({ transport })
-  await expect(withdrawExpireUnfreeze(client, { now })).rejects.toBeInstanceOf(
+  await expect(withdrawExpireUnfreeze(client, {})).rejects.toBeInstanceOf(
     AccountNotFoundError,
   )
 })

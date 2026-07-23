@@ -12,6 +12,10 @@ import {
 } from '../../utils/transaction/registry.js'
 import type { RawContract } from '../../utils/transaction/serializeRawData.js'
 import {
+  type NodeTransaction,
+  toNodeTransaction,
+} from '../../utils/transaction/toNodeTransaction.js'
+import {
   type DelegateResourceContract,
   ResourceCode,
 } from '../../utils/transaction/types.js'
@@ -19,6 +23,10 @@ import {
   type BuildAndBroadcastReturnType,
   buildAndBroadcast,
 } from './utils/buildAndBroadcast.js'
+import {
+  buildTransaction,
+  type TransactionHeader,
+} from './utils/buildTransaction.js'
 
 /** Resource type delegatable under Stake 2.0. */
 export type DelegateResource = 'BANDWIDTH' | 'ENERGY'
@@ -36,31 +44,34 @@ export type DelegateResourceParameters = {
   lock?: boolean | undefined
   /** Lock period, in blocks (only meaningful when `lock` is true). */
   lockPeriod?: bigint | undefined
-  /** Injectable clock (ms since epoch) for deterministic tests. */
-  now?: bigint | undefined
+  /**
+   * A pre-derived TaPoS + timing header. When supplied the transaction is built
+   * fully offline against it; otherwise it is derived from the latest block.
+   */
+  blockHeader?: TransactionHeader | undefined
 }
 export type DelegateResourceReturnType = BuildAndBroadcastReturnType
 
-/**
- * Delegates staked bandwidth or energy to another account under Stake 2.0 by
- * locally building, signing and broadcasting a `DelegateResourceContract`
- * (§ type 57).
- *
- * @param client The Client to use.
- * @param parameters Receiver, amount, resource, optional lock/account/clock.
- * @returns `{ txID }` — the locally computed transaction id.
- */
-export async function delegateResource(
+export type BuildDelegateResourceParameters = DelegateResourceParameters & {
+  /**
+   * Multi-sig permission id (`Contract.Permission_id`) to bind the transaction
+   * to an active/owner permission.
+   */
+  permissionId?: number | undefined
+}
+export type BuildDelegateResourceReturnType = NodeTransaction
+
+/** The signing (delegator) account plus the assembled `DelegateResourceContract`. */
+function assemble(
   client: Client,
   parameters: DelegateResourceParameters,
-): Promise<DelegateResourceReturnType> {
+): { account: TronAccount; contract: RawContract } {
   const { receiverAddress, balance, resource, lock, lockPeriod } = parameters
 
+  // Resolve the owner/signing account (per-call, else hoisted on the Client).
   const source = parameters.account ?? client.account
   if (!source) throw new AccountNotFoundError()
   const account = parseAccount(source)
-
-  const now = parameters.now ?? BigInt(Date.now())
 
   const value: DelegateResourceContract = {
     ownerAddress: toHex(account.address),
@@ -79,5 +90,47 @@ export async function delegateResource(
     },
   }
 
-  return buildAndBroadcast(client, { contract, account, now })
+  return { account, contract }
+}
+
+/**
+ * Builds an **unsigned** `DelegateResourceContract` transaction (§ type 57) and
+ * returns it in java-tron's HTTP JSON shape (TronWeb-compatible `{ visible,
+ * txID, raw_data, raw_data_hex }`) — the build half of {@link delegateResource},
+ * without signing or broadcasting. Pass `permissionId` to bind it to an
+ * active/owner permission. The node is used only to fetch the latest block
+ * (TaPoS).
+ *
+ * @param client The Client to use.
+ * @param parameters Receiver, amount, resource, optional lock/account/permissionId/blockHeader.
+ * @returns A TronWeb-shaped unsigned {@link NodeTransaction}.
+ */
+export async function buildDelegateResource(
+  client: Client,
+  parameters: BuildDelegateResourceParameters,
+): Promise<BuildDelegateResourceReturnType> {
+  const { contract } = assemble(client, parameters)
+  const unsigned = await buildTransaction(client, {
+    contract,
+    permissionId: parameters.permissionId,
+    blockHeader: parameters.blockHeader,
+  })
+  return toNodeTransaction(unsigned)
+}
+
+/**
+ * Delegates staked bandwidth or energy to another account under Stake 2.0 by
+ * locally building, signing and broadcasting a `DelegateResourceContract`
+ * (§ type 57).
+ *
+ * @param client The Client to use.
+ * @param parameters Receiver, amount, resource, optional lock/account/blockHeader.
+ * @returns `{ txID }` — the locally computed transaction id.
+ */
+export async function delegateResource(
+  client: Client,
+  parameters: DelegateResourceParameters,
+): Promise<DelegateResourceReturnType> {
+  const { account, contract } = assemble(client, parameters)
+  return buildAndBroadcast(client, { contract, account, blockHeader: parameters.blockHeader })
 }

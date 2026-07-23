@@ -1,0 +1,119 @@
+import { expect, test } from 'vitest'
+import { buildFreezeBalanceV2 } from '../../../src/actions/wallet/freezeBalanceV2.js'
+import { createPublicClient } from '../../../src/clients/createPublicClient.js'
+import { createWalletClient } from '../../../src/clients/createWalletClient.js'
+import { AccountNotFoundError } from '../../../src/errors/rpc.js'
+import { rpc } from '../../fixtures/rpc/loader.js'
+import { loadTxFixtureFile } from '../../fixtures/tx/loader.js'
+import { createMockTransport } from '../../mock/createMockTransport.js'
+
+// pk = 1 (permitted trivial key) → address TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC,
+// which is exactly the fixture `owner_address`.
+const pk1 = `0x${'0'.repeat(63)}1` as const
+
+// Same canonical freeze gold vector as freezeBalanceV2 — the build half must
+// produce the identical bytes / id (it is exactly what freezeBalanceV2 signs).
+const [bandwidth] = loadTxFixtureFile('freeze-balance-v2-contract.json')
+
+function buildMock() {
+  return createMockTransport({
+    responses: {
+      getnowblock: { response: rpc('getnowblock.fixed') },
+      broadcasthex: { response: rpc('broadcasttransaction.ok') },
+    },
+  })
+}
+
+test('builds the canonical freeze in TronWeb JSON shape, unsigned', async () => {
+  const { transport, calls } = buildMock()
+  const client = createWalletClient({ account: pk1, transport })
+
+  const tx = await buildFreezeBalanceV2(client, {
+    frozenBalance: 1000000n,
+    resource: 'BANDWIDTH',
+  })
+
+  // Byte-identical to what freezeBalanceV2 builds.
+  expect(tx.txID).toBe(bandwidth?.txID)
+  expect(tx.raw_data_hex).toBe(bandwidth?.rawDataHex)
+
+  // TronWeb-compatible wrapper: visible:false, no signature (unsigned).
+  expect(tx.visible).toBe(false)
+  expect(tx.signature).toBeUndefined()
+
+  // Only the block was fetched — nothing was signed or broadcast.
+  expect(calls.map((c) => c.path)).toEqual(['getnowblock'])
+})
+
+test('a custom blockHeader is used verbatim and skips the getnowblock fetch', async () => {
+  const { transport, calls } = buildMock()
+  const client = createWalletClient({ account: pk1, transport })
+
+  const tx = await buildFreezeBalanceV2(client, {
+    frozenBalance: 1000000n,
+    resource: 'BANDWIDTH',
+    blockHeader: {
+      refBlockBytes: '1234',
+      refBlockHash: '0102030405060708',
+      timestamp: 1700000000000n,
+      expiration: 1700000000000n + 60000n,
+    },
+  })
+
+  expect(tx.txID).toBe(bandwidth?.txID)
+  expect(tx.raw_data_hex).toBe(bandwidth?.rawDataHex)
+  expect(calls).toEqual([])
+})
+
+test('raw_data contract is a node-JSON FreezeBalanceV2Contract', async () => {
+  const { transport } = buildMock()
+  const client = createWalletClient({ account: pk1, transport })
+
+  const tx = await buildFreezeBalanceV2(client, {
+    frozenBalance: 1000000n,
+    resource: 'BANDWIDTH',
+  })
+  const contract = (tx.raw_data.contract as Record<string, unknown>[])[0] as {
+    type: string
+    parameter: { type_url: string; value: Record<string, unknown> }
+  }
+
+  expect(contract.type).toBe('FreezeBalanceV2Contract')
+  expect(contract.parameter.type_url).toBe(
+    'type.googleapis.com/protocol.FreezeBalanceV2Contract',
+  )
+  // snake_case keys, 41-hex owner address (no 0x), int64 as a JSON number.
+  expect(contract.parameter.value.owner_address).toMatch(/^41[0-9a-f]{40}$/)
+  expect(contract.parameter.value.frozen_balance).toBe(1000000)
+})
+
+test('permissionId is baked in as Permission_id and changes the id', async () => {
+  const { transport } = buildMock()
+  const client = createWalletClient({ account: pk1, transport })
+
+  const tx = await buildFreezeBalanceV2(client, {
+    frozenBalance: 1000000n,
+    resource: 'BANDWIDTH',
+    permissionId: 2,
+  })
+  const contract = (tx.raw_data.contract as Record<string, unknown>[])[0] as {
+    Permission_id?: number
+  }
+
+  // TRON renders the field with a capital `P`.
+  expect(contract.Permission_id).toBe(2)
+  // The permission id is part of the serialized bytes → a different txID.
+  expect(tx.txID).not.toBe(bandwidth?.txID)
+  expect(tx.raw_data_hex).not.toBe(bandwidth?.rawDataHex)
+})
+
+test('throws AccountNotFoundError when no account is available (bare action)', async () => {
+  const { transport } = buildMock()
+  const client = createPublicClient({ transport })
+  await expect(
+    buildFreezeBalanceV2(client, {
+      frozenBalance: 1000000n,
+      resource: 'BANDWIDTH',
+    }),
+  ).rejects.toBeInstanceOf(AccountNotFoundError)
+})

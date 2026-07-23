@@ -7,18 +7,23 @@ import type { Address } from '../../types/address.js'
 import type { ByteArray, Hex } from '../../types/misc.js'
 import { toHex } from '../../utils/address/toHex.js'
 import { bytesToHex } from '../../utils/encoding/toHex.js'
-import { getAction } from '../../utils/getAction.js'
-import { fillBlockHeader } from '../../utils/transaction/prepareTransaction.js'
 import {
   ContractType,
   contractTypeUrlPrefix,
 } from '../../utils/transaction/registry.js'
-import type {
-  RawContract,
-  RawData,
-} from '../../utils/transaction/serializeRawData.js'
-import { getNowBlock } from '../public/getNowBlock.js'
-import { broadcastTransaction } from './broadcastTransaction.js'
+import type { RawContract } from '../../utils/transaction/serializeRawData.js'
+import {
+  type NodeTransaction,
+  toNodeTransaction,
+} from '../../utils/transaction/toNodeTransaction.js'
+import {
+  type BuildAndBroadcastReturnType,
+  buildAndBroadcast,
+} from './utils/buildAndBroadcast.js'
+import {
+  buildTransaction,
+  type TransactionHeader,
+} from './utils/buildTransaction.js'
 
 export type SendTrxParameters = {
   /** The signing account (falls back to `client.account`). */
@@ -29,37 +34,36 @@ export type SendTrxParameters = {
   amount: bigint
   /** Optional memo, written to `raw_data.data` (hex or raw bytes). */
   memo?: Hex | ByteArray | undefined
-  /** Injectable clock (ms since epoch) for deterministic tests. */
-  now?: bigint | undefined
+  /**
+   * A pre-derived TaPoS + timing header. When supplied the transaction is built
+   * fully offline against it; otherwise it is derived from the latest block.
+   */
+  blockHeader?: TransactionHeader | undefined
 }
-export type SendTrxReturnType = { txID: string }
+export type SendTrxReturnType = BuildAndBroadcastReturnType
 
-/**
- * Sends TRX to a recipient by locally building, signing and broadcasting a
- * `TransferContract` transaction (§4.1). The transaction is assembled entirely
- * client-side; the node is used only to fetch the latest block (TaPoS) and to
- * broadcast. `now` is the single point the wall clock is read and is injectable
- * so the built bytes / `txID` are deterministic offline.
- *
- * @param client The Client to use.
- * @param parameters Recipient, amount, optional memo/account/clock.
- * @returns `{ txID }` — the locally computed transaction id.
- */
-export async function sendTrx(
+export type BuildSendTrxParameters = SendTrxParameters & {
+  /**
+   * Multi-sig permission id (`Contract.Permission_id`) to bind the transaction
+   * to an active/owner permission.
+   */
+  permissionId?: number | undefined
+}
+export type BuildSendTrxReturnType = NodeTransaction
+
+/** The signing account plus the assembled `TransferContract` and memo `data`. */
+function assemble(
   client: Client,
   parameters: SendTrxParameters,
-): Promise<SendTrxReturnType> {
+): { account: TronAccount; contract: RawContract; data: string | undefined } {
   const { to, amount, memo } = parameters
 
-  // Resolve the signing account (per-call, else hoisted on the Client).
+  // Resolve the owner/signing account (per-call, else hoisted on the Client).
   const source = parameters.account ?? client.account
   if (!source) throw new AccountNotFoundError()
   const account = parseAccount(source)
 
-  // The only wall-clock read in the write pipeline — injectable for tests.
-  const now = parameters.now ?? BigInt(Date.now())
-
-  // ① / ② build the TransferContract (addresses enter the body as 41-hex).
+  // Build the TransferContract (addresses enter the body as 41-hex).
   const contract: RawContract = {
     type: ContractType.TransferContract,
     parameter: {
@@ -72,29 +76,60 @@ export async function sendTrx(
     },
   }
 
-  // ③ assemble raw_data (memo → bare-hex `data`).
-  let rawData: RawData = { contract: [contract], timestamp: now }
-  if (memo !== undefined) rawData = { ...rawData, data: memoToHex(memo) }
+  return {
+    account,
+    contract,
+    data: memo !== undefined ? memoToHex(memo) : undefined,
+  }
+}
 
-  // ④ fill TaPoS reference fields + expiration from the latest block.
-  const block = await getAction(
-    client,
-    getNowBlock,
-    'getNowBlock',
-  )(undefined as never)
-  rawData = fillBlockHeader(rawData, block, now)
+/**
+ * Builds an **unsigned** `TransferContract` transaction (§4.1) and returns it in
+ * java-tron's HTTP JSON shape (TronWeb-compatible `{ visible, txID, raw_data,
+ * raw_data_hex }`) — the build half of {@link sendTrx}, without signing or
+ * broadcasting. Pass `permissionId` to bind it to an active/owner permission.
+ * The node is used only to fetch the latest block (TaPoS).
+ *
+ * @param client The Client to use.
+ * @param parameters Recipient, amount, optional memo/account/permissionId/blockHeader.
+ * @returns A TronWeb-shaped unsigned {@link NodeTransaction}.
+ */
+export async function buildSendTrx(
+  client: Client,
+  parameters: BuildSendTrxParameters,
+): Promise<BuildSendTrxReturnType> {
+  const { contract, data } = assemble(client, parameters)
+  const unsigned = await buildTransaction(client, {
+    contract,
+    data,
+    permissionId: parameters.permissionId,
+    blockHeader: parameters.blockHeader,
+  })
+  return toNodeTransaction(unsigned)
+}
 
-  // ⑤ / ⑥ sign locally (recomputes txID, owner guard, txCheck, appends sig).
-  const signed = account.signTransaction({ raw_data: rawData })
-
-  // ⑦ broadcast; the local txID is authoritative.
-  await getAction(
-    client,
-    broadcastTransaction,
-    'broadcastTransaction',
-  )({ signedTransaction: signed })
-
-  return { txID: signed.txID ?? '' }
+/**
+ * Sends TRX to a recipient by locally building, signing and broadcasting a
+ * `TransferContract` transaction (§4.1). The transaction is assembled entirely
+ * client-side; the node is used only to fetch the latest block (TaPoS) and to
+ * broadcast. Timing is chain-derived from that block, never the wall clock; pass
+ * `blockHeader` to build fully offline against a pinned block.
+ *
+ * @param client The Client to use.
+ * @param parameters Recipient, amount, optional memo/account/blockHeader.
+ * @returns `{ txID }` — the locally computed transaction id.
+ */
+export async function sendTrx(
+  client: Client,
+  parameters: SendTrxParameters,
+): Promise<SendTrxReturnType> {
+  const { account, contract, data } = assemble(client, parameters)
+  return buildAndBroadcast(client, {
+    contract,
+    account,
+    data,
+    blockHeader: parameters.blockHeader,
+  })
 }
 
 /** Normalizes a memo to bare (no `0x`), lowercase hex. */

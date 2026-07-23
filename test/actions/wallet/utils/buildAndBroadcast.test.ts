@@ -1,8 +1,5 @@
 import { expect, test } from 'vitest'
-import { rpc } from '../../../fixtures/rpc/loader.js'
-import { loadTxFixtureFile } from '../../../fixtures/tx/loader.js'
-import { createMockTransport } from '../../../mock/createMockTransport.js'
-import { parseBroadcast } from '../../../mock/parseBroadcast.js'
+import { buildAndBroadcast } from '../../../../src/actions/wallet/utils/buildAndBroadcast.js'
 import { createPublicClient } from '../../../../src/clients/createPublicClient.js'
 import { parseAccount } from '../../../../src/types/account.js'
 import { toHex } from '../../../../src/utils/address/toHex.js'
@@ -11,11 +8,13 @@ import {
   contractTypeUrlPrefix,
 } from '../../../../src/utils/transaction/registry.js'
 import type { RawContract } from '../../../../src/utils/transaction/serializeRawData.js'
-import { buildAndBroadcast } from '../../../../src/actions/wallet/utils/buildAndBroadcast.js'
+import { rpc } from '../../../fixtures/rpc/loader.js'
+import { loadTxFixtureFile } from '../../../fixtures/tx/loader.js'
+import { createMockTransport } from '../../../mock/createMockTransport.js'
+import { parseBroadcast } from '../../../mock/parseBroadcast.js'
 
 // pk = 1 → address TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC (the fixture owner).
 const pk1 = `0x${'0'.repeat(63)}1` as const
-const now = 1700000000000n
 
 const [bandwidth] = loadTxFixtureFile('freeze-balance-v2-contract.json')
 
@@ -48,7 +47,6 @@ test('runs getNowBlock → sign → broadcast and returns the local txID', async
   const { txID } = await buildAndBroadcast(client, {
     contract: freezeContract(),
     account,
-    now,
   })
 
   // Byte-for-byte gold: the helper produces the same bytes as the action.
@@ -78,7 +76,6 @@ test('writes fee_limit into raw_data when supplied', async () => {
   await buildAndBroadcast(client, {
     contract: freezeContract(),
     account,
-    now,
     feeLimit: 15000000n,
   })
 
@@ -88,18 +85,17 @@ test('writes fee_limit into raw_data when supplied', async () => {
   expect(body.raw_data.feeLimit).toBe(15000000n)
 })
 
-test('defaults now to the wall clock when omitted', async () => {
+test('derives timing from the latest block when blockHeader is omitted', async () => {
   const { transport, bodyOf } = writeMock()
   const client = createPublicClient({ transport })
   const account = parseAccount(pk1)
-  const before = BigInt(Date.now())
 
   await buildAndBroadcast(client, { contract: freezeContract(), account })
 
   const body = parseBroadcast(bodyOf('broadcasthex')) as {
     raw_data: { timestamp: bigint }
   }
-  const after = BigInt(Date.now())
-  expect(body.raw_data.timestamp).toBeGreaterThanOrEqual(before)
-  expect(body.raw_data.timestamp).toBeLessThanOrEqual(after)
+  // getnowblock.fixed pins block_header timestamp = 1700000000000; timing is
+  // taken verbatim from the fetched block rather than a wall clock.
+  expect(body.raw_data.timestamp).toBe(1700000000000n)
 })

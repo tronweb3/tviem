@@ -1,17 +1,16 @@
 import { expect, test } from 'vitest'
+import { withdrawBalance } from '../../../src/actions/wallet/withdrawBalance.js'
+import { createPublicClient } from '../../../src/clients/createPublicClient.js'
+import { createWalletClient } from '../../../src/clients/createWalletClient.js'
+import { AccountNotFoundError } from '../../../src/errors/rpc.js'
 import { rpc } from '../../fixtures/rpc/loader.js'
 import { loadTxFixtureFile } from '../../fixtures/tx/loader.js'
 import { createMockTransport } from '../../mock/createMockTransport.js'
 import { parseBroadcast } from '../../mock/parseBroadcast.js'
-import { createPublicClient } from '../../../src/clients/createPublicClient.js'
-import { createWalletClient } from '../../../src/clients/createWalletClient.js'
-import { AccountNotFoundError } from '../../../src/errors/rpc.js'
-import { withdrawBalance } from '../../../src/actions/wallet/withdrawBalance.js'
 
 // pk = 1 (permitted trivial key) → address TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC,
 // which is exactly the fixture `owner_address`.
 const pk1 = `0x${'0'.repeat(63)}1` as const
-const now = 1700000000000n
 
 const [withdraw] = loadTxFixtureFile('withdraw-balance-contract.json')
 
@@ -28,7 +27,7 @@ test('withdraws rewards byte-for-byte against the gold vector', async () => {
   const { transport, calls, bodyOf } = writeMock()
   const client = createWalletClient({ account: pk1, transport })
 
-  const { txID } = await withdrawBalance(client, { now })
+  const { txID } = await withdrawBalance(client, {})
 
   expect(txID).toBe(withdraw?.txID)
   expect(calls.map((c) => c.path)).toEqual(['getnowblock', 'broadcasthex'])
@@ -47,7 +46,7 @@ test('withdraws rewards byte-for-byte against the gold vector', async () => {
 test('resolves the per-call account when the client hoists none', async () => {
   const { transport, bodyOf } = writeMock()
   const client = createWalletClient({ transport })
-  const { txID } = await withdrawBalance(client, { account: pk1, now })
+  const { txID } = await withdrawBalance(client, { account: pk1 })
   expect(txID).toBe(withdraw?.txID)
   expect(
     (parseBroadcast(bodyOf('broadcasthex')) as { raw_data_hex: string })
@@ -58,7 +57,7 @@ test('resolves the per-call account when the client hoists none', async () => {
 test('throws AccountNotFoundError when no account is available', async () => {
   const { transport } = writeMock()
   const client = createPublicClient({ transport })
-  await expect(withdrawBalance(client, { now })).rejects.toBeInstanceOf(
+  await expect(withdrawBalance(client, {})).rejects.toBeInstanceOf(
     AccountNotFoundError,
   )
 })

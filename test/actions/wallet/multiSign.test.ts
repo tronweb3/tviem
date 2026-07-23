@@ -1,12 +1,12 @@
 import { expect, test } from 'vitest'
-import { loadTxFixtureFile } from '../../fixtures/tx/loader.js'
-import { createMockTransport } from '../../mock/createMockTransport.js'
 import { privateKeyToAddress } from '../../../src/accounts/utils/privateKeyToAddress.js'
 import { signTransaction } from '../../../src/accounts/utils/signTransaction.js'
+import { multiSign } from '../../../src/actions/wallet/multiSign.js'
 import { createPublicClient } from '../../../src/clients/createPublicClient.js'
 import { BaseError } from '../../../src/errors/base.js'
 import { TransactionTamperedError } from '../../../src/errors/rpc.js'
-import { multiSign } from '../../../src/actions/wallet/multiSign.js'
+import { loadTxFixtureFile } from '../../fixtures/tx/loader.js'
+import { createMockTransport } from '../../mock/createMockTransport.js'
 
 // Two distinct permitted trivial keys → two distinct co-signers.
 const pk1 = `0x${'0'.repeat(63)}1` as const

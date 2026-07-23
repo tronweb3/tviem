@@ -9,19 +9,21 @@ import type { Address } from '../../types/address.js'
 import type { Hex } from '../../types/misc.js'
 import { encodeFunctionData } from '../../utils/abi/encodeFunctionData.js'
 import { toHex } from '../../utils/address/toHex.js'
-import { getAction } from '../../utils/getAction.js'
-import { fillBlockHeader } from '../../utils/transaction/prepareTransaction.js'
 import {
   ContractType,
   contractTypeUrlPrefix,
 } from '../../utils/transaction/registry.js'
-import type {
-  RawContract,
-  RawData,
-} from '../../utils/transaction/serializeRawData.js'
+import type { RawContract } from '../../utils/transaction/serializeRawData.js'
+import {
+  type NodeTransaction,
+  toNodeTransaction,
+} from '../../utils/transaction/toNodeTransaction.js'
 import type { TriggerSmartContract } from '../../utils/transaction/types.js'
-import { getNowBlock } from '../public/getNowBlock.js'
-import { broadcastTransaction } from './broadcastTransaction.js'
+import { buildAndBroadcast } from './utils/buildAndBroadcast.js'
+import {
+  buildTransaction,
+  type TransactionHeader,
+} from './utils/buildTransaction.js'
 
 export type WriteContractParameters = {
   /** The signing account (falls back to `client.account`). */
@@ -38,32 +40,25 @@ export type WriteContractParameters = {
   feeLimit?: bigint | undefined
   /** TRX value (in SUN) to attach to the call. */
   callValue?: bigint | undefined
-  /** Injectable clock (ms since epoch) for deterministic tests. */
-  now?: bigint | undefined
+  /**
+   * A pre-derived TaPoS + timing header. When supplied the transaction is built
+   * fully offline against it; otherwise it is derived from the latest block.
+   */
+  blockHeader?: TransactionHeader | undefined
 }
 export type WriteContractReturnType = { txID: string }
 
-/**
- * Writes to (state-changing calls) a contract function by locally building,
- * signing and broadcasting a `TriggerSmartContract` transaction (§4.2). The
- * calldata is produced by {@link encodeFunctionData}; the whole transaction is
- * assembled client-side, with the node used only to fetch the latest block and
- * to broadcast.
- *
- * `feeLimit` is written into `raw_data` (field 18) and therefore enters the
- * signed hash — it cannot be added after broadcast. It defaults to
- * {@link defaultFeeLimit}; callers who want a tighter bound can pre-compute it
- * with `estimateEnergy` and pass it explicitly (kept opt-in so the built bytes
- * stay deterministic and no extra node round-trip is forced).
- *
- * @param client The Client to use.
- * @param parameters Contract address / ABI / function / args / fee / clock.
- * @returns `{ txID }` — the locally computed transaction id.
- */
-export async function writeContract(
+export type BuildWriteContractParameters = WriteContractParameters & {
+  /** Multi-sig permission id (`Contract.Permission_id`). */
+  permissionId?: number | undefined
+}
+export type BuildWriteContractReturnType = NodeTransaction
+
+/** The signing account plus the assembled `TriggerSmartContract` and fee limit. */
+function assemble(
   client: Client,
   parameters: WriteContractParameters,
-): Promise<WriteContractReturnType> {
+): { account: TronAccount; contract: RawContract; feeLimit: bigint } {
   const { abi, address, args, callValue, functionName } = parameters
 
   // Resolve the signing account (per-call, else hoisted on the Client).
@@ -71,8 +66,7 @@ export async function writeContract(
   if (!source) throw new AccountNotFoundError()
   const account = parseAccount(source)
 
-  // The only wall-clock read in the write pipeline — injectable for tests.
-  const now = parameters.now ?? BigInt(Date.now())
+  // feeLimit enters raw_data (field 18) and therefore the signed hash.
   const feeLimit = parameters.feeLimit ?? defaultFeeLimit
 
   // ① build the calldata (full selector + params).
@@ -94,26 +88,63 @@ export async function writeContract(
     },
   }
 
-  // ③ raw_data carrying feeLimit (field 18, part of the signed hash).
-  let rawData: RawData = { contract: [contract], timestamp: now, feeLimit }
+  return { account, contract, feeLimit }
+}
 
-  // ④ fill TaPoS reference fields + expiration from the latest block.
-  const block = await getAction(
-    client,
-    getNowBlock,
-    'getNowBlock',
-  )(undefined as never)
-  rawData = fillBlockHeader(rawData, block, now)
+/**
+ * Builds an **unsigned** `TriggerSmartContract` transaction (§4.2) and returns
+ * it in java-tron's HTTP JSON shape (TronWeb-compatible `{ visible, txID,
+ * raw_data, raw_data_hex }`) — the build half of {@link writeContract}, without
+ * signing or broadcasting. `feeLimit` still enters the signed hash (field 18)
+ * and defaults to {@link defaultFeeLimit}. Pass `permissionId` to bind it to an
+ * active/owner permission. The node is used only to fetch the latest block
+ * (TaPoS).
+ *
+ * @param client The Client to use.
+ * @param parameters Contract address / ABI / function / args / fee, optional
+ * callValue/account/permissionId/blockHeader.
+ * @returns A TronWeb-shaped unsigned {@link NodeTransaction}.
+ */
+export async function buildWriteContract(
+  client: Client,
+  parameters: BuildWriteContractParameters,
+): Promise<BuildWriteContractReturnType> {
+  const { contract, feeLimit } = assemble(client, parameters)
+  const unsigned = await buildTransaction(client, {
+    contract,
+    feeLimit,
+    permissionId: parameters.permissionId,
+    blockHeader: parameters.blockHeader,
+  })
+  return toNodeTransaction(unsigned)
+}
 
-  // ⑤ / ⑥ sign locally (recomputes txID, owner guard, txCheck, appends sig).
-  const signed = account.signTransaction({ raw_data: rawData })
-
-  // ⑦ broadcast; the local txID is authoritative.
-  await getAction(
-    client,
-    broadcastTransaction,
-    'broadcastTransaction',
-  )({ signedTransaction: signed })
-
-  return { txID: signed.txID ?? '' }
+/**
+ * Writes to (state-changing calls) a contract function by locally building,
+ * signing and broadcasting a `TriggerSmartContract` transaction (§4.2). The
+ * calldata is produced by {@link encodeFunctionData}; the whole transaction is
+ * assembled client-side, with the node used only to fetch the latest block and
+ * to broadcast.
+ *
+ * `feeLimit` is written into `raw_data` (field 18) and therefore enters the
+ * signed hash — it cannot be added after broadcast. It defaults to
+ * {@link defaultFeeLimit}; callers who want a tighter bound can pre-compute it
+ * with `estimateEnergy` and pass it explicitly (kept opt-in so the built bytes
+ * stay deterministic and no extra node round-trip is forced).
+ *
+ * @param client The Client to use.
+ * @param parameters Contract address / ABI / function / args / fee / blockHeader.
+ * @returns `{ txID }` — the locally computed transaction id.
+ */
+export async function writeContract(
+  client: Client,
+  parameters: WriteContractParameters,
+): Promise<WriteContractReturnType> {
+  const { account, contract, feeLimit } = assemble(client, parameters)
+  return buildAndBroadcast(client, {
+    contract,
+    account,
+    feeLimit,
+    blockHeader: parameters.blockHeader,
+  })
 }

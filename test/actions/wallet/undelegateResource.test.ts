@@ -1,19 +1,18 @@
 import { expect, test } from 'vitest'
-import { rpc } from '../../fixtures/rpc/loader.js'
-import { loadTxFixtureFile } from '../../fixtures/tx/loader.js'
-import { createMockTransport } from '../../mock/createMockTransport.js'
-import { parseBroadcast } from '../../mock/parseBroadcast.js'
+import { undelegateResource } from '../../../src/actions/wallet/undelegateResource.js'
 import { createPublicClient } from '../../../src/clients/createPublicClient.js'
 import { createWalletClient } from '../../../src/clients/createWalletClient.js'
 import { AccountNotFoundError } from '../../../src/errors/rpc.js'
 import type { Address } from '../../../src/types/address.js'
-import { undelegateResource } from '../../../src/actions/wallet/undelegateResource.js'
+import { rpc } from '../../fixtures/rpc/loader.js'
+import { loadTxFixtureFile } from '../../fixtures/tx/loader.js'
+import { createMockTransport } from '../../mock/createMockTransport.js'
+import { parseBroadcast } from '../../mock/parseBroadcast.js'
 
 // pk = 1 (permitted trivial key) → address TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC,
 // which is exactly the fixture `owner_address`.
 const pk1 = `0x${'0'.repeat(63)}1` as const
 const receiver = 'TDvSsdrNM5eeXNL3czpa6AxLDHZA9nwe9K' as Address
-const now = 1700000000000n
 
 const [energy] = loadTxFixtureFile('un-delegate-resource-contract.json')
 
@@ -34,7 +33,6 @@ test('undelegates ENERGY byte-for-byte against the gold vector', async () => {
     receiverAddress: receiver,
     balance: 1000000n,
     resource: 'ENERGY',
-    now,
   })
 
   expect(txID).toBe(energy?.txID)
@@ -59,7 +57,6 @@ test('resolves the per-call account when the client hoists none', async () => {
     receiverAddress: receiver,
     balance: 1000000n,
     resource: 'ENERGY',
-    now,
   })
   expect(txID).toBe(energy?.txID)
   expect(
@@ -76,7 +73,6 @@ test('throws AccountNotFoundError when no account is available', async () => {
       receiverAddress: receiver,
       balance: 1n,
       resource: 'ENERGY',
-      now,
     }),
   ).rejects.toBeInstanceOf(AccountNotFoundError)
 })

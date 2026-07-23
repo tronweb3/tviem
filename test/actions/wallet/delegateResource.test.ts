@@ -1,19 +1,18 @@
 import { expect, test } from 'vitest'
-import { rpc } from '../../fixtures/rpc/loader.js'
-import { loadTxFixtureFile } from '../../fixtures/tx/loader.js'
-import { createMockTransport } from '../../mock/createMockTransport.js'
-import { parseBroadcast } from '../../mock/parseBroadcast.js'
+import { delegateResource } from '../../../src/actions/wallet/delegateResource.js'
 import { createPublicClient } from '../../../src/clients/createPublicClient.js'
 import { createWalletClient } from '../../../src/clients/createWalletClient.js'
 import { AccountNotFoundError } from '../../../src/errors/rpc.js'
 import type { Address } from '../../../src/types/address.js'
-import { delegateResource } from '../../../src/actions/wallet/delegateResource.js'
+import { rpc } from '../../fixtures/rpc/loader.js'
+import { loadTxFixtureFile } from '../../fixtures/tx/loader.js'
+import { createMockTransport } from '../../mock/createMockTransport.js'
+import { parseBroadcast } from '../../mock/parseBroadcast.js'
 
 // pk = 1 (permitted trivial key) → address TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC,
 // which is exactly the fixture `owner_address`.
 const pk1 = `0x${'0'.repeat(63)}1` as const
 const receiver = 'TDvSsdrNM5eeXNL3czpa6AxLDHZA9nwe9K' as Address
-const now = 1700000000000n
 
 const [unlocked, locked] = loadTxFixtureFile('delegate-resource-contract.json')
 
@@ -35,7 +34,6 @@ test('delegates BANDWIDTH (lock=false) byte-for-byte against the gold vector', a
     balance: 1000000n,
     resource: 'BANDWIDTH',
     lock: false,
-    now,
   })
 
   expect(txID).toBe(unlocked?.txID)
@@ -62,7 +60,6 @@ test('delegates ENERGY with lock + lock_period byte-for-byte', async () => {
     resource: 'ENERGY',
     lock: true,
     lockPeriod: 86400n,
-    now,
   })
 
   expect(txID).toBe(locked?.txID)
@@ -80,7 +77,6 @@ test('omitting lock matches the unlocked vector (lock=false is not encoded)', as
     receiverAddress: receiver,
     balance: 1000000n,
     resource: 'BANDWIDTH',
-    now,
   })
 
   expect(txID).toBe(unlocked?.txID)
@@ -99,7 +95,6 @@ test('resolves the per-call account when the client hoists none', async () => {
     balance: 1000000n,
     resource: 'BANDWIDTH',
     lock: false,
-    now,
   })
   expect(txID).toBe(unlocked?.txID)
   expect(
@@ -116,7 +111,6 @@ test('throws AccountNotFoundError when no account is available', async () => {
       receiverAddress: receiver,
       balance: 1n,
       resource: 'BANDWIDTH',
-      now,
     }),
   ).rejects.toBeInstanceOf(AccountNotFoundError)
 })

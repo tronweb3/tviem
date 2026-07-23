@@ -1,16 +1,15 @@
 import { expect, test } from 'vitest'
+import { cancelAllUnfreezeV2 } from '../../../src/actions/wallet/cancelAllUnfreezeV2.js'
+import { createPublicClient } from '../../../src/clients/createPublicClient.js'
+import { createWalletClient } from '../../../src/clients/createWalletClient.js'
+import { AccountNotFoundError } from '../../../src/errors/rpc.js'
 import { rpc } from '../../fixtures/rpc/loader.js'
 import { loadTxFixtureFile } from '../../fixtures/tx/loader.js'
 import { createMockTransport } from '../../mock/createMockTransport.js'
 import { parseBroadcast } from '../../mock/parseBroadcast.js'
-import { createPublicClient } from '../../../src/clients/createPublicClient.js'
-import { createWalletClient } from '../../../src/clients/createWalletClient.js'
-import { AccountNotFoundError } from '../../../src/errors/rpc.js'
-import { cancelAllUnfreezeV2 } from '../../../src/actions/wallet/cancelAllUnfreezeV2.js'
 
 // pk = 1 → address TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC (the fixture owner).
 const pk1 = `0x${'0'.repeat(63)}1` as const
-const now = 1700000000000n
 
 const [fixture] = loadTxFixtureFile('cancel-all-unfreeze-v2-contract.json')
 
@@ -27,7 +26,7 @@ test('cancels all unfreeze v2 byte-for-byte against the gold vector', async () =
   const { transport, calls, bodyOf } = writeMock()
   const client = createWalletClient({ account: pk1, transport })
 
-  const { txID } = await cancelAllUnfreezeV2(client, { now })
+  const { txID } = await cancelAllUnfreezeV2(client, {})
 
   expect(txID).toBe(fixture?.txID)
   expect(calls.map((c) => c.path)).toEqual(['getnowblock', 'broadcasthex'])
@@ -47,7 +46,7 @@ test('cancels all unfreeze v2 byte-for-byte against the gold vector', async () =
 test('resolves the per-call account when the client hoists none', async () => {
   const { transport, bodyOf } = writeMock()
   const client = createWalletClient({ transport })
-  const { txID } = await cancelAllUnfreezeV2(client, { account: pk1, now })
+  const { txID } = await cancelAllUnfreezeV2(client, { account: pk1 })
   expect(txID).toBe(fixture?.txID)
   expect(
     (parseBroadcast(bodyOf('broadcasthex')) as { raw_data_hex: string })
@@ -58,7 +57,7 @@ test('resolves the per-call account when the client hoists none', async () => {
 test('throws AccountNotFoundError when no account is available', async () => {
   const { transport } = writeMock()
   const client = createPublicClient({ transport })
-  await expect(cancelAllUnfreezeV2(client, { now })).rejects.toBeInstanceOf(
+  await expect(cancelAllUnfreezeV2(client, {})).rejects.toBeInstanceOf(
     AccountNotFoundError,
   )
 })

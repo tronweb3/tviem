@@ -59,7 +59,7 @@ test('sendTrx runs the full pipeline when the client hoists an account', async (
     },
   })
   const client = createWalletClient({ account: pk1, transport: mock })
-  const { txID } = await client.sendTrx({ to, amount: 1n, now: 1700000000000n })
+  const { txID } = await client.sendTrx({ to, amount: 1n })
   expect(txID).toMatch(/^[0-9a-f]{64}$/)
 })
 
@@ -75,7 +75,6 @@ test('a per-call account satisfies the guard on an account-less client', async (
     account: pk1,
     to,
     amount: 1n,
-    now: 1700000000000n,
   })
   expect(txID).toMatch(/^[0-9a-f]{64}$/)
 })

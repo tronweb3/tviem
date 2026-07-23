@@ -1,6 +1,9 @@
 import { expect, test } from 'vitest'
 
-import { deriveRefBlockParams, fillBlockHeader } from '../../../src/utils/transaction/prepareTransaction.js'
+import {
+  deriveRefBlockParams,
+  fillBlockHeader,
+} from '../../../src/utils/transaction/prepareTransaction.js'
 import type { RawData } from '../../../src/utils/transaction/serializeRawData.js'
 
 // A block id whose hex chars 16..32 are the §2.3 ref_block_hash.
@@ -24,22 +27,27 @@ test('deriveRefBlockParams: accepts a 0x-prefixed block id', () => {
   )
 })
 
-test('fillBlockHeader: sets TaPoS and expiration = now + 60000', () => {
-  const rawData: RawData = { contract: [], timestamp: 1700000000000n }
-  const filled = fillBlockHeader(
-    rawData,
-    { number: 0x1234, blockID },
-    1700000000000n,
-  )
+test('fillBlockHeader: sets TaPoS, timestamp and expiration from the block', () => {
+  const rawData: RawData = { contract: [] }
+  const filled = fillBlockHeader(rawData, {
+    number: 0x1234,
+    blockID,
+    timestamp: 1700000000000n,
+  })
   expect(filled.refBlockBytes).toBe('1234')
   expect(filled.refBlockHash).toBe('0102030405060708')
+  // Both timing fields come from the block's own timestamp (chain time).
+  expect(filled.timestamp).toBe(1700000000000n)
   expect(filled.expiration).toBe(1700000060000n)
   // Original is not mutated; unrelated fields are preserved.
   expect(rawData.refBlockBytes).toBeUndefined()
-  expect(filled.timestamp).toBe(1700000000000n)
 })
 
-test('fillBlockHeader: never reads the wall clock (now is supplied)', () => {
-  const filled = fillBlockHeader({ contract: [] }, { number: 1, blockID }, 0)
+test('fillBlockHeader: never reads the wall clock (timing is chain-derived)', () => {
+  const filled = fillBlockHeader(
+    { contract: [] },
+    { number: 1, blockID, timestamp: 0 },
+  )
+  expect(filled.timestamp).toBe(0n)
   expect(filled.expiration).toBe(60000n)
 })

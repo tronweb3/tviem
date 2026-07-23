@@ -1,17 +1,16 @@
 import { expect, test } from 'vitest'
+import { sendTrc10 } from '../../../src/actions/wallet/sendTrc10.js'
+import { createPublicClient } from '../../../src/clients/createPublicClient.js'
+import { createWalletClient } from '../../../src/clients/createWalletClient.js'
+import { AccountNotFoundError } from '../../../src/errors/rpc.js'
 import { rpc } from '../../fixtures/rpc/loader.js'
 import { loadTxFixtureFile } from '../../fixtures/tx/loader.js'
 import { createMockTransport } from '../../mock/createMockTransport.js'
 import { parseBroadcast } from '../../mock/parseBroadcast.js'
-import { createPublicClient } from '../../../src/clients/createPublicClient.js'
-import { createWalletClient } from '../../../src/clients/createWalletClient.js'
-import { AccountNotFoundError } from '../../../src/errors/rpc.js'
-import { sendTrc10 } from '../../../src/actions/wallet/sendTrc10.js'
 
 // pk = 1 (permitted trivial key) → address TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC,
 // which is exactly the fixture `owner_address`.
 const pk1 = `0x${'0'.repeat(63)}1` as const
-const now = 1700000000000n
 
 // The fixture pins two input forms (visible=true UTF-8 / visible=false hex),
 // both of which normalize to the identical wire bytes / txID.
@@ -38,7 +37,6 @@ test('sends a TRC10 asset byte-for-byte against the gold vector (UTF-8 asset_nam
     to,
     assetName: '1002000',
     amount: 1000n,
-    now,
   })
 
   expect(txID).toBe(utf8Form?.txID)
@@ -65,7 +63,6 @@ test('accepts the hex asset_name form and yields the identical bytes', async () 
     to,
     assetName: '0x31303032303030',
     amount: 1000n,
-    now,
   })
 
   expect(txID).toBe(hexForm?.txID)
@@ -83,7 +80,6 @@ test('resolves the per-call account when the client hoists none', async () => {
     to,
     assetName: '1002000',
     amount: 1000n,
-    now,
   })
   expect(txID).toBe(utf8Form?.txID)
   expect(
@@ -96,6 +92,6 @@ test('throws AccountNotFoundError when no account is available', async () => {
   const { transport } = writeMock()
   const client = createPublicClient({ transport })
   await expect(
-    sendTrc10(client, { to, assetName: '1002000', amount: 1n, now }),
+    sendTrc10(client, { to, assetName: '1002000', amount: 1n }),
   ).rejects.toBeInstanceOf(AccountNotFoundError)
 })

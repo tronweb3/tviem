@@ -18,6 +18,10 @@ import {
 } from '../../utils/transaction/registry.js'
 import type { RawContract } from '../../utils/transaction/serializeRawData.js'
 import {
+  type NodeTransaction,
+  toNodeTransaction,
+} from '../../utils/transaction/toNodeTransaction.js'
+import {
   EntryType,
   type SmartContractAbi,
   type SmartContractAbiEntry,
@@ -28,6 +32,10 @@ import {
   type BuildAndBroadcastReturnType,
   buildAndBroadcast,
 } from './utils/buildAndBroadcast.js'
+import {
+  buildTransaction,
+  type TransactionHeader,
+} from './utils/buildTransaction.js'
 
 const entryTypes: Record<string, number> = {
   constructor: EntryType.CONSTRUCTOR,
@@ -122,8 +130,11 @@ export type DeployContractParameters<
   tokenId?: bigint | undefined
   /** Energy/bandwidth fee ceiling in SUN (`raw_data.fee_limit`). */
   feeLimit?: bigint | undefined
-  /** Injectable clock (ms since epoch) for deterministic tests. */
-  now?: bigint | undefined
+  /**
+   * A pre-derived TaPoS + timing header. When supplied the transaction is built
+   * fully offline against it; otherwise it is derived from the latest block.
+   */
+  blockHeader?: TransactionHeader | undefined
 }
 
 export type DeployContractReturnType = BuildAndBroadcastReturnType & {
@@ -131,23 +142,23 @@ export type DeployContractReturnType = BuildAndBroadcastReturnType & {
   contractAddress: Address
 }
 
-/**
- * Deploys a smart contract by locally building, signing and broadcasting a
- * `CreateSmartContract` (§ type 30). The constructor `args` are ABI-encoded
- * and appended to `bytecode` (see {@link encodeDeployData}); the deployed
- * address is derived deterministically from the transaction id and deployer
- * (see {@link genContractAddress}) and returned as `contractAddress`.
- *
- * @param client The Client to use.
- * @param parameters ABI, bytecode, optional constructor args, resource limits.
- * @returns `{ txID, contractAddress }`.
- */
-export async function deployContract<
-  const abi extends Abi | readonly unknown[],
->(
+export type BuildDeployContractParameters<
+  abi extends Abi | readonly unknown[] = Abi,
+> = DeployContractParameters<abi> & {
+  /** Multi-sig permission id (`Contract.Permission_id`). */
+  permissionId?: number | undefined
+}
+export type BuildDeployContractReturnType = NodeTransaction
+
+/** The signing account plus the assembled `CreateSmartContract` and fee limit. */
+function assemble(
   client: Client,
-  parameters: DeployContractParameters<abi>,
-): Promise<DeployContractReturnType> {
+  parameters: DeployContractParameters<Abi>,
+): {
+  account: TronAccount
+  contract: RawContract
+  feeLimit: bigint | undefined
+} {
   const {
     abi,
     bytecode,
@@ -159,15 +170,15 @@ export async function deployContract<
     callTokenValue,
     tokenId,
     feeLimit,
-  } = parameters as DeployContractParameters<Abi>
+  } = parameters
 
+  // Resolve the owner/signing account (per-call, else hoisted on the Client).
   const source = parameters.account ?? client.account
   if (!source) throw new AccountNotFoundError()
   const account = parseAccount(source)
-
-  const now = parameters.now ?? BigInt(Date.now())
   const ownerAddress = toHex(account.address)
 
+  // Build the CreateSmartContract (constructor args ABI-encoded onto bytecode).
   const contract: RawContract = {
     type: ContractType.CreateSmartContract,
     parameter: {
@@ -191,15 +202,76 @@ export async function deployContract<
     },
   }
 
+  return { account, contract, feeLimit }
+}
+
+/**
+ * Builds an **unsigned** `CreateSmartContract` transaction (§ type 30) and
+ * returns it in java-tron's HTTP JSON shape (TronWeb-compatible `{ visible,
+ * txID, raw_data, raw_data_hex }`) — the build half of {@link deployContract},
+ * without signing or broadcasting. The constructor `args` are ABI-encoded and
+ * appended to `bytecode` (see {@link encodeDeployData}); pass `permissionId` to
+ * bind it to an active/owner permission. The node is used only to fetch the
+ * latest block (TaPoS).
+ *
+ * The deployed contract address depends on the final `txID`, so — unlike
+ * {@link deployContract} — it is not derived here; callers compute it after the
+ * transaction is signed and its id is fixed.
+ *
+ * @param client The Client to use.
+ * @param parameters ABI, bytecode, optional args/limits/permissionId/blockHeader.
+ * @returns A TronWeb-shaped unsigned {@link NodeTransaction}.
+ */
+export async function buildDeployContract<
+  const abi extends Abi | readonly unknown[],
+>(
+  client: Client,
+  parameters: BuildDeployContractParameters<abi>,
+): Promise<BuildDeployContractReturnType> {
+  const { contract, feeLimit } = assemble(
+    client,
+    parameters as DeployContractParameters<Abi>,
+  )
+  const unsigned = await buildTransaction(client, {
+    contract,
+    feeLimit,
+    permissionId: parameters.permissionId,
+    blockHeader: parameters.blockHeader,
+  })
+  return toNodeTransaction(unsigned)
+}
+
+/**
+ * Deploys a smart contract by locally building, signing and broadcasting a
+ * `CreateSmartContract` (§ type 30). The constructor `args` are ABI-encoded
+ * and appended to `bytecode` (see {@link encodeDeployData}); the deployed
+ * address is derived deterministically from the transaction id and deployer
+ * (see {@link genContractAddress}) and returned as `contractAddress`.
+ *
+ * @param client The Client to use.
+ * @param parameters ABI, bytecode, optional constructor args, resource limits.
+ * @returns `{ txID, contractAddress }`.
+ */
+export async function deployContract<
+  const abi extends Abi | readonly unknown[],
+>(
+  client: Client,
+  parameters: DeployContractParameters<abi>,
+): Promise<DeployContractReturnType> {
+  const { account, contract, feeLimit } = assemble(
+    client,
+    parameters as DeployContractParameters<Abi>,
+  )
+
   const { txID } = await buildAndBroadcast(client, {
     contract,
     account,
-    now,
     feeLimit,
+    blockHeader: parameters.blockHeader,
   })
 
   const contractAddress = toBase58(
-    genContractAddress(txID, ownerAddress) as AddressInput,
+    genContractAddress(txID, toHex(account.address)) as AddressInput,
   )
   return { txID, contractAddress }
 }

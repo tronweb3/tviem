@@ -6,24 +6,21 @@
 // Unlike sendTrx.test.ts / writeContract.test.ts, the expected `raw_data_hex`,
 // `txID` and `signature` are NOT hard-coded here: they are loaded straight from
 // the v0.1a gold fixtures (`test/fixtures/tx/*.json` + `test/fixtures/sig/
-// transaction.json`). Each case drives the real write action with a fixed
-// clock and the fixed reference block, then asserts the broadcast body the
+// transaction.json`). Each case drives the real write action against the fixed
+// reference block (whose own timestamp drives timing), then asserts the broadcast body the
 // action assembled equals the gold vector byte-for-byte and the appended
 // signature equals the pk=1 gold signature (looked up by txID). A drift in any
 // underlying primitive (serialize / getTransactionId / sign / fillBlockHeader)
 // would break these assertions.
 import { expect, test } from 'vitest'
-import { rpc } from '../../fixtures/rpc/loader.js'
-import { loadSigTransactionFixtures } from '../../fixtures/sig/loader.js'
-import {
-  loadTxFixtureFile,
-  type TxFixture,
-} from '../../fixtures/tx/loader.js'
-import { createMockTransport } from '../../mock/createMockTransport.js'
-import { parseBroadcast } from '../../mock/parseBroadcast.js'
 import { privateKeyToAccount } from '../../../src/accounts/privateKeyToAccount.js'
 import { createWalletClient } from '../../../src/clients/createWalletClient.js'
 import type { Address } from '../../../src/types/address.js'
+import { rpc } from '../../fixtures/rpc/loader.js'
+import { loadSigTransactionFixtures } from '../../fixtures/sig/loader.js'
+import { loadTxFixtureFile, type TxFixture } from '../../fixtures/tx/loader.js'
+import { createMockTransport } from '../../mock/createMockTransport.js'
+import { parseBroadcast } from '../../mock/parseBroadcast.js'
 
 // pk = 1 (the only permitted trivial key besides pk=2). Its canonical address
 // is TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC (41-hex 417e5f45…395bdf), which is the
@@ -31,11 +28,11 @@ import type { Address } from '../../../src/types/address.js'
 const pk1 = `0x${'0'.repeat(63)}1` as const
 const pk1Account = privateKeyToAccount(pk1)
 
-// The single wall-clock value + reference block used by every gold vector.
+// The single reference block used by every gold vector. Timing is derived from
+// the block's own timestamp (no injected clock).
 // getnowblock.fixed pins block 4660 / a blockID whose bytes 8..16 are
 // 0102030405060708 → ref_block_bytes=1234, ref_block_hash=0102030405060708,
-// and now=1700000000000 → expiration=1700000060000, all matching the fixtures.
-const now = 1700000000000n
+// and its timestamp=1700000000000 → expiration=1700000060000, all matching the fixtures.
 
 // TRC20 `transfer(address,uint256)` — matches the calldata pinned in the
 // trigger-smart-contract gold vectors (selector a9059cbb).
@@ -102,7 +99,6 @@ test('sendTrx reproduces the canonical TransferContract gold vector byte-for-byt
   const { txID } = await client.sendTrx({
     to: 'TPL66VK2gCXNCD7EJg9pgJRfqcRazjhUZY' as Address,
     amount: 1000000n,
-    now,
   })
 
   // Returned id is the LOCAL txID and equals the gold vector.
@@ -156,7 +152,6 @@ test.each(
     args: [trc20Recipient, 1000000n],
     feeLimit,
     ...(callValue !== undefined ? { callValue } : {}),
-    now,
   })
 
   expect(txID).toBe(gold.txID)
@@ -257,14 +252,13 @@ const nativeCases: {
       c.freezeBalanceV2({
         frozenBalance: 1000000n,
         resource: 'BANDWIDTH',
-        now,
       }),
   },
   {
     label: 'freezeBalanceV2 ENERGY',
     gold: goldByName(freezeCases, 'freeze v2 ENERGY'),
     invoke: (c) =>
-      c.freezeBalanceV2({ frozenBalance: 2000000n, resource: 'ENERGY', now }),
+      c.freezeBalanceV2({ frozenBalance: 2000000n, resource: 'ENERGY' }),
   },
   {
     label: 'unfreezeBalanceV2 BANDWIDTH',
@@ -273,7 +267,6 @@ const nativeCases: {
       c.unfreezeBalanceV2({
         unfreezeBalance: 500000n,
         resource: 'BANDWIDTH',
-        now,
       }),
   },
   {
@@ -283,18 +276,17 @@ const nativeCases: {
       c.unfreezeBalanceV2({
         unfreezeBalance: 250000n,
         resource: 'ENERGY',
-        now,
       }),
   },
   {
     label: 'cancelAllUnfreezeV2',
     gold: goldByName(cancelAllCases, 'cancel all unfreeze v2'),
-    invoke: (c) => c.cancelAllUnfreezeV2({ now }),
+    invoke: (c) => c.cancelAllUnfreezeV2({}),
   },
   {
     label: 'withdrawExpireUnfreeze',
     gold: goldByName(withdrawExpireCases, 'withdraw expired unfrozen balance'),
-    invoke: (c) => c.withdrawExpireUnfreeze({ now }),
+    invoke: (c) => c.withdrawExpireUnfreeze({}),
   },
   {
     label: 'delegateResource BANDWIDTH lock=false',
@@ -305,7 +297,6 @@ const nativeCases: {
         balance: 1000000n,
         resource: 'BANDWIDTH',
         lock: false,
-        now,
       }),
   },
   {
@@ -321,7 +312,6 @@ const nativeCases: {
         resource: 'ENERGY',
         lock: true,
         lockPeriod: 86400n,
-        now,
       }),
   },
   {
@@ -332,7 +322,6 @@ const nativeCases: {
         receiverAddress: receiver,
         balance: 1000000n,
         resource: 'ENERGY',
-        now,
       }),
   },
   {
@@ -344,13 +333,12 @@ const nativeCases: {
           { voteAddress: receiver, voteCount: 5n },
           { voteAddress: witness2, voteCount: 10n },
         ],
-        now,
       }),
   },
   {
     label: 'withdrawBalance',
     gold: goldByName(withdrawBalanceCases, 'withdraw block rewards'),
-    invoke: (c) => c.withdrawBalance({ now }),
+    invoke: (c) => c.withdrawBalance({}),
   },
   {
     label: 'sendTrc10 (asset_name UTF-8 id)',
@@ -359,7 +347,7 @@ const nativeCases: {
       'transfer-asset visible=true (asset_name UTF-8, Base58 addresses)',
     ),
     invoke: (c) =>
-      c.sendTrc10({ to: receiver, assetName: '1002000', amount: 1000n, now }),
+      c.sendTrc10({ to: receiver, assetName: '1002000', amount: 1000n }),
   },
 ]
 
@@ -385,7 +373,6 @@ test('sendTrc10 asset_name flex: 0x-hex form equals the UTF-8-id gold vector', a
       to: receiver,
       assetName: '0x31303032303030',
       amount: 1000n,
-      now,
     }),
   )
 })

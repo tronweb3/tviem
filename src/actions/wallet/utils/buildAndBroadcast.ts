@@ -2,64 +2,58 @@
 import type { TronAccount } from '../../../accounts/types.js'
 import type { Client } from '../../../clients/createClient.js'
 import { getAction } from '../../../utils/getAction.js'
-import { fillBlockHeader } from '../../../utils/transaction/prepareTransaction.js'
-import type {
-  RawContract,
-  RawData,
-} from '../../../utils/transaction/serializeRawData.js'
-import { getNowBlock } from '../../public/getNowBlock.js'
+import type { RawContract } from '../../../utils/transaction/serializeRawData.js'
 import { broadcastTransaction } from '../broadcastTransaction.js'
+import { buildTransaction, type TransactionHeader } from './buildTransaction.js'
 
 export type BuildAndBroadcastParameters = {
   /** The single `Transaction.Contract` to wrap in the transaction. */
   contract: RawContract
   /** The signing account (already resolved and parsed). */
   account: TronAccount
-  /** Injectable clock (ms since epoch) for deterministic tests. */
-  now?: bigint | undefined
+  /**
+   * A pre-derived TaPoS + timing {@link TransactionHeader}. When supplied the
+   * node is not queried for the latest block and these fields are used verbatim;
+   * otherwise the header is derived from the latest block's own timestamp.
+   */
+  blockHeader?: TransactionHeader | undefined
   /** Energy/bandwidth fee ceiling in SUN (`raw_data.fee_limit`). */
   feeLimit?: bigint | undefined
+  /** Bare-hex `raw_data.data` payload (e.g. a transfer memo). */
+  data?: string | undefined
 }
 export type BuildAndBroadcastReturnType = { txID: string }
 
 /**
  * The shared TRON write pipeline extracted from `sendTrx` / `writeContract`:
- * wrap a single already-built `RawContract` into a `raw_data` model, fill its
- * TaPoS reference fields + expiration from the latest block, sign it locally
- * (the account recomputes the `txID` and runs the four sign guards), then
- * broadcast. The node is used only to fetch the latest block and to broadcast;
- * the returned `txID` is the locally computed one.
+ * {@link buildTransaction} the contract into an unsigned transaction, sign it
+ * locally (the account recomputes the `txID` and runs the four sign guards),
+ * then broadcast. The node is used only to fetch the latest block and to
+ * broadcast; the returned `txID` is the locally computed one.
  *
- * `now` is the single point the wall clock is read and is injectable so the
- * built bytes / `txID` are deterministic offline.
+ * Timing is chain-derived (from the latest block's timestamp), never the local
+ * wall clock; pass `blockHeader` to build fully offline against a pinned block.
  *
  * @param client The Client to use.
- * @param parameters The built contract, signing account, optional clock/fee.
+ * @param parameters The built contract, signing account, optional header/fee.
  * @returns `{ txID }` — the locally computed transaction id.
  */
 export async function buildAndBroadcast(
   client: Client,
   parameters: BuildAndBroadcastParameters,
 ): Promise<BuildAndBroadcastReturnType> {
-  const { contract, account, feeLimit } = parameters
+  const { contract, account, feeLimit, data, blockHeader } = parameters
 
-  // The only wall-clock read in the write pipeline — injectable for tests.
-  const now = parameters.now ?? BigInt(Date.now())
-
-  // Wrap the contract in the raw_data model (fee_limit only when supplied).
-  let rawData: RawData = { contract: [contract], timestamp: now }
-  if (feeLimit !== undefined) rawData = { ...rawData, feeLimit }
-
-  // Fill TaPoS reference fields + expiration from the latest block.
-  const block = await getAction(
-    client,
-    getNowBlock,
-    'getNowBlock',
-  )(undefined as never)
-  rawData = fillBlockHeader(rawData, block, now)
+  // Build the unsigned transaction (block header filled, txID computed locally).
+  const unsigned = await buildTransaction(client, {
+    contract,
+    feeLimit,
+    data,
+    blockHeader,
+  })
 
   // Sign locally (recomputes txID, owner guard, txCheck, appends sig).
-  const signed = account.signTransaction({ raw_data: rawData })
+  const signed = account.signTransaction(unsigned)
 
   // Broadcast; the local txID is authoritative.
   await getAction(

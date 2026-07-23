@@ -160,11 +160,10 @@ describe('getContract', () => {
         client,
       })
 
-      const result = await contract.write.transfer([holder, 1000n], {
-        now: 1_700_000_000_000n,
-      })
+      const result = await contract.write.transfer([holder, 1000n], {})
 
-      // Local txID is authoritative and deterministic (fixed block + `now`).
+      // Local txID is authoritative and deterministic (timing comes from the
+      // pinned reference block's own timestamp).
       expect(result.txID).toMatch(/^[0-9a-f]{64}$/)
       // Both node round-trips happened: fetch block, then broadcast.
       expect(calls.map((c) => c.path)).toEqual(['getnowblock', 'broadcasthex'])

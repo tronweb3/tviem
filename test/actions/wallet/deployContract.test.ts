@@ -1,23 +1,19 @@
 import type { Abi } from 'abitype'
 import { expect, test } from 'vitest'
-import { rpc } from '../../fixtures/rpc/loader.js'
-import {
-  loadTxFixtureFile,
-  type TxFixture,
-} from '../../fixtures/tx/loader.js'
-import { createMockTransport } from '../../mock/createMockTransport.js'
-import { parseBroadcast } from '../../mock/parseBroadcast.js'
+import { deployContract } from '../../../src/actions/wallet/deployContract.js'
 import { createPublicClient } from '../../../src/clients/createPublicClient.js'
 import { createWalletClient } from '../../../src/clients/createWalletClient.js'
 import { AccountNotFoundError } from '../../../src/errors/rpc.js'
 import type { Hex } from '../../../src/types/misc.js'
 import { toHex } from '../../../src/utils/address/toHex.js'
-import { deployContract } from '../../../src/actions/wallet/deployContract.js'
+import { rpc } from '../../fixtures/rpc/loader.js'
+import { loadTxFixtureFile, type TxFixture } from '../../fixtures/tx/loader.js'
+import { createMockTransport } from '../../mock/createMockTransport.js'
+import { parseBroadcast } from '../../mock/parseBroadcast.js'
 
 // pk = 1 (permitted trivial key) → address TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC,
 // which is exactly the fixture `owner_address`.
 const pk1 = `0x${'0'.repeat(63)}1` as const
-const now = 1700000000000n
 
 const [basic, withToken] = loadTxFixtureFile('create-smart-contract.json')
 
@@ -56,7 +52,6 @@ test('deploys byte-for-byte against the gold vector + backfills the address', as
     consumeUserResourcePercent: BigInt(value.consume_user_resource_percent),
     originEnergyLimit: BigInt(value.origin_energy_limit),
     feeLimit: 1000000000n,
-    now,
   })
 
   expect(txID).toBe(basic?.txID)
@@ -90,7 +85,6 @@ test('carries call_token_value + token_id byte-for-byte', async () => {
     callTokenValue: BigInt(value.call_token_value ?? '0'),
     tokenId: BigInt(value.token_id ?? '0'),
     feeLimit: 1000000000n,
-    now,
   })
 
   expect(txID).toBe(withToken?.txID)
@@ -114,7 +108,6 @@ test('resolves the per-call account when the client hoists none', async () => {
     consumeUserResourcePercent: BigInt(value.consume_user_resource_percent),
     originEnergyLimit: BigInt(value.origin_energy_limit),
     feeLimit: 1000000000n,
-    now,
   })
   expect(txID).toBe(basic?.txID)
 })
@@ -123,6 +116,6 @@ test('throws AccountNotFoundError when no account is available', async () => {
   const { transport } = writeMock()
   const client = createPublicClient({ transport })
   await expect(
-    deployContract(client, { abi: [], bytecode: '0x60', now }),
+    deployContract(client, { abi: [], bytecode: '0x60' }),
   ).rejects.toBeInstanceOf(AccountNotFoundError)
 })

@@ -4,12 +4,19 @@ import type { RawData } from './serializeRawData.js'
 /** Default transaction lifetime, in milliseconds (one minute). */
 export const defaultExpirationMs = 60000n
 
-/** A reference block, used to derive TaPoS parameters. */
+/** A reference block, used to derive TaPoS parameters and transaction timing. */
 export type BlockRef = {
   /** Block number (`block_header.raw_data.number`). */
   number: bigint | number
   /** Block id (`blockID`, 32-byte hash hex, bare or `0x`-prefixed). */
   blockID: string
+  /**
+   * Block timestamp in ms (`block_header.raw_data.timestamp`). This chain time —
+   * never the local wall clock — is what a built transaction's `timestamp` and
+   * `expiration` are derived from, so a skewed client clock can't produce an
+   * already-expired transaction.
+   */
+  timestamp: bigint | number
 }
 
 /** TaPoS reference fields derived from a block. */
@@ -43,28 +50,28 @@ export function deriveRefBlockParams(
 export type FillBlockHeaderErrorType = DeriveRefBlockParamsErrorType | ErrorType
 
 /**
- * Fills the TaPoS reference fields and the expiration of a raw data model
- * from a reference block. `expiration` is set to `now + 60000` (one minute).
- * `now` must be supplied by the caller — the wall clock is never read.
+ * Fills the TaPoS reference fields plus the `timestamp` and `expiration` of a
+ * raw data model from a reference block. Both timing fields come from the
+ * block's own `timestamp` (chain time): `timestamp` is the block time and
+ * `expiration` is `block.timestamp + 60000` (one minute). The wall clock is
+ * never read — this mirrors TronWeb's `getCurrentRefBlockParams`, so a skewed
+ * client clock cannot mint an already-expired transaction.
  *
  * @param rawData Raw data model to fill.
- * @param block Reference block.
- * @param now Current time, in milliseconds.
- * @returns A new raw data model with TaPoS and expiration set.
+ * @param block Reference block (supplies TaPoS fields and the base timestamp).
+ * @returns A new raw data model with TaPoS, timestamp and expiration set.
  */
-export function fillBlockHeader(
-  rawData: RawData,
-  block: BlockRef,
-  now: bigint | number,
-): RawData {
+export function fillBlockHeader(rawData: RawData, block: BlockRef): RawData {
   const { refBlockBytes, refBlockHash } = deriveRefBlockParams(
     block.number,
     block.blockID,
   )
+  const timestamp = BigInt(block.timestamp)
   return {
     ...rawData,
     refBlockBytes,
     refBlockHash,
-    expiration: BigInt(now) + defaultExpirationMs,
+    timestamp,
+    expiration: timestamp + defaultExpirationMs,
   }
 }

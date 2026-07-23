@@ -1,17 +1,16 @@
 import { expect, test } from 'vitest'
+import { freezeBalanceV2 } from '../../../src/actions/wallet/freezeBalanceV2.js'
+import { createPublicClient } from '../../../src/clients/createPublicClient.js'
+import { createWalletClient } from '../../../src/clients/createWalletClient.js'
+import { AccountNotFoundError } from '../../../src/errors/rpc.js'
 import { rpc } from '../../fixtures/rpc/loader.js'
 import { loadTxFixtureFile } from '../../fixtures/tx/loader.js'
 import { createMockTransport } from '../../mock/createMockTransport.js'
 import { parseBroadcast } from '../../mock/parseBroadcast.js'
-import { createPublicClient } from '../../../src/clients/createPublicClient.js'
-import { createWalletClient } from '../../../src/clients/createWalletClient.js'
-import { AccountNotFoundError } from '../../../src/errors/rpc.js'
-import { freezeBalanceV2 } from '../../../src/actions/wallet/freezeBalanceV2.js'
 
 // pk = 1 (permitted trivial key) → address TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC,
 // which is exactly the fixture `owner_address`.
 const pk1 = `0x${'0'.repeat(63)}1` as const
-const now = 1700000000000n
 
 const [bandwidth, energy] = loadTxFixtureFile('freeze-balance-v2-contract.json')
 
@@ -31,7 +30,6 @@ test('freezes for BANDWIDTH byte-for-byte against the gold vector', async () => 
   const { txID } = await freezeBalanceV2(client, {
     frozenBalance: 1000000n,
     resource: 'BANDWIDTH',
-    now,
   })
 
   expect(txID).toBe(bandwidth?.txID)
@@ -56,7 +54,6 @@ test('freezes for ENERGY byte-for-byte against the gold vector', async () => {
   const { txID } = await freezeBalanceV2(client, {
     frozenBalance: 2000000n,
     resource: 'ENERGY',
-    now,
   })
 
   expect(txID).toBe(energy?.txID)
@@ -73,7 +70,6 @@ test('resolves the per-call account when the client hoists none', async () => {
     account: pk1,
     frozenBalance: 1000000n,
     resource: 'BANDWIDTH',
-    now,
   })
   expect(txID).toBe(bandwidth?.txID)
   expect(
@@ -86,6 +82,6 @@ test('throws AccountNotFoundError when no account is available', async () => {
   const { transport } = writeMock()
   const client = createPublicClient({ transport })
   await expect(
-    freezeBalanceV2(client, { frozenBalance: 1n, resource: 'BANDWIDTH', now }),
+    freezeBalanceV2(client, { frozenBalance: 1n, resource: 'BANDWIDTH' }),
   ).rejects.toBeInstanceOf(AccountNotFoundError)
 })
