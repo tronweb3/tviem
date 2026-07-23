@@ -44,14 +44,16 @@ function toSnakeCase(name: string): string {
 // value→name table. Arrays anywhere in a path are mapped element-wise.
 const RESOURCE_CODE = ['BANDWIDTH', 'ENERGY', 'TRON_POWER'] as const
 const PERMISSION_TYPE = ['Owner', 'Witness', 'Active'] as const
+// Order MUST match java-tron's `SmartContract.ABI.Entry.EntryType` (and the
+// `EntryType` enum in types.ts): Event=3, Fallback=4, Receive=5, Error=6.
 const ABI_ENTRY_TYPE = [
   'UnknownEntryType',
   'Constructor',
   'Function',
-  'Fallback',
   'Event',
-  'Error',
+  'Fallback',
   'Receive',
+  'Error',
 ] as const
 const STATE_MUTABILITY = [
   'UnknownMutabilityType',
