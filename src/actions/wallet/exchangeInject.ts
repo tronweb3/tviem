@@ -1,0 +1,123 @@
+// TRON-specific, clean-room implementation for @tronweb3/omni.
+import type { TronAccount } from '../../accounts/types.js'
+import type { Client } from '../../clients/createClient.js'
+import { AccountNotFoundError } from '../../errors/rpc.js'
+import { parseAccount } from '../../types/account.js'
+import type { Hex } from '../../types/misc.js'
+import { toHex } from '../../utils/address/toHex.js'
+import {
+  ContractType,
+  contractTypeUrlPrefix,
+} from '../../utils/transaction/registry.js'
+import type { RawContract } from '../../utils/transaction/serializeRawData.js'
+import {
+  type NodeTransaction,
+  toNodeTransaction,
+} from '../../utils/transaction/toNodeTransaction.js'
+import type { ExchangeInjectContract } from '../../utils/transaction/types.js'
+import {
+  type BuildAndBroadcastReturnType,
+  buildAndBroadcast,
+} from './utils/buildAndBroadcast.js'
+import {
+  buildTransaction,
+  type TransactionHeader,
+} from './utils/buildTransaction.js'
+
+export type ExchangeInjectParameters = {
+  /** The signing (owner) account (falls back to `client.account`). */
+  account?: TronAccount | Hex | undefined
+  /** Id of the exchange to inject liquidity into. */
+  exchangeId: bigint | number
+  /** Token id being injected (TRC10 id text, or `'_'` for TRX). */
+  tokenId: string
+  /** Amount of the token to inject. */
+  quant: bigint
+  /**
+   * A pre-derived TaPoS + timing header. When supplied the transaction is built
+   * fully offline against it; otherwise it is derived from the latest block.
+   */
+  blockHeader?: TransactionHeader | undefined
+}
+export type ExchangeInjectReturnType = BuildAndBroadcastReturnType
+
+export type BuildExchangeInjectParameters = ExchangeInjectParameters & {
+  /** Multi-sig permission id (`Contract.Permission_id`). */
+  permissionId?: number | undefined
+}
+export type BuildExchangeInjectReturnType = NodeTransaction
+
+/** The signing account plus the assembled `ExchangeInjectContract`. */
+function assemble(
+  client: Client,
+  parameters: ExchangeInjectParameters,
+): { account: TronAccount; contract: RawContract } {
+  const { exchangeId, tokenId, quant } = parameters
+
+  // Resolve the owner/signing account (per-call, else hoisted on the Client).
+  const source = parameters.account ?? client.account
+  if (!source) throw new AccountNotFoundError()
+  const account = parseAccount(source)
+
+  const value: ExchangeInjectContract = {
+    ownerAddress: toHex(account.address),
+    exchangeId: BigInt(exchangeId),
+    tokenId,
+    quant,
+  }
+
+  const contract: RawContract = {
+    type: ContractType.ExchangeInjectContract,
+    parameter: {
+      typeUrl: `${contractTypeUrlPrefix}ExchangeInjectContract`,
+      value,
+    },
+  }
+
+  return { account, contract }
+}
+
+/**
+ * Builds an **unsigned** `ExchangeInjectContract` transaction (§ type 42) and
+ * returns it in java-tron's HTTP JSON shape (TronWeb-compatible `{ visible,
+ * txID, raw_data, raw_data_hex }`) — the build half of {@link exchangeInject},
+ * without signing or broadcasting. Pass `permissionId` to bind it to an
+ * active/owner permission. The node is used only to fetch the latest block
+ * (TaPoS).
+ *
+ * @param client The Client to use.
+ * @param parameters Exchange id + token/quant, optional account/permissionId/blockHeader.
+ * @returns A TronWeb-shaped unsigned {@link NodeTransaction}.
+ */
+export async function buildExchangeInject(
+  client: Client,
+  parameters: BuildExchangeInjectParameters,
+): Promise<BuildExchangeInjectReturnType> {
+  const { contract } = assemble(client, parameters)
+  const unsigned = await buildTransaction(client, {
+    contract,
+    permissionId: parameters.permissionId,
+    blockHeader: parameters.blockHeader,
+  })
+  return toNodeTransaction(unsigned)
+}
+
+/**
+ * Injects liquidity into a Bancor exchange by locally building, signing and
+ * broadcasting an `ExchangeInjectContract` (§ type 42).
+ *
+ * @param client The Client to use.
+ * @param parameters Exchange id + token/quant, optional account/blockHeader.
+ * @returns `{ txID }` — the locally computed transaction id.
+ */
+export async function exchangeInject(
+  client: Client,
+  parameters: ExchangeInjectParameters,
+): Promise<ExchangeInjectReturnType> {
+  const { account, contract } = assemble(client, parameters)
+  return buildAndBroadcast(client, {
+    contract,
+    account,
+    blockHeader: parameters.blockHeader,
+  })
+}

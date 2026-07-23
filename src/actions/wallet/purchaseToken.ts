@@ -1,0 +1,125 @@
+// TRON-specific, clean-room implementation for @tronweb3/omni.
+import type { TronAccount } from '../../accounts/types.js'
+import type { Client } from '../../clients/createClient.js'
+import { AccountNotFoundError } from '../../errors/rpc.js'
+import { parseAccount } from '../../types/account.js'
+import type { Address } from '../../types/address.js'
+import type { Hex } from '../../types/misc.js'
+import { toHex } from '../../utils/address/toHex.js'
+import {
+  ContractType,
+  contractTypeUrlPrefix,
+} from '../../utils/transaction/registry.js'
+import type { RawContract } from '../../utils/transaction/serializeRawData.js'
+import {
+  type NodeTransaction,
+  toNodeTransaction,
+} from '../../utils/transaction/toNodeTransaction.js'
+import type { FlexInput } from '../../utils/transaction/types.js'
+import {
+  type BuildAndBroadcastReturnType,
+  buildAndBroadcast,
+} from './utils/buildAndBroadcast.js'
+import {
+  buildTransaction,
+  type TransactionHeader,
+} from './utils/buildTransaction.js'
+
+export type PurchaseTokenParameters = {
+  /** The signing (buyer) account (falls back to `client.account`). */
+  account?: TronAccount | Hex | undefined
+  /** The token issuer's Base58Check address. */
+  issuerAddress: Address
+  /**
+   * TRC10 token id (`asset_name`). Dual-form ("flex"): plain text/id (e.g.
+   * `'1002000'`) is UTF-8 encoded; a `0x`-prefixed value is hex.
+   */
+  tokenId: FlexInput
+  /** Amount of TRX to pay, in SUN. */
+  amount: bigint
+  /**
+   * A pre-derived TaPoS + timing header. When supplied the transaction is built
+   * fully offline against it; otherwise it is derived from the latest block.
+   */
+  blockHeader?: TransactionHeader | undefined
+}
+export type PurchaseTokenReturnType = BuildAndBroadcastReturnType
+
+export type BuildPurchaseTokenParameters = PurchaseTokenParameters & {
+  /** Multi-sig permission id (`Contract.Permission_id`). */
+  permissionId?: number | undefined
+}
+export type BuildPurchaseTokenReturnType = NodeTransaction
+
+/** The signing account plus the assembled `ParticipateAssetIssueContract`. */
+function assemble(
+  client: Client,
+  parameters: PurchaseTokenParameters,
+): { account: TronAccount; contract: RawContract } {
+  const { issuerAddress, tokenId, amount } = parameters
+
+  // Resolve the owner/signing account (per-call, else hoisted on the Client).
+  const source = parameters.account ?? client.account
+  if (!source) throw new AccountNotFoundError()
+  const account = parseAccount(source)
+
+  const contract: RawContract = {
+    type: ContractType.ParticipateAssetIssueContract,
+    parameter: {
+      typeUrl: `${contractTypeUrlPrefix}ParticipateAssetIssueContract`,
+      value: {
+        ownerAddress: toHex(account.address),
+        toAddress: toHex(issuerAddress),
+        assetName: tokenId,
+        amount,
+      },
+    },
+  }
+
+  return { account, contract }
+}
+
+/**
+ * Builds an **unsigned** `ParticipateAssetIssueContract` transaction (§ type 9)
+ * and returns it in java-tron's HTTP JSON shape (TronWeb-compatible `{ visible,
+ * txID, raw_data, raw_data_hex }`) — the build half of {@link purchaseToken},
+ * without signing or broadcasting. Pass `permissionId` to bind it to an
+ * active/owner permission. The node is used only to fetch the latest block
+ * (TaPoS).
+ *
+ * @param client The Client to use.
+ * @param parameters Issuer, token id, amount, optional account/permissionId/blockHeader.
+ * @returns A TronWeb-shaped unsigned {@link NodeTransaction}.
+ */
+export async function buildPurchaseToken(
+  client: Client,
+  parameters: BuildPurchaseTokenParameters,
+): Promise<BuildPurchaseTokenReturnType> {
+  const { contract } = assemble(client, parameters)
+  const unsigned = await buildTransaction(client, {
+    contract,
+    permissionId: parameters.permissionId,
+    blockHeader: parameters.blockHeader,
+  })
+  return toNodeTransaction(unsigned)
+}
+
+/**
+ * Buys (participates in) a TRC10 token issuance by locally building, signing
+ * and broadcasting a `ParticipateAssetIssueContract` (§ type 9).
+ *
+ * @param client The Client to use.
+ * @param parameters Issuer, token id, amount, optional account/blockHeader.
+ * @returns `{ txID }` — the locally computed transaction id.
+ */
+export async function purchaseToken(
+  client: Client,
+  parameters: PurchaseTokenParameters,
+): Promise<PurchaseTokenReturnType> {
+  const { account, contract } = assemble(client, parameters)
+  return buildAndBroadcast(client, {
+    contract,
+    account,
+    blockHeader: parameters.blockHeader,
+  })
+}

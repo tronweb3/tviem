@@ -151,29 +151,135 @@ export {
   type AccountPermissionUpdateParameters,
   type AccountPermissionUpdateReturnType,
   accountPermissionUpdate,
+  type BuildAccountPermissionUpdateParameters,
+  type BuildAccountPermissionUpdateReturnType,
+  buildAccountPermissionUpdate,
 } from './actions/wallet/accountPermissionUpdate.js'
+export {
+  type ApplyForSrParameters,
+  type ApplyForSrReturnType,
+  applyForSr,
+  type BuildApplyForSrParameters,
+  type BuildApplyForSrReturnType,
+  buildApplyForSr,
+} from './actions/wallet/applyForSr.js'
 export {
   type BroadcastTransactionParameters,
   type BroadcastTransactionReturnType,
   broadcastTransaction,
 } from './actions/wallet/broadcastTransaction.js'
 export {
+  type BuildCancelAllUnfreezeV2Parameters,
+  type BuildCancelAllUnfreezeV2ReturnType,
+  buildCancelAllUnfreezeV2,
   type CancelAllUnfreezeV2Parameters,
   type CancelAllUnfreezeV2ReturnType,
   cancelAllUnfreezeV2,
 } from './actions/wallet/cancelAllUnfreezeV2.js'
 export {
+  type BuildClearAbiParameters,
+  type BuildClearAbiReturnType,
+  buildClearAbi,
+  type ClearAbiParameters,
+  type ClearAbiReturnType,
+  clearAbi,
+} from './actions/wallet/clearAbi.js'
+export {
+  type BuildCreateAccountParameters,
+  type BuildCreateAccountReturnType,
+  buildCreateAccount,
+  type CreateAccountParameters,
+  type CreateAccountReturnType,
+  createAccount,
+} from './actions/wallet/createAccount.js'
+export {
+  type BuildCreateProposalParameters,
+  type BuildCreateProposalReturnType,
+  buildCreateProposal,
+  type CreateProposalParameters,
+  type CreateProposalReturnType,
+  createProposal,
+  type ProposalParameterInput,
+  type ProposalParametersInput,
+} from './actions/wallet/createProposal.js'
+export {
+  type BuildCreateTokenParameters,
+  type BuildCreateTokenReturnType,
+  buildCreateToken,
+  type CreateTokenFrozenSupply,
+  type CreateTokenParameters,
+  type CreateTokenReturnType,
+  createToken,
+} from './actions/wallet/createToken.js'
+export {
+  type BuildDelegateResourceParameters,
+  type BuildDelegateResourceReturnType,
+  buildDelegateResource,
   type DelegateResource,
   type DelegateResourceParameters,
   type DelegateResourceReturnType,
   delegateResource,
 } from './actions/wallet/delegateResource.js'
 export {
+  type BuildDeleteProposalParameters,
+  type BuildDeleteProposalReturnType,
+  buildDeleteProposal,
+  type DeleteProposalParameters,
+  type DeleteProposalReturnType,
+  deleteProposal,
+} from './actions/wallet/deleteProposal.js'
+export {
+  type BuildDeployContractParameters,
+  type BuildDeployContractReturnType,
+  buildDeployContract,
   type DeployContractParameters,
   type DeployContractReturnType,
   deployContract,
 } from './actions/wallet/deployContract.js'
 export {
+  type BuildExchangeCreateParameters,
+  type BuildExchangeCreateReturnType,
+  buildExchangeCreate,
+  type ExchangeCreateParameters,
+  type ExchangeCreateReturnType,
+  exchangeCreate,
+} from './actions/wallet/exchangeCreate.js'
+export {
+  type BuildExchangeInjectParameters,
+  type BuildExchangeInjectReturnType,
+  buildExchangeInject,
+  type ExchangeInjectParameters,
+  type ExchangeInjectReturnType,
+  exchangeInject,
+} from './actions/wallet/exchangeInject.js'
+export {
+  type BuildExchangeTransactionParameters,
+  type BuildExchangeTransactionReturnType,
+  buildExchangeTransaction,
+  type ExchangeTransactionParameters,
+  type ExchangeTransactionReturnType,
+  exchangeTransaction,
+} from './actions/wallet/exchangeTransaction.js'
+export {
+  type BuildExchangeWithdrawParameters,
+  type BuildExchangeWithdrawReturnType,
+  buildExchangeWithdraw,
+  type ExchangeWithdrawParameters,
+  type ExchangeWithdrawReturnType,
+  exchangeWithdraw,
+} from './actions/wallet/exchangeWithdraw.js'
+export {
+  type BuildFreezeBalanceParameters,
+  type BuildFreezeBalanceReturnType,
+  buildFreezeBalance,
+  type FreezeBalanceParameters,
+  type FreezeBalanceReturnType,
+  freezeBalance,
+} from './actions/wallet/freezeBalance.js'
+export {
+  type BuildFreezeBalanceV2Parameters,
+  type BuildFreezeBalanceV2ReturnType,
+  buildFreezeBalanceV2,
   type FreezeBalanceV2Parameters,
   type FreezeBalanceV2ReturnType,
   freezeBalanceV2,
@@ -186,42 +292,138 @@ export {
   multiSign,
 } from './actions/wallet/multiSign.js'
 export {
+  type BuildPurchaseTokenParameters,
+  type BuildPurchaseTokenReturnType,
+  buildPurchaseToken,
+  type PurchaseTokenParameters,
+  type PurchaseTokenReturnType,
+  purchaseToken,
+} from './actions/wallet/purchaseToken.js'
+export {
+  type BuildSendTrc10Parameters,
+  type BuildSendTrc10ReturnType,
+  buildSendTrc10,
   type SendTrc10Parameters,
   type SendTrc10ReturnType,
   sendTrc10,
 } from './actions/wallet/sendTrc10.js'
 export {
+  type BuildSendTrxParameters,
+  type BuildSendTrxReturnType,
+  buildSendTrx,
   type SendTrxParameters,
   type SendTrxReturnType,
   sendTrx,
 } from './actions/wallet/sendTrx.js'
 export {
+  type BuildSetAccountIdParameters,
+  type BuildSetAccountIdReturnType,
+  buildSetAccountId,
+  type SetAccountIdParameters,
+  type SetAccountIdReturnType,
+  setAccountId,
+} from './actions/wallet/setAccountId.js'
+export {
+  type BuildUndelegateResourceParameters,
+  type BuildUndelegateResourceReturnType,
+  buildUndelegateResource,
   type UndelegateResourceParameters,
   type UndelegateResourceReturnType,
   undelegateResource,
 } from './actions/wallet/undelegateResource.js'
 export {
+  type BuildUnfreezeBalanceParameters,
+  type BuildUnfreezeBalanceReturnType,
+  buildUnfreezeBalance,
+  type UnfreezeBalanceParameters,
+  type UnfreezeBalanceReturnType,
+  unfreezeBalance,
+} from './actions/wallet/unfreezeBalance.js'
+export {
+  type BuildUnfreezeBalanceV2Parameters,
+  type BuildUnfreezeBalanceV2ReturnType,
+  buildUnfreezeBalanceV2,
   type UnfreezeBalanceV2Parameters,
   type UnfreezeBalanceV2ReturnType,
   unfreezeBalanceV2,
 } from './actions/wallet/unfreezeBalanceV2.js'
 export {
+  type BuildUpdateAccountParameters,
+  type BuildUpdateAccountReturnType,
+  buildUpdateAccount,
+  type UpdateAccountParameters,
+  type UpdateAccountReturnType,
+  updateAccount,
+} from './actions/wallet/updateAccount.js'
+export {
+  type BuildUpdateBrokerageParameters,
+  type BuildUpdateBrokerageReturnType,
+  buildUpdateBrokerage,
+  type UpdateBrokerageParameters,
+  type UpdateBrokerageReturnType,
+  updateBrokerage,
+} from './actions/wallet/updateBrokerage.js'
+export {
+  type BuildUpdateEnergyLimitParameters,
+  type BuildUpdateEnergyLimitReturnType,
+  buildUpdateEnergyLimit,
+  type UpdateEnergyLimitParameters,
+  type UpdateEnergyLimitReturnType,
+  updateEnergyLimit,
+} from './actions/wallet/updateEnergyLimit.js'
+export {
+  type BuildUpdateSettingParameters,
+  type BuildUpdateSettingReturnType,
+  buildUpdateSetting,
+  type UpdateSettingParameters,
+  type UpdateSettingReturnType,
+  updateSetting,
+} from './actions/wallet/updateSetting.js'
+export {
+  type BuildUpdateTokenParameters,
+  type BuildUpdateTokenReturnType,
+  buildUpdateToken,
+  type UpdateTokenParameters,
+  type UpdateTokenReturnType,
+  updateToken,
+} from './actions/wallet/updateToken.js'
+export {
+  type BuildUpdateWitnessParameters,
+  type BuildUpdateWitnessReturnType,
+  buildUpdateWitness,
+  type UpdateWitnessParameters,
+  type UpdateWitnessReturnType,
+  updateWitness,
+} from './actions/wallet/updateWitness.js'
+export {
+  type BuildVoteWitnessParameters,
+  type BuildVoteWitnessReturnType,
+  buildVoteWitness,
   type VoteWitnessParameters,
   type VoteWitnessReturnType,
   voteWitness,
   type WitnessVote,
 } from './actions/wallet/voteWitness.js'
 export {
+  type BuildWithdrawBalanceParameters,
+  type BuildWithdrawBalanceReturnType,
+  buildWithdrawBalance,
   type WithdrawBalanceParameters,
   type WithdrawBalanceReturnType,
   withdrawBalance,
 } from './actions/wallet/withdrawBalance.js'
 export {
+  type BuildWithdrawExpireUnfreezeParameters,
+  type BuildWithdrawExpireUnfreezeReturnType,
+  buildWithdrawExpireUnfreeze,
   type WithdrawExpireUnfreezeParameters,
   type WithdrawExpireUnfreezeReturnType,
   withdrawExpireUnfreeze,
 } from './actions/wallet/withdrawExpireUnfreeze.js'
 export {
+  type BuildWriteContractParameters,
+  type BuildWriteContractReturnType,
+  buildWriteContract,
   type WriteContractParameters,
   type WriteContractReturnType,
   writeContract,
@@ -866,21 +1068,44 @@ export {
   toBroadcastHex,
 } from './utils/transaction/serializeTransaction.js'
 export {
+  type NodeRawData,
+  type ToNodeRawDataErrorType,
+  toNodeRawData,
+} from './utils/transaction/toNodeRawData.js'
+export {
+  type NodeTransaction,
+  type ToNodeTransactionErrorType,
+  type ToNodeTransactionInput,
+  toNodeTransaction,
+} from './utils/transaction/toNodeTransaction.js'
+export {
   type TxCheckErrorType,
   txCheck,
 } from './utils/transaction/txCheck.js'
 export type {
+  AccountCreateContract,
   AccountPermissionUpdateContract,
+  AccountUpdateContract,
+  AssetIssueContract,
+  AssetIssueFrozenSupply,
   BytesInput,
   CancelAllUnfreezeV2Contract,
+  ClearABIContract,
   ContractAddressInput,
   ContractMessage,
   CreateSmartContract,
   DelegateResourceContract,
   FlexInput,
+  FreezeBalanceContract,
   FreezeBalanceV2Contract,
+  ParticipateAssetIssueContract,
   Permission,
   PermissionKey,
+  ProposalApproveContract,
+  ProposalCreateContract,
+  ProposalDeleteContract,
+  ProposalParameter,
+  SetAccountIdContract,
   SmartContract,
   SmartContractAbi,
   SmartContractAbiEntry,
@@ -889,14 +1114,21 @@ export type {
   TransferContract,
   TriggerSmartContract,
   UnDelegateResourceContract,
+  UnfreezeBalanceContract,
   UnfreezeBalanceV2Contract,
   UnknownContractParameter,
   UnknownField,
+  UpdateAssetContract,
+  UpdateBrokerageContract,
+  UpdateEnergyLimitContract,
+  UpdateSettingContract,
   Vote,
   VoteWitnessContract,
   WithdrawBalanceContract,
   WithdrawExpireUnfreezeContract,
   WithUnknownFields,
+  WitnessCreateContract,
+  WitnessUpdateContract,
 } from './utils/transaction/types.js'
 export {
   EntryType,
