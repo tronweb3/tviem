@@ -126,6 +126,14 @@ export type WithdrawBalanceContract = WithUnknownFields & {
   ownerAddress: ContractAddressInput
 }
 
+/** `UpdateBrokerageContract` (type 49). */
+export type UpdateBrokerageContract = WithUnknownFields & {
+  /** Witness account address (field 1). */
+  ownerAddress: ContractAddressInput
+  /** New brokerage percentage, 0..100 (field 2, `int32`). */
+  brokerage: number
+}
+
 /** `SmartContract.ABI.Entry.Param`. */
 export type SmartContractAbiParam = WithUnknownFields & {
   /** Whether the parameter is indexed (field 1, `bool`). */
@@ -257,6 +265,98 @@ export type AccountPermissionUpdateContract = WithUnknownFields & {
   actives?: Permission[] | undefined
 }
 
+/** `FreezeBalanceContract` (contract type 11) — Stake 1.0 freeze. */
+export type FreezeBalanceContract = WithUnknownFields & {
+  /** Account address (field 1). */
+  ownerAddress: ContractAddressInput
+  /** Amount to freeze, in SUN (field 2, `int64`). */
+  frozenBalance: bigint
+  /** Freeze duration, in days (field 3, `int64`). */
+  frozenDuration: bigint
+  /** Resource type (field 10, enum — see `ResourceCode`). */
+  resource?: number | undefined
+  /** Recipient address the resource is obtained for (field 15). */
+  receiverAddress?: ContractAddressInput | undefined
+}
+
+/** `UnfreezeBalanceContract` (contract type 12) — Stake 1.0 unfreeze. */
+export type UnfreezeBalanceContract = WithUnknownFields & {
+  /** Account address (field 1). */
+  ownerAddress: ContractAddressInput
+  /** Resource type (field 10, enum — see `ResourceCode`). */
+  resource?: number | undefined
+  /** Recipient address the resource was obtained for (field 15). */
+  receiverAddress?: ContractAddressInput | undefined
+}
+
+/** `ParticipateAssetIssueContract` (contract type 9) — buy a TRC10 token. */
+export type ParticipateAssetIssueContract = WithUnknownFields & {
+  /** Buyer address (field 1). */
+  ownerAddress: ContractAddressInput
+  /** Token issuer address (field 2). */
+  toAddress: ContractAddressInput
+  /** TRC10 asset name/id (field 3, dual string/hex form). */
+  assetName: FlexInput
+  /** Amount of TRX paid, in SUN (field 4, `int64`). */
+  amount: bigint
+}
+
+/** `AssetIssueContract.FrozenSupply` — a staked-supply tranche. */
+export type AssetIssueFrozenSupply = WithUnknownFields & {
+  /** Amount of the token supply frozen (field 1, `int64`). */
+  frozenAmount: bigint
+  /** Freeze duration, in days (field 2, `int64`). */
+  frozenDays: bigint
+}
+
+/** `AssetIssueContract` (contract type 6) — create a TRC10 token. */
+export type AssetIssueContract = WithUnknownFields & {
+  /** Issuer address (field 1). */
+  ownerAddress: ContractAddressInput
+  /** Token name (field 2, `bytes`, dual string/hex form). */
+  name: FlexInput
+  /** Token abbreviation (field 3, `bytes`, dual string/hex form). */
+  abbr: FlexInput
+  /** Total supply (field 4, `int64`). */
+  totalSupply: bigint
+  /** Staked-supply tranches (field 5, repeated). */
+  frozenSupply?: AssetIssueFrozenSupply[] | undefined
+  /** TRX numerator of the ICO price ratio `trx_num/num` (field 6, `int32`). */
+  trxNum: number
+  /** Number of token decimals (field 7, `int32`). */
+  precision?: number | undefined
+  /** Token numerator of the ICO price ratio `trx_num/num` (field 8, `int32`). */
+  num: number
+  /** ICO start time, ms (field 9, `int64`). */
+  startTime: bigint
+  /** ICO end time, ms (field 10, `int64`). */
+  endTime: bigint
+  /** Vote score (field 16, `int32`). */
+  voteScore?: number | undefined
+  /** Token description (field 20, `bytes`, dual string/hex form). */
+  description: FlexInput
+  /** Token website URL (field 21, `bytes`, dual string/hex form). */
+  url: FlexInput
+  /** Creator-donated bandwidth for holders (field 22, `int64`). */
+  freeAssetNetLimit?: bigint | undefined
+  /** Per-holder free bandwidth cap (field 23, `int64`). */
+  publicFreeAssetNetLimit?: bigint | undefined
+}
+
+/** `UpdateAssetContract` (contract type 15) — update a TRC10 token. */
+export type UpdateAssetContract = WithUnknownFields & {
+  /** Issuer address (field 1). */
+  ownerAddress: ContractAddressInput
+  /** New token description (field 2, `bytes`, dual string/hex form). */
+  description: FlexInput
+  /** New token website URL (field 3, `bytes`, dual string/hex form). */
+  url: FlexInput
+  /** New per-holder free bandwidth (field 4, `int64`). */
+  newLimit: bigint
+  /** New total free bandwidth (field 5, `int64`). */
+  newPublicLimit: bigint
+}
+
 /** `FreezeBalanceV2Contract` (contract type 54) — stake 2.0 freeze. */
 export type FreezeBalanceV2Contract = WithUnknownFields & {
   /** Account address (field 1). */
@@ -317,11 +417,172 @@ export type CancelAllUnfreezeV2Contract = WithUnknownFields & {
   ownerAddress: ContractAddressInput
 }
 
+/** `AccountCreateContract` (contract type 0) — create a new account. */
+export type AccountCreateContract = WithUnknownFields & {
+  /** Creator (payer) address (field 1). */
+  ownerAddress: ContractAddressInput
+  /** Address of the account to create (field 2). */
+  accountAddress: ContractAddressInput
+  /** Account type (field 3, `int32`). */
+  type?: number | undefined
+}
+
+/** `AccountUpdateContract` (contract type 10) — set an account name. */
+export type AccountUpdateContract = WithUnknownFields & {
+  /** Account name (field 1, `bytes`, dual string/hex form). */
+  accountName: FlexInput
+  /** Account address (field 2). */
+  ownerAddress: ContractAddressInput
+}
+
+/** `SetAccountIdContract` (contract type 19) — set an account id. */
+export type SetAccountIdContract = WithUnknownFields & {
+  /** Account id (field 1, `bytes`, dual string/hex form). */
+  accountId: FlexInput
+  /** Account address (field 2). */
+  ownerAddress: ContractAddressInput
+}
+
+/** `WitnessCreateContract` (contract type 5) — apply to become an SR. */
+export type WitnessCreateContract = WithUnknownFields & {
+  /** Applicant account address (field 1). */
+  ownerAddress: ContractAddressInput
+  /** Witness page URL (field 2, `bytes`, dual string/hex form). */
+  url: FlexInput
+}
+
+/** `WitnessUpdateContract` (contract type 8) — update an SR's URL. */
+export type WitnessUpdateContract = WithUnknownFields & {
+  /** Witness account address (field 1). */
+  ownerAddress: ContractAddressInput
+  /** New witness page URL (field 12, `bytes`, dual string/hex form). */
+  updateUrl: FlexInput
+}
+
+/** `ClearABIContract` (contract type 48) — clear a contract's ABI. */
+export type ClearABIContract = WithUnknownFields & {
+  /** Owner (deployer) address (field 1). */
+  ownerAddress: ContractAddressInput
+  /** Contract address (field 2). */
+  contractAddress: ContractAddressInput
+}
+
+/** `UpdateSettingContract` (contract type 33) — update the user resource share. */
+export type UpdateSettingContract = WithUnknownFields & {
+  /** Owner (deployer) address (field 1). */
+  ownerAddress: ContractAddressInput
+  /** Contract address (field 2). */
+  contractAddress: ContractAddressInput
+  /** Percentage of energy consumed by the caller (field 3, `int64`). */
+  consumeUserResourcePercent: bigint
+}
+
+/** `UpdateEnergyLimitContract` (contract type 45) — update a contract's energy limit. */
+export type UpdateEnergyLimitContract = WithUnknownFields & {
+  /** Owner (deployer) address (field 1). */
+  ownerAddress: ContractAddressInput
+  /** Contract address (field 2). */
+  contractAddress: ContractAddressInput
+  /** Creator energy limit (field 3, `int64`). */
+  originEnergyLimit: bigint
+}
+
+/** A single `map<int64,int64>` entry inside `ProposalCreateContract`. */
+export type ProposalParameter = WithUnknownFields & {
+  /** Chain-parameter id (map key, `int64`). */
+  key: bigint
+  /** New parameter value (map value, `int64`). */
+  value: bigint
+}
+
+/** `ProposalCreateContract` (contract type 16) — create a governance proposal. */
+export type ProposalCreateContract = WithUnknownFields & {
+  /** Proposer address (field 1). */
+  ownerAddress: ContractAddressInput
+  /** Proposed chain-parameter changes (field 2, `map<int64,int64>`). */
+  parameters?: ProposalParameter[] | undefined
+}
+
+/** `ProposalApproveContract` (contract type 17) — approve/disapprove a proposal. */
+export type ProposalApproveContract = WithUnknownFields & {
+  /** Voter address (field 1). */
+  ownerAddress: ContractAddressInput
+  /** Proposal id (field 2, `int64`). */
+  proposalId: bigint
+  /** Whether to add (true) or remove (false) approval (field 3, `bool`). */
+  isAddApproval?: boolean | undefined
+}
+
+/** `ProposalDeleteContract` (contract type 18) — delete a proposal. */
+export type ProposalDeleteContract = WithUnknownFields & {
+  /** Proposer address (field 1). */
+  ownerAddress: ContractAddressInput
+  /** Proposal id (field 2, `int64`). */
+  proposalId: bigint
+}
+
+/** `ExchangeCreateContract` (contract type 41) — create a Bancor exchange pair. */
+export type ExchangeCreateContract = WithUnknownFields & {
+  /** Creator address (field 1). */
+  ownerAddress: ContractAddressInput
+  /** First token id (field 2, `bytes`, dual string/hex form). */
+  firstTokenId: FlexInput
+  /** First token balance seeded into the exchange (field 3, `int64`). */
+  firstTokenBalance: bigint
+  /** Second token id (field 4, `bytes`, dual string/hex form). */
+  secondTokenId: FlexInput
+  /** Second token balance seeded into the exchange (field 5, `int64`). */
+  secondTokenBalance: bigint
+}
+
+/** `ExchangeInjectContract` (contract type 42) — inject liquidity into an exchange. */
+export type ExchangeInjectContract = WithUnknownFields & {
+  /** Owner address (field 1). */
+  ownerAddress: ContractAddressInput
+  /** Exchange id (field 2, `int64`). */
+  exchangeId: bigint
+  /** Token id to inject (field 3, `bytes`, dual string/hex form). */
+  tokenId: FlexInput
+  /** Amount of the token to inject (field 4, `int64`). */
+  quant: bigint
+}
+
+/** `ExchangeWithdrawContract` (contract type 43) — withdraw liquidity from an exchange. */
+export type ExchangeWithdrawContract = WithUnknownFields & {
+  /** Owner address (field 1). */
+  ownerAddress: ContractAddressInput
+  /** Exchange id (field 2, `int64`). */
+  exchangeId: bigint
+  /** Token id to withdraw (field 3, `bytes`, dual string/hex form). */
+  tokenId: FlexInput
+  /** Amount of the token to withdraw (field 4, `int64`). */
+  quant: bigint
+}
+
+/** `ExchangeTransactionContract` (contract type 44) — trade against an exchange. */
+export type ExchangeTransactionContract = WithUnknownFields & {
+  /** Trader address (field 1). */
+  ownerAddress: ContractAddressInput
+  /** Exchange id (field 2, `int64`). */
+  exchangeId: bigint
+  /** Token id sold into the exchange (field 3, `bytes`, dual string/hex form). */
+  tokenId: FlexInput
+  /** Amount of the token sold (field 4, `int64`). */
+  quant: bigint
+  /** Minimum amount of the counter-token expected (field 5, `int64`). */
+  expected: bigint
+}
+
 /** Union of all registered (known) contract message models. */
 export type ContractMessage =
   | TransferContract
   | TransferAssetContract
   | VoteWitnessContract
+  | FreezeBalanceContract
+  | UnfreezeBalanceContract
+  | ParticipateAssetIssueContract
+  | AssetIssueContract
+  | UpdateAssetContract
   | WithdrawBalanceContract
   | CreateSmartContract
   | TriggerSmartContract
@@ -332,3 +593,19 @@ export type ContractMessage =
   | DelegateResourceContract
   | UnDelegateResourceContract
   | CancelAllUnfreezeV2Contract
+  | UpdateBrokerageContract
+  | AccountCreateContract
+  | AccountUpdateContract
+  | SetAccountIdContract
+  | WitnessCreateContract
+  | WitnessUpdateContract
+  | ClearABIContract
+  | UpdateSettingContract
+  | UpdateEnergyLimitContract
+  | ProposalCreateContract
+  | ProposalApproveContract
+  | ProposalDeleteContract
+  | ExchangeCreateContract
+  | ExchangeInjectContract
+  | ExchangeWithdrawContract
+  | ExchangeTransactionContract

@@ -1,5 +1,21 @@
 import type { ByteArray } from '../../types/misc.js'
 import {
+  decodeAccountCreateContract,
+  decodeAccountUpdateContract,
+  decodeSetAccountIdContract,
+  encodeAccountCreateContract,
+  encodeAccountUpdateContract,
+  encodeSetAccountIdContract,
+} from './contracts/account.js'
+import {
+  decodeAssetIssueContract,
+  decodeParticipateAssetIssueContract,
+  decodeUpdateAssetContract,
+  encodeAssetIssueContract,
+  encodeParticipateAssetIssueContract,
+  encodeUpdateAssetContract,
+} from './contracts/asset.js'
+import {
   decodeCancelAllUnfreezeV2Contract,
   decodeFreezeBalanceV2Contract,
   decodeUnfreezeBalanceV2Contract,
@@ -12,6 +28,14 @@ import {
   encodeWithdrawExpireUnfreezeContract,
 } from './contracts/balance.js'
 import {
+  decodeClearABIContract,
+  decodeUpdateEnergyLimitContract,
+  decodeUpdateSettingContract,
+  encodeClearABIContract,
+  encodeUpdateEnergyLimitContract,
+  encodeUpdateSettingContract,
+} from './contracts/contractAdmin.js'
+import {
   decodeAccountPermissionUpdateContract,
   encodeAccountPermissionUpdateContract,
 } from './contracts/permission.js'
@@ -22,11 +46,35 @@ import {
   encodeUnDelegateResourceContract,
 } from './contracts/resource.js'
 import {
+  decodeExchangeCreateContract,
+  decodeExchangeInjectContract,
+  decodeExchangeTransactionContract,
+  decodeExchangeWithdrawContract,
+  encodeExchangeCreateContract,
+  encodeExchangeInjectContract,
+  encodeExchangeTransactionContract,
+  encodeExchangeWithdrawContract,
+} from './contracts/exchange.js'
+import {
+  decodeProposalApproveContract,
+  decodeProposalCreateContract,
+  decodeProposalDeleteContract,
+  encodeProposalApproveContract,
+  encodeProposalCreateContract,
+  encodeProposalDeleteContract,
+} from './contracts/proposal.js'
+import {
   decodeCreateSmartContract,
   decodeTriggerSmartContract,
   encodeCreateSmartContract,
   encodeTriggerSmartContract,
 } from './contracts/smartContract.js'
+import {
+  decodeFreezeBalanceContract,
+  decodeUnfreezeBalanceContract,
+  encodeFreezeBalanceContract,
+  encodeUnfreezeBalanceContract,
+} from './contracts/stake1.js'
 import {
   decodeTransferAssetContract,
   decodeTransferContract,
@@ -37,23 +85,52 @@ import {
   decodeVoteWitnessContract,
   encodeVoteWitnessContract,
 } from './contracts/vote.js'
+import {
+  decodeUpdateBrokerageContract,
+  decodeWitnessCreateContract,
+  decodeWitnessUpdateContract,
+  encodeUpdateBrokerageContract,
+  encodeWitnessCreateContract,
+  encodeWitnessUpdateContract,
+} from './contracts/witness.js'
 import type { ContractMessage, UnknownContractParameter } from './types.js'
 
 /** `Transaction.Contract.ContractType` integers (v0.1 contract set). */
 export const ContractType = {
+  AccountCreateContract: 0,
   TransferContract: 1,
   TransferAssetContract: 2,
   VoteWitnessContract: 4,
+  WitnessCreateContract: 5,
+  AssetIssueContract: 6,
+  WitnessUpdateContract: 8,
+  ParticipateAssetIssueContract: 9,
+  ProposalCreateContract: 16,
+  ProposalApproveContract: 17,
+  ProposalDeleteContract: 18,
+  ExchangeCreateContract: 41,
+  ExchangeInjectContract: 42,
+  ExchangeWithdrawContract: 43,
+  ExchangeTransactionContract: 44,
+  AccountUpdateContract: 10,
+  FreezeBalanceContract: 11,
+  UnfreezeBalanceContract: 12,
   WithdrawBalanceContract: 13,
+  UpdateAssetContract: 15,
+  SetAccountIdContract: 19,
   CreateSmartContract: 30,
   TriggerSmartContract: 31,
+  UpdateSettingContract: 33,
+  UpdateEnergyLimitContract: 45,
   AccountPermissionUpdateContract: 46,
+  ClearABIContract: 48,
   FreezeBalanceV2Contract: 54,
   UnfreezeBalanceV2Contract: 55,
   WithdrawExpireUnfreezeContract: 56,
   DelegateResourceContract: 57,
   UnDelegateResourceContract: 58,
   CancelAllUnfreezeV2Contract: 59,
+  UpdateBrokerageContract: 49,
 } as const
 export type ContractType = (typeof ContractType)[keyof typeof ContractType]
 
@@ -114,6 +191,36 @@ export const contractCodecs: readonly ContractCodec[] = [
     decodeVoteWitnessContract,
   ),
   defineContractCodec(
+    ContractType.FreezeBalanceContract,
+    'FreezeBalanceContract',
+    encodeFreezeBalanceContract,
+    decodeFreezeBalanceContract,
+  ),
+  defineContractCodec(
+    ContractType.UnfreezeBalanceContract,
+    'UnfreezeBalanceContract',
+    encodeUnfreezeBalanceContract,
+    decodeUnfreezeBalanceContract,
+  ),
+  defineContractCodec(
+    ContractType.AssetIssueContract,
+    'AssetIssueContract',
+    encodeAssetIssueContract,
+    decodeAssetIssueContract,
+  ),
+  defineContractCodec(
+    ContractType.ParticipateAssetIssueContract,
+    'ParticipateAssetIssueContract',
+    encodeParticipateAssetIssueContract,
+    decodeParticipateAssetIssueContract,
+  ),
+  defineContractCodec(
+    ContractType.UpdateAssetContract,
+    'UpdateAssetContract',
+    encodeUpdateAssetContract,
+    decodeUpdateAssetContract,
+  ),
+  defineContractCodec(
     ContractType.WithdrawBalanceContract,
     'WithdrawBalanceContract',
     encodeWithdrawBalanceContract,
@@ -172,6 +279,102 @@ export const contractCodecs: readonly ContractCodec[] = [
     'CancelAllUnfreezeV2Contract',
     encodeCancelAllUnfreezeV2Contract,
     decodeCancelAllUnfreezeV2Contract,
+  ),
+  defineContractCodec(
+    ContractType.UpdateBrokerageContract,
+    'UpdateBrokerageContract',
+    encodeUpdateBrokerageContract,
+    decodeUpdateBrokerageContract,
+  ),
+  defineContractCodec(
+    ContractType.AccountCreateContract,
+    'AccountCreateContract',
+    encodeAccountCreateContract,
+    decodeAccountCreateContract,
+  ),
+  defineContractCodec(
+    ContractType.AccountUpdateContract,
+    'AccountUpdateContract',
+    encodeAccountUpdateContract,
+    decodeAccountUpdateContract,
+  ),
+  defineContractCodec(
+    ContractType.SetAccountIdContract,
+    'SetAccountIdContract',
+    encodeSetAccountIdContract,
+    decodeSetAccountIdContract,
+  ),
+  defineContractCodec(
+    ContractType.WitnessCreateContract,
+    'WitnessCreateContract',
+    encodeWitnessCreateContract,
+    decodeWitnessCreateContract,
+  ),
+  defineContractCodec(
+    ContractType.WitnessUpdateContract,
+    'WitnessUpdateContract',
+    encodeWitnessUpdateContract,
+    decodeWitnessUpdateContract,
+  ),
+  defineContractCodec(
+    ContractType.ClearABIContract,
+    'ClearABIContract',
+    encodeClearABIContract,
+    decodeClearABIContract,
+  ),
+  defineContractCodec(
+    ContractType.UpdateSettingContract,
+    'UpdateSettingContract',
+    encodeUpdateSettingContract,
+    decodeUpdateSettingContract,
+  ),
+  defineContractCodec(
+    ContractType.UpdateEnergyLimitContract,
+    'UpdateEnergyLimitContract',
+    encodeUpdateEnergyLimitContract,
+    decodeUpdateEnergyLimitContract,
+  ),
+  defineContractCodec(
+    ContractType.ProposalCreateContract,
+    'ProposalCreateContract',
+    encodeProposalCreateContract,
+    decodeProposalCreateContract,
+  ),
+  defineContractCodec(
+    ContractType.ProposalApproveContract,
+    'ProposalApproveContract',
+    encodeProposalApproveContract,
+    decodeProposalApproveContract,
+  ),
+  defineContractCodec(
+    ContractType.ProposalDeleteContract,
+    'ProposalDeleteContract',
+    encodeProposalDeleteContract,
+    decodeProposalDeleteContract,
+  ),
+  defineContractCodec(
+    ContractType.ExchangeCreateContract,
+    'ExchangeCreateContract',
+    encodeExchangeCreateContract,
+    decodeExchangeCreateContract,
+  ),
+  defineContractCodec(
+    ContractType.ExchangeInjectContract,
+    'ExchangeInjectContract',
+    encodeExchangeInjectContract,
+    decodeExchangeInjectContract,
+  ),
+  defineContractCodec(
+    ContractType.ExchangeWithdrawContract,
+    'ExchangeWithdrawContract',
+    encodeExchangeWithdrawContract,
+    decodeExchangeWithdrawContract,
+  ),
+  defineContractCodec(
+    ContractType.ExchangeTransactionContract,
+    'ExchangeTransactionContract',
+    encodeExchangeTransactionContract,
+    decodeExchangeTransactionContract,
   ),
 ]
 

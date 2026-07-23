@@ -17,13 +17,34 @@ const to = '41928c9af0651632157ef27a2cf17ca72c575a4d21' as const
 
 test('ContractType: §6 integers', () => {
   expect(ContractType).toStrictEqual({
+    AccountCreateContract: 0,
     TransferContract: 1,
     TransferAssetContract: 2,
     VoteWitnessContract: 4,
+    WitnessCreateContract: 5,
+    AssetIssueContract: 6,
+    WitnessUpdateContract: 8,
+    ParticipateAssetIssueContract: 9,
+    ProposalCreateContract: 16,
+    ProposalApproveContract: 17,
+    ProposalDeleteContract: 18,
+    ExchangeCreateContract: 41,
+    ExchangeInjectContract: 42,
+    ExchangeWithdrawContract: 43,
+    ExchangeTransactionContract: 44,
+    AccountUpdateContract: 10,
+    FreezeBalanceContract: 11,
+    UnfreezeBalanceContract: 12,
     WithdrawBalanceContract: 13,
+    UpdateAssetContract: 15,
+    SetAccountIdContract: 19,
     CreateSmartContract: 30,
     TriggerSmartContract: 31,
+    UpdateSettingContract: 33,
+    UpdateEnergyLimitContract: 45,
     AccountPermissionUpdateContract: 46,
+    ClearABIContract: 48,
+    UpdateBrokerageContract: 49,
     FreezeBalanceV2Contract: 54,
     UnfreezeBalanceV2Contract: 55,
     WithdrawExpireUnfreezeContract: 56,
@@ -34,7 +55,7 @@ test('ContractType: §6 integers', () => {
 })
 
 test('bidirectional lookup: typeUrl ↔ codec ↔ type integer', () => {
-  expect(contractCodecs).toHaveLength(13)
+  expect(contractCodecs).toHaveLength(34)
   for (const [name, type] of Object.entries(ContractType)) {
     const typeUrl = `${contractTypeUrlPrefix}${name}`
     const codec = getContractCodecByTypeUrl(typeUrl)
@@ -48,12 +69,10 @@ test('bidirectional lookup: typeUrl ↔ codec ↔ type integer', () => {
 
 test('unregistered lookups return undefined', () => {
   expect(
-    getContractCodecByTypeUrl(
-      'type.googleapis.com/protocol.AccountCreateContract',
-    ),
+    getContractCodecByTypeUrl('type.googleapis.com/protocol.VoteAssetContract'),
   ).toBeUndefined()
-  expect(getContractCodecByType(0)).toBeUndefined()
   expect(getContractCodecByType(3)).toBeUndefined()
+  expect(getContractCodecByType(99)).toBeUndefined()
 })
 
 test('decodeContractParameter: registered type URL decodes the message', () => {
