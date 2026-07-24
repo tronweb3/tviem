@@ -1,14 +1,13 @@
 import { describe, expect, test } from 'vitest'
-
+import { signTransaction } from '../../../src/accounts/utils/signTransaction.js'
+import { decodeRawData } from '../../../src/utils/transaction/decodeRawData.js'
+import { getTransactionId } from '../../../src/utils/transaction/getTransactionId.js'
+import type { RawData } from '../../../src/utils/transaction/serializeRawData.js'
 import {
   loadSigTransactionFixtures,
   type SigTransactionFixture,
 } from '../../fixtures/sig/loader.js'
 import { loadTxFixtures } from '../../fixtures/tx/loader.js'
-import { decodeRawData } from '../../../src/utils/transaction/decodeRawData.js'
-import { getTransactionId } from '../../../src/utils/transaction/getTransactionId.js'
-import type { RawData } from '../../../src/utils/transaction/serializeRawData.js'
-import { signTransaction } from '../../../src/accounts/utils/signTransaction.js'
 
 // Only pk=1 / pk=2 are permitted trivial private keys.
 const pk1 = '0x0000000000000000000000000000000000000000000000000000000000000001'
@@ -126,6 +125,22 @@ describe('signTransaction', () => {
       permissionId: 2,
     })
     expect(signed.signature).toHaveLength(1)
+  })
+
+  test('an equal, already-baked permissionId is idempotent (guard ①)', () => {
+    const first = signTransaction({
+      transaction: { raw_data: canonicalRawData },
+      privateKey: pk1,
+      permissionId: 2,
+    })
+    const again = signTransaction({
+      transaction: first,
+      privateKey: pk1,
+      permissionId: 2,
+    })
+    expect(again.txID).toBe(first.txID)
+    expect(again.raw_data_hex).toBe(first.raw_data_hex)
+    expect(again.signature).toEqual(first.signature)
   })
 
   test('de-duplicates a repeated signature by the same key (guard ⑤)', () => {

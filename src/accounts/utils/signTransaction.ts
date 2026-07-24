@@ -82,6 +82,11 @@ function ownerAddressOf(rawData: RawData): ContractAddressInput | undefined {
  * Guards, in order:
  * 1. When `permissionId` is given it is written into every contract of
  *    `raw_data` before the id is derived (multi-sig / permission signing).
+ *    The write is unconditional — an id already baked into the transaction
+ *    is overwritten, which changes the txID and silently orphans any
+ *    collected signatures. This is the low-level escape hatch; co-signing
+ *    should go through the `multiSign` action, which validates the id
+ *    against the baked one (and the collected signatures) first.
  * 2. The transaction id is always recomputed locally from `raw_data` via
  *    {@link getTransactionId}; a node-supplied `txID` is never trusted when a
  *    `raw_data` (or `raw_data_hex`) is present.

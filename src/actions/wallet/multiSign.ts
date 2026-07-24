@@ -1,10 +1,6 @@
 // TRON-specific, clean-room implementation for @tronweb3/omni.
 import type { SignableTransaction } from '../../accounts/types.js'
 import {
-  type PrivateKeyToAddressErrorType,
-  privateKeyToAddress,
-} from '../../accounts/utils/privateKeyToAddress.js'
-import {
   type SignTransactionErrorType,
   signTransaction,
 } from '../../accounts/utils/signTransaction.js'
@@ -12,11 +8,10 @@ import type { Client } from '../../clients/createClient.js'
 import { BaseError, type BaseErrorType } from '../../errors/base.js'
 import type { ErrorType } from '../../errors/utils.js'
 import type { Hex } from '../../types/misc.js'
-import { isAddressEqual } from '../../utils/address/isAddressEqual.js'
-import { getAction } from '../../utils/getAction.js'
-import { decodeRawData } from '../../utils/transaction/decodeRawData.js'
-import { getSignWeight } from '../public/getSignWeight.js'
-import type { AssertUnchangedTransactionErrorType } from '../utils/assertUnchangedTransaction.js'
+import {
+  type DecodeRawDataErrorType,
+  decodeRawData,
+} from '../../utils/transaction/decodeRawData.js'
 
 export type MultiSignParameters = {
   /** The transaction to co-sign — fresh or already carrying other signatures. */
@@ -31,49 +26,47 @@ export type MultiSignReturnType = SignableTransaction
 
 export type MultiSignErrorType =
   | SignTransactionErrorType
-  | PrivateKeyToAddressErrorType
-  // The bundled `getSignWeight` pre-check fails closed on a tampered echo.
-  | AssertUnchangedTransactionErrorType
+  | DecodeRawDataErrorType
   | BaseErrorType
   | ErrorType
 
 /**
- * Adds one party's signature to a multi-signature transaction under a permission
- * id and returns the co-signed transaction — a single call that mirrors
- * TronWeb's `multiSign` ergonomics (the node round-trip and the pre-checks are
- * bundled in, so a caller never has to pair it with a separate `getSignWeight`),
- * **without** TronWeb's flaw of signing the transaction the node hands back.
+ * Adds one party's signature to a multi-signature transaction under a
+ * permission id and returns the co-signed transaction. Signing is **fully
+ * local and deterministic** — no node is contacted, so co-signing works
+ * air-gapped and can never be influenced by a node (the flaw in TronWeb's
+ * `multiSign`, which adopts and signs the transaction the node hands back).
  *
- * What it signs is always the **local** transaction: {@link signTransaction}
- * writes `permissionId` into every contract, recomputes the txID locally from
- * `raw_data` (a node-supplied id is never trusted), skips the owner-address
- * guard so a non-owner co-signer can sign, and de-duplicates this key's
- * signature. The bytes it signs are the exact bytes it serialized itself, so the
- * node can never substitute what gets signed.
+ * The multi-sig guards live here (the underlying `signTransaction` writes a
+ * given `permissionId` unconditionally — the low-level escape hatch):
+ * - `permissionId` must be a non-negative integer, and the transaction must
+ *   carry a `raw_data` (or `raw_data_hex`) to bind it into;
+ * - a transaction already bound to a **different** permission id throws — a
+ *   re-bind would change the txID and orphan every collected signature; an
+ *   equal, already-baked id is idempotent;
+ * - binding a fresh positive id onto a transaction that already carries
+ *   signatures throws (they would go stale; id 0 encodes to nothing, so an
+ *   owner-permission co-sign of signed bytes stays allowed).
  *
- * When this is the first signature establishing a (positive) permission id, it
- * pre-validates against the on-chain permission via {@link getSignWeight}
- * (querying with the signatures present *before* this one, so `approvedList`
- * reflects who signed earlier):
- * - throws if the node reports `PERMISSION_ERROR`;
- * - throws if the signer's address is absent from the permission's keys;
- * - throws if the signer has already signed.
+ * Signing itself is delegated to {@link signTransaction}: the txID is always
+ * recomputed locally from `raw_data` (a node-supplied id is never trusted),
+ * the owner-address guard is skipped so a non-owner co-signer can sign, and
+ * this key's signature is de-duplicated (hex-case-insensitively).
  *
- * `getSignWeight` additionally fails closed (`TransactionTamperedError`) if the
- * node echoes bytes that differ from the local transaction. A transaction that
- * already carries the permission id (a later co-signer, or an offline flow) is
- * signed locally with **no** node contact, so co-signing can proceed offline.
+ * The canonical flow bakes the permission id at build time (`buildX(...,
+ * { permissionId })`), so every signer — first or later — signs offline with
+ * the id already in the bytes. Membership/progress checks (is the signer in
+ * the permission's keys, who has signed, is the threshold met) are the node's
+ * business at broadcast; to check early, call `getSignWeight` /
+ * `getApprovedList` explicitly.
  *
- * Because the permission id must be injected before the id is derived, this
- * takes a raw `privateKey`: a `TronAccount`'s bound signer intentionally does
- * not forward a `permissionId`.
- *
- * @param client The Client to use.
+ * @param _client The Client (unused — signing is local; kept for the action
+ * calling convention).
  * @param parameters Transaction, a signer's private key, the permission id.
  * @returns A new {@link SignableTransaction} with this signature appended.
  */
 export async function multiSign(
-  client: Client,
+  _client: Client,
   parameters: MultiSignParameters,
 ): Promise<MultiSignReturnType> {
   const { transaction, privateKey, permissionId } = parameters
@@ -83,56 +76,36 @@ export async function multiSign(
       `Invalid multi-sig permission id: ${permissionId}. Expected a non-negative integer (an active permission's id is >= 2).`,
     )
 
-  // Sign locally first: the returned bytes are the single source of truth for
-  // both the weight query and the value handed back. A node substitution can
-  // never reach this signature.
-  const signed = signTransaction({ transaction, privateKey, permissionId })
-
-  // Mirror TronWeb's gate: only round-trip the node to pre-validate membership
-  // when this signature is establishing a fresh, positive permission id. A
-  // transaction already carrying the permission id (a later co-signer / offline
-  // flow) is signed locally with no node contact.
   const rawData =
     transaction.raw_data ??
     (transaction.raw_data_hex
       ? decodeRawData(transaction.raw_data_hex)
       : undefined)
-  const alreadyEstablished = Boolean(rawData?.contract?.[0]?.permissionId)
-  if (permissionId <= 0 || alreadyEstablished) return signed
-
-  // Pre-validate against the on-chain permission. Query with the signatures that
-  // were present *before* this one so `approvedList` reflects prior signers; the
-  // action also asserts the node's echoed bytes match the local transaction.
-  const probe: SignableTransaction = {
-    ...signed,
-    signature: transaction.signature ? [...transaction.signature] : [],
-  }
-  const weight = await getAction(
-    client,
-    getSignWeight,
-    'getSignWeight',
-  )({ transaction: probe })
-
-  if (weight.result?.code === 'PERMISSION_ERROR')
+  if (!rawData)
     throw new BaseError(
-      weight.result.message ??
-        'The active permission rejected the transaction.',
+      'Cannot bind a permission id: the transaction carries no `raw_data` (or `raw_data_hex`) to write it into.',
     )
 
-  const signer = privateKeyToAddress(privateKey)
-  const keys = weight.permission?.keys
-  if (!keys)
-    throw new BaseError(
-      'getSignWeight returned no permission to validate the signer against.',
+  // A transaction already bound to a different id is never re-bound — that
+  // would change the txID and orphan every collected signature.
+  for (const contract of rawData.contract)
+    if (
+      contract.permissionId !== undefined &&
+      contract.permissionId !== permissionId
     )
-  if (!keys.some((key) => isAddressEqual(key.address, signer)))
+      throw new BaseError(
+        `Permission id mismatch: the transaction is bound to permission ${contract.permissionId}, but ${permissionId} was supplied.`,
+      )
+
+  // A fresh positive bind changes the serialized bytes (id 0 encodes to
+  // nothing), so signatures collected over the unbound bytes would go stale.
+  const binds =
+    permissionId > 0 &&
+    rawData.contract.some((contract) => contract.permissionId === undefined)
+  if (binds && transaction.signature?.length)
     throw new BaseError(
-      `Address ${signer} has no permission to sign this transaction.`,
-    )
-  if (weight.approvedList.some((address) => isAddressEqual(address, signer)))
-    throw new BaseError(
-      `Address ${signer} has already signed this transaction.`,
+      `Cannot bind permission id ${permissionId}: the transaction already carries ${transaction.signature.length} signature(s) over the unbound bytes; binding now would invalidate them.`,
     )
 
-  return signed
+  return signTransaction({ transaction, privateKey, permissionId })
 }
