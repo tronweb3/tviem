@@ -34,7 +34,6 @@ export {
 export { type ToAccountErrorType, toAccount } from './accounts/toAccount.js'
 export type {
   AccountSignMessageParameters,
-  AccountSignParameters,
   AccountSignTypedDataParameters,
   AccountSource,
   SignableTransaction,
@@ -988,9 +987,7 @@ export {
   type SerializeSignatureErrorType,
   type Signature,
   type SignErrorType,
-  type SignParameters,
   serializeSignature,
-  sign,
 } from './utils/signature/sign.js'
 export {
   type SignMessageErrorType,

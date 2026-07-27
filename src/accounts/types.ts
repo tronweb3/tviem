@@ -1,7 +1,7 @@
 // TRON-specific, clean-room implementation for @tronweb3/omni.
 import type { HDKey } from '@scure/bip32'
 import type { Address } from '../types/address.js'
-import type { ByteArray, Hex, SignableMessage } from '../types/misc.js'
+import type { Hex, SignableMessage } from '../types/misc.js'
 import type { HashTypedDataParameters } from '../utils/signature/hashTypedData.js'
 import type { Signature } from '../utils/signature/sign.js'
 import type { RawData } from '../utils/transaction/serializeRawData.js'
@@ -34,12 +34,6 @@ export type SignableTransaction = {
   signature?: string[] | undefined
 }
 
-/** Parameters for an account's low-level `sign`. */
-export type AccountSignParameters = {
-  /** The 32-byte digest to sign, as `0x`-prefixed hex or bytes. */
-  hash: Hex | ByteArray
-}
-
 /** Parameters for an account's `signMessage`. */
 export type AccountSignMessageParameters = {
   /** The message to sign — a UTF-8 string or `{ raw }`. */
@@ -56,14 +50,17 @@ export type AccountSignTypedDataParameters = HashTypedDataParameters
  * The signing surface shared by every account. Local (private-key) accounts
  * are implemented today; remote/delegated signers land in v0.1c. All methods
  * are synchronous for locally held keys.
+ *
+ * Deliberately, there is NO raw-digest `sign({ hash })`: signing an opaque
+ * 32-byte hash is blind signing — the signer cannot know what it authorizes.
+ * Every signature an account produces carries context: a transaction (five
+ * sign guards), a TIP-191-prefixed message, or a TIP-712 typed-data domain.
  */
 export type TronCustomSource = {
   /** The account's canonical Base58Check address. */
   address: Address
   /** The uncompressed secp256k1 public key (`0x04…`, 65 bytes). */
   publicKey: Hex
-  /** Signs a 32-byte digest, returning a TRON-wire {@link Signature}. */
-  sign: (parameters: AccountSignParameters) => Signature
   /** Signs a message per TIP-191. */
   signMessage: (parameters: AccountSignMessageParameters) => Signature
   /** Signs TIP-712 typed structured data. */

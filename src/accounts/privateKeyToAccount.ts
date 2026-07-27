@@ -8,11 +8,7 @@ import {
   type BytesToHexErrorType,
   bytesToHex,
 } from '../utils/encoding/toHex.js'
-import {
-  type Signature,
-  type SignErrorType,
-  sign,
-} from '../utils/signature/sign.js'
+import type { Signature } from '../utils/signature/sign.js'
 import {
   type SignMessageErrorType,
   signMessage,
@@ -34,7 +30,6 @@ import {
 export type PrivateKeyToAccountErrorType =
   | PrivateKeyToAddressErrorType
   | BytesToHexErrorType
-  | SignErrorType
   | SignMessageErrorType
   | SignTypedDataErrorType
   | SignTransactionErrorType
@@ -43,8 +38,10 @@ export type PrivateKeyToAccountErrorType =
 
 /**
  * Creates a local account from a secp256k1 private key. The returned account
- * derives its address and public key from the key, and signs digests,
- * messages (TIP-191) and transactions with it. Signing is synchronous.
+ * derives its address and public key from the key, and signs messages
+ * (TIP-191), typed data (TIP-712) and transactions with it. Signing is
+ * synchronous. There is deliberately no raw-digest `sign` — blind signing is
+ * not supported (see {@link TronCustomSource}).
  *
  * Accepts a `0x`-prefixed or bare hex key; the key is left-padded to 32 bytes
  * (TronWeb parity).
@@ -73,7 +70,6 @@ export function privateKeyToAccount(
     publicKey,
     source: 'privateKey',
     type: 'local',
-    sign: ({ hash }): Signature => sign({ hash, privateKey: keyHex }),
     signMessage: ({ message }): Signature =>
       signMessage({ message, privateKey: keyHex }),
     signTypedData: (parameters): Signature =>

@@ -1,9 +1,8 @@
 import { describe, expect, test } from 'vitest'
-
-import { loadTxFixtures } from '../fixtures/tx/loader.js'
+import { privateKeyToAccount } from '../../src/accounts/privateKeyToAccount.js'
 import { decodeRawData } from '../../src/utils/transaction/decodeRawData.js'
 import { getTransactionId } from '../../src/utils/transaction/getTransactionId.js'
-import { privateKeyToAccount } from '../../src/accounts/privateKeyToAccount.js'
+import { loadTxFixtures } from '../fixtures/tx/loader.js'
 
 // Only pk=1 is a permitted trivial private key.
 const pk1 = '0x0000000000000000000000000000000000000000000000000000000000000001'
@@ -38,12 +37,9 @@ describe('privateKeyToAccount', () => {
     expect(privateKeyToAccount(pk1.slice(2)).address).toBe(address)
   })
 
-  test('§2.3: sign({ hash: txID }) reproduces the canonical signature', () => {
+  test('exposes NO raw-digest sign (blind signing unsupported)', () => {
     const account = privateKeyToAccount(pk1)
-    const signature = account.sign({ hash: `0x${txID}` })
-    expect(signature.hex).toBe(txSignature)
-    expect(signature.v).toBe(28)
-    expect(signature.serialized.endsWith('001c')).toBe(true)
+    expect('sign' in account).toBe(false)
   })
 
   test('§2.2: signMessage reproduces the TronWeb-verified vector', () => {
@@ -64,18 +60,26 @@ describe('privateKeyToAccount', () => {
     expect(signed.signature).toEqual([txSignature])
   })
 
-  test('signTransaction signs a supplied txID and appends to existing signatures', () => {
+  test('signTransaction appends to existing signatures', () => {
     const account = privateKeyToAccount(pk1)
     const signed = account.signTransaction({
-      txID,
+      raw_data: canonicalRawData,
       signature: ['deadbeef'],
     })
     expect(signed.signature).toEqual(['deadbeef', txSignature])
   })
 
+  test('signTransaction refuses a bare txID (blind signing)', () => {
+    const account = privateKeyToAccount(pk1)
+    expect(() => account.signTransaction({ txID })).toThrow(/blind signing/)
+  })
+
   test('signTransaction does not mutate its input', () => {
     const account = privateKeyToAccount(pk1)
-    const transaction = { txID, signature: [] as string[] }
+    const transaction = {
+      raw_data: canonicalRawData,
+      signature: [] as string[],
+    }
     account.signTransaction(transaction)
     expect(transaction.signature).toEqual([])
   })

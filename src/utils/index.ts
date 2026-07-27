@@ -257,9 +257,7 @@ export {
   type SerializeSignatureErrorType,
   type Signature,
   type SignErrorType,
-  type SignParameters,
   serializeSignature,
-  sign,
 } from './signature/sign.js'
 export {
   type SignMessageErrorType,

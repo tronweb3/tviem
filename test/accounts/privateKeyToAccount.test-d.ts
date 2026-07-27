@@ -1,16 +1,14 @@
 import { expectTypeOf, test } from 'vitest'
-
-import type { Address } from '../../src/types/address.js'
-import type { ByteArray, Hex, SignableMessage } from '../../src/types/misc.js'
-import type { Signature } from '../../src/utils/signature/sign.js'
 import { privateKeyToAccount } from '../../src/accounts/privateKeyToAccount.js'
 import type {
   AccountSignMessageParameters,
-  AccountSignParameters,
   AccountSignTypedDataParameters,
   SignableTransaction,
   TronLocalAccount,
 } from '../../src/accounts/types.js'
+import type { Address } from '../../src/types/address.js'
+import type { Hex, SignableMessage } from '../../src/types/misc.js'
+import type { Signature } from '../../src/utils/signature/sign.js'
 
 // pk=1, in both accepted input forms.
 const pk0x =
@@ -42,17 +40,12 @@ test('privateKeyToAccount: address / publicKey field types', () => {
   expectTypeOf(account.type).toEqualTypeOf<'local'>()
 })
 
-test('privateKeyToAccount: sign method signature', () => {
+test('privateKeyToAccount: no raw-digest sign on the account surface', () => {
   const account = privateKeyToAccount(pk0x)
-
-  expectTypeOf(account.sign).toEqualTypeOf<
-    (parameters: AccountSignParameters) => Signature
-  >()
-  expectTypeOf(account.sign).parameter(0).toEqualTypeOf<AccountSignParameters>()
-  expectTypeOf(account.sign).returns.toEqualTypeOf<Signature>()
-
-  // the digest input is `Hex | ByteArray`
-  expectTypeOf<AccountSignParameters['hash']>().toEqualTypeOf<Hex | ByteArray>()
+  // Blind signing is unsupported: the account exposes no `sign({ hash })`.
+  expectTypeOf<keyof typeof account>().not.toEqualTypeOf<'sign'>()
+  // @ts-expect-error — `sign` does not exist on TronLocalAccount.
+  account.sign
 })
 
 test('privateKeyToAccount: signMessage method signature', () => {
@@ -99,7 +92,7 @@ test('privateKeyToAccount: signTransaction method signature', () => {
 })
 
 test('privateKeyToAccount: returned Signature shape (r/s/v/hex/serialized)', () => {
-  const sig = privateKeyToAccount(pk0x).sign({ hash: pk0x })
+  const sig = privateKeyToAccount(pk0x).signMessage({ message: 'gm' })
 
   expectTypeOf(sig).toEqualTypeOf<Signature>()
   expectTypeOf(sig.r).toEqualTypeOf<Hex>()

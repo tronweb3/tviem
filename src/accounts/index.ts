@@ -1,6 +1,11 @@
 // biome-ignore lint/performance/noBarrelFile: entrypoint module
 export { HDKey } from '@scure/bip32'
 export {
+  type ParseAccount,
+  type ParseAccountErrorType,
+  parseAccount,
+} from '../types/account.js'
+export {
   type GenerateMnemonicErrorType,
   generateMnemonic,
 } from './generateMnemonic.js'
@@ -23,14 +28,8 @@ export {
   privateKeyToAccount,
 } from './privateKeyToAccount.js'
 export { type ToAccountErrorType, toAccount } from './toAccount.js'
-export {
-  type ParseAccount,
-  type ParseAccountErrorType,
-  parseAccount,
-} from '../types/account.js'
 export type {
   AccountSignMessageParameters,
-  AccountSignParameters,
   AccountSignTypedDataParameters,
   AccountSource,
   SignableMessage,

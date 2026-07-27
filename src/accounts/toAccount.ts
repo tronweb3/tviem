@@ -23,7 +23,7 @@ export type ToAccountErrorType =
  * - Passing a `0x`-prefixed or bare hex **private key** delegates to
  *   {@link privateKeyToAccount}, yielding a {@link TronLocalAccount}.
  * - Passing a **custom source** (an object carrying an `address` plus its own
- *   `sign`/`signMessage`/`signTransaction` functions) completes it into a
+ *   `signMessage`/`signTypedData`/`signTransaction` functions) completes it into a
  *   {@link TronCustomAccount} by attaching the `source: 'custom'` /
  *   `type: 'local'` discriminants. This is the shape v0.1c delegated and
  *   remote signers plug into.
@@ -37,7 +37,7 @@ export type ToAccountErrorType =
  *
  * @example
  * // From a custom source:
- * toAccount({ address, publicKey, sign, signMessage, signTransaction })
+ * toAccount({ address, publicKey, signMessage, signTypedData, signTransaction })
  */
 export function toAccount(source: Hex | string): TronLocalAccount
 export function toAccount(source: TronCustomSource): TronCustomAccount

@@ -1,8 +1,4 @@
 import { expectTypeOf, test } from 'vitest'
-
-import type { Address } from '../../src/types/address.js'
-import type { Hex } from '../../src/types/misc.js'
-import type { Signature } from '../../src/utils/signature/sign.js'
 import { generatePrivateKey } from '../../src/accounts/generatePrivateKey.js'
 import { privateKeyToAccount } from '../../src/accounts/privateKeyToAccount.js'
 import { toAccount } from '../../src/accounts/toAccount.js'
@@ -13,6 +9,9 @@ import type {
   TronCustomSource,
   TronLocalAccount,
 } from '../../src/accounts/types.js'
+import type { Address } from '../../src/types/address.js'
+import type { Hex } from '../../src/types/misc.js'
+import type { Signature } from '../../src/utils/signature/sign.js'
 
 test('privateKeyToAccount returns a TronLocalAccount', () => {
   const account = privateKeyToAccount('0x01')
@@ -29,7 +28,6 @@ test('account fields are branded/narrowed', () => {
 
 test('signing methods are synchronous and return a TRON-wire Signature', () => {
   const account = privateKeyToAccount('0x01')
-  expectTypeOf(account.sign({ hash: '0x00' })).toEqualTypeOf<Signature>()
   expectTypeOf(
     account.signMessage({ message: 'gm' }),
   ).toEqualTypeOf<Signature>()

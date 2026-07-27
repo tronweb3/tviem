@@ -250,13 +250,13 @@ describe('signTransaction', () => {
     expect(transaction.signature).toEqual([])
   })
 
-  test('signs a supplied txID when no raw_data is present', () => {
-    const signed = signTransaction({
-      transaction: { txID: canonicalTxID },
-      privateKey: pk1,
-    })
-    expect(signed.signature).toEqual([canonicalSig])
-    expect(signed.raw_data).toBeUndefined()
+  test('refuses a bare txID with no raw_data (blind signing)', () => {
+    expect(() =>
+      signTransaction({
+        transaction: { txID: canonicalTxID },
+        privateKey: pk1,
+      }),
+    ).toThrow(/blind signing/)
   })
 
   test('decodes raw_data_hex when it is the only body supplied', () => {

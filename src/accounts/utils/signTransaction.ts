@@ -95,9 +95,10 @@ function ownerAddressOf(rawData: RawData): ContractAddressInput | undefined {
  *    collected signatures. This is the low-level escape hatch; co-signing
  *    should go through the `multiSign` action, which validates the id
  *    against the baked one (and the collected signatures) first.
- * 2. The transaction id is always recomputed locally from `raw_data` via
- *    {@link getTransactionId}; a node-supplied `txID` is never trusted when a
- *    `raw_data` (or `raw_data_hex`) is present.
+ * 2. The transaction must carry a `raw_data` (or `raw_data_hex`) — signing a
+ *    bare `txID` digest is blind signing and is refused. The id is always
+ *    recomputed locally via {@link getTransactionId}; a node-supplied `txID`
+ *    is never trusted.
  * 3. The first contract's `owner_address` must equal the signing account's
  *    address, otherwise it throws. This guard is skipped when `permissionId`
  *    is set (the signer need not be the owner in a multi-sig flow).
@@ -105,9 +106,6 @@ function ownerAddressOf(rawData: RawData): ContractAddressInput | undefined {
  *    re-serialize is self-consistent and matches the id).
  * 5. If this key's signature is already present it is not appended twice
  *    (compared hex-case-insensitively — the wire value is bytes).
- *
- * When only a `txID` (and no `raw_data`/`raw_data_hex`) is supplied, guards
- * 3 and 4 are not applicable and the supplied id is signed as-is.
  *
  * @param parameters Transaction, private key, optional address and permission.
  * @returns A new {@link SignableTransaction} with the recomputed `txID`, the
@@ -135,30 +133,28 @@ export function signTransaction(
       })),
     }
 
-  // Guard 2: always recompute the id locally; never trust a node-supplied one.
-  const txID = rawData ? getTransactionId(rawData) : transaction.txID
-  if (!txID)
+  // Guard 2: the transaction must carry its CONTENT — signing a bare txID
+  // digest would be blind signing (the signer cannot know what it
+  // authorizes), which this SDK does not support. The id is then always
+  // recomputed locally; a node-supplied txID is never trusted.
+  if (!rawData)
     throw new BaseError(
-      'Cannot sign transaction: neither `txID` nor `raw_data` was provided.',
+      'Cannot sign transaction: no `raw_data` (or `raw_data_hex`) was provided. Signing a bare `txID` digest is blind signing and is not supported.',
     )
+  const txID = getTransactionId(rawData)
 
-  let rawDataHex: string | undefined
-  if (rawData) {
-    // Guard 3: owner_address must match the signer (skipped for multi-sig).
-    if (permissionId === undefined) {
-      const owner = ownerAddressOf(rawData)
-      if (owner !== undefined && !isAddressEqual(toHex(owner), address))
-        throw new BaseError(
-          `The transaction's owner_address does not match the signing account (${address}).`,
-        )
-    }
-    // Guard 4: the serialized transaction must be self-consistent.
-    rawDataHex = toRawDataHex(rawData)
-    if (!txCheck(rawDataHex, txID))
+  // Guard 3: owner_address must match the signer (skipped for multi-sig).
+  if (permissionId === undefined) {
+    const owner = ownerAddressOf(rawData)
+    if (owner !== undefined && !isAddressEqual(toHex(owner), address))
       throw new BaseError(
-        'The transaction failed its integrity check (txCheck).',
+        `The transaction's owner_address does not match the signing account (${address}).`,
       )
   }
+  // Guard 4: the serialized transaction must be self-consistent.
+  const rawDataHex = toRawDataHex(rawData)
+  if (!txCheck(rawDataHex, txID))
+    throw new BaseError('The transaction failed its integrity check (txCheck).')
 
   // Guard 5: sign and append, de-duplicating this key's signature. The wire
   // value is bytes, so the compare ignores hex case — TronWeb renders the
@@ -171,18 +167,16 @@ export function signTransaction(
     : [...existing, sig]
 
   const result: SignableTransaction = { ...transaction, txID, signature }
-  if (rawData) {
-    // The result speaks the node dialect — the returned JSON is what the
-    // chain/TronWeb/explorers exchange, so a signed transaction can be
-    // handed to any tool (or the node's own JSON endpoints) as-is. A
-    // contract type with no registered codec cannot be rendered; it keeps
-    // the SDK model (broadcasting still works — it uses raw_data_hex).
-    try {
-      result.raw_data = toNodeRawData(rawData)
-    } catch {
-      result.raw_data = rawData
-    }
-    result.raw_data_hex = rawDataHex
+  // The result speaks the node dialect — the returned JSON is what the
+  // chain/TronWeb/explorers exchange, so a signed transaction can be
+  // handed to any tool (or the node's own JSON endpoints) as-is. A
+  // contract type with no registered codec cannot be rendered; it keeps
+  // the SDK model (broadcasting still works — it uses raw_data_hex).
+  try {
+    result.raw_data = toNodeRawData(rawData)
+  } catch {
+    result.raw_data = rawData
   }
+  result.raw_data_hex = rawDataHex
   return result
 }

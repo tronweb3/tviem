@@ -1,12 +1,11 @@
 import type { HDKey } from '@scure/bip32'
 import { expectTypeOf, test } from 'vitest'
-
-import type { Address } from '../../src/types/address.js'
-import type { Hex } from '../../src/types/misc.js'
-import type { Signature } from '../../src/utils/signature/sign.js'
 import { hdKeyToAccount } from '../../src/accounts/hdKeyToAccount.js'
 import { mnemonicToAccount } from '../../src/accounts/mnemonicToAccount.js'
 import type { TronAccount, TronHDAccount } from '../../src/accounts/types.js'
+import type { Address } from '../../src/types/address.js'
+import type { Hex } from '../../src/types/misc.js'
+import type { Signature } from '../../src/utils/signature/sign.js'
 
 const mnemonic =
   'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about'
@@ -31,7 +30,6 @@ test('HD account fields are branded/narrowed', () => {
 
 test('HD account exposes the full signing surface', () => {
   const account = mnemonicToAccount(mnemonic)
-  expectTypeOf(account.sign({ hash: '0x00' })).toEqualTypeOf<Signature>()
   expectTypeOf(
     account.signMessage({ message: 'gm' }),
   ).toEqualTypeOf<Signature>()
