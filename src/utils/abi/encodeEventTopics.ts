@@ -5,6 +5,10 @@ import {
   AbiEventNotFoundError,
   type AbiEventNotFoundErrorType,
 } from '../../errors/abi.js'
+import {
+  FilterTypeNotSupportedError,
+  type FilterTypeNotSupportedErrorType,
+} from '../../errors/log.js'
 import type { ErrorType } from '../../errors/utils.js'
 import type { Hex, LogTopic } from '../../types/misc.js'
 import { type StringToHexErrorType, stringToHex } from '../encoding/toHex.js'
@@ -37,6 +41,7 @@ export type EncodeEventTopicsReturnType = LogTopic[]
 export type EncodeEventTopicsErrorType =
   | AbiEventNotFoundErrorType
   | EncodeAbiParametersErrorType
+  | FilterTypeNotSupportedErrorType
   | Keccak256ErrorType
   | StringToHexErrorType
   | ToEventSelectorErrorType
@@ -47,9 +52,17 @@ export type EncodeEventTopicsErrorType =
  * model: the first topic is the event selector (`keccak256` of the event
  * signature) unless the event is `anonymous`, followed by one topic per
  * indexed parameter. Indexed static values are ABI-encoded into a 32-byte
- * word; indexed dynamic values (`string`, `bytes`, arrays, tuples) are hashed
- * with `keccak256` (the raw bytes for `string`/`bytes`), since only their hash
- * is recoverable from a log.
+ * word; indexed `string`/`bytes` values are hashed with `keccak256` of their
+ * raw bytes, since only their hash is recoverable from a log.
+ *
+ * An ARRAY of values for one indexed parameter is an OR-list of alternatives
+ * (viem's `LogTopic` semantics): each entry becomes its own topic candidate,
+ * e.g. `args: { from: [a, b] }` filters logs from either address.
+ *
+ * Indexed array/tuple parameters are NOT supported for filtering and throw
+ * {@link FilterTypeNotSupportedError} (viem parity): Solidity hashes them
+ * over a non-standard in-place encoding, so a filter topic cannot be derived
+ * from the standard ABI encoding.
  *
  * TRON behavior: indexed `address` topics encode the 20-byte EVM body,
  * left-padded to 32 bytes.
@@ -83,8 +96,16 @@ export function encodeEventTopics(
         argTopics.push(null)
         continue
       }
+      // Array/tuple params first: they cannot be filtered on at all, so an
+      // array value must never be misread as an OR-list of them.
+      if (
+        param.type === 'tuple' ||
+        getArrayComponents(param.type) !== undefined
+      )
+        throw new FilterTypeNotSupportedError(param.type)
+      // An array VALUE is an OR-list of alternatives for this topic.
       argTopics.push(
-        Array.isArray(value) && isHashedType(param.type)
+        Array.isArray(value)
           ? value.map((v) => encodeArg(param, v))
           : encodeArg(param, value),
       )
@@ -100,16 +121,6 @@ export function encodeEventTopics(
 
 /////////////////////////////////////////////////////////////////////////////
 // Internal
-
-/** Whether an indexed value of this type is stored as its `keccak256` hash. */
-function isHashedType(type: string): boolean {
-  return (
-    type === 'string' ||
-    type === 'bytes' ||
-    type === 'tuple' ||
-    getArrayComponents(type) !== undefined
-  )
-}
 
 function selectEvent(
   abi: Abi | readonly unknown[],
@@ -131,8 +142,5 @@ function selectEvent(
 function encodeArg(param: AbiParameter, value: unknown): Hex {
   if (param.type === 'string') return keccak256(stringToHex(value as string))
   if (param.type === 'bytes') return keccak256(value as Hex)
-  if (isHashedType(param.type))
-    // Indexed arrays / tuples are hashed over their ABI encoding.
-    return keccak256(encodeAbiParameters([param], [value] as never))
   return encodeAbiParameters([param], [value] as never)
 }

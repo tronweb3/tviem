@@ -69,7 +69,7 @@ export type EncodeErrorResultErrorType =
  *   errorName: 'InsufficientBalance',
  *   args: [1n],
  * })
- * // '0xf4d678b8000000000000000000000000000000000000000000000000000000000000000001'
+ * // '0x926653510000000000000000000000000000000000000000000000000000000000000001'
  */
 export function encodeErrorResult<
   const abi extends Abi | readonly unknown[],

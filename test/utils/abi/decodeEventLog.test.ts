@@ -1,13 +1,15 @@
 import type { Abi } from 'abitype'
 import { describe, expect, test } from 'vitest'
-
+import {
+  AbiEventSignatureNotFoundError,
+  DecodeLogDataMismatch,
+} from '../../../src/errors/abi.js'
+import { decodeEventLog } from '../../../src/utils/abi/decodeEventLog.js'
 import {
   type FixtureParameter,
   loadEventFixtures,
   reviveValue,
 } from '../../fixtures/abi/loader.js'
-import { DecodeLogDataMismatch } from '../../../src/errors/abi.js'
-import { decodeEventLog } from '../../../src/utils/abi/decodeEventLog.js'
 
 const fixtures = loadEventFixtures()
 
@@ -98,5 +100,62 @@ describe('decodeEventLog (units)', () => {
         eventName: 'Transfer',
       }),
     ).toThrow()
+  })
+})
+
+describe('eventName is validated against topic0 (the log identity)', () => {
+  const bothAbi = [
+    {
+      type: 'event',
+      name: 'Transfer',
+      inputs: [
+        { name: 'from', type: 'address', indexed: true },
+        { name: 'to', type: 'address', indexed: true },
+        { name: 'value', type: 'uint256', indexed: false },
+      ],
+    },
+    {
+      type: 'event',
+      name: 'Approval',
+      inputs: [
+        { name: 'owner', type: 'address', indexed: true },
+        { name: 'spender', type: 'address', indexed: true },
+        { name: 'value', type: 'uint256', indexed: false },
+      ],
+    },
+  ]
+  const A1_TOPIC =
+    '0x0000000000000000000000007e5f4552091a69125d5dfcb7b8c2659029395bdf'
+  const A2_TOPIC =
+    '0x0000000000000000000000002b5ad5c4795c026514f8317c7a215e218dccd6cf'
+  const TRANSFER_SELECTOR =
+    '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef'
+  const APPROVAL_SELECTOR =
+    '0x8c5be1e5ebec7d5bd14f71427d1e84f3dd0314c0f7b2291e5b200ac8c7c3b925'
+  const data =
+    '0x000000000000000000000000000000000000000000000000000000000000007b'
+
+  test('a log of a DIFFERENT event never decodes under the given name', () => {
+    // topic0 is an Approval selector; naming it 'Transfer' must throw, not
+    // silently relabel the log.
+    expect(() =>
+      decodeEventLog({
+        abi: bothAbi as unknown as Abi,
+        eventName: 'Transfer',
+        topics: [APPROVAL_SELECTOR, A1_TOPIC, A2_TOPIC],
+        data,
+      }),
+    ).toThrow(AbiEventSignatureNotFoundError)
+  })
+
+  test('the matching selector decodes under its name', () => {
+    const decoded = decodeEventLog({
+      abi: bothAbi as unknown as Abi,
+      eventName: 'Transfer',
+      topics: [TRANSFER_SELECTOR, A1_TOPIC, A2_TOPIC],
+      data,
+    })
+    expect(decoded.eventName).toBe('Transfer')
+    expect((decoded.args as { value: bigint }).value).toBe(123n)
   })
 })

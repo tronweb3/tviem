@@ -2,7 +2,13 @@ import type { Abi } from 'abitype'
 import { expect, test } from 'vitest'
 
 import { AbiItemAmbiguityError } from '../../../src/errors/abi.js'
-import { getAbiItem, getAmbiguousTypes, isArgOfType } from '../../../src/utils/abi/getAbiItem.js'
+import { decodeFunctionResult } from '../../../src/utils/abi/decodeFunctionResult.js'
+import {
+  getAbiItem,
+  getAmbiguousTypes,
+  isArgOfType,
+} from '../../../src/utils/abi/getAbiItem.js'
+import { prepareEncodeFunctionData } from '../../../src/utils/abi/prepareEncodeFunctionData.js'
 
 const abi = [
   {
@@ -185,4 +191,65 @@ test('getAmbiguousTypes reports address/string only for address args', () => {
     getAmbiguousTypes(source, target, ['TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC']),
   ).toEqual(['address', 'string'])
   expect(getAmbiguousTypes(source, target, ['just a string'])).toBeUndefined()
+})
+
+// A primitive string must never "match" a tuple parameter: without the
+// argType === 'object' guard, Object.values('ab') is ['a','b'] and each
+// one-char string satisfies string components — stealing the overload from
+// foo(string) and corrupting every downstream selector/decode.
+const stringVsTupleAbi = [
+  {
+    type: 'function',
+    name: 'foo',
+    inputs: [{ name: 's', type: 'string' }],
+    outputs: [{ name: '', type: 'uint256' }],
+  },
+  {
+    type: 'function',
+    name: 'foo',
+    inputs: [
+      {
+        name: 't',
+        type: 'tuple',
+        components: [
+          { name: 'a', type: 'string' },
+          { name: 'b', type: 'string' },
+        ],
+      },
+    ],
+    outputs: [{ name: '', type: 'int256' }],
+  },
+]
+
+test('a primitive string resolves the string overload, not the tuple', () => {
+  const item = getAbiItem({
+    abi: stringVsTupleAbi as unknown as Abi,
+    name: 'foo',
+    args: ['ab'],
+  }) as unknown as { inputs: { type: string }[] }
+  expect(item.inputs[0]!.type).toBe('string')
+
+  expect(isArgOfType('ab', stringVsTupleAbi[1]!.inputs[0] as never)).toBe(false)
+})
+
+test('overload resolution flows through to the selector and result decode', () => {
+  const prepared = prepareEncodeFunctionData({
+    abi: stringVsTupleAbi as unknown as Abi,
+    functionName: 'foo',
+    args: ['ab'],
+  } as never) as { functionName: string }
+  // foo(string), not foo((string,string)) (0xdd0b43b6).
+  expect(prepared.functionName).toBe('0xf31a6969')
+
+  // uint256 outputs (string overload): the value stays a huge POSITIVE
+  // number — the tuple overload's int256 would reinterpret it as negative.
+  const data =
+    '0x8000000000000000000000000000000000000000000000000000000000000005'
+  const value = decodeFunctionResult({
+    abi: stringVsTupleAbi as unknown as Abi,
+    functionName: 'foo',
+    args: ['ab'],
+    data,
+  } as never)
+  expect(value).toBe(BigInt(data))
 })

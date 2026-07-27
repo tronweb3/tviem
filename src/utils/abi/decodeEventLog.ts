@@ -161,9 +161,24 @@ function selectEvent(
   )
 
   if (eventName) {
-    const abiItem = events.find((event) => event.name === eventName)
-    if (!abiItem) throw new AbiEventNotFoundError(eventName, { docsPath })
-    return abiItem
+    const named = events.filter((event) => event.name === eventName)
+    if (named.length === 0)
+      throw new AbiEventNotFoundError(eventName, { docsPath })
+    // A non-anonymous log's topic0 IS the event's identity — validate it (and
+    // disambiguate overloads) instead of trusting the name label, so a log of
+    // a different event can never silently mis-decode under this name.
+    if (topic0) {
+      const matched = named.find(
+        (event) =>
+          !event.anonymous && toEventSelector(formatAbiItem(event)) === topic0,
+      )
+      if (matched) return matched
+      // All-anonymous candidates: topic0 is the first indexed arg, not a
+      // selector — the name match is all there is to go on.
+      if (named.every((event) => event.anonymous)) return named[0]!
+      throw new AbiEventSignatureNotFoundError(topic0, { docsPath })
+    }
+    return named[0]!
   }
 
   if (!topic0) throw new AbiEventSignatureEmptyTopicsError({ docsPath })

@@ -159,6 +159,10 @@ export function isArgOfType(arg: unknown, abiParameter: AbiParameter): boolean {
       )
         return Object.values(abiParameter.components).every(
           (component, index) =>
+            // Only objects/arrays can be tuple values — without this guard a
+            // primitive string would "match" (Object.values('ab') is
+            // ['a','b']) and steal the overload from foo(string).
+            argType === 'object' &&
             isArgOfType(
               Object.values(arg as Record<string, unknown>)[index],
               component as AbiParameter,
