@@ -9,9 +9,9 @@ import { BaseError, type BaseErrorType } from '../../errors/base.js'
 import type { ErrorType } from '../../errors/utils.js'
 import type { Hex } from '../../types/misc.js'
 import {
-  type DecodeRawDataErrorType,
-  decodeRawData,
-} from '../../utils/transaction/decodeRawData.js'
+  type ResolveRawDataErrorType,
+  resolveRawData,
+} from '../../utils/transaction/nodeRawData.js'
 
 export type MultiSignParameters = {
   /** The transaction to co-sign — fresh or already carrying other signatures. */
@@ -26,7 +26,7 @@ export type MultiSignReturnType = SignableTransaction
 
 export type MultiSignErrorType =
   | SignTransactionErrorType
-  | DecodeRawDataErrorType
+  | ResolveRawDataErrorType
   | BaseErrorType
   | ErrorType
 
@@ -76,11 +76,9 @@ export async function multiSign(
       `Invalid multi-sig permission id: ${permissionId}. Expected a non-negative integer (an active permission's id is >= 2).`,
     )
 
-  const rawData =
-    transaction.raw_data ??
-    (transaction.raw_data_hex
-      ? decodeRawData(transaction.raw_data_hex)
-      : undefined)
+  // Resolves either dialect (SDK model or node JSON) to the model; a node
+  // JSON is verified against its raw_data_hex bytes.
+  const rawData = resolveRawData(transaction)
   if (!rawData)
     throw new BaseError(
       'Cannot bind a permission id: the transaction carries no `raw_data` (or `raw_data_hex`) to write it into.',

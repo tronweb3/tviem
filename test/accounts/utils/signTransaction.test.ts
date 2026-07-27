@@ -143,6 +143,74 @@ describe('signTransaction', () => {
     expect(again.signature).toEqual(first.signature)
   })
 
+  test('accepts a chain-built node-JSON transaction verbatim', () => {
+    // The exact shape wallet/createtransaction (and TronWeb) hand over:
+    // snake_case raw_data + raw_data_hex. Signing it must equal the
+    // internal-model path bit for bit.
+    const fixture = txFixtures.find((f) => f.txID === canonicalTxID)!
+    const signed = signTransaction({
+      transaction: {
+        visible: false,
+        txID: fixture.txID,
+        raw_data: fixture.rawData,
+        raw_data_hex: fixture.rawDataHex,
+      } as never,
+      privateKey: pk1,
+    })
+    expect(signed.txID).toBe(canonicalTxID)
+    expect(signed.signature).toEqual([canonicalSig])
+    expect(signed.raw_data_hex).toBe(fixture.rawDataHex)
+    // The signed result stays in the node dialect.
+    const contract = (
+      signed.raw_data as { contract: Record<string, unknown>[] }
+    ).contract[0]!
+    expect(contract.type).toBe('TransferContract')
+    expect((contract.parameter as { type_url: string }).type_url).toBe(
+      'type.googleapis.com/protocol.TransferContract',
+    )
+  })
+
+  test('node-JSON raw_data without raw_data_hex is refused', () => {
+    const fixture = txFixtures.find((f) => f.txID === canonicalTxID)!
+    expect(() =>
+      signTransaction({
+        transaction: { raw_data: fixture.rawData } as never,
+        privateKey: pk1,
+      }),
+    ).toThrow(/raw_data_hex/)
+  })
+
+  test('node-JSON raw_data that misdescribes the bytes is refused', () => {
+    // The human-readable JSON says amount=1, the bytes say otherwise — the
+    // bytes are what gets signed, so this must throw, never sign.
+    const fixture = txFixtures.find((f) => f.txID === canonicalTxID)!
+    const tampered = structuredClone(fixture.rawData) as {
+      contract: { parameter: { value: { amount: number } } }[]
+    }
+    tampered.contract[0]!.parameter.value.amount = 1
+    expect(() =>
+      signTransaction({
+        transaction: {
+          raw_data: tampered,
+          raw_data_hex: fixture.rawDataHex,
+        } as never,
+        privateKey: pk1,
+      }),
+    ).toThrow(/does not describe/)
+  })
+
+  test('signed output raw_data is node dialect even for model input', () => {
+    const signed = signTransaction({
+      transaction: { raw_data: canonicalRawData },
+      privateKey: pk1,
+    })
+    const rawData = signed.raw_data as Record<string, unknown>
+    expect(rawData.ref_block_bytes).toBeDefined()
+    expect(
+      (rawData as { contract: { type: string }[] }).contract[0]!.type,
+    ).toBe('TransferContract')
+  })
+
   test('de-duplicates a repeated signature by the same key (guard ⑤)', () => {
     const once = signTransaction({
       transaction: { raw_data: canonicalRawData },

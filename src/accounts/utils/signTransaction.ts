@@ -10,18 +10,19 @@ import {
 import { type ToHexErrorType, toHex } from '../../utils/address/toHex.js'
 import { type SignErrorType, sign } from '../../utils/signature/sign.js'
 import {
-  type DecodeRawDataErrorType,
-  decodeRawData,
-} from '../../utils/transaction/decodeRawData.js'
-import {
   type GetTransactionIdErrorType,
   getTransactionId,
 } from '../../utils/transaction/getTransactionId.js'
+import {
+  type ResolveRawDataErrorType,
+  resolveRawData,
+} from '../../utils/transaction/nodeRawData.js'
 import {
   type RawData,
   type ToRawDataHexErrorType,
   toRawDataHex,
 } from '../../utils/transaction/serializeRawData.js'
+import { toNodeRawData } from '../../utils/transaction/toNodeRawData.js'
 import {
   type TxCheckErrorType,
   txCheck,
@@ -55,7 +56,7 @@ export type SignTransactionParameters = {
 
 export type SignTransactionErrorType =
   | PrivateKeyToAddressErrorType
-  | DecodeRawDataErrorType
+  | ResolveRawDataErrorType
   | GetTransactionIdErrorType
   | ToRawDataHexErrorType
   | TxCheckErrorType
@@ -78,6 +79,13 @@ function ownerAddressOf(rawData: RawData): ContractAddressInput | undefined {
  * Signs a transaction locally with a secp256k1 private key and appends the
  * signature to its `signature` list — the input is never mutated. Signing is
  * synchronous and deterministic (RFC 6979, low-`s`, no extra entropy).
+ *
+ * `raw_data` is accepted in EITHER dialect: the SDK model, or java-tron's
+ * node JSON exactly as `wallet/createtransaction` / TronWeb hand it over
+ * (which must then carry `raw_data_hex` — the bytes are the source of truth
+ * and the JSON is verified to describe them). The signed result's `raw_data`
+ * is always the node JSON, so it can be passed to any TRON tool or JSON
+ * endpoint as-is.
  *
  * Guards, in order:
  * 1. When `permissionId` is given it is written into every contract of
@@ -111,12 +119,11 @@ export function signTransaction(
   const { transaction, privateKey, permissionId } = parameters
   const address = parameters.address ?? privateKeyToAddress(privateKey)
 
-  // Resolve the raw_data model (decode raw_data_hex when it's all we have).
-  let rawData =
-    transaction.raw_data ??
-    (transaction.raw_data_hex
-      ? decodeRawData(transaction.raw_data_hex)
-      : undefined)
+  // Resolve raw_data from either dialect: the SDK model is used as-is; a
+  // node-JSON raw_data (a chain-/TronWeb-built transaction passed verbatim)
+  // is resolved from its raw_data_hex BYTES and the JSON is verified to
+  // describe those exact bytes; a bare raw_data_hex is decoded.
+  let rawData = resolveRawData(transaction)
 
   // Guard 1: write the permission id into the transaction before the id.
   if (rawData && permissionId !== undefined)
@@ -165,7 +172,16 @@ export function signTransaction(
 
   const result: SignableTransaction = { ...transaction, txID, signature }
   if (rawData) {
-    result.raw_data = rawData
+    // The result speaks the node dialect — the returned JSON is what the
+    // chain/TronWeb/explorers exchange, so a signed transaction can be
+    // handed to any tool (or the node's own JSON endpoints) as-is. A
+    // contract type with no registered codec cannot be rendered; it keeps
+    // the SDK model (broadcasting still works — it uses raw_data_hex).
+    try {
+      result.raw_data = toNodeRawData(rawData)
+    } catch {
+      result.raw_data = rawData
+    }
     result.raw_data_hex = rawDataHex
   }
   return result

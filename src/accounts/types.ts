@@ -5,6 +5,7 @@ import type { ByteArray, Hex, SignableMessage } from '../types/misc.js'
 import type { HashTypedDataParameters } from '../utils/signature/hashTypedData.js'
 import type { Signature } from '../utils/signature/sign.js'
 import type { RawData } from '../utils/transaction/serializeRawData.js'
+import type { NodeRawData } from '../utils/transaction/toNodeRawData.js'
 
 export type { SignableMessage } from '../types/misc.js'
 
@@ -20,8 +21,13 @@ export type SignableTransaction = {
    * when omitted.
    */
   txID?: string | undefined
-  /** The `Transaction.raw_data` model. */
-  raw_data?: RawData | undefined
+  /**
+   * The `Transaction.raw_data` — the SDK model, or java-tron's node JSON as
+   * returned by the chain/TronWeb (which must be accompanied by
+   * `raw_data_hex`, the authoritative bytes). Signed results carry the node
+   * JSON form.
+   */
+  raw_data?: RawData | NodeRawData | undefined
   /** Serialized `raw_data` bytes (bare hex), passed through untouched. */
   raw_data_hex?: string | undefined
   /** Accumulated signatures (TRON wire form, bare lowercase hex). */

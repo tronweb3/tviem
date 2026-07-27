@@ -1,6 +1,7 @@
 // TRON-specific, clean-room implementation for @tronweb3/omni.
 import { BaseError, type BaseErrorType } from '../../errors/base.js'
 import type { ErrorType } from '../../errors/utils.js'
+import { isNodeRawData } from './nodeRawData.js'
 import type { RawData } from './serializeRawData.js'
 import {
   type NodeRawData,
@@ -29,7 +30,7 @@ export type NodeTransaction = {
 /** The transaction shape {@link toNodeTransaction} accepts. */
 export type ToNodeTransactionInput = {
   txID?: string | undefined
-  raw_data?: RawData | undefined
+  raw_data?: RawData | NodeRawData | undefined
   raw_data_hex?: string | undefined
   signature?: string[] | undefined
 }
@@ -60,7 +61,8 @@ export function toNodeTransaction(
 
   const result: NodeTransaction = {
     visible: false,
-    raw_data: toNodeRawData(raw_data),
+    // An already node-shaped raw_data passes through untouched.
+    raw_data: isNodeRawData(raw_data) ? raw_data : toNodeRawData(raw_data),
   }
   if (txID !== undefined) result.txID = txID
   if (raw_data_hex !== undefined) result.raw_data_hex = raw_data_hex

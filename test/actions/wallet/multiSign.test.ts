@@ -39,7 +39,11 @@ test('first sign is fully local — no node contact', async () => {
   expect(signed.signature).toHaveLength(1)
   expect(signed.txID).toBe(local.txID)
   expect(signed.raw_data_hex).toBe(local.raw_data_hex)
-  expect(signed.raw_data?.contract[0]?.permissionId).toBe(2)
+  // The signed result speaks the node dialect (snake_case, Permission_id).
+  const contract = (signed.raw_data as { contract: Record<string, unknown>[] })
+    .contract[0]!
+  expect(contract.Permission_id).toBe(2)
+  expect(contract.type).toBe('TransferContract')
   expect(calls).toHaveLength(0)
 })
 
