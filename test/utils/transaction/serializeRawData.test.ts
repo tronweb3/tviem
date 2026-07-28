@@ -1,9 +1,12 @@
 import { expect, test } from 'vitest'
-
-import { loadTxFixtures } from '../../fixtures/tx/loader.js'
 import { decodeRawData } from '../../../src/utils/transaction/decodeRawData.js'
+import { getTransactionId } from '../../../src/utils/transaction/getTransactionId.js'
 import { ContractType } from '../../../src/utils/transaction/registry.js'
-import { type RawData, toRawDataHex } from '../../../src/utils/transaction/serializeRawData.js'
+import {
+  type RawData,
+  toRawDataHex,
+} from '../../../src/utils/transaction/serializeRawData.js'
+import { loadTxFixtures } from '../../fixtures/tx/loader.js'
 
 // §2.3 canonical reference vector.
 const owner = '417e5f4552091a69125d5dfcb7b8c2659029395bdf' as const
@@ -92,4 +95,36 @@ test('serializeRawData omits zero fee_limit / timestamp (proto3 defaults)', () =
   // No trailing f14 (0x70) timestamp; raw ends at the contract's amount field.
   expect(hex.includes('7080d095')).toBe(false)
   expect(hex.endsWith('18c0843d')).toBe(true)
+})
+
+// K4 regression guard: a large contract bytecode must flow through the
+// length-accumulation concat + streaming hash (never a `push(...spread)` /
+// `String.fromCharCode(...)`), so txID stays computable for real deployments
+// (java-tron's tx-size cap is ~500KB — 1MB is a comfortable margin). A future
+// spread-based "simplification" of concatBytes/bytesToHex would overflow here.
+test('serializes a 1MB contract bytecode to a txID without a stack overflow (K4)', () => {
+  const bytecode = new Uint8Array(1024 * 1024).fill(0xab)
+  const rawData: RawData = {
+    refBlockBytes: '1234',
+    refBlockHash: '0102030405060708',
+    expiration: 1700000060000n,
+    contract: [
+      {
+        type: ContractType.CreateSmartContract,
+        parameter: {
+          typeUrl: 'type.googleapis.com/protocol.CreateSmartContract',
+          value: {
+            ownerAddress: owner,
+            newContract: { originAddress: owner, bytecode },
+          },
+        },
+      },
+    ],
+    timestamp: 1700000000000n,
+  }
+  let txId = ''
+  expect(() => {
+    txId = getTransactionId(rawData)
+  }).not.toThrow()
+  expect(txId).toMatch(/^[0-9a-f]{64}$/)
 })
