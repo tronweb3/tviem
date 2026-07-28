@@ -62,12 +62,21 @@ export async function broadcastTransaction(
 
   let response: unknown
   try {
-    response = await client.request({
-      node: 'full',
-      method: 'POST',
-      path: 'broadcasthex',
-      body,
-    })
+    // Broadcast exactly once — no transport retry. Re-sending a signed
+    // transaction cannot help: the node dedupes it by `txID`, so a retry after
+    // a lost response only comes back as a spurious "already exists" rejection
+    // (a success reported as a failure). Confirming inclusion is the caller's
+    // job (`waitForTransactionReceipt` / `getTransactionInfo`). This matches
+    // TronWeb's single-shot broadcast.
+    response = await client.request(
+      {
+        node: 'full',
+        method: 'POST',
+        path: 'broadcasthex',
+        body,
+      },
+      { retryCount: 0 },
+    )
   } catch (error) {
     // Map an expiration rejection to a dedicated, actionable error.
     if (

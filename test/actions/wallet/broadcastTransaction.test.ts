@@ -97,3 +97,27 @@ test('throws TronRpcError on a `{ result: false }` rejection without a code', as
     broadcastTransaction(client, { signedTransaction }),
   ).rejects.toBeInstanceOf(TronRpcError)
 })
+
+// A broadcast is sent exactly once, even under a retrying transport: re-sending
+// a signed tx cannot help (the node dedupes by txID). A raw throw is a
+// retryable transport error (→ UnknownNodeError), so a default client would
+// attempt it 4×; broadcastTransaction pins retryCount:0 → a single attempt.
+test('never retries the broadcast, even when the transport retries', async () => {
+  let attempts = 0
+  const { transport } = createMockTransport({
+    retryCount: 3,
+    responses: {
+      broadcasthex: {
+        fn: () => {
+          attempts += 1
+          throw new Error('network boom')
+        },
+      },
+    },
+  })
+  const client = createClient({ transport })
+  await expect(
+    broadcastTransaction(client, { signedTransaction }),
+  ).rejects.toThrow()
+  expect(attempts).toBe(1)
+})

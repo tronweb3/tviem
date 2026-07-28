@@ -1,11 +1,10 @@
 import { afterEach, describe, expect, test, vi } from 'vitest'
-
+import { waitForTransactionReceipt } from '../../../src/actions/public/waitForTransactionReceipt.js'
 import type { Client } from '../../../src/clients/createClient.js'
 import {
   TronRpcError,
   WaitForTransactionReceiptTimeoutError,
 } from '../../../src/errors/rpc.js'
-import { waitForTransactionReceipt } from '../../../src/actions/public/waitForTransactionReceipt.js'
 
 /** A minimal Client whose actions are provided via `overrides` (getAction). */
 function makeClient(overrides: Record<string, unknown>): Client {
@@ -107,8 +106,10 @@ describe('waitForTransactionReceipt', () => {
     })
     await vi.advanceTimersByTimeAsync(2000)
 
+    // The mining block (100) is confirmation 1, so confirmations:2 resolves at
+    // head 101 — one block on top — polling getNowBlock twice (100, 101).
     expect(await promise).toBe(receipt)
-    expect(blocks.count()).toBe(3)
+    expect(blocks.count()).toBe(2)
   })
 
   test('does not throw on a reverted receipt by default', async () => {

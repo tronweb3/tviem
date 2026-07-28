@@ -1,8 +1,8 @@
 import { expect, test } from 'vitest'
-import { createMockTransport } from '../../mock/createMockTransport.js'
+import { getEventsByTransactionID } from '../../../src/actions/public/getEventsByTransactionID.js'
 import { createPublicClient } from '../../../src/clients/createPublicClient.js'
 import { BaseError } from '../../../src/errors/base.js'
-import { getEventsByTransactionID } from '../../../src/actions/public/getEventsByTransactionID.js'
+import { createMockTransport } from '../../mock/createMockTransport.js'
 
 const txID = '19f67725574e5de75f75070de21ca3a618eae7606f52d07c582e490834af682d'
 
@@ -43,4 +43,28 @@ test('strips a 0x prefix and rejects a malformed id', async () => {
   await expect(
     getEventsByTransactionID(client, { txID: 'not-a-txid' }),
   ).rejects.toBeInstanceOf(BaseError)
+})
+
+// F-9E1: expose limit + the fingerprint cursor and return meta, instead of
+// silently dropping later pages of a multi-event transaction.
+test('forwards limit + fingerprint and returns the pagination meta', async () => {
+  const { transport, calls } = createMockTransport({
+    responses: {},
+    onUnmatched: {
+      response: {
+        data: [],
+        success: true,
+        meta: { fingerprint: 'fp', page_size: 20 },
+      },
+    },
+  })
+  const client = createPublicClient({ transport })
+  const { meta } = await getEventsByTransactionID(client, {
+    txID,
+    limit: 200,
+    fingerprint: 'prev',
+  })
+  expect(meta.fingerprint).toBe('fp')
+  expect(calls[0]?.path).toContain('limit=200')
+  expect(calls[0]?.path).toContain('fingerprint=prev')
 })

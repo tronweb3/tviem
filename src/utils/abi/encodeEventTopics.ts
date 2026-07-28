@@ -56,13 +56,14 @@ export type EncodeEventTopicsErrorType =
  * raw bytes, since only their hash is recoverable from a log.
  *
  * An ARRAY of values for one indexed parameter is an OR-list of alternatives
- * (viem's `LogTopic` semantics): each entry becomes its own topic candidate,
- * e.g. `args: { from: [a, b] }` filters logs from either address.
+ * (the {@link LogTopic} alternative-set form): each entry becomes its own
+ * topic candidate, e.g. `args: { from: [a, b] }` filters logs from either
+ * address.
  *
  * Indexed array/tuple parameters are NOT supported for filtering and throw
- * {@link FilterTypeNotSupportedError} (viem parity): Solidity hashes them
- * over a non-standard in-place encoding, so a filter topic cannot be derived
- * from the standard ABI encoding.
+ * {@link FilterTypeNotSupportedError}: Solidity hashes them over a
+ * non-standard in-place encoding, so a filter topic cannot be derived from
+ * the standard ABI encoding.
  *
  * TRON behavior: indexed `address` topics encode the 20-byte EVM body,
  * left-padded to 32 bytes.

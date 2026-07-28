@@ -103,7 +103,10 @@ export async function waitForTransactionReceipt(
         number?: number | bigint
       } | null
       const head = Number(now?.number ?? 0)
-      if (head - receiptBlock >= confirmations) break
+      // The mining block counts as the first confirmation, so `confirmations`
+      // is reached at depth `confirmations - 1` on top of it (N=1 resolves at
+      // the receipt block itself, handled by the `> 1` fast-path above).
+      if (head - receiptBlock + 1 >= confirmations) break
       assertNotTimedOut()
       await sleep(pollingInterval)
       assertNotTimedOut()

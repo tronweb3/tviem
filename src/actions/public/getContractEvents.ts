@@ -54,10 +54,10 @@ export type GetContractEventsReturnType = {
 
 /**
  * Reads a contract's events with ABI-driven `eventName` inference — the
- * TRON-native counterpart to viem's `getContractEvents`. It resolves through
+ * TRON-native contract-event reader. It resolves through
  * {@link getEventsByContractAddress} against the TronGrid `/v1` index.
  *
- * Protocol difference from viem: TRON's event index has no `fromBlock`/`toBlock`
+ * Protocol note: TRON's event index has no `fromBlock`/`toBlock`
  * block-range filter, so the window is expressed with `fromTimestamp` /
  * `toTimestamp` (ms) or a single `blockNumber`. Parameters are decoded by
  * TronGrid; `args` are normalized (addresses → Base58Check, integers → bigint).

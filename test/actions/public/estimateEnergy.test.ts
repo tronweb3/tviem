@@ -1,9 +1,10 @@
 import { expect, test } from 'vitest'
-import { createMockTransport } from '../../mock/createMockTransport.js'
+import { estimateEnergy } from '../../../src/actions/public/estimateEnergy.js'
 import { createClient } from '../../../src/clients/createClient.js'
 import { createPublicClient } from '../../../src/clients/createPublicClient.js'
+import { IntegerOutOfRangeError } from '../../../src/errors/encoding.js'
 import type { Address } from '../../../src/types/address.js'
-import { estimateEnergy } from '../../../src/actions/public/estimateEnergy.js'
+import { createMockTransport } from '../../mock/createMockTransport.js'
 
 // pk = 1 (permitted trivial key) → address TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC.
 const pk1 = `0x${'0'.repeat(63)}1` as const
@@ -86,4 +87,34 @@ test('forwards callValue as call_value', async () => {
 
   await client.estimateEnergy({ ...call, account: pk1, callValue: 5n })
   expect((calls[0]?.body as { call_value?: number }).call_value).toBe(5)
+})
+
+// K2: a call_value past the JSON-safe integer range (2^53-1) would be silently
+// rounded by Number() in the request body — reject it instead of estimating
+// against a corrupted value.
+test('accepts callValue at the JSON-safe integer boundary (K2)', async () => {
+  const { transport, calls } = energyMock()
+  const client = createPublicClient({ transport })
+
+  await client.estimateEnergy({
+    ...call,
+    account: pk1,
+    callValue: BigInt(Number.MAX_SAFE_INTEGER),
+  })
+  expect((calls[0]?.body as { call_value?: number }).call_value).toBe(
+    Number.MAX_SAFE_INTEGER,
+  )
+})
+
+test('rejects a callValue beyond the JSON-safe integer range (K2)', async () => {
+  const { transport } = energyMock()
+  const client = createPublicClient({ transport })
+
+  await expect(
+    client.estimateEnergy({
+      ...call,
+      account: pk1,
+      callValue: BigInt(Number.MAX_SAFE_INTEGER) + 1n,
+    }),
+  ).rejects.toBeInstanceOf(IntegerOutOfRangeError)
 })

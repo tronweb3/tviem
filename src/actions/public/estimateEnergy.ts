@@ -3,6 +3,7 @@ import type { Abi } from 'abitype'
 import type { TronAccount } from '../../accounts/types.js'
 import type { Client } from '../../clients/createClient.js'
 import { zeroAddress } from '../../constants/address.js'
+import { IntegerOutOfRangeError } from '../../errors/encoding.js'
 import { parseAccount } from '../../types/account.js'
 import type { Address } from '../../types/address.js'
 import type { Hex } from '../../types/misc.js'
@@ -51,6 +52,20 @@ export async function estimateEnergy(
   parameters: EstimateEnergyParameters,
 ): Promise<EstimateEnergyReturnType> {
   const { abi, address, args, callValue, functionName } = parameters
+
+  // The request body is JSON, where an int64 becomes a JS number — so a
+  // `call_value` past the safe-integer range would be silently rounded. Reject
+  // it rather than send a corrupted estimate (energy estimation never affects
+  // what is signed, so a hard error here is safe).
+  if (
+    callValue !== undefined &&
+    (callValue < 0n || callValue > BigInt(Number.MAX_SAFE_INTEGER))
+  )
+    throw new IntegerOutOfRangeError({
+      max: String(Number.MAX_SAFE_INTEGER),
+      min: '0',
+      value: String(callValue),
+    })
 
   const source = parameters.account ?? client.account
   const owner = source ? parseAccount(source).address : zeroAddress
