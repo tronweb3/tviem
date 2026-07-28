@@ -1,6 +1,9 @@
 import { expect, test } from 'vitest'
+import {
+  formatEvent,
+  formatEventMeta,
+} from '../../../src/actions/utils/formatEvent.js'
 import { toBase58 } from '../../../src/utils/address/toBase58.js'
-import { formatEvent, formatEventMeta } from '../../../src/actions/utils/formatEvent.js'
 
 const from = '0xafb6ccdb345bc36c69a618b66c1693f36213622b'
 const to = '0x2e5531459778bee382355ab73bc93ee763f5ed94'
@@ -71,4 +74,11 @@ test('formatEventMeta maps snake_case, omits absent fields', () => {
     at: 5,
   })
   expect(formatEventMeta(undefined)).toEqual({})
+})
+
+// F-9R2 (day 9): a row missing contract_address degrades to the null address
+// instead of failing the whole page ('' was never a valid address form).
+test('a missing contract_address degrades to the null address', () => {
+  const event = formatEvent({ event_name: 'X' })
+  expect(event.contractAddress).toBe('T9yD14Nj9j7xAB4dbGeiX9h8unkKHxuWwb')
 })

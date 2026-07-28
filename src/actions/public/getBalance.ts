@@ -1,5 +1,6 @@
 // TRON-specific, clean-room implementation for @tronweb3/omni (RD-1).
 import type { Client } from '../../clients/createClient.js'
+import { IntegerOutOfRangeError } from '../../errors/encoding.js'
 import type { Address } from '../../types/address.js'
 import { toHex } from '../../utils/address/toHex.js'
 
@@ -11,7 +12,7 @@ export type GetBalanceReturnType = bigint
 
 type GetAccountResponse = {
   /** Balance in SUN. Absent for a non-existent account (`{}`). */
-  balance?: number | string | undefined
+  balance?: number | string | bigint | undefined
 }
 
 /**
@@ -35,5 +36,15 @@ export async function getBalance(
     method: 'POST',
     body: { address: toHex(address) },
   })
-  return BigInt(response?.balance ?? 0)
+  const balance = response?.balance ?? 0
+  // The transport re-materializes unsafe integer literals as bigint where the
+  // engine allows; on engines where it cannot, an unsafe number here has
+  // ALREADY lost precision in JSON.parse — refuse to return it as if exact.
+  if (typeof balance === 'number' && !Number.isSafeInteger(balance))
+    throw new IntegerOutOfRangeError({
+      max: String(Number.MAX_SAFE_INTEGER),
+      min: '0',
+      value: String(balance),
+    })
+  return BigInt(balance)
 }

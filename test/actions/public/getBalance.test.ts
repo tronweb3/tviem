@@ -1,8 +1,10 @@
 import { expect, test } from 'vitest'
+import { getBalance } from '../../../src/actions/public/getBalance.js'
+import { createPublicClient } from '../../../src/clients/createPublicClient.js'
+import { http } from '../../../src/clients/transports/http.js'
+import { IntegerOutOfRangeError } from '../../../src/errors/encoding.js'
 import { rpc, rpcReq } from '../../fixtures/rpc/loader.js'
 import { createMockTransport } from '../../mock/createMockTransport.js'
-import { createPublicClient } from '../../../src/clients/createPublicClient.js'
-import { getBalance } from '../../../src/actions/public/getBalance.js'
 
 test('sends the 41-hex address to solidity getaccount and decodes SUN', async () => {
   const { transport, calls, bodyOf } = createMockTransport({
@@ -47,4 +49,30 @@ test('is callable as a bare action with an explicit client', async () => {
       address: 'TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC',
     }),
   ).toBe(42n)
+})
+
+// F-9R1 (day 9): balances past 2^53-1 SUN (~9M TRX — exchange scale) must
+// survive exactly. End-to-end through the REAL http transport: the mock
+// transport serves JS objects and cannot express this wire-text hazard.
+test('a balance past 2^53 survives exactly through the http transport', async () => {
+  const fetchFn = (async () =>
+    new Response('{"balance":9007199254740993}')) as typeof fetch
+  const transport = http('https://node.example', { fetchFn })
+  const client = createPublicClient({ transport })
+  expect(
+    await client.getBalance({ address: 'TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC' }),
+  ).toBe(9007199254740993n)
+})
+
+// Legacy-engine guard: if an unsafe number still reaches the action (no
+// reviver source access), it has ALREADY lost precision — refuse loudly
+// instead of returning a corrupted bigint.
+test('an unsafe numeric balance is refused, not silently corrupted', async () => {
+  const { transport } = createMockTransport({
+    responses: { getaccount: { response: { balance: 2 ** 53 } } },
+  })
+  const client = createPublicClient({ transport })
+  await expect(
+    client.getBalance({ address: 'TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC' }),
+  ).rejects.toBeInstanceOf(IntegerOutOfRangeError)
 })

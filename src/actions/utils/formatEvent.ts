@@ -100,7 +100,11 @@ export function formatEvent(raw: RawTronEvent): TronEvent {
   return {
     blockNumber: Number(raw.block_number ?? 0),
     blockTimestamp: BigInt(raw.block_timestamp ?? 0),
-    contractAddress: toBase58((raw.contract_address ?? '') as AddressInput),
+    // The null address — '' is not a valid address form.
+    contractAddress: toBase58(
+      (raw.contract_address ??
+        '410000000000000000000000000000000000000000') as AddressInput,
+    ),
     ...(raw.caller_contract_address
       ? {
           callerContractAddress: toBase58(

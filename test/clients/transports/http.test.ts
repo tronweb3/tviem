@@ -1,5 +1,8 @@
 import { afterEach, beforeEach, expect, test, vi } from 'vitest'
-
+import {
+  http,
+  normalizeTronError,
+} from '../../../src/clients/transports/http.js'
 import {
   TronBroadcastError,
   TronContractValidateError,
@@ -7,7 +10,6 @@ import {
 } from '../../../src/errors/node.js'
 import { HttpRequestError } from '../../../src/errors/request.js'
 import { UrlRequiredError } from '../../../src/errors/transport.js'
-import { http, normalizeTronError } from '../../../src/clients/transports/http.js'
 import { stringToHex } from '../../../src/utils/encoding/toHex.js'
 
 const HOST = 'https://node.example'
@@ -342,4 +344,23 @@ test('normalizeTronError returns { result: true } unchanged (no throw)', () => {
 test('normalizeTronError returns a SUCCESS-code body unchanged (no throw)', () => {
   const body = { code: 'SUCCESS', result: true }
   expect(normalizeTronError(body, NODE)).toBe(body)
+})
+
+// java-tron renders int64 fields as bare JSON numbers; a naive JSON.parse
+// corrupts them past 2^53-1 before any BigInt() coercion can help. The body
+// MUST be built from raw text — a JS number literal in this test file would
+// itself already be corrupted at source-parse time.
+test('re-materializes unsafe integer literals losslessly as bigint', async () => {
+  fetchMock.mockResolvedValueOnce(
+    new Response('{"balance":9007199254740993,"small":5,"note":"ok"}'),
+  )
+  const t = transport()
+  const body = (await t.config.request({
+    node: 'solidity',
+    path: 'getaccount',
+    body: {},
+  })) as { balance: unknown; small: unknown; note: unknown }
+  expect(body.balance).toBe(9007199254740993n) // 2^53 + 1, exact
+  expect(body.small).toBe(5) // safe integers stay numbers
+  expect(body.note).toBe('ok')
 })

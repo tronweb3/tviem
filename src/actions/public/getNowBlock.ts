@@ -1,5 +1,6 @@
 // TRON-specific, clean-room implementation for @tronweb3/omni (RD-2).
 import type { Client } from '../../clients/createClient.js'
+import { BlockNotFoundError } from '../../errors/rpc.js'
 import type { TronHexAddress } from '../../types/address.js'
 import type { Block } from '../../types/block.js'
 import { toBase58 } from '../../utils/address/toBase58.js'
@@ -43,7 +44,9 @@ export function formatBlock(raw: RawBlock): Block {
     parentHash: header.parentHash ?? '',
     txTrieRoot: header.txTrieRoot ?? '',
     witnessAddress: toBase58(
-      (header.witness_address ?? '41') as TronHexAddress,
+      // The null address — '41' alone is not a valid address form.
+      (header.witness_address ??
+        '410000000000000000000000000000000000000000') as TronHexAddress,
     ),
     ...(header.version !== undefined ? { version: header.version } : {}),
     transactions: raw.transactions ?? [],
@@ -69,5 +72,8 @@ export async function getNowBlock(
     path: 'getnowblock',
     method: 'GET',
   })
+  // An empty `{}` body (node warming up / LB stub) is "no block", not a block
+  // whose every field defaulted.
+  if (isEmptyResponse(response)) throw new BlockNotFoundError()
   return formatBlock(response)
 }

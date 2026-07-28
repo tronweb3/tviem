@@ -64,6 +64,43 @@ function resolveUrl(base: string, node: TronNode, path: string): string {
   return `${b}${prefix}${path}`
 }
 
+/** Whether `JSON.parse` exposes the raw source text to its reviver (V8). */
+const supportsParseSource = (() => {
+  try {
+    let seen = false
+    JSON.parse('0', ((_key, value, context?: { source?: string }) => {
+      seen = typeof context?.source === 'string'
+      return value
+    }) as (key: string, value: unknown) => unknown)
+    return seen
+  } catch {
+    return false
+  }
+})()
+
+/**
+ * Parses a node response body. java-tron renders `int64` fields (balances,
+ * amounts) as bare JSON numbers, which a naive `JSON.parse` corrupts past
+ * `2^53 - 1` BEFORE any `BigInt(...)` coercion can save them — so, where the
+ * engine exposes the raw literal to the reviver, an unsafe integer literal is
+ * re-materialized losslessly as a `bigint`. On engines without reviver source
+ * access this falls back to a plain parse (actions guard the affected fields).
+ */
+function parseBody(text: string): unknown {
+  if (!supportsParseSource) return JSON.parse(text)
+  return JSON.parse(text, ((_key, value, context?: { source?: string }) => {
+    if (
+      typeof value === 'number' &&
+      Number.isInteger(value) &&
+      !Number.isSafeInteger(value) &&
+      context?.source &&
+      /^-?\d+$/.test(context.source)
+    )
+      return BigInt(context.source)
+    return value
+  }) as (key: string, value: unknown) => unknown)
+}
+
 /** TRON node message fields are hex-encoded; decode to UTF-8 (or pass through). */
 function decodeNodeMessage(message: unknown): string {
   if (typeof message !== 'string' || message.length === 0) return ''
@@ -244,7 +281,7 @@ export function http(
           let body: any
           try {
             const text = await response.text()
-            body = text ? JSON.parse(text) : {}
+            body = text ? parseBody(text) : {}
           } catch (err) {
             throw new HttpRequestError({
               body: args.body as Record<string, unknown> | undefined,
