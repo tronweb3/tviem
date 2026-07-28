@@ -253,3 +253,92 @@ test('overload resolution flows through to the selector and result decode', () =
   } as never)
   expect(value).toBe(BigInt(data))
 })
+
+// F-7D2: `typeof null === 'object'`, so the tuple-branch guard must reject
+// null explicitly — otherwise Object.values(null) throws a raw TypeError
+// instead of the arg cleanly failing to match the tuple overload.
+const nullVsTupleAbi = [
+  {
+    type: 'function',
+    name: 'foo',
+    inputs: [{ name: 'x', type: 'uint256' }],
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    name: 'foo',
+    inputs: [
+      {
+        name: 't',
+        type: 'tuple',
+        components: [
+          { name: 'a', type: 'uint256' },
+          { name: 'b', type: 'uint256' },
+        ],
+      },
+    ],
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+]
+
+test('a null arg does not crash the tuple overload branch', () => {
+  expect(isArgOfType(null, nullVsTupleAbi[1]!.inputs[0] as never)).toBe(false)
+  // null matches no overload, so getAbiItem falls back to the first candidate
+  // rather than throwing a raw TypeError from Object.values(null).
+  expect(() =>
+    getAbiItem({
+      abi: nullVsTupleAbi as unknown as Abi,
+      name: 'foo',
+      args: [null],
+    }),
+  ).not.toThrow()
+})
+
+// F-7D3: `trcToken` encodes to the same 32-byte word as `uint256`, so a
+// number/bigint arg cannot pick between foo(uint256) and foo(trcToken) — the
+// combination must throw AbiItemAmbiguityError, not silently resolve to the
+// last structural match.
+const intVsTrcTokenAbi = [
+  {
+    type: 'function',
+    name: 'foo',
+    inputs: [{ name: 'x', type: 'uint256' }],
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    name: 'foo',
+    inputs: [{ name: 'x', type: 'trcToken' }],
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+]
+
+test('throws on an ambiguous uint256/trcToken overload', () => {
+  expect(() =>
+    getAbiItem({
+      abi: intVsTrcTokenAbi as unknown as Abi,
+      name: 'foo',
+      args: [5n],
+    }),
+  ).toThrowError(AbiItemAmbiguityError)
+  // unit level: the (integer, trcToken) pair is reported for a numeric arg…
+  expect(
+    getAmbiguousTypes(
+      [{ name: 'x', type: 'uint256' }],
+      [{ name: 'x', type: 'trcToken' }] as never,
+      [5n],
+    ),
+  ).toEqual(['uint256', 'trcToken'])
+  // …but a non-integer overlap (e.g. uint256 vs uint64) stays unambiguous.
+  expect(
+    getAmbiguousTypes(
+      [{ name: 'x', type: 'uint256' }],
+      [{ name: 'x', type: 'uint64' }],
+      [5n],
+    ),
+  ).toBeUndefined()
+})

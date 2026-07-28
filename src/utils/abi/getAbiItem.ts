@@ -41,6 +41,10 @@ export type GetAbiItemReturnType<
 
 export type GetAbiItemErrorType = AbiItemAmbiguityErrorType | ErrorType
 
+/** Matches `uint`/`int` at any valid bit width (a bare `uint`/`int` = 256). */
+const INTEGER_TYPE =
+  /^u?int(8|16|24|32|40|48|56|64|72|80|88|96|104|112|120|128|136|144|152|160|168|176|184|192|200|208|216|224|232|240|248|256)?$/
+
 /**
  * Finds an ABI item by `name` or by 4-byte function / 32-byte event selector
  * (`0x…` hex). When several overloads share a name, `args` disambiguates them
@@ -159,9 +163,12 @@ export function isArgOfType(arg: unknown, abiParameter: AbiParameter): boolean {
       )
         return Object.values(abiParameter.components).every(
           (component, index) =>
-            // Only objects/arrays can be tuple values — without this guard a
-            // primitive string would "match" (Object.values('ab') is
-            // ['a','b']) and steal the overload from foo(string).
+            // Only a non-null object/array can be a tuple value. Without the
+            // `object` guard a primitive string would "match" (Object.values(
+            // 'ab') is ['a','b']) and steal the overload from foo(string); the
+            // explicit null check keeps Object.values(null) from throwing,
+            // since typeof null === 'object' too.
+            arg !== null &&
             argType === 'object' &&
             isArgOfType(
               Object.values(arg as Record<string, unknown>)[index],
@@ -170,11 +177,7 @@ export function isArgOfType(arg: unknown, abiParameter: AbiParameter): boolean {
         )
 
       // `(u)intN`
-      if (
-        /^u?int(8|16|24|32|40|48|56|64|72|80|88|96|104|112|120|128|136|144|152|160|168|176|184|192|200|208|216|224|232|240|248|256)?$/.test(
-          abiParameterType,
-        )
-      )
+      if (INTEGER_TYPE.test(abiParameterType))
         return argType === 'number' || argType === 'bigint'
 
       // `bytes`, `bytesN`
@@ -239,6 +242,14 @@ export function getAmbiguousTypes(
         return isAddressArg(args[parameterIndex as unknown as number])
       if (types.includes('address') && types.includes('bytes'))
         return isAddressArg(args[parameterIndex as unknown as number])
+      // `trcToken` encodes as a 32-byte word, exactly like every `(u)intN`, so
+      // a number/bigint arg cannot pick between a `trcToken` overload and an
+      // integer one — they encode it identically (TRON-specific; the reference
+      // stack has no `trcToken`).
+      if (types.includes('trcToken') && types.every(isIntegerLikeType)) {
+        const arg = args[parameterIndex as unknown as number]
+        return typeof arg === 'number' || typeof arg === 'bigint'
+      }
       return false
     })()
 
@@ -250,4 +261,9 @@ export function getAmbiguousTypes(
 
 function isAddressArg(arg: unknown): boolean {
   return typeof arg === 'string' && isAddress(arg, { strict: false })
+}
+
+/** Whether a type encodes a number/bigint into a 32-byte word (`(u)intN` or the TRON `trcToken`). */
+function isIntegerLikeType(type: string): boolean {
+  return type === 'trcToken' || INTEGER_TYPE.test(type)
 }
