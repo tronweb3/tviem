@@ -4,8 +4,8 @@ import { concatBytes } from '../../data/concat.js'
 import { normalizeAddress } from '../normalize.js'
 import { writeUvarint } from '../protobuf/varint.js'
 import {
-  fBytes,
   type FIntErrorType,
+  fBytes,
   fInt,
   fMessage,
   tag,
@@ -67,7 +67,16 @@ export function encodeProposalCreateContract(
     fBytes(1, normalizeAddress(message.ownerAddress as ContractAddressInput)),
   ]
   // `parameters` is a `map<int64,int64>`: each entry force-emits key + value.
-  for (const entry of message.parameters ?? []) {
+  // A protobuf map serializes its entries sorted by the STRINGIFIED key in
+  // ascending order (`"10" < "2"`), not by numeric key or caller order — so
+  // the entries are sorted here to keep raw_data_hex/txID canonical whatever
+  // order the caller supplies.
+  const entries = [...(message.parameters ?? [])].sort((a, b) => {
+    const ka = String(a.key)
+    const kb = String(b.key)
+    return ka < kb ? -1 : ka > kb ? 1 : 0
+  })
+  for (const entry of entries) {
     const body = concatBytes([
       fIntMapEntry(1, entry.key),
       fIntMapEntry(2, entry.value),
