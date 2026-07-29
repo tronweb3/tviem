@@ -102,13 +102,13 @@ test('to bytes', () => {
   )
 })
 
-test('@tronweb3/omni: sha256 of empty bytes (0x)', () => {
+test('@tronweb3/tviem: sha256 of empty bytes (0x)', () => {
   expect(sha256('0x')).toBe(
     '0xe3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
   )
 })
 
-test('@tronweb3/omni: 0x-prefixed non-hex input hashes as utf8, not rejected (pins viem-aligned dispatch)', () => {
+test('@tronweb3/tviem: 0x-prefixed non-hex input hashes as utf8, not rejected (pins viem-aligned dispatch)', () => {
   expect(sha256('0xZZ')).toBe(sha256(stringToBytes('0xZZ')))
   expect(sha256('0xdeadbeef')).not.toBe(sha256(stringToBytes('0xdeadbeef')))
 })

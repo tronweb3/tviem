@@ -1,6 +1,6 @@
-// TRON-specific, clean-room implementation for @tronweb3/omni.
+// TRON-specific, clean-room implementation for @tronweb3/tviem.
 // Implements the EIP-712 / TIP-712 structured-data hash from the standard, over
-// omni's own keccak256 / encoding / address primitives — the only TRON-specific
+// tviem's own keccak256 / encoding / address primitives — the only TRON-specific
 // point is that `address`-typed values are converted from a TRON address form
 // to their 20-byte EVM form before being left-padded into a 32-byte word.
 import type {

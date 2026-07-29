@@ -1,4 +1,4 @@
-// TRON-specific, clean-room implementation for @tronweb3/omni (RD-3).
+// TRON-specific, clean-room implementation for @tronweb3/tviem (RD-3).
 import type { Client } from '../../clients/createClient.js'
 import type { TronHexAddress } from '../../types/address.js'
 import type { Hex } from '../../types/misc.js'

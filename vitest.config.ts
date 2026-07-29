@@ -2,8 +2,11 @@ import { join } from 'node:path'
 import { configDefaults, defineConfig } from 'vitest/config'
 
 const alias = [
-  { find: /^@tronweb3\/omni$/, replacement: join(__dirname, './src/index.ts') },
-  { find: /^@tronweb3\/omni\/(.*)/, replacement: join(__dirname, './src/$1') },
+  {
+    find: /^@tronweb3\/tviem$/,
+    replacement: join(__dirname, './src/index.ts'),
+  },
+  { find: /^@tronweb3\/tviem\/(.*)/, replacement: join(__dirname, './src/$1') },
 ]
 
 export default defineConfig({

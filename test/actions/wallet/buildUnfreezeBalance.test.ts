@@ -6,9 +6,9 @@ import { AccountNotFoundError } from '../../../src/errors/rpc.js'
 import { createMockTransport } from '../../mock/createMockTransport.js'
 import {
   expectBuildMatchesTronweb,
-  makeOmniClient,
   makeTronWeb,
-  omniHeader,
+  makeTviemClient,
+  tviemHeader,
   twBlockHeader,
 } from './_tronwebDiff.js'
 
@@ -16,14 +16,14 @@ import {
 const receiver = 'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t'
 
 test('builds UnfreezeBalanceContract byte-identical to TronWeb', async () => {
-  const client = makeOmniClient()
+  const client = makeTviemClient()
   const tronWeb = makeTronWeb()
   const owner = tronWeb.defaultAddress.base58 as string
 
-  const omniTx = await client.buildUnfreezeBalance({
+  const tviemTx = await client.buildUnfreezeBalance({
     resource: 'ENERGY',
     receiverAddress: receiver,
-    blockHeader: omniHeader,
+    blockHeader: tviemHeader,
   })
   const twTx = await tronWeb.transactionBuilder.unfreezeBalance(
     'ENERGY',
@@ -32,21 +32,21 @@ test('builds UnfreezeBalanceContract byte-identical to TronWeb', async () => {
     { blockHeader: twBlockHeader },
   )
 
-  expect(omniTx.visible).toBe(false)
-  expect(omniTx.signature).toBeUndefined()
-  expectBuildMatchesTronweb(omniTx, twTx, 'unfreezeBalance')
+  expect(tviemTx.visible).toBe(false)
+  expect(tviemTx.signature).toBeUndefined()
+  expectBuildMatchesTronweb(tviemTx, twTx, 'unfreezeBalance')
 })
 
 test('permissionId is baked in as Permission_id and matches TronWeb', async () => {
-  const client = makeOmniClient()
+  const client = makeTviemClient()
   const tronWeb = makeTronWeb()
   const owner = tronWeb.defaultAddress.base58 as string
 
-  const omniTx = await client.buildUnfreezeBalance({
+  const tviemTx = await client.buildUnfreezeBalance({
     resource: 'ENERGY',
     receiverAddress: receiver,
     permissionId: 2,
-    blockHeader: omniHeader,
+    blockHeader: tviemHeader,
   })
   const twTx = await tronWeb.transactionBuilder.unfreezeBalance(
     'ENERGY',
@@ -56,12 +56,12 @@ test('permissionId is baked in as Permission_id and matches TronWeb', async () =
   )
 
   const contract = (
-    omniTx.raw_data.contract as Record<string, unknown>[]
+    tviemTx.raw_data.contract as Record<string, unknown>[]
   )[0] as {
     Permission_id?: number
   }
   expect(contract.Permission_id).toBe(2)
-  expectBuildMatchesTronweb(omniTx, twTx, 'unfreezeBalance+permissionId')
+  expectBuildMatchesTronweb(tviemTx, twTx, 'unfreezeBalance+permissionId')
 })
 
 test('throws AccountNotFoundError when no account is available', async () => {
@@ -70,7 +70,7 @@ test('throws AccountNotFoundError when no account is available', async () => {
   await expect(
     buildUnfreezeBalance(client, {
       resource: 'ENERGY',
-      blockHeader: omniHeader,
+      blockHeader: tviemHeader,
     }),
   ).rejects.toBeInstanceOf(AccountNotFoundError)
 })

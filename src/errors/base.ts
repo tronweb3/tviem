@@ -12,11 +12,11 @@ let errorConfig: ErrorConfig = {
     docsSlug,
   }: BaseErrorParameters) =>
     docsPath
-      ? `${docsBaseUrl ?? 'https://github.com/tronweb3/omni'}${docsPath}${
+      ? `${docsBaseUrl ?? 'https://github.com/tronweb3/tviem'}${docsPath}${
           docsSlug ? `#${docsSlug}` : ''
         }`
       : undefined,
-  version: `@tronweb3/omni@${version}`,
+  version: `@tronweb3/tviem@${version}`,
 }
 
 export function setErrorConfig(config: ErrorConfig) {

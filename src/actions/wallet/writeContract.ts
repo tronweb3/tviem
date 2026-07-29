@@ -1,4 +1,4 @@
-// TRON-specific, clean-room implementation for @tronweb3/omni (WR-3).
+// TRON-specific, clean-room implementation for @tronweb3/tviem (WR-3).
 import type { Abi } from 'abitype'
 import type { TronAccount } from '../../accounts/types.js'
 import type { Client } from '../../clients/createClient.js'

@@ -6,7 +6,7 @@ export type FormatUnitsErrorType = ErrorType
  *  Divides a number by a given exponent of base 10 (10exponent), and formats it into a string representation of the number..
  *
  * @example
- * import { formatUnits } from '@tronweb3/omni'
+ * import { formatUnits } from '@tronweb3/tviem'
  *
  * formatUnits(420000000000n, 9)
  * // '420'

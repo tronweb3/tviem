@@ -5,7 +5,10 @@ import {
   UnsupportedWireTypeError,
 } from '../../../../src/errors/encoding.js'
 import { concatBytes } from '../../../../src/utils/data/concat.js'
-import { hexToBytes, stringToBytes } from '../../../../src/utils/encoding/toBytes.js'
+import {
+  hexToBytes,
+  stringToBytes,
+} from '../../../../src/utils/encoding/toBytes.js'
 import { bytesToHex } from '../../../../src/utils/encoding/toHex.js'
 import {
   fBool,
@@ -44,7 +47,7 @@ test('tag: invalid field number', () => {
   expect(() => tag(0, 2)).toThrowErrorMatchingInlineSnapshot(`
     [IntegerOutOfRangeError: Number "0" is not in safe integer range (1 to 536870911)
 
-    Version: @tronweb3/omni@0.1.0]
+    Version: @tronweb3/tviem@0.1.0]
   `)
 })
 
@@ -55,7 +58,7 @@ test('tag: unsupported wire type', () => {
   expect(() => tag(1, 3)).toThrowErrorMatchingInlineSnapshot(`
     [UnsupportedWireTypeError: Wire type \`3\` is not supported.
 
-    Version: @tronweb3/omni@0.1.0]
+    Version: @tronweb3/tviem@0.1.0]
   `)
 })
 
@@ -86,7 +89,7 @@ test('fInt: out of range', () => {
   ).toThrowErrorMatchingInlineSnapshot(`
     [IntegerOutOfRangeError: Number "18446744073709551616" is not in safe integer range (-9223372036854775808 to 18446744073709551615)
 
-    Version: @tronweb3/omni@0.1.0]
+    Version: @tronweb3/tviem@0.1.0]
   `)
 })
 

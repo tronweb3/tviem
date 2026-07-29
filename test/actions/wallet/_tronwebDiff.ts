@@ -1,5 +1,5 @@
 // Shared differential harness for the `buildX` write actions: build a
-// transaction with @tronweb3/omni AND, independently, with TronWeb's own
+// transaction with @tronweb3/tviem AND, independently, with TronWeb's own
 // `transactionBuilder`, and assert they agree byte-for-byte and id-for-id.
 // Both build offline against the same pinned block header. As a second,
 // independent check, omni's `raw_data` is re-encoded through TronWeb's protobuf
@@ -23,7 +23,7 @@ const REF = {
   expiration: 1700000060000n,
 }
 /** omni's `blockHeader` override (camelCase, bigint timing). */
-export const omniHeader = {
+export const tviemHeader = {
   refBlockBytes: REF.refBlockBytes,
   refBlockHash: REF.refBlockHash,
   timestamp: REF.timestamp,
@@ -38,7 +38,7 @@ export const twBlockHeader = {
 }
 
 /** An omni wallet client hoisted with pk1; no node is hit (blockHeader is set). */
-export function makeOmniClient() {
+export function makeTviemClient() {
   const { transport } = createMockTransport({ responses: {} })
   return createWalletClient({ account: pk1, transport })
 }
@@ -70,23 +70,23 @@ type NodeTx = {
  * `raw_data` to the same bytes/id.
  */
 export function expectBuildMatchesTronweb(
-  omniTx: NodeTx,
+  tviemTx: NodeTx,
   tronwebTx: NodeTx,
   label: string,
 ): void {
   expect(
-    norm(omniTx.raw_data_hex ?? ''),
+    norm(tviemTx.raw_data_hex ?? ''),
     `${label}: raw_data_hex omni↔tronweb`,
   ).toBe(norm(tronwebTx.raw_data_hex ?? ''))
-  expect(norm(omniTx.txID ?? ''), `${label}: txID omni↔tronweb`).toBe(
+  expect(norm(tviemTx.txID ?? ''), `${label}: txID omni↔tronweb`).toBe(
     norm(tronwebTx.txID ?? ''),
   )
-  const pb = codec.txJsonToPb({ raw_data: omniTx.raw_data })
+  const pb = codec.txJsonToPb({ raw_data: tviemTx.raw_data })
   expect(
     norm(codec.txPbToRawDataHex(pb)),
     `${label}: java-tron re-encode`,
-  ).toBe(norm(omniTx.raw_data_hex ?? ''))
+  ).toBe(norm(tviemTx.raw_data_hex ?? ''))
   expect(norm(codec.txPbToTxID(pb)), `${label}: java-tron txID`).toBe(
-    norm(omniTx.txID ?? ''),
+    norm(tviemTx.txID ?? ''),
   )
 }

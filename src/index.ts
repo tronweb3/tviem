@@ -52,7 +52,7 @@ export {
   signTransaction,
 } from './accounts/utils/signTransaction.js'
 // Contract facade + read (public) & write (wallet) actions — also available via
-// the `@tronweb3/omni/actions` subpath.
+// the `@tronweb3/tviem/actions` subpath.
 export {
   type GetContractErrorType,
   type GetContractParameters,

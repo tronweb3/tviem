@@ -1,4 +1,4 @@
-// TRON-specific, clean-room tests for @tronweb3/omni.
+// TRON-specific, clean-room tests for @tronweb3/tviem.
 import { describe, expect, test } from 'vitest'
 
 import { InvalidAddressError } from '../../../src/errors/address.js'

@@ -8,7 +8,12 @@ import {
   hexToString,
 } from '../../../src/utils/encoding/fromHex.js'
 import { hexToBytes } from '../../../src/utils/encoding/toBytes.js'
-import { boolToHex, bytesToHex, numberToHex, stringToHex } from '../../../src/utils/encoding/toHex.js'
+import {
+  boolToHex,
+  bytesToHex,
+  numberToHex,
+  stringToHex,
+} from '../../../src/utils/encoding/toHex.js'
 
 describe('converts hex to number', () => {
   test('default', () => {
@@ -63,7 +68,7 @@ describe('converts hex to number', () => {
     ).toThrowErrorMatchingInlineSnapshot(`
       [SizeOverflowError: Size cannot exceed 32 bytes. Given size: 64 bytes.
 
-      Version: @tronweb3/omni@0.1.0]
+      Version: @tronweb3/tviem@0.1.0]
     `)
   })
 
@@ -73,14 +78,14 @@ describe('converts hex to number', () => {
     ).toThrowErrorMatchingInlineSnapshot(`
       [IntegerOutOfRangeError: Number "9007199254740992n" is not in safe integer range (-9007199254740991 to 9007199254740991)
 
-      Version: @tronweb3/omni@0.1.0]
+      Version: @tronweb3/tviem@0.1.0]
     `)
     expect(() =>
       hexToNumber('0xffdfffffffffffff', { signed: true }),
     ).toThrowErrorMatchingInlineSnapshot(`
       [IntegerOutOfRangeError: Number "-9007199254740993n" is not in safe integer range (-9007199254740991 to 9007199254740991)
 
-      Version: @tronweb3/omni@0.1.0]
+      Version: @tronweb3/tviem@0.1.0]
     `)
   })
 })
@@ -146,7 +151,7 @@ describe('converts hex to bigint', () => {
     ).toThrowErrorMatchingInlineSnapshot(`
       [SizeOverflowError: Size cannot exceed 32 bytes. Given size: 64 bytes.
 
-      Version: @tronweb3/omni@0.1.0]
+      Version: @tronweb3/tviem@0.1.0]
     `)
   })
 })
@@ -173,7 +178,7 @@ describe('converts hex to boolean', () => {
     ).toThrowErrorMatchingInlineSnapshot(`
       [SizeOverflowError: Size cannot exceed 32 bytes. Given size: 64 bytes.
 
-      Version: @tronweb3/omni@0.1.0]
+      Version: @tronweb3/tviem@0.1.0]
     `)
   })
 
@@ -182,7 +187,7 @@ describe('converts hex to boolean', () => {
       `
       [InvalidHexBooleanError: Hex value "0xa" is not a valid boolean. The hex value must be "0x0" (false) or "0x1" (true).
 
-      Version: @tronweb3/omni@0.1.0]
+      Version: @tronweb3/tviem@0.1.0]
     `,
     )
   })
@@ -223,7 +228,7 @@ describe('converts hex to string', () => {
     ).toThrowErrorMatchingInlineSnapshot(`
       [SizeOverflowError: Size cannot exceed 32 bytes. Given size: 64 bytes.
 
-      Version: @tronweb3/omni@0.1.0]
+      Version: @tronweb3/tviem@0.1.0]
     `)
   })
 })
@@ -357,7 +362,7 @@ describe('converts hex to bytes', () => {
     ).toThrowErrorMatchingInlineSnapshot(`
       [SizeOverflowError: Size cannot exceed 32 bytes. Given size: 64 bytes.
 
-      Version: @tronweb3/omni@0.1.0]
+      Version: @tronweb3/tviem@0.1.0]
     `)
   })
 
@@ -367,17 +372,17 @@ describe('converts hex to bytes', () => {
     ).toThrowErrorMatchingInlineSnapshot(`
       [BaseError: Invalid byte sequence ("gg" in "420fggf11a").
 
-      Version: @tronweb3/omni@0.1.0]
+      Version: @tronweb3/tviem@0.1.0]
     `)
   })
 })
 
-test('@tronweb3/omni: hexToBigInt inverts numberToHex', () => {
+test('@tronweb3/tviem: hexToBigInt inverts numberToHex', () => {
   expect(hexToBigInt(numberToHex(1000000n, { size: 32 }))).toBe(1000000n)
   expect(hexToBigInt(numberToHex(0n, { size: 32 }))).toBe(0n)
 })
 
-test('@tronweb3/omni: uint256/int256 boundary round-trips', () => {
+test('@tronweb3/tviem: uint256/int256 boundary round-trips', () => {
   const maxUint256 = 2n ** 256n - 1n
   expect(hexToBigInt(numberToHex(maxUint256, { size: 32 }))).toBe(maxUint256)
 

@@ -6,41 +6,41 @@ import { AccountNotFoundError } from '../../../src/errors/rpc.js'
 import { createMockTransport } from '../../mock/createMockTransport.js'
 import {
   expectBuildMatchesTronweb,
-  makeOmniClient,
   makeTronWeb,
-  omniHeader,
+  makeTviemClient,
+  tviemHeader,
   twBlockHeader,
 } from './_tronwebDiff.js'
 
 const url = 'https://omni.example/new'
 
 test('builds WitnessUpdateContract byte-identical to TronWeb', async () => {
-  const client = makeOmniClient()
+  const client = makeTviemClient()
   const tronWeb = makeTronWeb()
   const owner = tronWeb.defaultAddress.base58 as string
 
-  const omniTx = await client.buildUpdateWitness({
+  const tviemTx = await client.buildUpdateWitness({
     url,
-    blockHeader: omniHeader,
+    blockHeader: tviemHeader,
   })
   const twTx = await tronWeb.transactionBuilder.updateWitness(owner, url, {
     blockHeader: twBlockHeader,
   })
 
-  expect(omniTx.visible).toBe(false)
-  expect(omniTx.signature).toBeUndefined()
-  expectBuildMatchesTronweb(omniTx, twTx, 'updateWitness')
+  expect(tviemTx.visible).toBe(false)
+  expect(tviemTx.signature).toBeUndefined()
+  expectBuildMatchesTronweb(tviemTx, twTx, 'updateWitness')
 })
 
 test('permissionId is baked in as Permission_id and matches TronWeb', async () => {
-  const client = makeOmniClient()
+  const client = makeTviemClient()
   const tronWeb = makeTronWeb()
   const owner = tronWeb.defaultAddress.base58 as string
 
-  const omniTx = await client.buildUpdateWitness({
+  const tviemTx = await client.buildUpdateWitness({
     url,
     permissionId: 2,
-    blockHeader: omniHeader,
+    blockHeader: tviemHeader,
   })
   const twTx = await tronWeb.transactionBuilder.updateWitness(owner, url, {
     permissionId: 2,
@@ -48,18 +48,18 @@ test('permissionId is baked in as Permission_id and matches TronWeb', async () =
   })
 
   const contract = (
-    omniTx.raw_data.contract as Record<string, unknown>[]
+    tviemTx.raw_data.contract as Record<string, unknown>[]
   )[0] as {
     Permission_id?: number
   }
   expect(contract.Permission_id).toBe(2)
-  expectBuildMatchesTronweb(omniTx, twTx, 'updateWitness+permissionId')
+  expectBuildMatchesTronweb(tviemTx, twTx, 'updateWitness+permissionId')
 })
 
 test('throws AccountNotFoundError when no account is available', async () => {
   const { transport } = createMockTransport({ responses: {} })
   const client = createPublicClient({ transport })
   await expect(
-    buildUpdateWitness(client, { url, blockHeader: omniHeader }),
+    buildUpdateWitness(client, { url, blockHeader: tviemHeader }),
   ).rejects.toBeInstanceOf(AccountNotFoundError)
 })

@@ -1,4 +1,4 @@
-// New test file for @tronweb3/omni (no upstream errors/notImplemented.test.ts):
+// New test file for @tronweb3/tviem (no upstream errors/notImplemented.test.ts):
 // rendered-message checks for the NotImplementedError placeholder class.
 import { expect, test } from 'vitest'
 
@@ -12,7 +12,7 @@ test('NotImplementedError (default feature)', () => {
   expect(err).toMatchInlineSnapshot(`
     [NotImplementedError: This feature is not implemented yet.
 
-    Version: @tronweb3/omni@0.1.0]
+    Version: @tronweb3/tviem@0.1.0]
   `)
 })
 
@@ -25,7 +25,7 @@ test('NotImplementedError (named feature + docsPath)', () => {
   ).toMatchInlineSnapshot(`
     [NotImplementedError: getContract().getEvents is not implemented yet.
 
-    Docs: https://github.com/tronweb3/omni/docs/contract/events
-    Version: @tronweb3/omni@0.1.0]
+    Docs: https://github.com/tronweb3/tviem/docs/contract/events
+    Version: @tronweb3/tviem@0.1.0]
   `)
 })

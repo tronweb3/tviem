@@ -143,7 +143,7 @@ test('creates function signature from `AbiFunction`', () => {
   ).toEqual('0xd703f50a')
 })
 
-test('@tronweb3/omni: TRC-20 selectors', () => {
+test('@tronweb3/tviem: TRC-20 selectors', () => {
   expect(toFunctionSelector('function transfer(address,uint256)')).toBe(
     '0xa9059cbb',
   )

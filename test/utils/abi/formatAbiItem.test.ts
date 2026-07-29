@@ -1,6 +1,9 @@
 import { describe, expect, test } from 'vitest'
 
-import { formatAbiItem, formatAbiParams } from '../../../src/utils/abi/formatAbiItem.js'
+import {
+  formatAbiItem,
+  formatAbiParams,
+} from '../../../src/utils/abi/formatAbiItem.js'
 
 describe('formatAbiItem', () => {
   test('foo()', () => {
@@ -287,7 +290,7 @@ describe('formatAbiItem', () => {
       [InvalidDefinitionTypeError: "constructor" is not a valid definition type.
       Valid types: "function", "event", "error"
 
-      Version: @tronweb3/omni@0.1.0]
+      Version: @tronweb3/tviem@0.1.0]
     `)
   })
 })

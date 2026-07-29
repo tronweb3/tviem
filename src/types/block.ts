@@ -1,4 +1,4 @@
-// TRON-specific, clean-room implementation for @tronweb3/omni.
+// TRON-specific, clean-room implementation for @tronweb3/tviem.
 import type { BlockRef } from '../utils/transaction/prepareTransaction.js'
 import type { Address } from './address.js'
 

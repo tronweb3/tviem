@@ -1,4 +1,4 @@
-// TRON-specific, clean-room implementation for @tronweb3/omni.
+// TRON-specific, clean-room implementation for @tronweb3/tviem.
 import type { ErrorType } from '../../errors/utils.js'
 import type { ByteArray, Hex, SignableMessage } from '../../types/misc.js'
 import { type ConcatErrorType, concat } from '../data/concat.js'
@@ -32,7 +32,7 @@ export type HashMessageErrorType =
  * @returns The `0x`-prefixed 32-byte digest.
  *
  * @example
- * hashMessage('hello @tronweb3/omni')
+ * hashMessage('hello @tronweb3/tviem')
  * // '0x068a2c93df26c5f19fb1d6b74abe50efc69cbff8b70a9cc9b915058e0ed9a18e'
  */
 export function hashMessage<to extends 'hex' | 'bytes' = 'hex'>(

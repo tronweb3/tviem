@@ -49,7 +49,7 @@ describe('converts bytes to number', () => {
     ).toThrowErrorMatchingInlineSnapshot(`
       [SizeOverflowError: Size cannot exceed 32 bytes. Given size: 64 bytes.
 
-      Version: @tronweb3/omni@0.1.0]
+      Version: @tronweb3/tviem@0.1.0]
     `)
   })
 })
@@ -107,7 +107,7 @@ describe('converts bytes to bigint', () => {
     ).toThrowErrorMatchingInlineSnapshot(`
       [SizeOverflowError: Size cannot exceed 32 bytes. Given size: 64 bytes.
 
-      Version: @tronweb3/omni@0.1.0]
+      Version: @tronweb3/tviem@0.1.0]
     `)
   })
 })
@@ -142,7 +142,7 @@ describe('converts bytes to boolean', () => {
     ).toThrowErrorMatchingInlineSnapshot(`
       [SizeOverflowError: Size cannot exceed 32 bytes. Given size: 64 bytes.
 
-      Version: @tronweb3/omni@0.1.0]
+      Version: @tronweb3/tviem@0.1.0]
     `)
   })
 
@@ -152,14 +152,14 @@ describe('converts bytes to boolean', () => {
     ).toThrowErrorMatchingInlineSnapshot(`
       [InvalidBytesBooleanError: Bytes value "69" is not a valid boolean. The bytes array must contain a single byte of either a 0 or 1 value.
 
-      Version: @tronweb3/omni@0.1.0]
+      Version: @tronweb3/tviem@0.1.0]
     `)
     expect(() =>
       bytesToBool(new Uint8Array([1, 2])),
     ).toThrowErrorMatchingInlineSnapshot(`
       [InvalidBytesBooleanError: Bytes value "1,2" is not a valid boolean. The bytes array must contain a single byte of either a 0 or 1 value.
 
-      Version: @tronweb3/omni@0.1.0]
+      Version: @tronweb3/tviem@0.1.0]
     `)
   })
 })
@@ -216,7 +216,7 @@ describe('converts bytes to string', () => {
     ).toThrowErrorMatchingInlineSnapshot(`
       [SizeOverflowError: Size cannot exceed 32 bytes. Given size: 64 bytes.
 
-      Version: @tronweb3/omni@0.1.0]
+      Version: @tronweb3/tviem@0.1.0]
     `)
   })
 })
@@ -281,12 +281,12 @@ describe('converts bytes to hex', () => {
     ).toThrowErrorMatchingInlineSnapshot(`
       [SizeOverflowError: Size cannot exceed 32 bytes. Given size: 64 bytes.
 
-      Version: @tronweb3/omni@0.1.0]
+      Version: @tronweb3/tviem@0.1.0]
     `)
   })
 })
 
-test('@tronweb3/omni: uint256/int256 boundary round-trips', () => {
+test('@tronweb3/tviem: uint256/int256 boundary round-trips', () => {
   const maxUint256 = 2n ** 256n - 1n
   expect(bytesToBigInt(numberToBytes(maxUint256, { size: 32 }))).toBe(
     maxUint256,
@@ -306,7 +306,7 @@ test('@tronweb3/omni: uint256/int256 boundary round-trips', () => {
   ).toBe(maxInt256)
 })
 
-test('@tronweb3/omni: ~16KB payload round-trips through hex', () => {
+test('@tronweb3/tviem: ~16KB payload round-trips through hex', () => {
   // deterministic pseudo-random-looking payload (no Math.random/Date)
   const size = 16384
   const bytes = new Uint8Array(size)
@@ -318,7 +318,7 @@ test('@tronweb3/omni: ~16KB payload round-trips through hex', () => {
   expect(decoded).toEqual(bytes)
 })
 
-test('@tronweb3/omni: bytesToBool on empty bytes', () => {
+test('@tronweb3/tviem: bytesToBool on empty bytes', () => {
   // pins viem-aligned behavior: empty byte array coerces to false rather than throwing
   expect(bytesToBool(new Uint8Array([]))).toBe(false)
 })

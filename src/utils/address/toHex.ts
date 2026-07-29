@@ -1,4 +1,4 @@
-// TRON-specific, clean-room implementation for @tronweb3/omni.
+// TRON-specific, clean-room implementation for @tronweb3/tviem.
 import type { ErrorType } from '../../errors/utils.js'
 import type { AddressInput, TronHexAddress } from '../../types/address.js'
 import type { ByteArray } from '../../types/misc.js'

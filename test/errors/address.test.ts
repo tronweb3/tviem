@@ -13,6 +13,6 @@ test('InvalidAddressError', () => {
     - Address must be a "T"-prefixed Base58Check string of 34 characters, or a "41"-prefixed hex value of 21 bytes (42 hex characters).
     - Base58Check address must match its double-SHA256 checksum.
 
-    Version: @tronweb3/omni@0.1.0]
+    Version: @tronweb3/tviem@0.1.0]
   `)
 })

@@ -8,7 +8,11 @@ import {
   IntegerOutOfRangeError,
   VarintOverflowError,
 } from '../../../../src/errors/encoding.js'
-import { maxUvarint, readUvarint, writeUvarint } from '../../../../src/utils/transaction/protobuf/varint.js'
+import {
+  maxUvarint,
+  readUvarint,
+  writeUvarint,
+} from '../../../../src/utils/transaction/protobuf/varint.js'
 
 test('writeUvarint', () => {
   expect(writeUvarint(0n)).toStrictEqual(new Uint8Array([0x00]))
@@ -45,7 +49,7 @@ test('writeUvarint: out of range', () => {
   expect(() => writeUvarint(-1n)).toThrowErrorMatchingInlineSnapshot(`
     [IntegerOutOfRangeError: Number "-1" is not in safe 64-bit unsigned integer range (0 to 18446744073709551615)
 
-    Version: @tronweb3/omni@0.1.0]
+    Version: @tronweb3/tviem@0.1.0]
   `)
 })
 
@@ -112,7 +116,7 @@ test('readUvarint: truncated', () => {
   ).toThrowErrorMatchingInlineSnapshot(`
     [PositionOutOfBoundsError: Position \`3\` is out of bounds (\`0 < position < 3\`).
 
-    Version: @tronweb3/omni@0.1.0]
+    Version: @tronweb3/tviem@0.1.0]
   `)
 })
 
@@ -134,6 +138,6 @@ test('readUvarint: overflow', () => {
   ).toThrowErrorMatchingInlineSnapshot(`
     [VarintOverflowError: Varint exceeds the maximum size of a 64-bit unsigned integer.
 
-    Version: @tronweb3/omni@0.1.0]
+    Version: @tronweb3/tviem@0.1.0]
   `)
 })

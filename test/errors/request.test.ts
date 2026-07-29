@@ -1,4 +1,4 @@
-// New test file for @tronweb3/omni: field + credential-stripping checks for
+// New test file for @tronweb3/tviem: field + credential-stripping checks for
 // the HTTP request error classes (no upstream errors/request.test.ts).
 import { expect, test } from 'vitest'
 

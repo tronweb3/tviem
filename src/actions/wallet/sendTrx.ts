@@ -1,4 +1,4 @@
-// TRON-specific, clean-room implementation for @tronweb3/omni (WR-2).
+// TRON-specific, clean-room implementation for @tronweb3/tviem (WR-2).
 import type { TronAccount } from '../../accounts/types.js'
 import type { Client } from '../../clients/createClient.js'
 import { AccountNotFoundError } from '../../errors/rpc.js'

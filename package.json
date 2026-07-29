@@ -1,5 +1,5 @@
 {
-  "name": "@tronweb3/omni",
+  "name": "@tronweb3/tviem",
   "version": "0.1.0",
   "description": "Lightweight, type-safe TypeScript SDK for the TRON blockchain",
   "license": "MIT",
@@ -19,13 +19,13 @@
     "typescript",
     "tvm"
   ],
-  "homepage": "https://github.com/tronweb3/omni#readme",
+  "homepage": "https://github.com/tronweb3/tviem#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/tronweb3/omni.git"
+    "url": "git+https://github.com/tronweb3/tviem.git"
   },
   "bugs": {
-    "url": "https://github.com/tronweb3/omni/issues"
+    "url": "https://github.com/tronweb3/tviem/issues"
   },
   "main": "./src/_cjs/index.js",
   "module": "./src/_esm/index.js",
@@ -124,7 +124,7 @@
     "test": "vitest --project unit",
     "test:e2e": "vitest --project e2e",
     "tre:up": "node scripts/tre-up.mjs",
-    "tre:down": "docker rm -f omni-tre",
+    "tre:down": "docker rm -f tviem-tre",
     "test:typecheck": "vitest --typecheck.only",
     "test:build": "cd src && publint --strict . && attw --pack . --ignore-rules false-esm"
   },

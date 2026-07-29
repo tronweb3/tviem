@@ -7,7 +7,7 @@ export type ParseUnitsErrorType = ErrorType
  * Multiplies a string representation of a number by a given exponent of base 10 (10exponent).
  *
  * @example
- * import { parseUnits } from '@tronweb3/omni'
+ * import { parseUnits } from '@tronweb3/tviem'
  *
  * parseUnits('420', 9)
  * // 420000000000n

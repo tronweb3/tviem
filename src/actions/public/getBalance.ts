@@ -1,4 +1,4 @@
-// TRON-specific, clean-room implementation for @tronweb3/omni (RD-1).
+// TRON-specific, clean-room implementation for @tronweb3/tviem (RD-1).
 import type { Client } from '../../clients/createClient.js'
 import { IntegerOutOfRangeError } from '../../errors/encoding.js'
 import type { Address } from '../../types/address.js'

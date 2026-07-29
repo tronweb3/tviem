@@ -1,4 +1,4 @@
-// New test file for @tronweb3/omni (no upstream utils/regex.test.ts): match/non-match coverage for the vendored ABI type regexes.
+// New test file for @tronweb3/tviem (no upstream utils/regex.test.ts): match/non-match coverage for the vendored ABI type regexes.
 import { expect, test } from 'vitest'
 
 import { arrayRegex, bytesRegex, integerRegex } from '../../src/utils/regex.js'

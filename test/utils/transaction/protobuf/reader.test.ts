@@ -10,9 +10,17 @@ import { concatBytes } from '../../../../src/utils/data/concat.js'
 import { bytesToString } from '../../../../src/utils/encoding/fromBytes.js'
 import { hexToBytes } from '../../../../src/utils/encoding/toBytes.js'
 import { bytesToHex } from '../../../../src/utils/encoding/toHex.js'
-import { type ProtoField, readFields, readMessageFields } from '../../../../src/utils/transaction/protobuf/reader.js'
+import {
+  type ProtoField,
+  readFields,
+  readMessageFields,
+} from '../../../../src/utils/transaction/protobuf/reader.js'
 import { writeUvarint } from '../../../../src/utils/transaction/protobuf/varint.js'
-import { fBytes, fInt, tag } from '../../../../src/utils/transaction/protobuf/writer.js'
+import {
+  fBytes,
+  fInt,
+  tag,
+} from '../../../../src/utils/transaction/protobuf/writer.js'
 
 /** Extracts the byte payload of a non-varint field, narrowing the union. */
 function lenValue(field: ProtoField | undefined): ByteArray {
@@ -121,7 +129,7 @@ test('throws on unsupported wire types', () => {
   ).toThrowErrorMatchingInlineSnapshot(`
     [UnsupportedWireTypeError: Wire type \`3\` is not supported.
 
-    Version: @tronweb3/omni@0.1.0]
+    Version: @tronweb3/tviem@0.1.0]
   `)
 })
 

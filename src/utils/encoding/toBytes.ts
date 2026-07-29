@@ -34,17 +34,17 @@ export type ToBytesErrorType =
  * @returns Byte array value.
  *
  * @example
- * import { toBytes } from '@tronweb3/omni'
+ * import { toBytes } from '@tronweb3/tviem'
  * const data = toBytes('Hello world')
  * // Uint8Array([72, 101, 108, 108, 111, 32, 87, 111, 114, 108, 100, 33])
  *
  * @example
- * import { toBytes } from '@tronweb3/omni'
+ * import { toBytes } from '@tronweb3/tviem'
  * const data = toBytes(420)
  * // Uint8Array([1, 164])
  *
  * @example
- * import { toBytes } from '@tronweb3/omni'
+ * import { toBytes } from '@tronweb3/tviem'
  * const data = toBytes(420, { size: 4 })
  * // Uint8Array([0, 0, 1, 164])
  */
@@ -77,12 +77,12 @@ export type BoolToBytesErrorType =
  * @returns Byte array value.
  *
  * @example
- * import { boolToBytes } from '@tronweb3/omni'
+ * import { boolToBytes } from '@tronweb3/tviem'
  * const data = boolToBytes(true)
  * // Uint8Array([1])
  *
  * @example
- * import { boolToBytes } from '@tronweb3/omni'
+ * import { boolToBytes } from '@tronweb3/tviem'
  * const data = boolToBytes(true, { size: 32 })
  * // Uint8Array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1])
  */
@@ -131,12 +131,12 @@ export type HexToBytesErrorType = AssertSizeErrorType | PadErrorType | ErrorType
  * @returns Byte array value.
  *
  * @example
- * import { hexToBytes } from '@tronweb3/omni'
+ * import { hexToBytes } from '@tronweb3/tviem'
  * const data = hexToBytes('0x48656c6c6f20776f726c6421')
  * // Uint8Array([72, 101, 108, 108, 111, 32, 87, 111, 114, 108, 100, 33])
  *
  * @example
- * import { hexToBytes } from '@tronweb3/omni'
+ * import { hexToBytes } from '@tronweb3/tviem'
  * const data = hexToBytes('0x48656c6c6f20776f726c6421', { size: 32 })
  * // Uint8Array([72, 101, 108, 108, 111, 32, 87, 111, 114, 108, 100, 33, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
  */
@@ -180,12 +180,12 @@ export type NumberToBytesErrorType =
  * @returns Byte array value.
  *
  * @example
- * import { numberToBytes } from '@tronweb3/omni'
+ * import { numberToBytes } from '@tronweb3/tviem'
  * const data = numberToBytes(420)
  * // Uint8Array([1, 164])
  *
  * @example
- * import { numberToBytes } from '@tronweb3/omni'
+ * import { numberToBytes } from '@tronweb3/tviem'
  * const data = numberToBytes(420, { size: 4 })
  * // Uint8Array([0, 0, 1, 164])
  */
@@ -215,12 +215,12 @@ export type StringToBytesErrorType =
  * @returns Byte array value.
  *
  * @example
- * import { stringToBytes } from '@tronweb3/omni'
+ * import { stringToBytes } from '@tronweb3/tviem'
  * const data = stringToBytes('Hello world!')
  * // Uint8Array([72, 101, 108, 108, 111, 32, 119, 111, 114, 108, 100, 33])
  *
  * @example
- * import { stringToBytes } from '@tronweb3/omni'
+ * import { stringToBytes } from '@tronweb3/tviem'
  * const data = stringToBytes('Hello world!', { size: 32 })
  * // Uint8Array([72, 101, 108, 108, 111, 32, 87, 111, 114, 108, 100, 33, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
  */

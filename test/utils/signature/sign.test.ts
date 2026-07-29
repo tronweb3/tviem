@@ -1,4 +1,4 @@
-// TRON-specific, clean-room tests for @tronweb3/omni.
+// TRON-specific, clean-room tests for @tronweb3/tviem.
 import { describe, expect, test } from 'vitest'
 
 import { BaseError } from '../../../src/errors/base.js'
@@ -13,7 +13,7 @@ const txId =
 const txSignature =
   '4d6f1e54ea593e5118c2d1b3701a4cab4d5235a418e9e46dba8c5f033bc4af0f6c04a08241de23936dffdedc869eac45533f9479a6bf372a38382b168b65ae001c'
 
-// §2.2 TIP-191 message digest for "hello @tronweb3/omni" (pk = 1).
+// §2.2 TIP-191 message digest for "hello @tronweb3/tviem" (pk = 1).
 const messageDigest =
   '0x068a2c93df26c5f19fb1d6b74abe50efc69cbff8b70a9cc9b915058e0ed9a18e' as const
 const messageSignature =

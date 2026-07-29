@@ -1,4 +1,4 @@
-// TRON-specific, clean-room tests for @tronweb3/omni.
+// TRON-specific, clean-room tests for @tronweb3/tviem.
 // Signatures are pinned byte-for-byte from TronWeb's `utils.typedData
 // .signTypedData(domain, types, value, pk)` (pk=1). omni's `sign()` already
 // emits the same `0x||r||s||v` (v=1b/1c) wire form.

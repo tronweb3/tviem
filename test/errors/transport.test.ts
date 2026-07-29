@@ -1,4 +1,4 @@
-// New test file for @tronweb3/omni (no upstream errors/transport.test.ts):
+// New test file for @tronweb3/tviem (no upstream errors/transport.test.ts):
 // rendered-message check for the transport error class.
 import { expect, test } from 'vitest'
 
@@ -12,7 +12,7 @@ test('UrlRequiredError', () => {
   expect(err).toMatchInlineSnapshot(`
     [UrlRequiredError: No URL was provided to the Transport. Please provide a valid node URL to the Transport.
 
-    Docs: https://github.com/tronweb3/omni/docs/clients/intro
-    Version: @tronweb3/omni@0.1.0]
+    Docs: https://github.com/tronweb3/tviem/docs/clients/intro
+    Version: @tronweb3/tviem@0.1.0]
   `)
 })

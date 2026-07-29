@@ -1,14 +1,14 @@
-// TRON-specific, clean-room tests for @tronweb3/omni.
+// TRON-specific, clean-room tests for @tronweb3/tviem.
 import { describe, expect, test } from 'vitest'
 
 import { InvalidAddressError } from '../../../src/errors/address.js'
-import { hexToBytes } from '../../../src/utils/encoding/toBytes.js'
-import { bytesToHex } from '../../../src/utils/encoding/toHex.js'
 import {
   decodeBase58Check,
   encodeBase58Check,
   tryDecodeBase58Check,
 } from '../../../src/utils/address/base58check.js'
+import { hexToBytes } from '../../../src/utils/encoding/toBytes.js'
+import { bytesToHex } from '../../../src/utils/encoding/toHex.js'
 
 // §2.1 global test vectors (byte-compared against TronWeb).
 const v1 = {

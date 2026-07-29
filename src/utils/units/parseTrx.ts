@@ -9,7 +9,7 @@ export type ParseTrxErrorType = ParseUnitsErrorType | ErrorType
  * Converts a string representation of trx to numerical sun.
  *
  * @example
- * import { parseTrx } from '@tronweb3/omni'
+ * import { parseTrx } from '@tronweb3/tviem'
  *
  * parseTrx('420')
  * // 420000000n

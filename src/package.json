@@ -1,5 +1,5 @@
 {
-  "name": "@tronweb3/omni",
+  "name": "@tronweb3/tviem",
   "version": "0.1.0",
   "description": "Lightweight, type-safe TypeScript SDK for the TRON blockchain",
   "license": "MIT",
@@ -17,13 +17,13 @@
     "typescript",
     "tvm"
   ],
-  "homepage": "https://github.com/tronweb3/omni#readme",
+  "homepage": "https://github.com/tronweb3/tviem#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/tronweb3/omni.git"
+    "url": "git+https://github.com/tronweb3/tviem.git"
   },
   "bugs": {
-    "url": "https://github.com/tronweb3/omni/issues"
+    "url": "https://github.com/tronweb3/tviem/issues"
   },
   "main": "./_cjs/index.js",
   "module": "./_esm/index.js",

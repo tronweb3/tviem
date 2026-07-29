@@ -1,4 +1,4 @@
-// TRON-specific, clean-room implementation for @tronweb3/omni (RD-2).
+// TRON-specific, clean-room implementation for @tronweb3/tviem (RD-2).
 import type { Client } from '../../clients/createClient.js'
 import { BlockNotFoundError } from '../../errors/rpc.js'
 import type { TronHexAddress } from '../../types/address.js'

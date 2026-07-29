@@ -1,4 +1,4 @@
-// TRON-specific, clean-room implementation for @tronweb3/omni.
+// TRON-specific, clean-room implementation for @tronweb3/tviem.
 import type { TronAccount } from '../../accounts/types.js'
 import type { Client } from '../../clients/createClient.js'
 import { AccountNotFoundError } from '../../errors/rpc.js'
@@ -123,5 +123,9 @@ export async function voteWitness(
   parameters: VoteWitnessParameters,
 ): Promise<VoteWitnessReturnType> {
   const { account, contract } = assemble(client, parameters)
-  return buildAndBroadcast(client, { contract, account, blockHeader: parameters.blockHeader })
+  return buildAndBroadcast(client, {
+    contract,
+    account,
+    blockHeader: parameters.blockHeader,
+  })
 }

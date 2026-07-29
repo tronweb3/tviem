@@ -1,5 +1,5 @@
 // Development linker: symlinks each subpath export's dist file (`src/_esm|_cjs|_types/**`)
-// straight to its `index.ts` source, so `vitest` / the IDE resolve `@tronweb3/omni/*` to
+// straight to its `index.ts` source, so `vitest` / the IDE resolve `@tronweb3/tviem/*` to
 // source without a build step. Run via `pnpm preconstruct`.
 import {
   mkdirSync,

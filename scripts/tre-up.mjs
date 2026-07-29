@@ -4,7 +4,7 @@
 //
 //   pnpm tre:up      # start TRE on :9090 and fund pk=1
 //   pnpm test:e2e    # run the live e2e against it
-//   pnpm tre:down    # docker rm -f omni-tre
+//   pnpm tre:down    # docker rm -f tviem-tre
 //
 // pk=1 (address TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC) is the canonical trivial
 // test key. The funder is a TRE genesis account read at runtime from
@@ -15,7 +15,7 @@ import { setTimeout as sleep } from 'node:timers/promises'
 import { TronWeb } from 'tronweb'
 
 const TRE_HTTP = process.env.TRE_HTTP ?? 'http://127.0.0.1:9090'
-const CONTAINER = 'omni-tre'
+const CONTAINER = 'tviem-tre'
 const IMAGE = 'tronbox/tre'
 const PK1_ADDRESS = 'TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC'
 const FUND_SUN = 100_000_000_000n // 100,000 TRX

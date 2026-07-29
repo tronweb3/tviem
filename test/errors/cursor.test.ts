@@ -1,4 +1,4 @@
-// New test file for @tronweb3/omni (no upstream errors/cursor.test.ts): constructibility checks for the vendored cursor error classes.
+// New test file for @tronweb3/tviem (no upstream errors/cursor.test.ts): constructibility checks for the vendored cursor error classes.
 import { expect, test } from 'vitest'
 
 import { BaseError } from '../../src/errors/base.js'

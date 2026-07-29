@@ -1,4 +1,4 @@
-// TRON-specific, clean-room implementation for @tronweb3/omni.
+// TRON-specific, clean-room implementation for @tronweb3/tviem.
 import type { HDKey } from '@scure/bip32'
 
 import { BaseError, type BaseErrorType } from '../errors/base.js'

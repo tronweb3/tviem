@@ -1,4 +1,4 @@
-// TRON-specific, clean-room implementation for @tronweb3/omni.
+// TRON-specific, clean-room implementation for @tronweb3/tviem.
 import { secp256k1 } from '@noble/curves/secp256k1'
 
 import { BaseError, type BaseErrorType } from '../../errors/base.js'
@@ -116,7 +116,7 @@ export type RecoverMessageAddressErrorType =
  * @returns The signer's Base58Check address (`T…`).
  *
  * @example
- * recoverMessageAddress({ message: 'hello @tronweb3/omni', signature })
+ * recoverMessageAddress({ message: 'hello @tronweb3/tviem', signature })
  * // 'TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC'
  */
 export function recoverMessageAddress({

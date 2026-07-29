@@ -8,7 +8,7 @@ export type FormatTrxErrorType = FormatUnitsErrorType
  * Converts numerical sun to a string representation of trx.
  *
  * @example
- * import { formatTrx } from '@tronweb3/omni'
+ * import { formatTrx } from '@tronweb3/tviem'
  *
  * formatTrx(1000000n)
  * // '1'

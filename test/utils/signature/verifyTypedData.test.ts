@@ -1,9 +1,12 @@
-// TRON-specific, clean-room tests for @tronweb3/omni.
+// TRON-specific, clean-room tests for @tronweb3/tviem.
 import { describe, expect, test } from 'vitest'
 
 import type { Address, EvmAddress } from '../../../src/types/address.js'
 import { signTypedData } from '../../../src/utils/signature/signTypedData.js'
-import { recoverTypedDataAddress, verifyTypedData } from '../../../src/utils/signature/verifyTypedData.js'
+import {
+  recoverTypedDataAddress,
+  verifyTypedData,
+} from '../../../src/utils/signature/verifyTypedData.js'
 
 const pk1 =
   '0x0000000000000000000000000000000000000000000000000000000000000001' as const

@@ -22,7 +22,7 @@ test('AbiDecodingDataSizeInvalidError', () => {
 
     Data: 0x1234 (2 bytes)
 
-    Version: @tronweb3/omni@0.1.0]
+    Version: @tronweb3/tviem@0.1.0]
   `)
 })
 
@@ -42,7 +42,7 @@ test('AbiDecodingDataSizeTooSmallError', () => {
     Params: (uint256 a, uint256 b)
     Data:   0x1234 (2 bytes)
 
-    Version: @tronweb3/omni@0.1.0]
+    Version: @tronweb3/tviem@0.1.0]
   `)
 })
 
@@ -53,8 +53,8 @@ test('InvalidAbiDecodingTypeError', () => {
     [InvalidAbiDecodingType: Type "lol" is not a valid decoding type.
     Please provide a valid ABI type.
 
-    Docs: https://github.com/tronweb3/omni/lol
-    Version: @tronweb3/omni@0.1.0]
+    Docs: https://github.com/tronweb3/tviem/lol
+    Version: @tronweb3/tviem@0.1.0]
   `)
 })
 
@@ -70,7 +70,7 @@ test('AbiEncodingArrayLengthMismatchError', () => {
     Expected length: 69
     Given length: 420
 
-    Version: @tronweb3/omni@0.1.0]
+    Version: @tronweb3/tviem@0.1.0]
   `)
 })
 
@@ -85,7 +85,7 @@ test('AbiEncodingLengthMismatchError', () => {
     Expected length (params): 69
     Given length (values): 420
 
-    Version: @tronweb3/omni@0.1.0]
+    Version: @tronweb3/tviem@0.1.0]
   `)
 })
 
@@ -95,8 +95,8 @@ test('AbiEventSignatureEmptyTopicsError', () => {
   ).toMatchInlineSnapshot(`
     [AbiEventSignatureEmptyTopicsError: Cannot extract event signature from empty topics.
 
-    Docs: https://github.com/tronweb3/omni/test
-    Version: @tronweb3/omni@0.1.0]
+    Docs: https://github.com/tronweb3/tviem/test
+    Version: @tronweb3/tviem@0.1.0]
   `)
 })
 
@@ -124,7 +124,7 @@ test('DecodeLogDataMismatch', () => {
     Params: (uint256 a, uint256 b)
     Data:   0x1234 (2 bytes)
 
-    Version: @tronweb3/omni@0.1.0]
+    Version: @tronweb3/tviem@0.1.0]
   `)
 })
 
@@ -162,7 +162,7 @@ describe('DecodeLogTopicsMismatch', () => {
     ).toMatchInlineSnapshot(`
       [DecodeLogTopicsMismatch: Expected a topic for indexed event parameter "id" on event "Transfer(address from, address to, uint256 id)".
 
-      Version: @tronweb3/omni@0.1.0]
+      Version: @tronweb3/tviem@0.1.0]
     `)
   })
 
@@ -195,7 +195,7 @@ describe('DecodeLogTopicsMismatch', () => {
     ).toMatchInlineSnapshot(`
       [DecodeLogTopicsMismatch: Expected a topic for indexed event parameter on event "Transfer(address, address, uint256)".
 
-      Version: @tronweb3/omni@0.1.0]
+      Version: @tronweb3/tviem@0.1.0]
     `)
   })
 })
@@ -207,8 +207,8 @@ test('InvalidAbiEncodingTypeError', () => {
     [InvalidAbiEncodingType: Type "lol" is not a valid encoding type.
     Please provide a valid ABI type.
 
-    Docs: https://github.com/tronweb3/omni/lol
-    Version: @tronweb3/omni@0.1.0]
+    Docs: https://github.com/tronweb3/tviem/lol
+    Version: @tronweb3/tviem@0.1.0]
   `)
 })
 
@@ -216,6 +216,6 @@ test('InvalidArrayError', () => {
   expect(new InvalidArrayError('lol')).toMatchInlineSnapshot(`
     [InvalidArrayError: Value "lol" is not a valid array.
 
-    Version: @tronweb3/omni@0.1.0]
+    Version: @tronweb3/tviem@0.1.0]
   `)
 })

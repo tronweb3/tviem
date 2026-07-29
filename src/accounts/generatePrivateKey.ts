@@ -1,4 +1,4 @@
-// TRON-specific, clean-room implementation for @tronweb3/omni.
+// TRON-specific, clean-room implementation for @tronweb3/tviem.
 import { secp256k1 } from '@noble/curves/secp256k1'
 
 import type { ErrorType } from '../errors/utils.js'

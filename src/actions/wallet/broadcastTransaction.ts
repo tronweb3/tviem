@@ -1,4 +1,4 @@
-// TRON-specific, clean-room implementation for @tronweb3/omni (WR-1).
+// TRON-specific, clean-room implementation for @tronweb3/tviem (WR-1).
 import type { SignableTransaction } from '../../accounts/types.js'
 import type { Client } from '../../clients/createClient.js'
 import { TronNodeError } from '../../errors/node.js'

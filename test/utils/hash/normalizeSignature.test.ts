@@ -16,9 +16,9 @@ test('bar(int foo)', () => {
 
 // pins viem-aligned behavior: bare aliases stay bare alongside qualified types
 test('bar(uint foo, uint256 bar, int baz, int256 qux)', () => {
-  expect(normalizeSignature('bar(uint foo, uint256 bar, int baz, int256 qux)')).toBe(
-    'bar(uint,uint256,int,int256)',
-  )
+  expect(
+    normalizeSignature('bar(uint foo, uint256 bar, int baz, int256 qux)'),
+  ).toBe('bar(uint,uint256,int,int256)')
 })
 
 test('processAccount(uint256 , address )', () => {
@@ -140,7 +140,7 @@ test('error: invalid signatures', () => {
     `
     [BaseError: Unable to normalize signature.
 
-    Version: @tronweb3/omni@0.1.0]
+    Version: @tronweb3/tviem@0.1.0]
   `,
   )
 
@@ -149,7 +149,7 @@ test('error: invalid signatures', () => {
   ).toThrowErrorMatchingInlineSnapshot(`
     [BaseError: Unable to normalize signature.
 
-    Version: @tronweb3/omni@0.1.0]
+    Version: @tronweb3/tviem@0.1.0]
   `)
 
   expect(() =>
@@ -157,7 +157,7 @@ test('error: invalid signatures', () => {
   ).toThrowErrorMatchingInlineSnapshot(`
     [BaseError: Unable to normalize signature.
 
-    Version: @tronweb3/omni@0.1.0]
+    Version: @tronweb3/tviem@0.1.0]
   `)
 
   expect(() =>
@@ -165,6 +165,6 @@ test('error: invalid signatures', () => {
   ).toThrowErrorMatchingInlineSnapshot(`
     [BaseError: Unable to normalize signature.
 
-    Version: @tronweb3/omni@0.1.0]
+    Version: @tronweb3/tviem@0.1.0]
   `)
 })

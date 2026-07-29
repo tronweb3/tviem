@@ -1,4 +1,4 @@
-// TRON-specific, clean-room implementation for @tronweb3/omni.
+// TRON-specific, clean-room implementation for @tronweb3/tviem.
 import { generateMnemonic as generateMnemonic_ } from '@scure/bip39'
 import { wordlist } from '@scure/bip39/wordlists/english'
 

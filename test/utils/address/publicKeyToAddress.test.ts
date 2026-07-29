@@ -1,9 +1,9 @@
-// TRON-specific, clean-room tests for @tronweb3/omni.
+// TRON-specific, clean-room tests for @tronweb3/tviem.
 import { describe, expect, test } from 'vitest'
 
 import { BaseError } from '../../../src/errors/base.js'
-import { hexToBytes } from '../../../src/utils/encoding/toBytes.js'
 import { publicKeyToAddress } from '../../../src/utils/address/publicKeyToAddress.js'
+import { hexToBytes } from '../../../src/utils/encoding/toBytes.js'
 
 // §2.1 V1 (pk = 1, the "famous private key").
 const v1PublicKey =

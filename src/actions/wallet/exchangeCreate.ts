@@ -1,4 +1,4 @@
-// TRON-specific, clean-room implementation for @tronweb3/omni.
+// TRON-specific, clean-room implementation for @tronweb3/tviem.
 import type { TronAccount } from '../../accounts/types.js'
 import type { Client } from '../../clients/createClient.js'
 import { AccountNotFoundError } from '../../errors/rpc.js'
@@ -54,12 +54,8 @@ function assemble(
   client: Client,
   parameters: ExchangeCreateParameters,
 ): { account: TronAccount; contract: RawContract } {
-  const {
-    firstTokenId,
-    firstTokenBalance,
-    secondTokenId,
-    secondTokenBalance,
-  } = parameters
+  const { firstTokenId, firstTokenBalance, secondTokenId, secondTokenBalance } =
+    parameters
 
   // Resolve the owner/signing account (per-call, else hoisted on the Client).
   const source = parameters.account ?? client.account

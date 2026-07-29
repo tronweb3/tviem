@@ -1,8 +1,11 @@
-// TRON-specific, clean-room tests for @tronweb3/omni.
+// TRON-specific, clean-room tests for @tronweb3/tviem.
 import { describe, expect, test } from 'vitest'
 
 import { decodeRawData } from '../../../src/utils/transaction/decodeRawData.js'
-import { serializeTransaction, toBroadcastHex } from '../../../src/utils/transaction/serializeTransaction.js'
+import {
+  serializeTransaction,
+  toBroadcastHex,
+} from '../../../src/utils/transaction/serializeTransaction.js'
 
 // §2.3 canonical transfer (pk=1). raw_data bytes = 133 (0x85), one 65-byte
 // (0x41) signature. The full Transaction envelope is `0a`+varint(len)+raw_data

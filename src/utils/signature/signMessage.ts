@@ -1,4 +1,4 @@
-// TRON-specific, clean-room implementation for @tronweb3/omni.
+// TRON-specific, clean-room implementation for @tronweb3/tviem.
 import type { ErrorType } from '../../errors/utils.js'
 import type { ByteArray, Hex, SignableMessage } from '../../types/misc.js'
 import { type HashMessageErrorType, hashMessage } from './hashMessage.js'
@@ -30,7 +30,7 @@ export type SignMessageErrorType =
  * the bare `hex` form and the `0x`-prefixed `serialized` form.
  *
  * @example
- * signMessage({ message: 'hello @tronweb3/omni', privateKey: '0x00...01' })
+ * signMessage({ message: 'hello @tronweb3/tviem', privateKey: '0x00...01' })
  *   .serialized
  * // '0x855e95...135dea1b'
  */

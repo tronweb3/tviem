@@ -69,7 +69,7 @@ describe('hex', () => {
       `
       [SizeExceedsPaddingSizeError: Hex size (43) exceeds padding size (32).
 
-      Version: @tronweb3/omni@0.1.0]
+      Version: @tronweb3/tviem@0.1.0]
     `,
     )
   })
@@ -91,7 +91,7 @@ describe('hex', () => {
       `
       [SizeExceedsPaddingSizeError: Hex size (5) exceeds padding size (4).
 
-      Version: @tronweb3/omni@0.1.0]
+      Version: @tronweb3/tviem@0.1.0]
     `,
     )
   })
@@ -203,7 +203,7 @@ describe('bytes', () => {
       `
       [SizeExceedsPaddingSizeError: Bytes size (44) exceeds padding size (32).
 
-      Version: @tronweb3/omni@0.1.0]
+      Version: @tronweb3/tviem@0.1.0]
     `,
     )
   })
@@ -254,7 +254,7 @@ describe('bytes', () => {
       `
       [SizeExceedsPaddingSizeError: Bytes size (5) exceeds padding size (4).
 
-      Version: @tronweb3/omni@0.1.0]
+      Version: @tronweb3/tviem@0.1.0]
     `,
     )
   })
@@ -385,7 +385,7 @@ describe('bytes', () => {
   })
 })
 
-test('@tronweb3/omni: pads to 32 bytes on the left by default', () => {
+test('@tronweb3/tviem: pads to 32 bytes on the left by default', () => {
   expect(pad('0x1')).toBe(
     '0x0000000000000000000000000000000000000000000000000000000000000001',
   )

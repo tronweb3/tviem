@@ -1,4 +1,4 @@
-// TRON-specific, clean-room tests for @tronweb3/omni.
+// TRON-specific, clean-room tests for @tronweb3/tviem.
 // Every pinned digest is byte-for-byte from TronWeb's `utils.typedData`
 // (`TypedDataEncoder.hash` / `.hashDomain`), an ethers-fork oracle. Oracle
 // `address` values are 0x EVM form; omni additionally accepts base58 / 41-hex
@@ -9,7 +9,10 @@ import { describe, expect, test } from 'vitest'
 import type { AddressInput, EvmAddress } from '../../../src/types/address.js'
 import { concat } from '../../../src/utils/data/concat.js'
 import { keccak256 } from '../../../src/utils/hash/keccak256.js'
-import { hashDomain, hashTypedData } from '../../../src/utils/signature/hashTypedData.js'
+import {
+  hashDomain,
+  hashTypedData,
+} from '../../../src/utils/signature/hashTypedData.js'
 
 // 0x EVM address forms for pk=1 / pk=2 (the form the oracle requires).
 const PK1: EvmAddress = '0x7e5f4552091a69125d5dfcb7b8c2659029395bdf'

@@ -1,4 +1,4 @@
-// TRON-specific, clean-room tests for @tronweb3/omni.
+// TRON-specific, clean-room tests for @tronweb3/tviem.
 // Vectors are byte-for-byte from TronWeb's `TronWeb.fromMnemonic` over the
 // canonical zero-entropy BIP-39 test vector (the "pk=1" of mnemonics: 16 zero
 // bytes → "abandon abandon … about"). No secret is committed — the phrase is
@@ -8,12 +8,11 @@ import { HDKey } from '@scure/bip32'
 import { entropyToMnemonic, mnemonicToSeedSync } from '@scure/bip39'
 import { wordlist } from '@scure/bip39/wordlists/english'
 import { describe, expect, test } from 'vitest'
-
-import { verifyMessage } from '../../src/utils/signature/verifyMessage.js'
-import { verifyTypedData } from '../../src/utils/signature/verifyTypedData.js'
 import { generateMnemonic } from '../../src/accounts/generateMnemonic.js'
 import { hdKeyToAccount } from '../../src/accounts/hdKeyToAccount.js'
 import { mnemonicToAccount } from '../../src/accounts/mnemonicToAccount.js'
+import { verifyMessage } from '../../src/utils/signature/verifyMessage.js'
+import { verifyTypedData } from '../../src/utils/signature/verifyTypedData.js'
 
 const mnemonic = entropyToMnemonic(new Uint8Array(16), wordlist)
 

@@ -1,4 +1,4 @@
-// New test file for @tronweb3/omni (no upstream errors/unit.test.ts): constructibility check for the vendored unit error class.
+// New test file for @tronweb3/tviem (no upstream errors/unit.test.ts): constructibility check for the vendored unit error class.
 import { expect, test } from 'vitest'
 
 import { BaseError } from '../../src/errors/base.js'

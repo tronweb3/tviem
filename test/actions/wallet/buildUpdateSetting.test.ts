@@ -7,23 +7,23 @@ import type { Address } from '../../../src/types/address.js'
 import { createMockTransport } from '../../mock/createMockTransport.js'
 import {
   expectBuildMatchesTronweb,
-  makeOmniClient,
   makeTronWeb,
-  omniHeader,
+  makeTviemClient,
+  tviemHeader,
   twBlockHeader,
 } from './_tronwebDiff.js'
 
 const contractAddress = 'TDvSsdrNM5eeXNL3czpa6AxLDHZA9nwe9K' as Address
 
 test('builds UpdateSettingContract byte-identical to TronWeb', async () => {
-  const client = makeOmniClient()
+  const client = makeTviemClient()
   const tronWeb = makeTronWeb()
   const owner = tronWeb.defaultAddress.base58 as string
 
-  const omniTx = await client.buildUpdateSetting({
+  const tviemTx = await client.buildUpdateSetting({
     contractAddress,
     consumeUserResourcePercent: 60n,
-    blockHeader: omniHeader,
+    blockHeader: tviemHeader,
   })
   const twTx = await tronWeb.transactionBuilder.updateSetting(
     contractAddress,
@@ -32,21 +32,21 @@ test('builds UpdateSettingContract byte-identical to TronWeb', async () => {
     { blockHeader: twBlockHeader },
   )
 
-  expect(omniTx.visible).toBe(false)
-  expect(omniTx.signature).toBeUndefined()
-  expectBuildMatchesTronweb(omniTx, twTx, 'updateSetting')
+  expect(tviemTx.visible).toBe(false)
+  expect(tviemTx.signature).toBeUndefined()
+  expectBuildMatchesTronweb(tviemTx, twTx, 'updateSetting')
 })
 
 test('permissionId is baked in as Permission_id and matches TronWeb', async () => {
-  const client = makeOmniClient()
+  const client = makeTviemClient()
   const tronWeb = makeTronWeb()
   const owner = tronWeb.defaultAddress.base58 as string
 
-  const omniTx = await client.buildUpdateSetting({
+  const tviemTx = await client.buildUpdateSetting({
     contractAddress,
     consumeUserResourcePercent: 60n,
     permissionId: 2,
-    blockHeader: omniHeader,
+    blockHeader: tviemHeader,
   })
   const twTx = await tronWeb.transactionBuilder.updateSetting(
     contractAddress,
@@ -56,12 +56,12 @@ test('permissionId is baked in as Permission_id and matches TronWeb', async () =
   )
 
   const contract = (
-    omniTx.raw_data.contract as Record<string, unknown>[]
+    tviemTx.raw_data.contract as Record<string, unknown>[]
   )[0] as {
     Permission_id?: number
   }
   expect(contract.Permission_id).toBe(2)
-  expectBuildMatchesTronweb(omniTx, twTx, 'updateSetting+permissionId')
+  expectBuildMatchesTronweb(tviemTx, twTx, 'updateSetting+permissionId')
 })
 
 test('throws AccountNotFoundError when no account is available', async () => {
@@ -71,7 +71,7 @@ test('throws AccountNotFoundError when no account is available', async () => {
     buildUpdateSetting(client, {
       contractAddress,
       consumeUserResourcePercent: 60n,
-      blockHeader: omniHeader,
+      blockHeader: tviemHeader,
     }),
   ).rejects.toBeInstanceOf(AccountNotFoundError)
 })

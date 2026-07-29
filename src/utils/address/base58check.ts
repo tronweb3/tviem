@@ -1,4 +1,4 @@
-// TRON-specific, clean-room implementation for @tronweb3/omni.
+// TRON-specific, clean-room implementation for @tronweb3/tviem.
 import { sha256 } from '@noble/hashes/sha256'
 import { base58 } from '@scure/base'
 
