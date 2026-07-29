@@ -3,6 +3,7 @@ import type { Abi } from 'abitype'
 
 import type { TronAccount } from '../../accounts/types.js'
 import type { Client } from '../../clients/createClient.js'
+import { defaultFeeLimit } from '../../constants/address.js'
 import { AccountNotFoundError } from '../../errors/rpc.js'
 import { parseAccount } from '../../types/account.js'
 import type { Address, AddressInput } from '../../types/address.js'
@@ -157,7 +158,7 @@ function assemble(
 ): {
   account: TronAccount
   contract: RawContract
-  feeLimit: bigint | undefined
+  feeLimit: bigint
 } {
   const {
     abi,
@@ -169,7 +170,6 @@ function assemble(
     originEnergyLimit,
     callTokenValue,
     tokenId,
-    feeLimit,
   } = parameters
 
   // Resolve the owner/signing account (per-call, else hoisted on the Client).
@@ -177,6 +177,11 @@ function assemble(
   if (!source) throw new AccountNotFoundError()
   const account = parseAccount(source)
   const ownerAddress = toHex(account.address)
+
+  // A contract deployment needs an energy budget — default the fee limit like
+  // writeContract so the natural no-feeLimit call is not rejected on-chain for
+  // fee_limit 0. An explicit `0n` is still honored (nullish-coalesced).
+  const feeLimit = parameters.feeLimit ?? defaultFeeLimit
 
   // Build the CreateSmartContract (constructor args ABI-encoded onto bytecode).
   const contract: RawContract = {
