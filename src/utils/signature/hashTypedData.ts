@@ -1,4 +1,3 @@
-// TRON-specific, clean-room implementation for @tronweb3/tviem.
 // Implements the EIP-712 / TIP-712 structured-data hash from the standard, over
 // tviem's own keccak256 / encoding / address primitives — the only TRON-specific
 // point is that `address`-typed values are converted from a TRON address form

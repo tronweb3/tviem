@@ -1,4 +1,3 @@
-// TRON-specific, clean-room implementation for @tronweb3/tviem.
 import type { SignableTransaction } from '../../accounts/types.js'
 import {
   TransactionTamperedError,

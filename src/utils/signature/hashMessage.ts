@@ -1,4 +1,3 @@
-// TRON-specific, clean-room implementation for @tronweb3/tviem.
 import type { ErrorType } from '../../errors/utils.js'
 import type { ByteArray, Hex, SignableMessage } from '../../types/misc.js'
 import { type ConcatErrorType, concat } from '../data/concat.js'

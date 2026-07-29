@@ -1,5 +1,5 @@
 /**
- * TRON address types (ADDR-1). Not vendored — TRON-specific.
+ * TRON address types.
  *
  * TRON has three interchangeable address forms (all derived from the same
  * 21-byte payload, pivot = `0x41 ++ 20-byte EVM address`):

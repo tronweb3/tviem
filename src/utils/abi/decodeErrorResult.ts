@@ -1,4 +1,3 @@
-// TRON-specific, clean-room implementation for @tronweb3/tviem.
 import type { Abi, AbiError } from 'abitype'
 import { solidityError, solidityPanic } from '../../constants/solidity.js'
 import {

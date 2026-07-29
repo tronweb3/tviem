@@ -1,4 +1,3 @@
-// TRON-specific, clean-room implementation for @tronweb3/tviem (RD-4).
 import type { Client } from '../../clients/createClient.js'
 
 export type GetChainParametersReturnType = Record<string, bigint>

@@ -1,4 +1,3 @@
-// TRON-specific, clean-room implementation for @tronweb3/tviem.
 import { BaseError } from './base.js'
 
 /**

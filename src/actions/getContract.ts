@@ -1,13 +1,3 @@
-// Structure vendored (de-branded) and adapted for TRON: the contract facade is
-// trimmed to TRON's read / write pipeline. `read` maps `view`/`pure` functions
-// to `readContract`; `write` + `estimateEnergy` map `nonpayable`/`payable`
-// functions to `writeContract` / `estimateEnergy`; `getEvents.<Event>(options?)`
-// maps to `getContractEvents` against the TronGrid `/v1` index. EVM-only groups
-// (`simulate`, `createEventFilter`, `watchEvent`)
-// and the split public/wallet keyed-client are dropped. Method groups are
-// mounted by capability probing (`'readContract' in client`,
-// `'writeContract' in client`) and every dispatch goes through `getAction` so a
-// consumer can override any action on the Client.
 import type {
   Abi,
   AbiFunction,

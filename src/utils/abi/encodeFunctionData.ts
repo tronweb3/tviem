@@ -1,4 +1,3 @@
-// TRON-specific, clean-room implementation for @tronweb3/tviem.
 import type { Abi } from 'abitype'
 
 import type { AbiFunctionNotFoundErrorType } from '../../errors/abi.js'

@@ -25,7 +25,7 @@ test('reads and formats the latest block', async () => {
   expect(calls[0]?.path).toBe('getnowblock')
 })
 
-// F-9R2 (day 9): an empty {} body is "no block", not a block whose every
+// An empty {} body is "no block", not a block whose every
 // field defaulted — and must not surface as a baffling InvalidAddressError.
 test('an empty {} body throws BlockNotFoundError', async () => {
   const { transport } = createMockTransport({

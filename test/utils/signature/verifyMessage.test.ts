@@ -1,4 +1,3 @@
-// TRON-specific, clean-room tests for @tronweb3/tviem.
 import { describe, expect, test } from 'vitest'
 import { hashMessage } from '../../../src/utils/signature/hashMessage.js'
 import { signMessage } from '../../../src/utils/signature/signMessage.js'

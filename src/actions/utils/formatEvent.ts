@@ -1,4 +1,3 @@
-// TRON-specific, clean-room implementation for @tronweb3/tviem.
 import type { Address, AddressInput } from '../../types/address.js'
 import type { Hex } from '../../types/misc.js'
 import { toBase58 } from '../../utils/address/toBase58.js'

@@ -228,8 +228,7 @@ describe('B. per-type live pipeline diff', () => {
 
   test('cross-stack dedup: a TronWeb-cased copy of the same bytes is deduped', () => {
     // TronWeb's uppercase v byte renders the same 65 signature bytes with a
-    // different hex case. Our dedup guard compares case-insensitively (Day 5
-    // fix), so re-signing a TronWeb-signed transaction with the SAME key
+    // different hex case. Our dedup guard compares case-insensitively, so re-signing a TronWeb-signed transaction with the SAME key
     // appends nothing and leaves the existing entry untouched — a duplicate
     // would make the node reject the broadcast.
     const rawData = decodeRawData(canonical.rawDataHex)

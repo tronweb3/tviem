@@ -76,7 +76,7 @@ test('formatEventMeta maps snake_case, omits absent fields', () => {
   expect(formatEventMeta(undefined)).toEqual({})
 })
 
-// F-9R2 (day 9): a row missing contract_address degrades to the null address
+// A row missing contract_address degrades to the null address
 // instead of failing the whole page ('' was never a valid address form).
 test('a missing contract_address degrades to the null address', () => {
   const event = formatEvent({ event_name: 'X' })

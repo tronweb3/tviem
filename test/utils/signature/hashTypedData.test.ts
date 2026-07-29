@@ -1,4 +1,3 @@
-// TRON-specific, clean-room tests for @tronweb3/tviem.
 // Every pinned digest is byte-for-byte from TronWeb's `utils.typedData`
 // (`TypedDataEncoder.hash` / `.hashDomain`), an ethers-fork oracle. Oracle
 // `address` values are 0x EVM form; tviem additionally accepts base58 / 41-hex

@@ -1,4 +1,3 @@
-// TRON-specific, clean-room implementation for @tronweb3/tviem.
 import type { Abi, ExtractAbiEventNames } from 'abitype'
 import type { Client } from '../../clients/createClient.js'
 import type { AddressInput } from '../../types/address.js'

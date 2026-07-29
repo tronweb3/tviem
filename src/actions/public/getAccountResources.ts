@@ -1,4 +1,3 @@
-// TRON-specific, clean-room implementation for @tronweb3/tviem.
 import type { Client } from '../../clients/createClient.js'
 import type { Address } from '../../types/address.js'
 import { toHex } from '../../utils/address/toHex.js'

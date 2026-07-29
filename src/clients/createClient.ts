@@ -1,8 +1,3 @@
-// Structure vendored (de-branded) and adapted for TRON: the request contract is
-// TRON's REST `TronRequestFn` (no EIP-1193 methods/batch/id), the account model
-// is TRON-local, EVM-only concerns (batch / ccipRead / rpcSchema / block tags)
-// are dropped, and the default `blockTime`/`pollingInterval` are TRON's. The
-// `.extend` closure and `isPlainObject` are copied verbatim.
 import type { TronAccount } from '../accounts/types.js'
 import type { ErrorType } from '../errors/utils.js'
 import {

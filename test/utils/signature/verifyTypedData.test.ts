@@ -1,4 +1,3 @@
-// TRON-specific, clean-room tests for @tronweb3/tviem.
 import { describe, expect, test } from 'vitest'
 
 import type { Address, EvmAddress } from '../../../src/types/address.js'

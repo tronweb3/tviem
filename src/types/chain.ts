@@ -1,8 +1,7 @@
 /**
- * TRON chain definition types (CHAIN-1). Not vendored verbatim — the shape is
- * TRON-specific: the EVM `Chain` notion of a single flat RPC URL group is
- * replaced by TRON's dual-node model (`full` / `solidity`), the native
- * currency is pinned to TRX (6 decimals), and EVM-only fields
+ * TRON chain definition types. The EVM `Chain` notion of a single flat RPC
+ * URL group is replaced by TRON's dual-node model (`full` / `solidity`), the
+ * native currency is pinned to TRX (6 decimals), and EVM-only fields
  * (formatters / fees / serializers / block explorers / ENS) are dropped.
  */
 

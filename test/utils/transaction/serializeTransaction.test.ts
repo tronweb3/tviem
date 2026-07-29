@@ -1,4 +1,3 @@
-// TRON-specific, clean-room tests for @tronweb3/tviem.
 import { describe, expect, test } from 'vitest'
 
 import { decodeRawData } from '../../../src/utils/transaction/decodeRawData.js'

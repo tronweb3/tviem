@@ -1,5 +1,3 @@
-// Structure vendored (de-branded) and adapted for TRON: the account is hoisted
-// onto the Client, and the wallet action set is TRON's write pipeline.
 import type { TronAccount } from '../accounts/types.js'
 import type { ErrorType } from '../errors/utils.js'
 import type { ParseAccount } from '../types/account.js'

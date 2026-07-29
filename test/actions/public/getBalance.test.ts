@@ -51,7 +51,7 @@ test('is callable as a bare action with an explicit client', async () => {
   ).toBe(42n)
 })
 
-// F-9R1 (day 9): balances past 2^53-1 SUN (~9M TRX — exchange scale) must
+// Balances past 2^53-1 SUN (~9M TRX — exchange scale) must
 // survive exactly. End-to-end through the REAL http transport: the mock
 // transport serves JS objects and cannot express this wire-text hazard.
 test('a balance past 2^53 survives exactly through the http transport', async () => {

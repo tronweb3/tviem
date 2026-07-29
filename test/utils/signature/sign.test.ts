@@ -1,4 +1,3 @@
-// TRON-specific, clean-room tests for @tronweb3/tviem.
 import { describe, expect, test } from 'vitest'
 
 import { BaseError } from '../../../src/errors/base.js'
@@ -60,7 +59,7 @@ describe('sign', () => {
     expect([27, 28]).toContain(randomized.v)
   })
 
-  test('accepts the advertised 0x-hex form of extraEntropy (Day 5 fix)', () => {
+  test('accepts the advertised 0x-hex form of extraEntropy', () => {
     const deterministic = sign({ hash: txId, privateKey: pk1 })
     const salted = sign({
       hash: txId,

@@ -1,7 +1,3 @@
-// Structure vendored (de-branded) and adapted for TRON: the action set is
-// TRON's read pipeline and each method is bound through `getAction` so a
-// consumer can override any action on the Client.
-
 import {
   type EstimateEnergyParameters,
   type EstimateEnergyReturnType,

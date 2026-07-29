@@ -1,4 +1,3 @@
-// TRON-specific, clean-room implementation for @tronweb3/tviem.
 import { privateKeyToAccount } from '../accounts/privateKeyToAccount.js'
 import type { TronAccount, TronLocalAccount } from '../accounts/types.js'
 import type { ErrorType } from '../errors/utils.js'

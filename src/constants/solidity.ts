@@ -1,4 +1,3 @@
-// TRON-specific, clean-room implementation for @tronweb3/tviem.
 import type { AbiError } from 'abitype'
 
 /** The built-in `Error(string)` revert (4-byte selector `0x08c379a0`). */

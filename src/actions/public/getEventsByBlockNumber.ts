@@ -1,4 +1,3 @@
-// TRON-specific, clean-room implementation for @tronweb3/tviem.
 import type { Client } from '../../clients/createClient.js'
 import type { EventPageMeta, TronEvent } from '../utils/formatEvent.js'
 import { requestEvents } from '../utils/requestEvents.js'

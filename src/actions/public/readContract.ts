@@ -1,4 +1,3 @@
-// TRON-specific, clean-room implementation for @tronweb3/tviem.
 import type { Abi } from 'abitype'
 import type { Client } from '../../clients/createClient.js'
 import { zeroAddress } from '../../constants/address.js'

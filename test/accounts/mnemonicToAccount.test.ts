@@ -1,4 +1,3 @@
-// TRON-specific, clean-room tests for @tronweb3/tviem.
 // Vectors are byte-for-byte from TronWeb's `TronWeb.fromMnemonic` over the
 // canonical zero-entropy BIP-39 test vector (the "pk=1" of mnemonics: 16 zero
 // bytes → "abandon abandon … about"). No secret is committed — the phrase is

@@ -1,9 +1,3 @@
-// Structure vendored (de-branded) and adapted for TRON: the action set is
-// TRON's write pipeline (local build → sign → broadcast). Each account-taking
-// action resolves `args.account ?? client.account` and throws
-// `AccountNotFoundError` when neither is present; every action is bound through
-// `getAction` so a consumer can override any of them on the Client.
-
 import type { TronAccount } from '../../accounts/types.js'
 import {
   type AccountPermissionUpdateParameters,
