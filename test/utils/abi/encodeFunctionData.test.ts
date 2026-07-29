@@ -1,14 +1,13 @@
 import type { Abi } from 'abitype'
 import { expect, test } from 'vitest'
-
+import { encodeFunctionData } from '../../../src/utils/abi/encodeFunctionData.js'
+import { prepareEncodeFunctionData } from '../../../src/utils/abi/prepareEncodeFunctionData.js'
+import { slice } from '../../../src/utils/data/slice.js'
 import {
   type FunctionFixture,
   loadFunctionFixtures,
   reviveValues,
 } from '../../fixtures/abi/loader.js'
-import { slice } from '../../../src/utils/data/slice.js'
-import { encodeFunctionData } from '../../../src/utils/abi/encodeFunctionData.js'
-import { prepareEncodeFunctionData } from '../../../src/utils/abi/prepareEncodeFunctionData.js'
 
 /** Picks the overload whose input count matches the fixture args. */
 function fnFor(fixture: FunctionFixture): FunctionFixture['abi'][number] {

@@ -1,7 +1,7 @@
 import { expect, test } from 'vitest'
-import { createMockTransport } from '../../mock/createMockTransport.js'
-import { createPublicClient } from '../../../src/clients/createPublicClient.js'
 import { getContractEvents } from '../../../src/actions/public/getContractEvents.js'
+import { createPublicClient } from '../../../src/clients/createPublicClient.js'
+import { createMockTransport } from '../../mock/createMockTransport.js'
 
 const usdt = 'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t'
 

@@ -1,7 +1,6 @@
 import { expect, test } from 'vitest'
-
-import { toHex } from '../../src/utils/address/toHex.js'
 import { defaultFeeLimit, zeroAddress } from '../../src/constants/address.js'
+import { toHex } from '../../src/utils/address/toHex.js'
 
 test('zeroAddress is 41 followed by 20 zero bytes', () => {
   expect(toHex(zeroAddress)).toBe('410000000000000000000000000000000000000000')

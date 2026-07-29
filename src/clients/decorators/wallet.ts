@@ -45,6 +45,14 @@ import {
   createAccount,
 } from '../../actions/wallet/createAccount.js'
 import {
+  type BuildCreateProposalParameters,
+  type BuildCreateProposalReturnType,
+  buildCreateProposal,
+  type CreateProposalParameters,
+  type CreateProposalReturnType,
+  createProposal,
+} from '../../actions/wallet/createProposal.js'
+import {
   type BuildCreateTokenParameters,
   type BuildCreateTokenReturnType,
   buildCreateToken,
@@ -60,14 +68,6 @@ import {
   type DelegateResourceReturnType,
   delegateResource,
 } from '../../actions/wallet/delegateResource.js'
-import {
-  type BuildCreateProposalParameters,
-  type BuildCreateProposalReturnType,
-  buildCreateProposal,
-  type CreateProposalParameters,
-  type CreateProposalReturnType,
-  createProposal,
-} from '../../actions/wallet/createProposal.js'
 import {
   type BuildDeleteProposalParameters,
   type BuildDeleteProposalReturnType,

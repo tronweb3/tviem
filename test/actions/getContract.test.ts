@@ -1,14 +1,16 @@
 import { describe, expect, test } from 'vitest'
-
-import { rpc } from '../fixtures/rpc/loader.js'
-import { createMockTransport } from '../mock/createMockTransport.js'
-import { parseBroadcast } from '../mock/parseBroadcast.js'
 import { privateKeyToAccount } from '../../src/accounts/privateKeyToAccount.js'
+import {
+  getContract,
+  getFunctionParameters,
+} from '../../src/actions/getContract.js'
 import { createPublicClient } from '../../src/clients/createPublicClient.js'
 import { createWalletClient } from '../../src/clients/createWalletClient.js'
 import { walletActions } from '../../src/clients/decorators/wallet.js'
 import type { Address } from '../../src/types/address.js'
-import { getContract, getFunctionParameters } from '../../src/actions/getContract.js'
+import { rpc } from '../fixtures/rpc/loader.js'
+import { createMockTransport } from '../mock/createMockTransport.js'
+import { parseBroadcast } from '../mock/parseBroadcast.js'
 
 const trc20Abi = [
   {

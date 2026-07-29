@@ -1,12 +1,11 @@
 import { expectTypeOf, test } from 'vitest'
-
-import type { Hex } from '../../src/types/misc.js'
 import { toAccount } from '../../src/accounts/toAccount.js'
 import type {
   TronCustomAccount,
   TronCustomSource,
   TronLocalAccount,
 } from '../../src/accounts/types.js'
+import type { Hex } from '../../src/types/misc.js'
 
 // pk=1, in both accepted input forms.
 const pk0x =

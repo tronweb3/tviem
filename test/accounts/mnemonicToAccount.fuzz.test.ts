@@ -7,14 +7,13 @@
 import { entropyToMnemonic } from '@scure/bip39'
 import { wordlist } from '@scure/bip39/wordlists/english'
 import { describe, expect, test } from 'vitest'
-
+import { mnemonicToAccount } from '../../src/accounts/mnemonicToAccount.js'
+import type { Hex } from '../../src/types/misc.js'
+import { hexToBytes } from '../../src/utils/encoding/toBytes.js'
 import {
   loadSigFuzzFixtures,
   type SigFuzzHdFixture,
 } from '../fixtures/sig/loader.js'
-import type { Hex } from '../../src/types/misc.js'
-import { hexToBytes } from '../../src/utils/encoding/toBytes.js'
-import { mnemonicToAccount } from '../../src/accounts/mnemonicToAccount.js'
 
 const { meta, hd } = loadSigFuzzFixtures()
 

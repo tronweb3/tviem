@@ -156,9 +156,7 @@ test('TransactionTamperedError fails closed and retains the mismatch fields', ()
   expect(err).toBeInstanceOf(BaseError)
   expect(err.name).toBe('TransactionTamperedError')
   // The message names the mismatch and the anti-tamper posture.
-  expect(err.shortMessage).toContain(
-    'does not match the locally built one',
-  )
+  expect(err.shortMessage).toContain('does not match the locally built one')
   expect(err.message).toContain('transaction tampering')
   expect(err.message).toContain(
     'No signature was produced over the node-supplied transaction.',

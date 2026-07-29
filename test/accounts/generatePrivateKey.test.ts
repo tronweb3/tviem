@@ -1,8 +1,7 @@
 import { secp256k1 } from '@noble/curves/secp256k1'
 import { describe, expect, test } from 'vitest'
-
-import { hexToBytes } from '../../src/utils/encoding/toBytes.js'
 import { generatePrivateKey } from '../../src/accounts/generatePrivateKey.js'
+import { hexToBytes } from '../../src/utils/encoding/toBytes.js'
 
 describe('generatePrivateKey', () => {
   test('returns a 0x-prefixed 64-hex-char key', () => {

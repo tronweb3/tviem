@@ -1,12 +1,15 @@
 import { expect, test } from 'vitest'
-
-import { loadTxFixtures } from '../../fixtures/tx/loader.js'
 import { concatBytes } from '../../../src/utils/data/concat.js'
 import { hexToBytes } from '../../../src/utils/encoding/toBytes.js'
 import { bytesToHex } from '../../../src/utils/encoding/toHex.js'
 import { decodeRawData } from '../../../src/utils/transaction/decodeRawData.js'
-import { fBytes, fInt, fMessage } from '../../../src/utils/transaction/protobuf/writer.js'
+import {
+  fBytes,
+  fInt,
+  fMessage,
+} from '../../../src/utils/transaction/protobuf/writer.js'
 import type { UnknownContractParameter } from '../../../src/utils/transaction/types.js'
+import { loadTxFixtures } from '../../fixtures/tx/loader.js'
 
 const canonical = loadTxFixtures().find(
   (f) => f.name === 'transfer canonical (reference vector)',

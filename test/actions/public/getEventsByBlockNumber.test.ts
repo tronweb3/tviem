@@ -1,7 +1,7 @@
 import { expect, test } from 'vitest'
-import { createMockTransport } from '../../mock/createMockTransport.js'
-import { createPublicClient } from '../../../src/clients/createPublicClient.js'
 import { getEventsByBlockNumber } from '../../../src/actions/public/getEventsByBlockNumber.js'
+import { createPublicClient } from '../../../src/clients/createPublicClient.js'
+import { createMockTransport } from '../../mock/createMockTransport.js'
 
 test('reads a block’s events with paging from /v1/blocks/{n}/events', async () => {
   const { transport, calls } = createMockTransport({

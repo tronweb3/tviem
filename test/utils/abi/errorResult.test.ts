@@ -8,10 +8,10 @@ import {
   AbiErrorSignatureNotFoundError,
   AbiItemAmbiguityError,
 } from '../../../src/errors/abi.js'
-import { concatHex } from '../../../src/utils/data/concat.js'
 import { decodeErrorResult } from '../../../src/utils/abi/decodeErrorResult.js'
 import { encodeAbiParameters } from '../../../src/utils/abi/encodeAbiParameters.js'
 import { encodeErrorResult } from '../../../src/utils/abi/encodeErrorResult.js'
+import { concatHex } from '../../../src/utils/data/concat.js'
 
 const abi = [
   {

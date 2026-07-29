@@ -1,7 +1,7 @@
 import { expect, test } from 'vitest'
+import { createPublicClient } from '../../../src/clients/createPublicClient.js'
 import { rpc } from '../../fixtures/rpc/loader.js'
 import { createMockTransport } from '../../mock/createMockTransport.js'
-import { createPublicClient } from '../../../src/clients/createPublicClient.js'
 
 const successHash =
   '407ec75dad4545890e5788ef78555ecab9dc72d56df29da4ebbd508022bdbaba'

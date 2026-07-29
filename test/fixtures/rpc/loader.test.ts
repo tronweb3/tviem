@@ -1,5 +1,5 @@
-import { deriveRefBlockParams } from '../../../src/utils/transaction/prepareTransaction.js'
 import { describe, expect, test } from 'vitest'
+import { deriveRefBlockParams } from '../../../src/utils/transaction/prepareTransaction.js'
 import { loadTxFixtureFile } from '../tx/loader.js'
 import { rpc, rpcFixture, rpcFixtureNames, rpcReq } from './loader.js'
 

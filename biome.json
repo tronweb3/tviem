@@ -10,6 +10,7 @@
       "!**/coverage",
       "!**/CHANGELOG.md",
       "!**/pnpm-lock.yaml",
+      "!**/test/fixtures/**/*.json",
       "!**/tsconfig.json",
       "!**/tsconfig.*.json"
     ]

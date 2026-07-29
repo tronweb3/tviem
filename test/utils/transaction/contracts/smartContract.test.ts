@@ -1,14 +1,20 @@
 import { expect, test } from 'vitest'
 
 import { bytesToHex } from '../../../../src/utils/encoding/toHex.js'
-import type { CreateSmartContract, TriggerSmartContract } from '../../../../src/utils/transaction/types.js'
-import { EntryType, StateMutabilityType } from '../../../../src/utils/transaction/types.js'
 import {
   decodeCreateSmartContract,
   decodeTriggerSmartContract,
   encodeCreateSmartContract,
   encodeTriggerSmartContract,
 } from '../../../../src/utils/transaction/contracts/smartContract.js'
+import type {
+  CreateSmartContract,
+  TriggerSmartContract,
+} from '../../../../src/utils/transaction/types.js'
+import {
+  EntryType,
+  StateMutabilityType,
+} from '../../../../src/utils/transaction/types.js'
 
 // §2.1 V1, §2.1 V3 (USDT), §2.4 TRC20 transfer calldata.
 const v1 = '417e5f4552091a69125d5dfcb7b8c2659029395bdf' as const

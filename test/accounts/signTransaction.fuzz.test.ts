@@ -6,16 +6,15 @@
 //   - for owner-matching cases the full signTransaction pipeline is exercised
 //     and its appended signature[0] is diffed byte-for-byte.
 import { describe, expect, test } from 'vitest'
-
+import { signTransaction } from '../../src/accounts/utils/signTransaction.js'
+import { sign } from '../../src/utils/signature/sign.js'
+import { decodeRawData } from '../../src/utils/transaction/decodeRawData.js'
+import type { RawData } from '../../src/utils/transaction/serializeRawData.js'
 import {
   loadSigFuzzFixtures,
   type SigFuzzTransactionFixture,
 } from '../fixtures/sig/loader.js'
 import { loadTxFixtures } from '../fixtures/tx/loader.js'
-import { sign } from '../../src/utils/signature/sign.js'
-import { decodeRawData } from '../../src/utils/transaction/decodeRawData.js'
-import type { RawData } from '../../src/utils/transaction/serializeRawData.js'
-import { signTransaction } from '../../src/accounts/utils/signTransaction.js'
 
 const PRIVATE_KEY = {
   pk1: '0x0000000000000000000000000000000000000000000000000000000000000001',

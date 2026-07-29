@@ -1,8 +1,8 @@
 import type { Abi } from 'abitype'
 import { expect, test } from 'vitest'
-import { loadFunctionFixtures } from '../../fixtures/abi/loader.js'
 import { AbiFunctionNotFoundError } from '../../../src/errors/abi.js'
 import { prepareEncodeFunctionData } from '../../../src/utils/abi/prepareEncodeFunctionData.js'
+import { loadFunctionFixtures } from '../../fixtures/abi/loader.js'
 
 test('derives the selector and narrows the abi to one item', () => {
   const fixture = loadFunctionFixtures().find(

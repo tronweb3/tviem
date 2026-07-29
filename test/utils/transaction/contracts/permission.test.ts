@@ -1,12 +1,12 @@
 import { expect, test } from 'vitest'
 
 import { bytesToHex } from '../../../../src/utils/encoding/toHex.js'
-import type { AccountPermissionUpdateContract } from '../../../../src/utils/transaction/types.js'
-import { PermissionType } from '../../../../src/utils/transaction/types.js'
 import {
   decodeAccountPermissionUpdateContract,
   encodeAccountPermissionUpdateContract,
 } from '../../../../src/utils/transaction/contracts/permission.js'
+import type { AccountPermissionUpdateContract } from '../../../../src/utils/transaction/types.js'
+import { PermissionType } from '../../../../src/utils/transaction/types.js'
 
 // §2.1 V1 / V2.
 const v1 = '417e5f4552091a69125d5dfcb7b8c2659029395bdf' as const

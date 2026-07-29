@@ -1,7 +1,6 @@
 import { expect, test, vi } from 'vitest'
-
-import type { TronRequestFn } from '../../../src/types/transport.js'
 import { createTransport } from '../../../src/clients/transports/createTransport.js'
+import type { TronRequestFn } from '../../../src/types/transport.js'
 
 function setup(request: TronRequestFn) {
   return createTransport(

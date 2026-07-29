@@ -1,7 +1,7 @@
 import { expect, test } from 'vitest'
 import type { SignableTransaction } from '../../../src/accounts/types.js'
-import { TransactionTamperedError } from '../../../src/errors/rpc.js'
 import { assertUnchangedTransaction } from '../../../src/actions/utils/assertUnchangedTransaction.js'
+import { TransactionTamperedError } from '../../../src/errors/rpc.js'
 
 const local: SignableTransaction = {
   txID: 'aabbccdd',

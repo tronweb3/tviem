@@ -1,9 +1,9 @@
+import { describe, expect, test } from 'vitest'
 import {
   TronBroadcastError,
   TronContractValidateError,
 } from '../../src/errors/node.js'
 import type { TronRequestFn } from '../../src/types/transport.js'
-import { describe, expect, test } from 'vitest'
 import { rpc } from '../fixtures/rpc/loader.js'
 import { createMockTransport } from './createMockTransport.js'
 
@@ -109,7 +109,9 @@ describe('createMockTransport', () => {
     })
     const promise = request({ path: 'triggersmartcontract', body: {} })
     await expect(promise).rejects.toBeInstanceOf(TronContractValidateError)
-    const error = (await promise.catch((e: unknown) => e)) as TronContractValidateError
+    const error = (await promise.catch(
+      (e: unknown) => e,
+    )) as TronContractValidateError
     expect(error.code).toBe('CONTRACT_VALIDATE_ERROR')
     expect(error.node).toBe('full')
     expect(error.path).toBe('triggersmartcontract')

@@ -1,13 +1,13 @@
 import type { Abi } from 'abitype'
 import { expect, test } from 'vitest'
+import { AbiFunctionOutputsNotFoundError } from '../../../src/errors/abi.js'
+import { decodeFunctionResult } from '../../../src/utils/abi/decodeFunctionResult.js'
 import {
   type FixtureValue,
   loadFunctionFixtures,
   reviveValue,
   reviveValues,
 } from '../../fixtures/abi/loader.js'
-import { AbiFunctionOutputsNotFoundError } from '../../../src/errors/abi.js'
-import { decodeFunctionResult } from '../../../src/utils/abi/decodeFunctionResult.js'
 
 test('every gold function fixture with returnData decodes deep-equal', () => {
   for (const fixture of loadFunctionFixtures()) {

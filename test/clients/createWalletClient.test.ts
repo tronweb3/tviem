@@ -1,13 +1,12 @@
 import { expect, test } from 'vitest'
-
-import { rpc } from '../fixtures/rpc/loader.js'
-import { createMockTransport } from '../mock/createMockTransport.js'
-import { AccountNotFoundError } from '../../src/errors/rpc.js'
 import { createWalletClient } from '../../src/clients/createWalletClient.js'
 import {
   createTransport,
   type Transport,
 } from '../../src/clients/transports/createTransport.js'
+import { AccountNotFoundError } from '../../src/errors/rpc.js'
+import { rpc } from '../fixtures/rpc/loader.js'
+import { createMockTransport } from '../mock/createMockTransport.js'
 
 const transport: Transport = () =>
   createTransport(

@@ -138,6 +138,16 @@ export {
   createAccount,
 } from './wallet/createAccount.js'
 export {
+  type BuildCreateProposalParameters,
+  type BuildCreateProposalReturnType,
+  buildCreateProposal,
+  type CreateProposalParameters,
+  type CreateProposalReturnType,
+  createProposal,
+  type ProposalParameterInput,
+  type ProposalParametersInput,
+} from './wallet/createProposal.js'
+export {
   type BuildCreateTokenParameters,
   type BuildCreateTokenReturnType,
   buildCreateToken,
@@ -155,16 +165,6 @@ export {
   type DelegateResourceReturnType,
   delegateResource,
 } from './wallet/delegateResource.js'
-export {
-  type BuildCreateProposalParameters,
-  type BuildCreateProposalReturnType,
-  buildCreateProposal,
-  type CreateProposalParameters,
-  type CreateProposalReturnType,
-  createProposal,
-  type ProposalParameterInput,
-  type ProposalParametersInput,
-} from './wallet/createProposal.js'
 export {
   type BuildDeleteProposalParameters,
   type BuildDeleteProposalReturnType,

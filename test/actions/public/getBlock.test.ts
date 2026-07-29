@@ -1,12 +1,12 @@
 import { expect, test } from 'vitest'
-import { rpc, rpcReq } from '../../fixtures/rpc/loader.js'
-import { createMockTransport } from '../../mock/createMockTransport.js'
 import { createPublicClient } from '../../../src/clients/createPublicClient.js'
 import { BlockNotFoundError } from '../../../src/errors/rpc.js'
 import {
   type BlockRef,
   deriveRefBlockParams,
 } from '../../../src/utils/transaction/prepareTransaction.js'
+import { rpc, rpcReq } from '../../fixtures/rpc/loader.js'
+import { createMockTransport } from '../../mock/createMockTransport.js'
 
 test('getNowBlock GETs the full node and maps the raw block', async () => {
   const { transport, calls } = createMockTransport({

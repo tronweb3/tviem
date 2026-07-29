@@ -1,8 +1,8 @@
 import { expect, test } from 'vitest'
+import { getAccountResources } from '../../../src/actions/public/getAccountResources.js'
+import { createPublicClient } from '../../../src/clients/createPublicClient.js'
 import { rpc, rpcReq } from '../../fixtures/rpc/loader.js'
 import { createMockTransport } from '../../mock/createMockTransport.js'
-import { createPublicClient } from '../../../src/clients/createPublicClient.js'
-import { getAccountResources } from '../../../src/actions/public/getAccountResources.js'
 
 const address = 'TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC'
 

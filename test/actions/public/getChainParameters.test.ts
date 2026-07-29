@@ -1,8 +1,11 @@
 import { expect, test } from 'vitest'
+import {
+  getEnergyFee,
+  getTransactionFee,
+} from '../../../src/actions/public/getChainParameters.js'
+import { createPublicClient } from '../../../src/clients/createPublicClient.js'
 import { rpc } from '../../fixtures/rpc/loader.js'
 import { createMockTransport } from '../../mock/createMockTransport.js'
-import { createPublicClient } from '../../../src/clients/createPublicClient.js'
-import { getEnergyFee, getTransactionFee } from '../../../src/actions/public/getChainParameters.js'
 
 test('maps chainParameter[] to a bigint map, absent value -> 0n', async () => {
   const { transport, calls, bodyOf } = createMockTransport({

@@ -66,7 +66,10 @@ test('TronValidationError carries code / node / path / response', () => {
 
 test('TronContractValidateError carries code / node / path / response', () => {
   const response = {
-    result: { code: 'CONTRACT_VALIDATE_ERROR', message: 'insufficient balance' },
+    result: {
+      code: 'CONTRACT_VALIDATE_ERROR',
+      message: 'insufficient balance',
+    },
   }
   const err = new TronContractValidateError('insufficient balance', {
     code: 'CONTRACT_VALIDATE_ERROR',

@@ -7,16 +7,15 @@
 //   - encodePacked must reproduce the gold packed bytes exactly.
 import { readFileSync } from 'node:fs'
 import { describe, expect, test } from 'vitest'
-
+import { decodeAbiParameters } from '../../../src/utils/abi/decodeAbiParameters.js'
+import { encodeAbiParameters } from '../../../src/utils/abi/encodeAbiParameters.js'
+import { encodePacked } from '../../../src/utils/abi/encodePacked.js'
 import {
   type FixtureParameter,
   type FixtureValue,
   reviveValue,
   reviveValues,
 } from '../../fixtures/abi/loader.js'
-import { decodeAbiParameters } from '../../../src/utils/abi/decodeAbiParameters.js'
-import { encodeAbiParameters } from '../../../src/utils/abi/encodeAbiParameters.js'
-import { encodePacked } from '../../../src/utils/abi/encodePacked.js'
 
 type EncodeCase = {
   name: string

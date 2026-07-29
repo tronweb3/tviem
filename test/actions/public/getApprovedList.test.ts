@@ -1,10 +1,10 @@
 import { expect, test } from 'vitest'
-import { loadTxFixtureFile } from '../../fixtures/tx/loader.js'
-import { createMockTransport } from '../../mock/createMockTransport.js'
 import { signTransaction } from '../../../src/accounts/utils/signTransaction.js'
+import { getApprovedList } from '../../../src/actions/public/getApprovedList.js'
 import { createPublicClient } from '../../../src/clients/createPublicClient.js'
 import { TransactionTamperedError } from '../../../src/errors/rpc.js'
-import { getApprovedList } from '../../../src/actions/public/getApprovedList.js'
+import { loadTxFixtureFile } from '../../fixtures/tx/loader.js'
+import { createMockTransport } from '../../mock/createMockTransport.js'
 
 const pk1 = `0x${'0'.repeat(63)}1` as const
 const [transfer] = loadTxFixtureFile('transfer-contract.json')

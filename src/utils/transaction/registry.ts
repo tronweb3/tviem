@@ -36,16 +36,6 @@ import {
   encodeUpdateSettingContract,
 } from './contracts/contractAdmin.js'
 import {
-  decodeAccountPermissionUpdateContract,
-  encodeAccountPermissionUpdateContract,
-} from './contracts/permission.js'
-import {
-  decodeDelegateResourceContract,
-  decodeUnDelegateResourceContract,
-  encodeDelegateResourceContract,
-  encodeUnDelegateResourceContract,
-} from './contracts/resource.js'
-import {
   decodeExchangeCreateContract,
   decodeExchangeInjectContract,
   decodeExchangeTransactionContract,
@@ -56,6 +46,10 @@ import {
   encodeExchangeWithdrawContract,
 } from './contracts/exchange.js'
 import {
+  decodeAccountPermissionUpdateContract,
+  encodeAccountPermissionUpdateContract,
+} from './contracts/permission.js'
+import {
   decodeProposalApproveContract,
   decodeProposalCreateContract,
   decodeProposalDeleteContract,
@@ -63,6 +57,12 @@ import {
   encodeProposalCreateContract,
   encodeProposalDeleteContract,
 } from './contracts/proposal.js'
+import {
+  decodeDelegateResourceContract,
+  decodeUnDelegateResourceContract,
+  encodeDelegateResourceContract,
+  encodeUnDelegateResourceContract,
+} from './contracts/resource.js'
 import {
   decodeCreateSmartContract,
   decodeTriggerSmartContract,

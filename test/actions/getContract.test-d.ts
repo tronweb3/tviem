@@ -1,10 +1,9 @@
 import { expectTypeOf, test } from 'vitest'
-
+import { getContract } from '../../src/actions/getContract.js'
 import type { Client } from '../../src/clients/createClient.js'
 import type { PublicClient } from '../../src/clients/createPublicClient.js'
 import type { WalletClient } from '../../src/clients/createWalletClient.js'
 import type { AddressInput } from '../../src/types/address.js'
-import { getContract } from '../../src/actions/getContract.js'
 
 const trc20Abi = [
   {

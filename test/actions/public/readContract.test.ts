@@ -1,7 +1,6 @@
 import { describe, expect, test } from 'vitest'
-
-import { rpc, rpcReq } from '../../fixtures/rpc/loader.js'
 import { privateKeyToAccount } from '../../../src/accounts/privateKeyToAccount.js'
+import { readContract } from '../../../src/actions/public/readContract.js'
 import { createClient } from '../../../src/clients/createClient.js'
 import {
   createTransport,
@@ -10,8 +9,11 @@ import {
 import { normalizeTronError } from '../../../src/clients/transports/http.js'
 import { ContractFunctionRevertedError } from '../../../src/errors/rpc.js'
 import type { Address } from '../../../src/types/address.js'
-import type { TronRequestArgs, TronRequestFn } from '../../../src/types/transport.js'
-import { readContract } from '../../../src/actions/public/readContract.js'
+import type {
+  TronRequestArgs,
+  TronRequestFn,
+} from '../../../src/types/transport.js'
+import { rpc, rpcReq } from '../../fixtures/rpc/loader.js'
 
 const balanceOfAbi = [
   {

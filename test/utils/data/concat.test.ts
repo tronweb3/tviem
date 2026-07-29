@@ -1,6 +1,10 @@
 import { expect, test } from 'vitest'
 
-import { concat, concatBytes, concatHex } from '../../../src/utils/data/concat.js'
+import {
+  concat,
+  concatBytes,
+  concatHex,
+} from '../../../src/utils/data/concat.js'
 
 test('concat', () => {
   expect(concat(['0x0', '0x1'])).toBe('0x01')

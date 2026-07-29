@@ -1,7 +1,6 @@
 import { expect, test } from 'vitest'
-
-import { TronRpcError } from '../../../src/errors/rpc.js'
 import { assertRpcSuccess } from '../../../src/actions/utils/normalizeResponse.js'
+import { TronRpcError } from '../../../src/errors/rpc.js'
 
 test('passes through a normal business object', () => {
   expect(() => assertRpcSuccess({ balance: 1 })).not.toThrow()

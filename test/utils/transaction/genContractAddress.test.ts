@@ -1,7 +1,6 @@
 import { expect, test } from 'vitest'
-
-import { loadTxFixtureFile } from '../../fixtures/tx/loader.js'
 import { genContractAddress } from '../../../src/utils/transaction/genContractAddress.js'
+import { loadTxFixtureFile } from '../../fixtures/tx/loader.js'
 
 const owner = '417e5f4552091a69125d5dfcb7b8c2659029395bdf'
 const createFixtures = loadTxFixtureFile('create-smart-contract.json')

@@ -1,12 +1,11 @@
 import { expect, test } from 'vitest'
-
-import type { Chain } from '../../src/types/chain.js'
-import { getAction } from '../../src/utils/getAction.js'
 import { createClient } from '../../src/clients/createClient.js'
 import {
   createTransport,
   type Transport,
 } from '../../src/clients/transports/createTransport.js'
+import type { Chain } from '../../src/types/chain.js'
+import { getAction } from '../../src/utils/getAction.js'
 
 const transport: Transport = () =>
   createTransport(

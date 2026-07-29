@@ -3,13 +3,16 @@ import { expect, test } from 'vitest'
 import { concatBytes } from '../../../../src/utils/data/concat.js'
 import { hexToBytes } from '../../../../src/utils/encoding/toBytes.js'
 import { bytesToHex } from '../../../../src/utils/encoding/toHex.js'
-import type { TransferAssetContract, TransferContract } from '../../../../src/utils/transaction/types.js'
 import {
   decodeTransferAssetContract,
   decodeTransferContract,
   encodeTransferAssetContract,
   encodeTransferContract,
 } from '../../../../src/utils/transaction/contracts/transfer.js'
+import type {
+  TransferAssetContract,
+  TransferContract,
+} from '../../../../src/utils/transaction/types.js'
 
 // §2.1 V1 / V2, §2.3 `to`.
 const v1 = '417e5f4552091a69125d5dfcb7b8c2659029395bdf' as const

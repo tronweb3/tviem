@@ -2,8 +2,14 @@ import { expect, test } from 'vitest'
 
 import { InvalidAddressError } from '../../../src/errors/address.js'
 import type { AddressInput } from '../../../src/types/address.js'
-import { hexToBytes, stringToBytes } from '../../../src/utils/encoding/toBytes.js'
-import { flex, normalizeAddress } from '../../../src/utils/transaction/normalize.js'
+import {
+  hexToBytes,
+  stringToBytes,
+} from '../../../src/utils/encoding/toBytes.js'
+import {
+  flex,
+  normalizeAddress,
+} from '../../../src/utils/transaction/normalize.js'
 
 // §2.1 V1.
 const v1 = '417e5f4552091a69125d5dfcb7b8c2659029395bdf' as const

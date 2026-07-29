@@ -1,10 +1,12 @@
 import { expect, test } from 'vitest'
-
-import { loadTxFixtures } from '../../fixtures/tx/loader.js'
 import { sha256 } from '../../../src/utils/hash/sha256.js'
 import { decodeRawData } from '../../../src/utils/transaction/decodeRawData.js'
 import { getTransactionId } from '../../../src/utils/transaction/getTransactionId.js'
-import { serializeRawData, toRawDataHex } from '../../../src/utils/transaction/serializeRawData.js'
+import {
+  serializeRawData,
+  toRawDataHex,
+} from '../../../src/utils/transaction/serializeRawData.js'
+import { loadTxFixtures } from '../../fixtures/tx/loader.js'
 
 const canonical = loadTxFixtures().find(
   (f) => f.name === 'transfer canonical (reference vector)',

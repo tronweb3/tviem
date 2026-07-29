@@ -3,7 +3,11 @@ import { expect, test } from 'vitest'
 import { concatBytes } from '../../../../src/utils/data/concat.js'
 import { hexToBytes } from '../../../../src/utils/encoding/toBytes.js'
 import { bytesToHex } from '../../../../src/utils/encoding/toHex.js'
-import { decodeMessage, encodeMessage, type MessageSpec } from '../../../../src/utils/transaction/contracts/codec.js'
+import {
+  decodeMessage,
+  encodeMessage,
+  type MessageSpec,
+} from '../../../../src/utils/transaction/contracts/codec.js'
 
 // §2.1 V1.
 const v1 = '417e5f4552091a69125d5dfcb7b8c2659029395bdf' as const

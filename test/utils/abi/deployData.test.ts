@@ -5,10 +5,10 @@ import {
   AbiConstructorNotFoundError,
   AbiConstructorParamsNotFoundError,
 } from '../../../src/errors/abi.js'
-import { concatHex } from '../../../src/utils/data/concat.js'
 import { decodeDeployData } from '../../../src/utils/abi/decodeDeployData.js'
 import { encodeAbiParameters } from '../../../src/utils/abi/encodeAbiParameters.js'
 import { encodeDeployData } from '../../../src/utils/abi/encodeDeployData.js'
+import { concatHex } from '../../../src/utils/data/concat.js'
 
 const bytecode = '0x60806040' as const
 

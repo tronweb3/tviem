@@ -1,7 +1,6 @@
 import { expect, test } from 'vitest'
-
-import { loadTxFixtures } from '../../fixtures/tx/loader.js'
 import { txCheck } from '../../../src/utils/transaction/txCheck.js'
+import { loadTxFixtures } from '../../fixtures/tx/loader.js'
 
 const canonical = loadTxFixtures().find(
   (f) => f.name === 'transfer canonical (reference vector)',

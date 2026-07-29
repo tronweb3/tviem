@@ -1,9 +1,20 @@
 import { expectTypeOf, test } from 'vitest'
 
 import type { Address } from '../../../src/types/address.js'
-import type { ByteArray, Hex, SignableMessage } from '../../../src/types/misc.js'
-import { type Signature, type SignParameters, sign } from '../../../src/utils/signature/sign.js'
-import { type SignMessageParameters, signMessage } from '../../../src/utils/signature/signMessage.js'
+import type {
+  ByteArray,
+  Hex,
+  SignableMessage,
+} from '../../../src/types/misc.js'
+import {
+  type Signature,
+  type SignParameters,
+  sign,
+} from '../../../src/utils/signature/sign.js'
+import {
+  type SignMessageParameters,
+  signMessage,
+} from '../../../src/utils/signature/signMessage.js'
 import {
   type RecoverMessageAddressParameters,
   recoverMessageAddress,
