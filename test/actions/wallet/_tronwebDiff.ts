@@ -2,9 +2,9 @@
 // transaction with @tronweb3/tviem AND, independently, with TronWeb's own
 // `transactionBuilder`, and assert they agree byte-for-byte and id-for-id.
 // Both build offline against the same pinned block header. As a second,
-// independent check, omni's `raw_data` is re-encoded through TronWeb's protobuf
-// codec (`txJsonToPb`) and must reproduce omni's exact bytes/id — proving
-// java-tron agrees with omni's serialization.
+// independent check, tviem's `raw_data` is re-encoded through TronWeb's protobuf
+// codec (`txJsonToPb`) and must reproduce tviem's exact bytes/id — proving
+// java-tron agrees with tviem's serialization.
 import { TronWeb, utils } from 'tronweb'
 import { expect } from 'vitest'
 
@@ -22,7 +22,7 @@ const REF = {
   timestamp: 1700000000000n,
   expiration: 1700000060000n,
 }
-/** omni's `blockHeader` override (camelCase, bigint timing). */
+/** tviem's `blockHeader` override (camelCase, bigint timing). */
 export const tviemHeader = {
   refBlockBytes: REF.refBlockBytes,
   refBlockHash: REF.refBlockHash,
@@ -37,7 +37,7 @@ export const twBlockHeader = {
   timestamp: Number(REF.timestamp),
 }
 
-/** An omni wallet client hoisted with pk1; no node is hit (blockHeader is set). */
+/** An tviem wallet client hoisted with pk1; no node is hit (blockHeader is set). */
 export function makeTviemClient() {
   const { transport } = createMockTransport({ responses: {} })
   return createWalletClient({ account: pk1, transport })
@@ -65,8 +65,8 @@ type NodeTx = {
 }
 
 /**
- * Assert omni's built transaction agrees with TronWeb's own build byte-for-byte
- * and id-for-id, and that java-tron (via `txJsonToPb`) re-encodes omni's
+ * Assert tviem's built transaction agrees with TronWeb's own build byte-for-byte
+ * and id-for-id, and that java-tron (via `txJsonToPb`) re-encodes tviem's
  * `raw_data` to the same bytes/id.
  */
 export function expectBuildMatchesTronweb(
@@ -76,9 +76,9 @@ export function expectBuildMatchesTronweb(
 ): void {
   expect(
     norm(tviemTx.raw_data_hex ?? ''),
-    `${label}: raw_data_hex omni↔tronweb`,
+    `${label}: raw_data_hex tviem↔tronweb`,
   ).toBe(norm(tronwebTx.raw_data_hex ?? ''))
-  expect(norm(tviemTx.txID ?? ''), `${label}: txID omni↔tronweb`).toBe(
+  expect(norm(tviemTx.txID ?? ''), `${label}: txID tviem↔tronweb`).toBe(
     norm(tronwebTx.txID ?? ''),
   )
   const pb = codec.txJsonToPb({ raw_data: tviemTx.raw_data })

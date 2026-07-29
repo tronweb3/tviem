@@ -1,7 +1,7 @@
 // TRON-specific, clean-room tests for @tronweb3/tviem.
 // Every pinned digest is byte-for-byte from TronWeb's `utils.typedData`
 // (`TypedDataEncoder.hash` / `.hashDomain`), an ethers-fork oracle. Oracle
-// `address` values are 0x EVM form; omni additionally accepts base58 / 41-hex
+// `address` values are 0x EVM form; tviem additionally accepts base58 / 41-hex
 // and must collapse them to the same 20-byte word (address-form invariance —
 // the one genuinely TRON-specific behavior of the digest).
 import { describe, expect, test } from 'vitest'
@@ -19,7 +19,7 @@ const PK1: EvmAddress = '0x7e5f4552091a69125d5dfcb7b8c2659029395bdf'
 const PK2: EvmAddress = '0x2b5ad5c4795c026514f8317c7a215e218dccd6cf'
 
 const domain = {
-  name: 'Omni TIP-712',
+  name: 'Example TIP-712',
   version: '1',
   chainId: 728126428n, // TRON mainnet chainId (0x2b6653dc)
   verifyingContract: PK2,
@@ -43,9 +43,9 @@ const mail = {
   contents: 'Hello, Bob!',
 }
 const mailDomainHash =
-  '0xc06892a7fa8ece3ba29b12601a06b95d32b3d5faee1926952ca012621a87c9b0'
+  '0x72436b46c555ba306e668db3d2b267531c668c282f370a7bcb37b666e9e19d59'
 const mailDigest =
-  '0xd80e28b4e265af88bf97816618e50cc1e3f75ad013ffaa1820a21557661c6c90'
+  '0x2d4f768f1cc74a03ba2e13748dcaefdcc11811292ab1abaa8434bb054a9d1ef4'
 
 describe('hashDomain', () => {
   test('matches the oracle EIP712Domain hash', () => {
@@ -55,7 +55,11 @@ describe('hashDomain', () => {
   test('drops absent fields (name/version/chainId only)', () => {
     // Self-consistency: a domain missing verifyingContract hashes over just
     // its present fields; adding a null field is identical to omitting it.
-    const partial = { name: 'Omni TIP-712', version: '1', chainId: 728126428n }
+    const partial = {
+      name: 'Example TIP-712',
+      version: '1',
+      chainId: 728126428n,
+    }
     expect(hashDomain(partial)).toBe(
       hashDomain({ ...partial, verifyingContract: undefined }),
     )
@@ -140,7 +144,7 @@ describe('hashTypedData', () => {
         primaryType: 'Sink',
         message: sink,
       }),
-    ).toBe('0x4c174e3f0fa8bf4bd14eb5a73e4c952931a80bcace44201cd8e2bf1a5eb86d78')
+    ).toBe('0x323068fb563c40983e7966ebbe74ad221a0b090a483e143ad682d2e764934a03')
   })
 
   // ---- Case 3: trcToken (TRON-native type; oracle keeps it in encodeType) ---
@@ -153,7 +157,7 @@ describe('hashTypedData', () => {
     } as const
     const pay = { token: '1000001', amount: '42' }
     const trcDigest =
-      '0x25d9ee3ac3b42bfdb3c2c618c59c2ad088be78bd58680df18f36a59f62e9cd17'
+      '0xb5ff276c84bcfd3261c31b46a76ce3f0151ffca89bab23ccdb41da608f737fab'
     expect(
       hashTypedData({
         domain,

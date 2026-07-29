@@ -46,7 +46,7 @@ function mulberry32(seed) {
   }
 }
 
-const rand = mulberry32(0x6f6d6e69) // fixed seed: ASCII "omni"
+const rand = mulberry32(0x6f6d6e69) // fixed seed for a reproducible corpus
 
 /** Uniform integer in [lo, hi] inclusive. */
 function randInt(lo, hi) {

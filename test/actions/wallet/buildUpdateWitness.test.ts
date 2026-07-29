@@ -12,7 +12,7 @@ import {
   twBlockHeader,
 } from './_tronwebDiff.js'
 
-const url = 'https://omni.example/new'
+const url = 'https://node.example/new'
 
 test('builds WitnessUpdateContract byte-identical to TronWeb', async () => {
   const client = makeTviemClient()

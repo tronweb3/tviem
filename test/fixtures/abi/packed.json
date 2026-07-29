@@ -90,8 +90,8 @@
   {
     "name": "packed-string",
     "types": ["string"],
-    "values": ["hello omni"],
-    "encoded": "0x68656c6c6f206f6d6e69"
+    "values": ["hello test"],
+    "encoded": "0x68656c6c6f2074657374"
   },
   {
     "name": "packed-string-utf8",
@@ -126,12 +126,12 @@
     "name": "packed-mixed",
     "types": ["string", "bytes", "uint8", "address", "bool"],
     "values": [
-      "omni",
+      "test",
       "0x0102",
       "7",
       "TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC",
       true
     ],
-    "encoded": "0x6f6d6e690102077e5f4552091a69125d5dfcb7b8c2659029395bdf01"
+    "encoded": "0x746573740102077e5f4552091a69125d5dfcb7b8c2659029395bdf01"
   }
 ]

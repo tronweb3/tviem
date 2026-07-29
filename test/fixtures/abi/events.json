@@ -110,14 +110,14 @@
       }
     ],
     "eventName": "Memo",
-    "args": ["hello omni", "7"],
+    "args": ["hello test", "7"],
     "topics": [
       "0x448e9a884e5395f60aba33da7a04a90a449ff6501b903608285c7b9685b2c417",
-      "0xf8f25ebd5cf5b7fb3f96c413240e193a33c56f3abaf481da6bff7bfb5364c132"
+      "0xaa73c1da4a1ef9448c89bb344bc368ba7eb1912a01eb6f4e4df9d940b1cf2caa"
     ],
     "data": "0x0000000000000000000000000000000000000000000000000000000000000007",
     "decoded": {
-      "tag": "0xf8f25ebd5cf5b7fb3f96c413240e193a33c56f3abaf481da6bff7bfb5364c132",
+      "tag": "0xaa73c1da4a1ef9448c89bb344bc368ba7eb1912a01eb6f4e4df9d940b1cf2caa",
       "value": "7"
     }
   },

@@ -27,7 +27,7 @@ const V = {
   addressIndex1: 'TSeJkUh4Qv67VNFwY8LaAxERygNdy6NQZK',
   change1: 'THLNguYKN3S8RUzVyi9ErynW4YmXLU5c8n',
   path5: 'TBdYXtwq18cAhi1BA574TrP6tw2G86anu1',
-  passphrase: 'TD6CLmNTvqUzGQt6aDZyMSjg6eT1t8uQza',
+  passphrase: 'TLqaejwnaDYJmRDhTNKE5FizgKvB52niAq',
 } as const
 
 describe('mnemonicToAccount', () => {
@@ -74,7 +74,7 @@ describe('mnemonicToAccount', () => {
 
   test('a passphrase changes the derived account', () => {
     const account = mnemonicToAccount(mnemonic, {
-      passphrase: 'omni-\u{1f680}',
+      passphrase: 'passphrase-\u{1f680}',
     })
     expect(account.address).toBe(V.passphrase)
     expect(account.address).not.toBe(V.default.address)
@@ -110,7 +110,7 @@ describe('mnemonicToAccount', () => {
     ).toBe(true)
 
     const typedData = {
-      domain: { name: 'Omni', version: '1', chainId: 728126428n },
+      domain: { name: 'Example', version: '1', chainId: 728126428n },
       types: { Msg: [{ name: 'text', type: 'string' }] },
       primaryType: 'Msg',
       message: { text: 'hi' },

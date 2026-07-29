@@ -79,10 +79,10 @@ describe('encodeEventTopics (units)', () => {
     const topics = encodeEventTopics({
       abi: memo.abi as unknown as Abi,
       eventName: 'Memo',
-      args: { tag: 'hello omni' },
+      args: { tag: 'hello test' },
     })
     expect(topics[1]).toBe(
-      '0xf8f25ebd5cf5b7fb3f96c413240e193a33c56f3abaf481da6bff7bfb5364c132',
+      '0xaa73c1da4a1ef9448c89bb344bc368ba7eb1912a01eb6f4e4df9d940b1cf2caa',
     )
   })
 

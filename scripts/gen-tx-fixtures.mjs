@@ -638,14 +638,14 @@ async function buildFixtures() {
   const deployParams = {
     abi: DEPLOY_ABI,
     bytecode: DEPLOY_BYTECODE,
-    name: 'OmniTest',
+    name: 'TestContract',
     consume_user_resource_percent: '30',
     origin_energy_limit: '5000000',
   }
   const deployOptions = {
     abi: DEPLOY_ABI,
     bytecode: DEPLOY_BYTECODE,
-    name: 'OmniTest',
+    name: 'TestContract',
     userFeePercentage: 30,
     originEnergyLimit: 5000000,
     feeLimit: 1000000000,

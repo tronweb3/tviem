@@ -167,7 +167,7 @@ const paramsCases = [
   {
     name: 'string-ascii',
     params: [{ type: 'string' }],
-    values: ['hello omni'],
+    values: ['hello test'],
   },
   {
     name: 'string-utf8',
@@ -199,7 +199,7 @@ const paramsCases = [
   {
     name: 'string-array',
     params: [{ type: 'string[]' }],
-    values: [['', 'omni', '你好']],
+    values: [['', 'test', '你好']],
   },
   // nested arrays
   {
@@ -577,7 +577,7 @@ const packedCases = [
   { name: 'packed-bytes32', types: ['bytes32'], values: [bytesOf(32)] },
   { name: 'packed-bytes-dynamic', types: ['bytes'], values: [bytesOf(5)] },
   { name: 'packed-bytes-empty', types: ['bytes'], values: ['0x'] },
-  { name: 'packed-string', types: ['string'], values: ['hello omni'] },
+  { name: 'packed-string', types: ['string'], values: ['hello test'] },
   { name: 'packed-string-utf8', types: ['string'], values: ['你好，波场 🚀'] },
   // In packed mode array elements are padded to 32 bytes.
   {
@@ -598,7 +598,7 @@ const packedCases = [
   {
     name: 'packed-mixed',
     types: ['string', 'bytes', 'uint8', 'address', 'bool'],
-    values: ['omni', '0x0102', '7', V1, true],
+    values: ['test', '0x0102', '7', V1, true],
   },
 ]
 
@@ -686,7 +686,7 @@ const eventFixtures = [
       { name: 'tag', type: 'string', indexed: true },
       { name: 'value', type: 'uint256', indexed: false },
     ]),
-    args: ['hello omni', '7'],
+    args: ['hello test', '7'],
   }),
   eventCase({
     name: 'indexed-bytes',

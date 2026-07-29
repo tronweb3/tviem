@@ -15,9 +15,9 @@ const txSignature =
 
 // §2.2 TIP-191 message digest for "hello @tronweb3/tviem" (pk = 1).
 const messageDigest =
-  '0x068a2c93df26c5f19fb1d6b74abe50efc69cbff8b70a9cc9b915058e0ed9a18e' as const
+  '0x46971b5b1d980410d80acba57293e39e27ed19dd6ff1015a8ebd9f8e0cc4edd9' as const
 const messageSignature =
-  '855e95dd49d937f13c6cbc5293db9b6fdfab8780d7c27c6eff9b12f8f3d3d56d792f34efe0adb183778c8e6f4c8f1cf66e19bd06be967bc7874613f4ee135dea1b'
+  '9db3012a68317a97618479e218f3ca6849714071c2a8f07c160f1a804b114a8e166364cb124269a0edea614f50ae2acd0fd3a2c97ae89f45b4811427fb6136b71b'
 
 describe('sign', () => {
   test('§2.3: signs the tx digest to the authoritative signature (…ae001c)', () => {
@@ -29,7 +29,7 @@ describe('sign', () => {
     expect(signature.recovery).toBe(1)
   })
 
-  test('§2.2: signs the TIP-191 message digest (…dea1b, v = 27)', () => {
+  test('§2.2: signs the TIP-191 message digest (…6b71b, v = 27)', () => {
     const signature = sign({ hash: messageDigest, privateKey: pk1 })
     expect(signature.hex).toBe(messageSignature)
     expect(signature.serialized).toBe(`0x${messageSignature}`)

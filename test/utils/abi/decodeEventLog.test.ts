@@ -76,7 +76,7 @@ describe('decodeEventLog (units)', () => {
       eventName: 'Memo',
     })
     expect((args as Record<string, unknown>).tag).toBe(
-      '0xf8f25ebd5cf5b7fb3f96c413240e193a33c56f3abaf481da6bff7bfb5364c132',
+      '0xaa73c1da4a1ef9448c89bb344bc368ba7eb1912a01eb6f4e4df9d940b1cf2caa',
     )
   })
 

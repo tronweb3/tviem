@@ -6,7 +6,21 @@
     "typedDataCount": 38,
     "hdCount": 34,
     "boundaries": [
-      0, 1, 9, 10, 11, 99, 100, 101, 127, 128, 255, 256, 257, 300, 512
+      0,
+      1,
+      9,
+      10,
+      11,
+      99,
+      100,
+      101,
+      127,
+      128,
+      255,
+      256,
+      257,
+      300,
+      512
     ]
   },
   "messages": [
@@ -1552,31 +1566,31 @@
     },
     {
       "name": "deploy contract with ABI entrys + bytecode (pk1)",
-      "txID": "5d0424804d3c439780580d0cf18ed3144d90e2b4d559eaf59925d80649454983",
+      "txID": "8f7b2800293e1967c1467a4caa2bc3a1db30a7b0190d1c802eb711b23d068059",
       "privateKeyLabel": "pk1",
       "ownerMatches": true,
-      "signature": "7c3c622e7fb1ad1449ac7ce130c0b7a0f2024958c4f13b6cc5e75be9074076ef3049b85f26ff165b3f3bf44c93c8aa7b1810284b270fbff22d0eee21af8224ee1c"
+      "signature": "27325e695e6c268375cafa15938647864f54d64c3fd060b64b2c85a333bf873e53a414c2348a1342435dc4fc4b3ab469777c8b87683400bcf4efe7b8209d10d91c"
     },
     {
       "name": "deploy contract with ABI entrys + bytecode (pk2)",
-      "txID": "5d0424804d3c439780580d0cf18ed3144d90e2b4d559eaf59925d80649454983",
+      "txID": "8f7b2800293e1967c1467a4caa2bc3a1db30a7b0190d1c802eb711b23d068059",
       "privateKeyLabel": "pk2",
       "ownerMatches": false,
-      "signature": "6aa796e6a4511358d0e6ab3726638c086b89a6200b711e43db0d01e58fa116cc7a64c45d536bc02e0b3517bdb25359d27c8175bd2bda4ec01bd1688d3fbad4391c"
+      "signature": "b56babb5edc8b22d67520fe1a700a3df24ca5b1b7d49e76dafdb64241f5b2ab021335ab16004f631f3c0d9b2218986baf6e126141291dce6bd53690b01cb13d61b"
     },
     {
       "name": "deploy contract with call_token_value + token_id (pk1)",
-      "txID": "10e2441b9c8883d3e814440fce33cdea93d6d82003d1457d5dbfee68f7ec5f06",
+      "txID": "ed6d5935a19ff36d1ca1d1ab2664d7fe49b8ac57b1fa27aa964fc982fe02147e",
       "privateKeyLabel": "pk1",
       "ownerMatches": true,
-      "signature": "eaad07ea1acc7e3b27ab94edfd90029b7e6106478dd8884f1cb38f8af0dbb4376571298bc085a07eef799b659d509f7f8da5e2b43b9a42181eba7994ba183d2f1b"
+      "signature": "e9a07189d9e6af56e747528cbd74db455491b00fd023fcc82a363a5191b7290841d62d6ce9c97a2d2d00ce4d7336067cd278330a8f903ed1cf0c7ac12f0b33811b"
     },
     {
       "name": "deploy contract with call_token_value + token_id (pk2)",
-      "txID": "10e2441b9c8883d3e814440fce33cdea93d6d82003d1457d5dbfee68f7ec5f06",
+      "txID": "ed6d5935a19ff36d1ca1d1ab2664d7fe49b8ac57b1fa27aa964fc982fe02147e",
       "privateKeyLabel": "pk2",
       "ownerMatches": false,
-      "signature": "d40fc7cf47841c20d67b86b3a9e7b879152049cd02575e48bb412ae8c4a433c74132676451dca406812955030eeeaad89751aeed322f9353bfd4b9eaf75b184e1b"
+      "signature": "110309d868c80abe341710944449b9cb2825c0e0b75b71f77fc16ed2e4fbbc2c536b591d4ad6c4c53d4b98e071dd0dd8b41cc6c47a012f2b1049ce1eeb9e7de91c"
     },
     {
       "name": "trigger TRC20 transfer with fee_limit (pk1)",
@@ -1780,13 +1794,13 @@
       "name": "mail #0 (pk1)",
       "privateKeyLabel": "pk1",
       "domain": {
-        "name": "Omni TIP-712",
+        "name": "Example TIP-712",
         "version": "1",
         "chainId": 728126428,
         "verifyingContract": "0x7e5f4552091a69125d5dfcb7b8c2659029395bdf"
       },
       "domainAlt": {
-        "name": "Omni TIP-712",
+        "name": "Example TIP-712",
         "version": "1",
         "chainId": 728126428,
         "verifyingContract": "TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC"
@@ -1840,22 +1854,22 @@
         },
         "contents": "wy K/W"
       },
-      "digest": "0x5ee033a512ff796d341a44350ef22f6f856acb4ab9a74fe60a5c895be5138e4e",
-      "signature": "0x5b66b28d354d3d21d632f6fd624045f67b43b421a80f82a889480e3d1bd65d27293b0d16b101b6b49d63aea64408f41c291ff6009c5fcc7b979765661943800f1c",
+      "digest": "0x00c6e0d81210d97305bcfbbc4867e47bc453868c4b302fe1e8044f435171f1b5",
+      "signature": "0xc3ae40c01ca84d65c4be17d37142fe85180bc98b0935d89837e1da90300fae305c9167061d98b8d1f4cc86d0d0b1dc5896085a61435fa60cb9c66c8c5bf8f4761b",
       "address": "TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC"
     },
     {
       "name": "mail #1 (pk2)",
       "privateKeyLabel": "pk2",
       "domain": {
-        "name": "Omni",
+        "name": "Example",
         "version": "2",
         "chainId": 1,
         "verifyingContract": "0x2b5ad5c4795c026514f8317c7a215e218dccd6cf",
         "salt": "0x724c4a81f320baacc3bfabd7f22a3680255f06238bd509d644e186a0e17ed74f"
       },
       "domainAlt": {
-        "name": "Omni",
+        "name": "Example",
         "version": "2",
         "chainId": 1,
         "verifyingContract": "TDvSsdrNM5eeXNL3czpa6AxLDHZA9nwe9K",
@@ -1910,8 +1924,8 @@
         },
         "contents": "(p<YDm\"+X,PRb}ZN}"
       },
-      "digest": "0x35784633d017e0e713594499f15e15db8246246ddcc7478f364c6a70e91ecc2d",
-      "signature": "0xf84567a0ef5760a2929c5ddb00aad926356d6115b6629f6b783c0a74635bdf7874aa6cee3c032a07873233fdfa5b51837552238698852d9e50da1f3fc2f32de61c",
+      "digest": "0xb63b0c2b8f5002e94495febaa21f461812c39561a556aaa0263f71c0efdda5ea",
+      "signature": "0xb110180bca30ed1efb15c18338800449459fb75f26452c6e9b5f485dc891afc20395a20611a4a2dbd155c1b8c86332c1701b25ee8ebeaeca82bda136876b536d1c",
       "address": "TDvSsdrNM5eeXNL3czpa6AxLDHZA9nwe9K"
     },
     {
@@ -2052,13 +2066,13 @@
       "name": "mail #4 (pk1)",
       "privateKeyLabel": "pk1",
       "domain": {
-        "name": "Omni TIP-712",
+        "name": "Example TIP-712",
         "version": "1",
         "chainId": 728126428,
         "verifyingContract": "0x7e5f4552091a69125d5dfcb7b8c2659029395bdf"
       },
       "domainAlt": {
-        "name": "Omni TIP-712",
+        "name": "Example TIP-712",
         "version": "1",
         "chainId": 728126428,
         "verifyingContract": "TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC"
@@ -2112,22 +2126,22 @@
         },
         "contents": "k\\8n+8FIf@ O:lC"
       },
-      "digest": "0x7e373d7ae71a6ff7dcecf16d967501ef06296ef077b3d1e4a25c826cc47693b7",
-      "signature": "0x15fe6e401db75c4ba12fe176bc0c93a87c2aa7023522bf9c9d032ad84abe58c7543160f3893c97285a1da9d1aeb05ed5f97229bdda462b6e55c01031f9d04d2b1b",
+      "digest": "0xd1e0d40997734c2e232dd036eec79ca08914189ff65d646e1e8ea9b0b4f792b1",
+      "signature": "0xeea7bf245fd252f08b327089da00ce593daf2955e7f233c1386c0f87558ad86c4cc015e12e3b5898e9ffadabda0056bb31cd0af3c8d951a3ec0429f7ec5267361b",
       "address": "TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC"
     },
     {
       "name": "mail #5 (pk2)",
       "privateKeyLabel": "pk2",
       "domain": {
-        "name": "Omni",
+        "name": "Example",
         "version": "2",
         "chainId": 1,
         "verifyingContract": "0x2b5ad5c4795c026514f8317c7a215e218dccd6cf",
         "salt": "0x724c4a81f320baacc3bfabd7f22a3680255f06238bd509d644e186a0e17ed74f"
       },
       "domainAlt": {
-        "name": "Omni",
+        "name": "Example",
         "version": "2",
         "chainId": 1,
         "verifyingContract": "TDvSsdrNM5eeXNL3czpa6AxLDHZA9nwe9K",
@@ -2182,8 +2196,8 @@
         },
         "contents": "]R</a9gSwXY"
       },
-      "digest": "0x17728abbcf3dd6a3e9cd7e3fac20502d985581782ab6164b8caecb23d9a5bdc6",
-      "signature": "0x489e4a8579412b797075e19a02c2bfa51965adc2cefdcd145006b8d06806e45b73dd3e48e9ae48f9a2ef96584490bdd32967b9467efee7f336618f0a28d6659d1b",
+      "digest": "0x7cc28b8c99561afb78979cfb9b58048a37b9f846456af0a4f6d6032715b0c3ed",
+      "signature": "0xfe386b02d07ecb2bd0c229bce9ec677abc060c0f2c2b921851a979ecebb75e250b3c8666dd9a14a34cd219154796b47357e5a396cabfb50605f5dfecfdae69471b",
       "address": "TDvSsdrNM5eeXNL3czpa6AxLDHZA9nwe9K"
     },
     {
@@ -2324,13 +2338,13 @@
       "name": "mail #8 (pk1)",
       "privateKeyLabel": "pk1",
       "domain": {
-        "name": "Omni TIP-712",
+        "name": "Example TIP-712",
         "version": "1",
         "chainId": 728126428,
         "verifyingContract": "0x7e5f4552091a69125d5dfcb7b8c2659029395bdf"
       },
       "domainAlt": {
-        "name": "Omni TIP-712",
+        "name": "Example TIP-712",
         "version": "1",
         "chainId": 728126428,
         "verifyingContract": "TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC"
@@ -2384,22 +2398,22 @@
         },
         "contents": "TGnVd?rW,X^"
       },
-      "digest": "0xe18df5993eca9a4e3153640c429014f12b1482831f2a8df967dd0a68c5b760a6",
-      "signature": "0x7164f924897dc1538b087d44e4fd47902f752b82b1b18eff03ae269546d41c8e029ac8c037ff9d7b990d80bbc1299297d49dde582cf8728656ec35621d25408b1b",
+      "digest": "0x568360ba95cd18c4c99865a330306952780c0fafc885761285afd370116665ab",
+      "signature": "0x312ea8a59cf25c8ccc3bb3d0ac20e6636fe6ad676d58d148873dcea3dc5ffa567e03b20f1c68de1d7fb0b3fd5c38b34a216781d877bf28040e419e57f534f8701b",
       "address": "TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC"
     },
     {
       "name": "mail #9 (pk2)",
       "privateKeyLabel": "pk2",
       "domain": {
-        "name": "Omni",
+        "name": "Example",
         "version": "2",
         "chainId": 1,
         "verifyingContract": "0x2b5ad5c4795c026514f8317c7a215e218dccd6cf",
         "salt": "0x724c4a81f320baacc3bfabd7f22a3680255f06238bd509d644e186a0e17ed74f"
       },
       "domainAlt": {
-        "name": "Omni",
+        "name": "Example",
         "version": "2",
         "chainId": 1,
         "verifyingContract": "TDvSsdrNM5eeXNL3czpa6AxLDHZA9nwe9K",
@@ -2454,8 +2468,8 @@
         },
         "contents": "=hyz[4.\"6_H"
       },
-      "digest": "0xdc240e2c4f56d0b6e2c0c8af5847d917007bdb971a764f5ca44afd008773cf04",
-      "signature": "0x03baa8114f8a07977825f4315d41cedbb7409041165cfbac551a950e1440172813f87f4872a139a0566da86054c60078cfc472dc4c4b3968f4cd0fdad7e5b8b61c",
+      "digest": "0x2a3ba495eda3e91ce38b55572fa209f1b0a4561f5cdf45a8ab521cd0d5c5ea90",
+      "signature": "0x629c27f5ee0e4dd51f24ce0d1d5c51c11986524b811e8df8b269afb2687a4bb11e3a1c5aca02ac5564c66682b35830631a6774d500af8348703ce986ceaefaa01c",
       "address": "TDvSsdrNM5eeXNL3czpa6AxLDHZA9nwe9K"
     },
     {
@@ -2708,13 +2722,13 @@
       "name": "sink #2 (pk1)",
       "privateKeyLabel": "pk1",
       "domain": {
-        "name": "Omni TIP-712",
+        "name": "Example TIP-712",
         "version": "1",
         "chainId": 728126428,
         "verifyingContract": "0x7e5f4552091a69125d5dfcb7b8c2659029395bdf"
       },
       "domainAlt": {
-        "name": "Omni TIP-712",
+        "name": "Example TIP-712",
         "version": "1",
         "chainId": 728126428,
         "verifyingContract": "TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC"
@@ -2824,22 +2838,22 @@
         "who": "TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC",
         "note": "X!N:tv^"
       },
-      "digest": "0xbbb5a44ae0b7fe72433b128fd4e1066b6fef57b035ceeb559ca939bfba7268fe",
-      "signature": "0x4b0818ab80ab48351fb0299b97ade5af00044698bb146fa21a1f354663ab8ab61cd2cb9e30846e6ae1998203e5d38e1794ec4f5cd1349aa598bbdfa260d346781b",
+      "digest": "0x764041bb171f15eaf69818db92b88fab64d04915f0a745c199c289562105b43d",
+      "signature": "0xe1f6f4609519383536d2e870a55c18ba6f561f4f4cd27be0951ea6a907800b5e4cd7b8dc19cd3d84628e8ddab6608fe430dc682921b26865fc3806efb611f0d71c",
       "address": "TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC"
     },
     {
       "name": "sink #3 (pk2)",
       "privateKeyLabel": "pk2",
       "domain": {
-        "name": "Omni",
+        "name": "Example",
         "version": "2",
         "chainId": 1,
         "verifyingContract": "0x2b5ad5c4795c026514f8317c7a215e218dccd6cf",
         "salt": "0x724c4a81f320baacc3bfabd7f22a3680255f06238bd509d644e186a0e17ed74f"
       },
       "domainAlt": {
-        "name": "Omni",
+        "name": "Example",
         "version": "2",
         "chainId": 1,
         "verifyingContract": "TDvSsdrNM5eeXNL3czpa6AxLDHZA9nwe9K",
@@ -2950,8 +2964,8 @@
         "who": "TDvSsdrNM5eeXNL3czpa6AxLDHZA9nwe9K",
         "note": "~#*_JI8{ZRW"
       },
-      "digest": "0xa5d3284aa0adf0b2ad62b6aa846d8b5a5ea7fce8f38a45467a7e406739adcd31",
-      "signature": "0xd638c61b7e0066c9b41a0896640d2fd5cccd3810b4a3a008922fae24b30e2d11314a1ea2ba57a1c49ffeb4185cd7c17bd72644f10414c76e8442f716539329a61c",
+      "digest": "0x44f50221aa163470fc9a06461dc96ac82860ef60a7cac4fa83092ea73964835e",
+      "signature": "0xee7f1c8a51fd6f78ba49b71a97286d3bad0353bd32f0a905906d530494a32a322e3daa8b0b6da6933bd45bf86fe0c7c0026fefb3da71b5f4cedc0086071e24871c",
       "address": "TDvSsdrNM5eeXNL3czpa6AxLDHZA9nwe9K"
     },
     {
@@ -3204,13 +3218,13 @@
       "name": "sink #6 (pk1)",
       "privateKeyLabel": "pk1",
       "domain": {
-        "name": "Omni TIP-712",
+        "name": "Example TIP-712",
         "version": "1",
         "chainId": 728126428,
         "verifyingContract": "0x7e5f4552091a69125d5dfcb7b8c2659029395bdf"
       },
       "domainAlt": {
-        "name": "Omni TIP-712",
+        "name": "Example TIP-712",
         "version": "1",
         "chainId": 728126428,
         "verifyingContract": "TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC"
@@ -3320,22 +3334,22 @@
         "who": "TDvSsdrNM5eeXNL3czpa6AxLDHZA9nwe9K",
         "note": "MLt-UG;DE/U"
       },
-      "digest": "0x9131c7b5a1752ba40e84278dc164edf23b2c1d02f7a9c61b83a024d452fda163",
-      "signature": "0xc38f86546ecf7e0fbda9e1ca51ad7ad3821b0009332602ae5d4476e22127ff133d3d993859e9e6bbec3053d584ba60ce812d7d20c8e9d96ac3d3a8fbcc55e5981b",
+      "digest": "0x0707af6f9b2492e61111e87e9b4e37a8df3563eb809c262f2d931dbfa06166fc",
+      "signature": "0xb27b3eee93ae7bc56451b697a087cf481ac5b9fbc9c504e23ac15074b99f8a6b2e29e97cc34d492ef032411f9a205b0c3000bbb9c0e560428227cbf9897274fc1b",
       "address": "TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC"
     },
     {
       "name": "sink #7 (pk2)",
       "privateKeyLabel": "pk2",
       "domain": {
-        "name": "Omni",
+        "name": "Example",
         "version": "2",
         "chainId": 1,
         "verifyingContract": "0x2b5ad5c4795c026514f8317c7a215e218dccd6cf",
         "salt": "0x724c4a81f320baacc3bfabd7f22a3680255f06238bd509d644e186a0e17ed74f"
       },
       "domainAlt": {
-        "name": "Omni",
+        "name": "Example",
         "version": "2",
         "chainId": 1,
         "verifyingContract": "TDvSsdrNM5eeXNL3czpa6AxLDHZA9nwe9K",
@@ -3446,8 +3460,8 @@
         "who": "TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC",
         "note": "dg7A|7*"
       },
-      "digest": "0xd3c716db8159bf59f674a5ec1e5a904aba8a3ce3c87eeb2dff83b504d181edfe",
-      "signature": "0xd6b086136a0bf1022015ee4316ceb6a9837765a4fc52f0827be0a77d0ea589d556a422b6254cc22620a43c49d5c989f5c64d2de7405c107461b97f0c7b8a9a201c",
+      "digest": "0x0251d37d0e91e1943665755af3fbecbc41fa63cbe41a33c3767e851a662cf01e",
+      "signature": "0x0bda4713b31f73fe16654d7bb9aa4ed8f2c260b1489a5e98af22ea718ee8746f12c0b3c2c9371ab961fdc2c310f35fa39918805824b0f16dcfde199fb773c3b01b",
       "address": "TDvSsdrNM5eeXNL3czpa6AxLDHZA9nwe9K"
     },
     {
@@ -3700,13 +3714,13 @@
       "name": "batch #0 (pk1)",
       "privateKeyLabel": "pk1",
       "domain": {
-        "name": "Omni TIP-712",
+        "name": "Example TIP-712",
         "version": "1",
         "chainId": 728126428,
         "verifyingContract": "0x7e5f4552091a69125d5dfcb7b8c2659029395bdf"
       },
       "domainAlt": {
-        "name": "Omni TIP-712",
+        "name": "Example TIP-712",
         "version": "1",
         "chainId": 728126428,
         "verifyingContract": "TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC"
@@ -3762,7 +3776,9 @@
           "0x2b5ad5c4795c026514f8317c7a215e218dccd6cf",
           "0x2b5ad5c4795c026514f8317c7a215e218dccd6cf"
         ],
-        "blobs": ["0x2cf0ee5729f1236b9e94f5a681a016b3"]
+        "blobs": [
+          "0x2cf0ee5729f1236b9e94f5a681a016b3"
+        ]
       },
       "valueAlt": {
         "items": [
@@ -3784,24 +3800,26 @@
           "TDvSsdrNM5eeXNL3czpa6AxLDHZA9nwe9K",
           "TDvSsdrNM5eeXNL3czpa6AxLDHZA9nwe9K"
         ],
-        "blobs": ["0x2cf0ee5729f1236b9e94f5a681a016b3"]
+        "blobs": [
+          "0x2cf0ee5729f1236b9e94f5a681a016b3"
+        ]
       },
-      "digest": "0xacfb9b861f9ae50910d367aeb490a4596d83dff801097218c5ec65f2bb1e898a",
-      "signature": "0x3de2b6fa29e89c12992713a42983538111aa15900bae9e4864a1a95dc8edce0b7fb74b7e7a2df608070ad45e8faaccf7c13695ff2fae992735d0d34c47cbdd4f1b",
+      "digest": "0xa1eabbd1afda6d48debb6bd8d2e471033eaf598af33d07a3a0737aa818d58e2c",
+      "signature": "0xadfb72da53fb5782c17fa83c0ec28713c8e125c55d62e8338e9b0472cbdc5e8f30a9772a59b61bf212a3ab2560bd6ab901e97509523f6824fa1e25af219cc3191c",
       "address": "TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC"
     },
     {
       "name": "batch #1 (pk2)",
       "privateKeyLabel": "pk2",
       "domain": {
-        "name": "Omni",
+        "name": "Example",
         "version": "2",
         "chainId": 1,
         "verifyingContract": "0x2b5ad5c4795c026514f8317c7a215e218dccd6cf",
         "salt": "0x724c4a81f320baacc3bfabd7f22a3680255f06238bd509d644e186a0e17ed74f"
       },
       "domainAlt": {
-        "name": "Omni",
+        "name": "Example",
         "version": "2",
         "chainId": 1,
         "verifyingContract": "TDvSsdrNM5eeXNL3czpa6AxLDHZA9nwe9K",
@@ -3858,7 +3876,9 @@
           "0x2b5ad5c4795c026514f8317c7a215e218dccd6cf",
           "0x2b5ad5c4795c026514f8317c7a215e218dccd6cf"
         ],
-        "blobs": ["0xcc43fad9ec5a4a1ab884c40084"]
+        "blobs": [
+          "0xcc43fad9ec5a4a1ab884c40084"
+        ]
       },
       "valueAlt": {
         "items": [
@@ -3880,10 +3900,12 @@
           "TDvSsdrNM5eeXNL3czpa6AxLDHZA9nwe9K",
           "TDvSsdrNM5eeXNL3czpa6AxLDHZA9nwe9K"
         ],
-        "blobs": ["0xcc43fad9ec5a4a1ab884c40084"]
+        "blobs": [
+          "0xcc43fad9ec5a4a1ab884c40084"
+        ]
       },
-      "digest": "0xf84b9e2b9772e5cb281b0aadac09dca4a748e53c4029c4d7508aac6f53f20078",
-      "signature": "0x72556f6154f3e7fddae27a11236a087ba38396dd76f6f24529e3b80955262bec7c8e371dd6a3c6c77a8af4e963911e7da83135785db8051db89248959f445feb1c",
+      "digest": "0xc1373a99baadf8befc9233786cfd42621d25d5733fcf88a58b0761e5252e4eb4",
+      "signature": "0xfd0a49b0e29b8d36442f096c43ef0128370200ee322425ada4b6a04f96422a7965ad3e9763ae210fb843955379363428971c4a81c0e26d65d3f08229d0d8a8c51b",
       "address": "TDvSsdrNM5eeXNL3czpa6AxLDHZA9nwe9K"
     },
     {
@@ -3945,7 +3967,9 @@
             "tag": "0x3685f989"
           }
         ],
-        "amounts": ["232702707043641546452810430049835087494"],
+        "amounts": [
+          "232702707043641546452810430049835087494"
+        ],
         "addrs": [
           "0x2b5ad5c4795c026514f8317c7a215e218dccd6cf",
           "0x2b5ad5c4795c026514f8317c7a215e218dccd6cf"
@@ -3967,7 +3991,9 @@
             "tag": "0x3685f989"
           }
         ],
-        "amounts": ["232702707043641546452810430049835087494"],
+        "amounts": [
+          "232702707043641546452810430049835087494"
+        ],
         "addrs": [
           "TDvSsdrNM5eeXNL3czpa6AxLDHZA9nwe9K",
           "TDvSsdrNM5eeXNL3czpa6AxLDHZA9nwe9K"
@@ -4035,7 +4061,9 @@
             "tag": "0x1df7e00d"
           }
         ],
-        "amounts": ["188395153550546109350576860599803059905"],
+        "amounts": [
+          "188395153550546109350576860599803059905"
+        ],
         "addrs": [
           "0x2b5ad5c4795c026514f8317c7a215e218dccd6cf",
           "0x7e5f4552091a69125d5dfcb7b8c2659029395bdf"
@@ -4053,7 +4081,9 @@
             "tag": "0x1df7e00d"
           }
         ],
-        "amounts": ["188395153550546109350576860599803059905"],
+        "amounts": [
+          "188395153550546109350576860599803059905"
+        ],
         "addrs": [
           "TDvSsdrNM5eeXNL3czpa6AxLDHZA9nwe9K",
           "TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC"
@@ -4068,13 +4098,13 @@
       "name": "batch #4 (pk1)",
       "privateKeyLabel": "pk1",
       "domain": {
-        "name": "Omni TIP-712",
+        "name": "Example TIP-712",
         "version": "1",
         "chainId": 728126428,
         "verifyingContract": "0x7e5f4552091a69125d5dfcb7b8c2659029395bdf"
       },
       "domainAlt": {
-        "name": "Omni TIP-712",
+        "name": "Example TIP-712",
         "version": "1",
         "chainId": 728126428,
         "verifyingContract": "TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC"
@@ -4117,7 +4147,9 @@
             "tag": "0xed743e15"
           }
         ],
-        "amounts": ["297692488619023590671950404911837813989"],
+        "amounts": [
+          "297692488619023590671950404911837813989"
+        ],
         "addrs": [
           "0x7e5f4552091a69125d5dfcb7b8c2659029395bdf",
           "0x2b5ad5c4795c026514f8317c7a215e218dccd6cf"
@@ -4131,29 +4163,31 @@
             "tag": "0xed743e15"
           }
         ],
-        "amounts": ["297692488619023590671950404911837813989"],
+        "amounts": [
+          "297692488619023590671950404911837813989"
+        ],
         "addrs": [
           "TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC",
           "TDvSsdrNM5eeXNL3czpa6AxLDHZA9nwe9K"
         ],
         "blobs": []
       },
-      "digest": "0x38a2624d36bcbde0cc43a8375cfba001b076b9796e8083308d171d61fb687bf7",
-      "signature": "0xee730988638b61367a31a2f1193ad319356440be6bfa38a73e54792b72297a0c0700ca28302ec746b9bff582ed2b93fae7494a061cf1cfa17253f00590f363961c",
+      "digest": "0x5c25abe73a2293608a59bbb61ccc0921f3821b046e05c0777177422c860547c2",
+      "signature": "0x9495c6468bb2547cba062297a74f7fb3f50b8bc20bd082ee7c76f6163070f5ad605b970b396f2a37f03e1857c27ac5380e9502cf29f88d9045387a130b66cced1b",
       "address": "TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC"
     },
     {
       "name": "batch #5 (pk2)",
       "privateKeyLabel": "pk2",
       "domain": {
-        "name": "Omni",
+        "name": "Example",
         "version": "2",
         "chainId": 1,
         "verifyingContract": "0x2b5ad5c4795c026514f8317c7a215e218dccd6cf",
         "salt": "0x724c4a81f320baacc3bfabd7f22a3680255f06238bd509d644e186a0e17ed74f"
       },
       "domainAlt": {
-        "name": "Omni",
+        "name": "Example",
         "version": "2",
         "chainId": 1,
         "verifyingContract": "TDvSsdrNM5eeXNL3czpa6AxLDHZA9nwe9K",
@@ -4206,7 +4240,9 @@
           "0x7e5f4552091a69125d5dfcb7b8c2659029395bdf",
           "0x7e5f4552091a69125d5dfcb7b8c2659029395bdf"
         ],
-        "blobs": ["0x2db47243"]
+        "blobs": [
+          "0x2db47243"
+        ]
       },
       "valueAlt": {
         "items": [
@@ -4224,10 +4260,12 @@
           "TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC",
           "TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC"
         ],
-        "blobs": ["0x2db47243"]
+        "blobs": [
+          "0x2db47243"
+        ]
       },
-      "digest": "0xfd2fdabbb07768cca9a86245bff30b3361f6b7721e7b1cb2a055803371ad78d4",
-      "signature": "0xdd703cdf73ebcf94726df0e1d4d00f4fa40c9fc886f4972ececdfd3cbbfd5ea02c5f2ae75aef794f91b49eb9060968815f1136987121b43c089c63dc8dff2db41c",
+      "digest": "0x40e6b553a930fd1e5cfc4d989f183a9db5f0b2dd0513a1495135a715b7019e34",
+      "signature": "0x636ec01e6a78dc7203c1c34c18056209d697646e6ea5e62f040863e6693410a54a63114586009e6cc33ae05ff1552b5f0f947183b0f53703f63d2032f6421b301c",
       "address": "TDvSsdrNM5eeXNL3czpa6AxLDHZA9nwe9K"
     },
     {
@@ -4294,7 +4332,9 @@
           "0x7e5f4552091a69125d5dfcb7b8c2659029395bdf",
           "0x7e5f4552091a69125d5dfcb7b8c2659029395bdf"
         ],
-        "blobs": ["0x3b4f2f1f5e952d8c9343fe02bd57e362"]
+        "blobs": [
+          "0x3b4f2f1f5e952d8c9343fe02bd57e362"
+        ]
       },
       "valueAlt": {
         "items": [
@@ -4316,7 +4356,9 @@
           "TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC",
           "TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC"
         ],
-        "blobs": ["0x3b4f2f1f5e952d8c9343fe02bd57e362"]
+        "blobs": [
+          "0x3b4f2f1f5e952d8c9343fe02bd57e362"
+        ]
       },
       "digest": "0x63aca98ba4269f1fb8d4793da54a9bfa65a0863b19972e9f266674bdfe14bfe2",
       "signature": "0xc7800f06b49195554f958a6040f18c285648e8cb433c5f6edb3932b90de936332be833afdd5f1ca654a244b8acb6bab25ae203603796179b4f651f59f0eb32151b",
@@ -4388,7 +4430,10 @@
           "0x2b5ad5c4795c026514f8317c7a215e218dccd6cf",
           "0x7e5f4552091a69125d5dfcb7b8c2659029395bdf"
         ],
-        "blobs": ["0x178ebb5fabef", "0x966412dd5464dde1ca6ba78c"]
+        "blobs": [
+          "0x178ebb5fabef",
+          "0x966412dd5464dde1ca6ba78c"
+        ]
       },
       "valueAlt": {
         "items": [
@@ -4410,7 +4455,10 @@
           "TDvSsdrNM5eeXNL3czpa6AxLDHZA9nwe9K",
           "TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC"
         ],
-        "blobs": ["0x178ebb5fabef", "0x966412dd5464dde1ca6ba78c"]
+        "blobs": [
+          "0x178ebb5fabef",
+          "0x966412dd5464dde1ca6ba78c"
+        ]
       },
       "digest": "0xd1cd24fd55bff1a9705a7b16798a18929ed230a54fef2eac134fe3499b583139",
       "signature": "0xb3c4388f00b65befa38db09c43cdafcc11186e03e24d021dfbd2d9af2e6d3c6309ca02d25b05124eb29ecd4ad9b6cd76ab6df04e2e10b88ede3e74d2fcf7a4d71b",
@@ -4420,13 +4468,13 @@
       "name": "batch #8 (pk1)",
       "privateKeyLabel": "pk1",
       "domain": {
-        "name": "Omni TIP-712",
+        "name": "Example TIP-712",
         "version": "1",
         "chainId": 728126428,
         "verifyingContract": "0x7e5f4552091a69125d5dfcb7b8c2659029395bdf"
       },
       "domainAlt": {
-        "name": "Omni TIP-712",
+        "name": "Example TIP-712",
         "version": "1",
         "chainId": 728126428,
         "verifyingContract": "TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC"
@@ -4510,22 +4558,22 @@
           "0xf3af8f921536dfa401326d643f"
         ]
       },
-      "digest": "0x78994b7db79c0586b8f8a83eb161873f64c9c72969e0ab9f929a9cb00aa41434",
-      "signature": "0xe88e60e4f451c583f02b61c089cec01793445d81d8d3c4d298ce728b8ad0da5a398a331dac0e00a579ccd7a62634c756d36365ae0e638cfd0bc32dbdcf7417141c",
+      "digest": "0xf531ad1a4f720e858d99b34750d7e54ff94383c7bd3d64e8205fd1d9b78ea612",
+      "signature": "0xf700f0c27535665415aa872c05b0f8fe49ba9568a514759ddb49c278add1e3487fda9ebbb90115bed19b5d1ff920cfe1ef0b4343fb35b43c2fb08d5a9ad5c38c1b",
       "address": "TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC"
     },
     {
       "name": "batch #9 (pk2)",
       "privateKeyLabel": "pk2",
       "domain": {
-        "name": "Omni",
+        "name": "Example",
         "version": "2",
         "chainId": 1,
         "verifyingContract": "0x2b5ad5c4795c026514f8317c7a215e218dccd6cf",
         "salt": "0x724c4a81f320baacc3bfabd7f22a3680255f06238bd509d644e186a0e17ed74f"
       },
       "domainAlt": {
-        "name": "Omni",
+        "name": "Example",
         "version": "2",
         "chainId": 1,
         "verifyingContract": "TDvSsdrNM5eeXNL3czpa6AxLDHZA9nwe9K",
@@ -4569,12 +4617,16 @@
             "tag": "0x49e90865"
           }
         ],
-        "amounts": ["83843354966230139567483401740706215230"],
+        "amounts": [
+          "83843354966230139567483401740706215230"
+        ],
         "addrs": [
           "0x2b5ad5c4795c026514f8317c7a215e218dccd6cf",
           "0x7e5f4552091a69125d5dfcb7b8c2659029395bdf"
         ],
-        "blobs": ["0xc1f8c058921522aba139a3100b246ce9"]
+        "blobs": [
+          "0xc1f8c058921522aba139a3100b246ce9"
+        ]
       },
       "valueAlt": {
         "items": [
@@ -4583,15 +4635,19 @@
             "tag": "0x49e90865"
           }
         ],
-        "amounts": ["83843354966230139567483401740706215230"],
+        "amounts": [
+          "83843354966230139567483401740706215230"
+        ],
         "addrs": [
           "TDvSsdrNM5eeXNL3czpa6AxLDHZA9nwe9K",
           "TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC"
         ],
-        "blobs": ["0xc1f8c058921522aba139a3100b246ce9"]
+        "blobs": [
+          "0xc1f8c058921522aba139a3100b246ce9"
+        ]
       },
-      "digest": "0x08b958fa58d763249adbc0aa7ba4fcf21c7b1549ee8f4c3ab91c700ee66923c4",
-      "signature": "0xbee0d905454bcc883286ffbb00b3df863df5c0678772821aed7c9b6431fb756166e982da376a2bc7fc7dc3973b1dc92843e995f2d4c739c9987656a96e2933101c",
+      "digest": "0x8485089e8e23af8e32ee83cb01152f36fd7366cc71af247eaeaf038fb6ca7c98",
+      "signature": "0xe971c7c4e761ed4afa4dc6faa4c441eeb916530c40d8d5b90ba566937d946aa336fe1964955501a21f08f99002d2e7eb705019aeffef87702b1c21735d8136ab1b",
       "address": "TDvSsdrNM5eeXNL3czpa6AxLDHZA9nwe9K"
     },
     {
@@ -4688,13 +4744,13 @@
       "name": "pay #2 (pk1)",
       "privateKeyLabel": "pk1",
       "domain": {
-        "name": "Omni TIP-712",
+        "name": "Example TIP-712",
         "version": "1",
         "chainId": 728126428,
         "verifyingContract": "0x7e5f4552091a69125d5dfcb7b8c2659029395bdf"
       },
       "domainAlt": {
-        "name": "Omni TIP-712",
+        "name": "Example TIP-712",
         "version": "1",
         "chainId": 728126428,
         "verifyingContract": "TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC"
@@ -4726,22 +4782,22 @@
         "amount": "7445886081830458129805356552",
         "to": "TDvSsdrNM5eeXNL3czpa6AxLDHZA9nwe9K"
       },
-      "digest": "0xdf1e2a2f6ef6445d1f356819e527c6f485894b5ee8daf1c9457c5980faf071d6",
-      "signature": "0x1615777c66db07bf56a7e2bfc1c7dfc2a5232ef96565d7179c805da0f5528b972d185c8215c00c378e7116b61a11ab68cb6ce9610c9933f13dc40a3ccc5f5e421b",
+      "digest": "0x2014a66417761462cb3f97dfd420873573db490b4519c8e3408d13b409293bb4",
+      "signature": "0x9a2e41b60a4a7fc4e4c2b41a7a9737acc09a88be882e0c6a49dad0f5381c62906b3b571bc64babec21006907a97e66320722c3e8a1bc022412dc558cbe9d316b1b",
       "address": "TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC"
     },
     {
       "name": "pay #3 (pk2)",
       "privateKeyLabel": "pk2",
       "domain": {
-        "name": "Omni",
+        "name": "Example",
         "version": "2",
         "chainId": 1,
         "verifyingContract": "0x2b5ad5c4795c026514f8317c7a215e218dccd6cf",
         "salt": "0x724c4a81f320baacc3bfabd7f22a3680255f06238bd509d644e186a0e17ed74f"
       },
       "domainAlt": {
-        "name": "Omni",
+        "name": "Example",
         "version": "2",
         "chainId": 1,
         "verifyingContract": "TDvSsdrNM5eeXNL3czpa6AxLDHZA9nwe9K",
@@ -4774,8 +4830,8 @@
         "amount": "54799973830062042009285545750",
         "to": "TDvSsdrNM5eeXNL3czpa6AxLDHZA9nwe9K"
       },
-      "digest": "0x865b8544e2f66e91bf76e51be4ed00875c94c69e98c26045fe3a635bc05be750",
-      "signature": "0x8fbd1b50930dcb94f2130ab7809f5465d24c513b86d4348b8f59f4b4fcc6f3010221e8a6af08eaeb03129e809ac6eb5745ba0bc77804eaf53eec225c94834cfc1c",
+      "digest": "0xd34e212f8c9f7650eca2e991a137fc806d675139f4b93c002cf381224e5c77d9",
+      "signature": "0xe34ae854806562396d12520b0e60a2bd8f1bbb2558505533a9e2e7c588ab5d7b4b861e96c9e54d2bc4e63586235df1d81d9b28f252df4537dc9460aa093f08071c",
       "address": "TDvSsdrNM5eeXNL3czpa6AxLDHZA9nwe9K"
     },
     {
@@ -4872,13 +4928,13 @@
       "name": "pay #6 (pk1)",
       "privateKeyLabel": "pk1",
       "domain": {
-        "name": "Omni TIP-712",
+        "name": "Example TIP-712",
         "version": "1",
         "chainId": 728126428,
         "verifyingContract": "0x7e5f4552091a69125d5dfcb7b8c2659029395bdf"
       },
       "domainAlt": {
-        "name": "Omni TIP-712",
+        "name": "Example TIP-712",
         "version": "1",
         "chainId": 728126428,
         "verifyingContract": "TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC"
@@ -4910,22 +4966,22 @@
         "amount": "4804720424211490617082419924",
         "to": "TDvSsdrNM5eeXNL3czpa6AxLDHZA9nwe9K"
       },
-      "digest": "0xa82f8bb1570d5b5dea8aa3659a13bcdb08431d79a4efa67ef8047a5c31509129",
-      "signature": "0x7709f4a1b2ce0334d32103bdb6542efe57e4d276aae1e43da2657db1c544149c6674b447a41284ed11a67e103bd81da5813616fddee58f29fb078d78dd54ab461c",
+      "digest": "0x84bf5ec6821f61af7a3d6394acf9496bd04d6c65f62e3babb78991847c33a6f6",
+      "signature": "0x7cada04b5bf26eb99b313b21d4acf432d406c16fdc5515682d0e64315b57765516bac5a99e6ebcf6c819a47d07e0746018f5fe0668eaf390d2fe78ffab7a564d1c",
       "address": "TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC"
     },
     {
       "name": "pay #7 (pk2)",
       "privateKeyLabel": "pk2",
       "domain": {
-        "name": "Omni",
+        "name": "Example",
         "version": "2",
         "chainId": 1,
         "verifyingContract": "0x2b5ad5c4795c026514f8317c7a215e218dccd6cf",
         "salt": "0x724c4a81f320baacc3bfabd7f22a3680255f06238bd509d644e186a0e17ed74f"
       },
       "domainAlt": {
-        "name": "Omni",
+        "name": "Example",
         "version": "2",
         "chainId": 1,
         "verifyingContract": "TDvSsdrNM5eeXNL3czpa6AxLDHZA9nwe9K",
@@ -4958,8 +5014,8 @@
         "amount": "69150479584743261249694268721",
         "to": "TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC"
       },
-      "digest": "0x73a3864711553db41f42c8fc0a8b3ee38abff214c4c18622445fb2583c5cedce",
-      "signature": "0xaf45d5156dd85f795d4fcbaf51de06e3f383dba62b35cc6fc31446da5a9e8a540b46365199e917b1f6cd0980748fb4b150c02443fa7e1003608244e04c5b91081b",
+      "digest": "0xcf2f7e2a832d94822b43cc286c38ace516ddd5e2d42925100da49c0e11bafd3e",
+      "signature": "0x5b746598bcab85775cb2013be08f2748eb7773c882e3a176bcb8ae950a5bf2e8156068670ad66283cee1d815d5f41eaaee33a42dbb913d0ea8de781d702acb461b",
       "address": "TDvSsdrNM5eeXNL3czpa6AxLDHZA9nwe9K"
     }
   ],
@@ -5189,12 +5245,12 @@
       "publicKey": "0x042874e5c806124122857ac3fea42b0ea4f240aefbb764df8e13d19ef755411fe5fc049b12c87219d07288cde097a607fee268e19929be80d7f9f94be03e267afd"
     },
     {
-      "name": "16B/00000000 m/44'/195'/0'/0/0 +pp:omni-\ud83d",
+      "name": "16B/00000000 m/44'/195'/0'/0/0 +pp:passph",
       "entropyHex": "00000000000000000000000000000000",
-      "passphrase": "omni-🚀",
+      "passphrase": "passphrase-🚀",
       "path": "m/44'/195'/0'/0/0",
-      "address": "TD6CLmNTvqUzGQt6aDZyMSjg6eT1t8uQza",
-      "publicKey": "0x04506e87a16ccc1c729d7b585126de7a4eaae4f7483d6ac0981e68c3c3727c285019b6b0a54ae5283dae9204da79a3a780241da0ec4b7e8ddcbea44a638b05bfc7"
+      "address": "TLqaejwnaDYJmRDhTNKE5FizgKvB52niAq",
+      "publicKey": "0x041d911d2089dca81e3cd8383301bf502e27c3399ecceab1dbf913ee6ab5dd182bd812d1cee273c2516c39734b579d787426b186f23c24f4c734f82cb6af2c3876"
     },
     {
       "name": "16B/00000000 m/44'/195'/0'/0/0 +pp:correc",

@@ -1,17 +1,20 @@
-// TRON-specific, clean-room tests for @tronweb3/omni.
+// TRON-specific, clean-room tests for @tronweb3/tviem.
 import { describe, expect, test } from 'vitest'
 
 import { stringToBytes } from '../../../src/utils/encoding/toBytes.js'
 import { keccak256 } from '../../../src/utils/hash/keccak256.js'
-import { hashMessage, presignMessagePrefix } from '../../../src/utils/signature/hashMessage.js'
+import {
+  hashMessage,
+  presignMessagePrefix,
+} from '../../../src/utils/signature/hashMessage.js'
 
 // Canonical TIP-191 digest for the current package name (pk = 1). Verified
 // byte-for-byte against TronWeb's `utils.message.hashMessage`. (The pre-rename
 // spec constant 0xdd7bd740… is stale: it is the digest of the former message,
 // not of the string below.)
-const message = 'hello @tronweb3/omni'
+const message = 'sign this message'
 const digest =
-  '0x068a2c93df26c5f19fb1d6b74abe50efc69cbff8b70a9cc9b915058e0ed9a18e'
+  '0x46971b5b1d980410d80acba57293e39e27ed19dd6ff1015a8ebd9f8e0cc4edd9'
 
 describe('hashMessage', () => {
   test('matches the TronWeb-verified TIP-191 digest', () => {

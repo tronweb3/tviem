@@ -1,6 +1,6 @@
 // TRON-specific, clean-room tests for @tronweb3/tviem.
 // Signatures are pinned byte-for-byte from TronWeb's `utils.typedData
-// .signTypedData(domain, types, value, pk)` (pk=1). omni's `sign()` already
+// .signTypedData(domain, types, value, pk)` (pk=1). tviem's `sign()` already
 // emits the same `0x||r||s||v` (v=1b/1c) wire form.
 import { describe, expect, test } from 'vitest'
 
@@ -15,7 +15,7 @@ const PK1: EvmAddress = '0x7e5f4552091a69125d5dfcb7b8c2659029395bdf'
 const PK2: EvmAddress = '0x2b5ad5c4795c026514f8317c7a215e218dccd6cf'
 
 const domain = {
-  name: 'Omni TIP-712',
+  name: 'Example TIP-712',
   version: '1',
   chainId: 728126428n,
   verifyingContract: PK2,
@@ -37,7 +37,7 @@ const message = {
   contents: 'Hello, Bob!',
 }
 const mailSignature =
-  '0x3ef740fd06a1ff032008c23896dab74bbbc3dc0179d980a6257d7cdc24a1bd3c3021ec88ce8abffad57ecb196b048f1ca11d4dc8ce9a5f8d233775074c3374de1c'
+  '0xce53aef3eebbfa840eb3ee50189c18510c2513d98aa5d7fd0c55820625d029e20221dd87c74326d0490b9591aa76fcb1dac3bd3cff693b97b827525939696f1b1c'
 
 const typedData = { domain, types, primaryType: 'Mail', message } as const
 
@@ -115,7 +115,7 @@ describe('signTypedData', () => {
         privateKey: pk1,
       }).serialized,
     ).toBe(
-      '0x893c3d82aa91846fb6ac5af691d1a6318e5d4f4d5c585dffad01c1aeb0075cbe0450f31da2e3e3d2707662ff5c21acdb156689d07cd3dfa4673aec92c3464c7e1c',
+      '0x408903aa47c943d02cf6e2cea736a8946c24e0b2300b88f570ebf7b6b7afb4ee748f776a70fa6b3956ca9284a38faa45d98543ed68b32863ef97bb12491fa0111c',
     )
   })
 })

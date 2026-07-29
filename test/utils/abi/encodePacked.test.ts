@@ -1,12 +1,11 @@
 import { describe, expect, test } from 'vitest'
-
+import { UnsupportedPackedAbiType } from '../../../src/errors/abi.js'
+import { encodePacked } from '../../../src/utils/abi/encodePacked.js'
 import {
   type FixtureParameter,
   loadPackedFixtures,
   reviveValue,
 } from '../../fixtures/abi/loader.js'
-import { UnsupportedPackedAbiType } from '../../../src/errors/abi.js'
-import { encodePacked } from '../../../src/utils/abi/encodePacked.js'
 
 const fixtures = loadPackedFixtures()
 
@@ -42,8 +41,8 @@ describe('encodePacked (units)', () => {
   })
 
   test('dynamic bytes / string are raw and unpadded', () => {
-    expect(encodePacked(['string'], ['hello omni'])).toBe(
-      '0x68656c6c6f206f6d6e69',
+    expect(encodePacked(['string'], ['hello test'])).toBe(
+      '0x68656c6c6f2074657374',
     )
     expect(encodePacked(['bytes'], ['0x0102030405'])).toBe('0x0102030405')
     expect(encodePacked(['bytes'], ['0x'])).toBe('0x')

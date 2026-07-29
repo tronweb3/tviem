@@ -1,4 +1,4 @@
-// TRON-specific, clean-room tests for @tronweb3/omni.
+// TRON-specific, clean-room tests for @tronweb3/tviem.
 import { describe, expect, test } from 'vitest'
 
 import { hashMessage } from '../../../src/utils/signature/hashMessage.js'
@@ -9,16 +9,16 @@ import { signMessage } from '../../../src/utils/signature/signMessage.js'
 // byte-for-byte against TronWeb's `utils.message.signMessage`.
 const pk1 =
   '0x0000000000000000000000000000000000000000000000000000000000000001' as const
-const message = 'hello @tronweb3/omni'
+const message = 'sign this message'
 const messageSignature =
-  '855e95dd49d937f13c6cbc5293db9b6fdfab8780d7c27c6eff9b12f8f3d3d56d792f34efe0adb183778c8e6f4c8f1cf66e19bd06be967bc7874613f4ee135dea1b'
+  '9db3012a68317a97618479e218f3ca6849714071c2a8f07c160f1a804b114a8e166364cb124269a0edea614f50ae2acd0fd3a2c97ae89f45b4811427fb6136b71b'
 
 describe('signMessage', () => {
-  test('signs to the TronWeb-verified signature (…dea1b, v = 27)', () => {
+  test('signs to the TronWeb-verified signature (…6b71b, v = 27)', () => {
     const signature = signMessage({ message, privateKey: pk1 })
     expect(signature.hex).toBe(messageSignature)
     expect(signature.serialized).toBe(`0x${messageSignature}`)
-    expect(signature.serialized.endsWith('dea1b')).toBe(true)
+    expect(signature.serialized.endsWith('6b71b')).toBe(true)
     expect(signature.v).toBe(27)
   })
 

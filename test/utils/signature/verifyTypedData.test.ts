@@ -15,7 +15,7 @@ const pk1Evm: EvmAddress = '0x7e5f4552091a69125d5dfcb7b8c2659029395bdf'
 const PK2: EvmAddress = '0x2b5ad5c4795c026514f8317c7a215e218dccd6cf'
 
 const domain = {
-  name: 'Omni TIP-712',
+  name: 'Example TIP-712',
   version: '1',
   chainId: 728126428n,
   verifyingContract: PK2,
@@ -39,7 +39,7 @@ const message = {
 const typedData = { domain, types, primaryType: 'Mail', message } as const
 // pk=1 signature over the Mail digest (from TronWeb's `signTypedData`).
 const mailSignature =
-  '0x3ef740fd06a1ff032008c23896dab74bbbc3dc0179d980a6257d7cdc24a1bd3c3021ec88ce8abffad57ecb196b048f1ca11d4dc8ce9a5f8d233775074c3374de1c'
+  '0xce53aef3eebbfa840eb3ee50189c18510c2513d98aa5d7fd0c55820625d029e20221dd87c74326d0490b9591aa76fcb1dac3bd3cff693b97b827525939696f1b1c'
 
 describe('recoverTypedDataAddress', () => {
   test('recovers TMVQGm… from the canonical signature', () => {

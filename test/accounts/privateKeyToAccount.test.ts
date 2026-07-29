@@ -44,11 +44,11 @@ describe('privateKeyToAccount', () => {
 
   test('§2.2: signMessage reproduces the TronWeb-verified vector', () => {
     const account = privateKeyToAccount(pk1)
-    // TronWeb-verified vectors for "hello @tronweb3/omni" (pk=1). The §2.2
+    // TronWeb-verified vectors for "sign this message" (pk=1). The §2.2
     // vector in the task spec is stale (pre-rename); see the SIG-3/4/5 notes.
-    const signature = account.signMessage({ message: 'hello @tronweb3/omni' })
+    const signature = account.signMessage({ message: 'sign this message' })
     expect(signature.serialized).toBe(
-      '0x855e95dd49d937f13c6cbc5293db9b6fdfab8780d7c27c6eff9b12f8f3d3d56d792f34efe0adb183778c8e6f4c8f1cf66e19bd06be967bc7874613f4ee135dea1b',
+      '0x9db3012a68317a97618479e218f3ca6849714071c2a8f07c160f1a804b114a8e166364cb124269a0edea614f50ae2acd0fd3a2c97ae89f45b4811427fb6136b71b',
     )
     expect(signature.v).toBe(27)
   })

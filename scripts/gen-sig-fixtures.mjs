@@ -24,7 +24,7 @@
 //     - `signature`— r(32)||s(32)||v over the txID digest (bare lowercase hex).
 //
 // The generator hard-asserts the canonical message case (pk=1,
-// "hello @tronweb3/omni") and the canonical transfer transaction case
+// "sign this message") and the canonical transfer transaction case
 // (pk=1) against their byte-verified reference vectors before writing.
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
@@ -55,11 +55,11 @@ const ADDRESS = {
 // message below. The values pinned here are the true golden, produced
 // identically by TronWeb (`hashMessage`/`signMessageV2`) and by the in-tree
 // implementation, and are byte-asserted against TronWeb's live output above.
-const CANONICAL_MESSAGE = 'hello @tronweb3/omni'
+const CANONICAL_MESSAGE = 'sign this message'
 const CANONICAL_MESSAGE_DIGEST =
-  '0x068a2c93df26c5f19fb1d6b74abe50efc69cbff8b70a9cc9b915058e0ed9a18e'
+  '0x46971b5b1d980410d80acba57293e39e27ed19dd6ff1015a8ebd9f8e0cc4edd9'
 const CANONICAL_MESSAGE_SIGNATURE =
-  '0x855e95dd49d937f13c6cbc5293db9b6fdfab8780d7c27c6eff9b12f8f3d3d56d792f34efe0adb183778c8e6f4c8f1cf66e19bd06be967bc7874613f4ee135dea1b'
+  '0x9db3012a68317a97618479e218f3ca6849714071c2a8f07c160f1a804b114a8e166364cb124269a0edea614f50ae2acd0fd3a2c97ae89f45b4811427fb6136b71b'
 
 /** Canonical transaction reference vector (pk=1). */
 const CANONICAL_TX_ID =

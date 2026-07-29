@@ -58,7 +58,7 @@ const HEX_ADDRESS = {
 }
 
 /** Fixed PRNG seed — reruns are byte-for-byte identical. */
-const SEED = 0x6f6d6e69 // "omni"
+const SEED = 0x6f6d6e69 // fixed seed for a reproducible corpus
 
 /**
  * TIP-191 length-prefix decimal boundaries (message BYTE lengths). Covers the
@@ -338,7 +338,7 @@ assert(
 // signer. Covers nested structs, fixed/dynamic arrays, arrays of structs,
 // every scalar width, bytes/bytesN, bool and the TRON-native `trcToken`.
 // Addresses are stored in 0x EVM form (`value`/`domain`, what the oracle saw)
-// AND base58 form (`valueAlt`/`domainAlt`) so the diff test proves omni's
+// AND base58 form (`valueAlt`/`domainAlt`) so the diff test proves the in-tree implementation's
 // TRON address-form invariance yields the same digest.
 // ---------------------------------------------------------------------------
 
@@ -387,13 +387,13 @@ function toAltForm(x) {
 /** Domain templates cycled across cases (±verifyingContract, ±salt, chainId). */
 const TD_DOMAINS = [
   {
-    name: 'Omni TIP-712',
+    name: 'Example TIP-712',
     version: '1',
     chainId: 728126428,
     verifyingContract: ADDR_POOL[0].evm,
   },
   {
-    name: 'Omni',
+    name: 'Example',
     version: '2',
     chainId: 1,
     verifyingContract: ADDR_POOL[1].evm,
@@ -624,7 +624,7 @@ function pushHd(entropyHex, path, passphrase) {
 for (const entropyHex of HD_ENTROPIES)
   for (const path of HD_PATHS) pushHd(entropyHex, path)
 // Passphrase (BIP-39 "25th word") variants on the default path.
-pushHd(HD_ENTROPIES[0], "m/44'/195'/0'/0/0", 'omni-\u{1f680}')
+pushHd(HD_ENTROPIES[0], "m/44'/195'/0'/0/0", 'passphrase-\u{1f680}')
 pushHd(HD_ENTROPIES[0], "m/44'/195'/0'/0/0", 'correct horse battery staple')
 
 assert(hdCases.length >= 30, `need >=30 HD cases, got ${hdCases.length}`)

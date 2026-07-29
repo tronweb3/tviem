@@ -465,7 +465,7 @@ async function buildFixtures() {
     const options = {
       abi: DEPLOY_ABI,
       bytecode: hexBytes(int(4, 32)),
-      name: `Omni${digits(int(1, 6))}`,
+      name: `Test${digits(int(1, 6))}`,
       userFeePercentage: int(0, 100),
       originEnergyLimit: int(1, 10_000_000),
       feeLimit: int(1_000_000, 1_000_000_000),
