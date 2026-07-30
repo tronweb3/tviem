@@ -241,8 +241,8 @@ export type GetContractErrorType = ErrorType
  * by `readContract`); `nonpayable` / `payable` → `write` (backed by
  * `writeContract`) and `estimateEnergy`. Groups are mounted by capability
  * probing the Client — `read` only when it exposes `readContract`, `write` /
- * `estimateEnergy` only when it exposes `writeContract`. `getEvents` is a
- * reserved placeholder that throws {@link NotImplementedError}.
+ * `estimateEnergy` only when it exposes `writeContract`. `getEvents.<Event>` is
+ * always mounted and reads that event's logs via `getContractEvents`.
  *
  * @example
  * const contract = getContract({
