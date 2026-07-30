@@ -1,9 +1,5 @@
 import type { SignableTransaction } from '../../accounts/types.js'
-import {
-  TransactionTamperedError,
-  type TransactionTamperedErrorType,
-} from '../../errors/rpc.js'
-import type { ErrorType } from '../../errors/utils.js'
+import { TransactionTamperedError } from '../../errors/rpc.js'
 
 /** The transaction an endpoint may echo back — only the load-bearing fields. */
 export type EchoedTransaction =
@@ -12,10 +8,6 @@ export type EchoedTransaction =
       raw_data_hex?: string | undefined
     }
   | undefined
-
-export type AssertUnchangedTransactionErrorType =
-  | TransactionTamperedErrorType
-  | ErrorType
 
 /**
  * Fails closed when a node's echoed transaction differs from the locally built
