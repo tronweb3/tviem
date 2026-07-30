@@ -19,7 +19,11 @@ const rootPkg = read('../../package.json') as { private?: boolean }
 const pkg = read('../../src/package.json') as {
   exports: Record<
     string,
-    { types: string; import: string; default: string } | string
+    | {
+        import: { types: string; default: string }
+        require: { types: string; default: string }
+      }
+    | string
   >
   typesVersions: { '*': Record<string, string[]> }
 }
@@ -35,7 +39,7 @@ describe('package exports surface (freeze guard)', () => {
     expect(rootPkg.private).toBe(true)
   })
 
-  test('publish manifest exports the public entrypoints with types/import/default', () => {
+  test('publish manifest wires each entrypoint with import/require type-safe conditions', () => {
     expect(Object.keys(pkg.exports).sort()).toEqual([
       '.',
       './accounts',
@@ -46,13 +50,16 @@ describe('package exports surface (freeze guard)', () => {
     ])
     for (const sub of ['.', './accounts', './actions', './chains', './utils']) {
       const entry = pkg.exports[sub] as {
-        types: string
-        import: string
-        default: string
+        import: { types: string; default: string }
+        require: { types: string; default: string }
       }
-      expect(entry.types).toMatch(/^\.\/_types\/.*\.d\.ts$/)
-      expect(entry.import).toMatch(/^\.\/_esm\/.*\.js$/)
-      expect(entry.default).toMatch(/^\.\/_cjs\/.*\.js$/)
+      // ESM (`import`): ESM-scoped types + `_esm` runtime.
+      expect(entry.import.types).toMatch(/^\.\/_types\/.*\.d\.ts$/)
+      expect(entry.import.default).toMatch(/^\.\/_esm\/.*\.js$/)
+      // CJS (`require`): CJS-scoped types co-located in `_cjs` (so `require`
+      // consumers don't get ESM-masquerading types) + `_cjs` runtime.
+      expect(entry.require.types).toMatch(/^\.\/_cjs\/.*\.d\.ts$/)
+      expect(entry.require.default).toMatch(/^\.\/_cjs\/.*\.js$/)
     }
     expect(pkg.exports['./package.json']).toBe('./package.json')
   })

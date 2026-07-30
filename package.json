@@ -42,29 +42,54 @@
   ],
   "exports": {
     ".": {
-      "types": "./src/_types/index.d.ts",
-      "import": "./src/_esm/index.js",
-      "default": "./src/_cjs/index.js"
+      "import": {
+        "types": "./src/_types/index.d.ts",
+        "default": "./src/_esm/index.js"
+      },
+      "require": {
+        "types": "./src/_cjs/index.d.ts",
+        "default": "./src/_cjs/index.js"
+      }
     },
     "./accounts": {
-      "types": "./src/_types/accounts/index.d.ts",
-      "import": "./src/_esm/accounts/index.js",
-      "default": "./src/_cjs/accounts/index.js"
+      "import": {
+        "types": "./src/_types/accounts/index.d.ts",
+        "default": "./src/_esm/accounts/index.js"
+      },
+      "require": {
+        "types": "./src/_cjs/accounts/index.d.ts",
+        "default": "./src/_cjs/accounts/index.js"
+      }
     },
     "./actions": {
-      "types": "./src/_types/actions/index.d.ts",
-      "import": "./src/_esm/actions/index.js",
-      "default": "./src/_cjs/actions/index.js"
+      "import": {
+        "types": "./src/_types/actions/index.d.ts",
+        "default": "./src/_esm/actions/index.js"
+      },
+      "require": {
+        "types": "./src/_cjs/actions/index.d.ts",
+        "default": "./src/_cjs/actions/index.js"
+      }
     },
     "./chains": {
-      "types": "./src/_types/chains/index.d.ts",
-      "import": "./src/_esm/chains/index.js",
-      "default": "./src/_cjs/chains/index.js"
+      "import": {
+        "types": "./src/_types/chains/index.d.ts",
+        "default": "./src/_esm/chains/index.js"
+      },
+      "require": {
+        "types": "./src/_cjs/chains/index.d.ts",
+        "default": "./src/_cjs/chains/index.js"
+      }
     },
     "./utils": {
-      "types": "./src/_types/utils/index.d.ts",
-      "import": "./src/_esm/utils/index.js",
-      "default": "./src/_cjs/utils/index.js"
+      "import": {
+        "types": "./src/_types/utils/index.d.ts",
+        "default": "./src/_esm/utils/index.js"
+      },
+      "require": {
+        "types": "./src/_cjs/utils/index.d.ts",
+        "default": "./src/_cjs/utils/index.js"
+      }
     },
     "./package.json": "./package.json"
   },
@@ -113,10 +138,11 @@
   },
   "scripts": {
     "clean": "rm -rf *.tsbuildinfo src/*.tsbuildinfo src/_esm src/_cjs src/_types",
-    "build": "pnpm clean && pnpm build:cjs && pnpm build:esm && pnpm build:types",
+    "build": "pnpm clean && pnpm build:cjs && pnpm build:esm && pnpm build:types && pnpm build:types:cjs",
     "build:esm": "tsc --project ./tsconfig.build.json --outDir ./src/_esm && printf '{\"type\":\"module\",\"sideEffects\":false}' > ./src/_esm/package.json",
     "build:cjs": "node scripts/runTsc.js --project ./tsconfig.build.json --module commonjs --moduleResolution node --outDir ./src/_cjs --removeComments --verbatimModuleSyntax false && printf '{\"type\":\"commonjs\"}' > ./src/_cjs/package.json",
     "build:types": "tsc --project ./tsconfig.build.json --declarationDir ./src/_types --emitDeclarationOnly --declaration --declarationMap",
+    "build:types:cjs": "tsc --project ./tsconfig.build.json --declarationDir ./src/_cjs --emitDeclarationOnly --declaration",
     "preconstruct": "node scripts/preconstruct.mjs",
     "check": "biome check --write --unsafe",
     "check:types": "tsc --noEmit --project ./tsconfig.json",

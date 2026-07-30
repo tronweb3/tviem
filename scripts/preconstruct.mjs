@@ -32,19 +32,18 @@ for (const dirName of ['_cjs', '_esm', '_types']) {
     rmSync(join(dist, file), { recursive: true, force: true })
 }
 
+// Collect every leaf file path of an export entry — a plain string, or a
+// nested conditions object like `{ import: { types, default }, require: {…} }`.
+function leafPaths(node) {
+  if (typeof node === 'string') return [node]
+  return Object.values(node).flatMap(leafPaths)
+}
+
 // Link exports to dist locations.
 for (const [key, exports] of Object.entries(packageJson.exports)) {
   if (/package\.json$/.test(key)) continue
 
-  const entries =
-    typeof exports === 'string'
-      ? [
-          ['default', exports],
-          ['types', exports.replace('.js', '.d.ts')],
-        ]
-      : Object.entries(exports)
-
-  for (const [, value] of entries) {
+  for (const value of leafPaths(exports)) {
     const srcDir = resolve(root, dirname(value).replace(/_types|_esm|_cjs/, ''))
     const srcFilePath = resolve(srcDir, 'index.ts')
 
