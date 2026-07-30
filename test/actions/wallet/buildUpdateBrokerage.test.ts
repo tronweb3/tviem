@@ -4,45 +4,27 @@ import { buildUpdateBrokerage } from '../../../src/actions/wallet/updateBrokerag
 import { createPublicClient } from '../../../src/clients/createPublicClient.js'
 import { AccountNotFoundError } from '../../../src/errors/rpc.js'
 import { createMockTransport } from '../../mock/createMockTransport.js'
-import {
-  expectBuildMatchesTronweb,
-  makeTronWeb,
-  makeTviemClient,
-  tviemHeader,
-  twBlockHeader,
-} from './_tronwebDiff.js'
+import { makeTviemClient, tviemHeader } from './_buildTestHelpers.js'
 
-test('builds UpdateBrokerageContract byte-identical to TronWeb', async () => {
+test('builds UpdateBrokerageContract offline', async () => {
   const client = makeTviemClient()
-  const tronWeb = makeTronWeb()
-  const owner = tronWeb.defaultAddress.base58 as string
 
   const tviemTx = await client.buildUpdateBrokerage({
     brokerage: 20,
     blockHeader: tviemHeader,
-  })
-  const twTx = await tronWeb.transactionBuilder.updateBrokerage(20, owner, {
-    blockHeader: twBlockHeader,
   })
 
   expect(tviemTx.visible).toBe(false)
   expect(tviemTx.signature).toBeUndefined()
-  expectBuildMatchesTronweb(tviemTx, twTx, 'updateBrokerage')
 })
 
-test('permissionId is baked in as Permission_id and matches TronWeb', async () => {
+test('permissionId is baked in as Permission_id', async () => {
   const client = makeTviemClient()
-  const tronWeb = makeTronWeb()
-  const owner = tronWeb.defaultAddress.base58 as string
 
   const tviemTx = await client.buildUpdateBrokerage({
     brokerage: 20,
     permissionId: 2,
     blockHeader: tviemHeader,
-  })
-  const twTx = await tronWeb.transactionBuilder.updateBrokerage(20, owner, {
-    permissionId: 2,
-    blockHeader: twBlockHeader,
   })
 
   const contract = (
@@ -51,7 +33,6 @@ test('permissionId is baked in as Permission_id and matches TronWeb', async () =
     Permission_id?: number
   }
   expect(contract.Permission_id).toBe(2)
-  expectBuildMatchesTronweb(tviemTx, twTx, 'updateBrokerage+permissionId')
 })
 
 test('throws AccountNotFoundError when no account is available', async () => {

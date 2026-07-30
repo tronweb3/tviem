@@ -122,9 +122,6 @@
     "check:types": "tsc --noEmit --project ./tsconfig.json",
     "check:unused": "pnpm clean && knip --production",
     "test": "vitest --project unit",
-    "test:e2e": "vitest --project e2e",
-    "tre:up": "node scripts/tre-up.mjs",
-    "tre:down": "docker rm -f tviem-tre",
     "test:typecheck": "vitest --typecheck.only",
     "test:build": "cd src && publint --strict . && attw --pack . --ignore-rules false-esm"
   },

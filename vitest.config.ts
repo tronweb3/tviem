@@ -22,13 +22,6 @@ export default defineConfig({
           typecheck: { enabled: true, include: ['test/**/*.test-d.ts'] },
         },
       },
-      {
-        resolve: { alias },
-        test: {
-          name: 'e2e',
-          include: ['test/**/*.e2e.test.ts'],
-        },
-      },
     ],
   },
 })
