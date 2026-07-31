@@ -62,8 +62,8 @@ test('a custom blockHeader is used verbatim and skips the getnowblock fetch', as
   const tx = await buildVoteWitness(client, {
     votes,
     blockHeader: {
-      refBlockBytes: '1234',
-      refBlockHash: '0102030405060708',
+      ref_block_bytes: '1234',
+      ref_block_hash: '0102030405060708',
       timestamp: 1700000000000n,
       expiration: 1700000000000n + 60000n,
     },

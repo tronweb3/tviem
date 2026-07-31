@@ -69,8 +69,8 @@ test('a custom blockHeader is used verbatim and skips the getnowblock fetch', as
     assetName: '1002000',
     amount: 1000n,
     blockHeader: {
-      refBlockBytes: '1234',
-      refBlockHash: '0102030405060708',
+      ref_block_bytes: '1234',
+      ref_block_hash: '0102030405060708',
       timestamp: blockTimestamp,
       expiration: blockTimestamp + 60000n,
     },

@@ -4,6 +4,7 @@ import { expect, test } from 'vitest'
 import { bytesToHex } from '../../../src/utils/encoding/toHex.js'
 import { decodeRawData } from '../../../src/utils/transaction/decodeRawData.js'
 import { getTransactionId } from '../../../src/utils/transaction/getTransactionId.js'
+import { contractTypeNameOf } from '../../../src/utils/transaction/registry.js'
 import { serializeRawData } from '../../../src/utils/transaction/serializeRawData.js'
 import { txCheck } from '../../../src/utils/transaction/txCheck.js'
 
@@ -37,10 +38,12 @@ test('fuzz corpus covers all 13 contract types with >=120 cases', () => {
 test.each(cases)('differential vs TronWeb gold: $name', (fixture) => {
   const model = decodeRawData(fixture.rawDataHex)
 
-  // decode recovers the contract's type integer and Any type URL.
+  // decode recovers the contract's type (as its enum NAME) and Any type URL.
   expect(model.contract).toHaveLength(1)
-  expect(model.contract[0]!.type).toBe(fixture.contractType)
-  expect(model.contract[0]!.parameter.typeUrl).toBe(fixture.typeUrl)
+  expect(model.contract[0]!.type).toBe(
+    contractTypeNameOf(fixture.contractType) ?? fixture.contractType,
+  )
+  expect(model.contract[0]!.parameter.type_url).toBe(fixture.typeUrl)
 
   // serializeRawData reproduces the gold bytes exactly.
   expect(bytesToHex(serializeRawData(model)).slice(2)).toBe(fixture.rawDataHex)

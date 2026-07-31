@@ -82,7 +82,7 @@ test('decodeContractParameter: registered type URL decodes the message', () => {
       'type.googleapis.com/protocol.TransferContract',
       value,
     ),
-  ).toStrictEqual({ ownerAddress: v1, toAddress: to, amount: 1_000_000n })
+  ).toStrictEqual({ owner_address: v1, to_address: to, amount: 1_000_000 })
 })
 
 test('decodeContractParameter: unknown type URL falls back to __unknown (no throw)', () => {
@@ -93,14 +93,19 @@ test('decodeContractParameter: unknown type URL falls back to __unknown (no thro
   )
   expect(decoded).toStrictEqual({
     __unknown: true,
-    typeUrl: 'type.googleapis.com/protocol.FooBarContract',
-    valueBytes: new Uint8Array([1, 2, 3]),
+    type_url: 'type.googleapis.com/protocol.FooBarContract',
+    value: '010203',
   })
 })
 
 test('registry codec encode/decode round-trips (§2.3 Any-value bytes)', () => {
   const codec = getContractCodecByType(ContractType.TransferContract)!
-  const x = { ownerAddress: v1, toAddress: to, amount: 1_000_000n }
+  const x = { owner_address: v1, to_address: to, amount: 1_000_000n }
   expect(bytesToHex(codec.encode(x))).toBe(`0x0a15${v1}1215${to}18c0843d`)
-  expect(codec.decode(codec.encode(x))).toStrictEqual(x)
+  // decode canonicalizes: int64 becomes its JSON-number form.
+  expect(codec.decode(codec.encode(x))).toStrictEqual({
+    owner_address: v1,
+    to_address: to,
+    amount: 1_000_000,
+  })
 })

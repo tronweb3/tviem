@@ -304,6 +304,7 @@ export {
 } from './transaction/getTransactionId.js'
 export { int64ToJson } from './transaction/int64.js'
 export {
+  type FlexErrorType,
   type FlexInput,
   flexToHex,
 } from './transaction/normalize.js'

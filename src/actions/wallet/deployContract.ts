@@ -193,15 +193,19 @@ function assemble(
           origin_address: ownerAddress,
           abi: toSmartContractAbi(abi),
           bytecode: encodeDeployData({ abi, bytecode, args }),
-          ...(callValue !== undefined ? { callValue } : {}),
+          ...(callValue !== undefined ? { call_value: callValue } : {}),
           ...(consumeUserResourcePercent !== undefined
-            ? { consumeUserResourcePercent }
+            ? { consume_user_resource_percent: consumeUserResourcePercent }
             : {}),
           ...(name !== undefined ? { name } : {}),
-          ...(originEnergyLimit !== undefined ? { originEnergyLimit } : {}),
+          ...(originEnergyLimit !== undefined
+            ? { origin_energy_limit: originEnergyLimit }
+            : {}),
         },
-        ...(callTokenValue !== undefined ? { callTokenValue } : {}),
-        ...(tokenId !== undefined ? { tokenId } : {}),
+        ...(callTokenValue !== undefined
+          ? { call_token_value: callTokenValue }
+          : {}),
+        ...(tokenId !== undefined ? { token_id: tokenId } : {}),
       },
     },
   }

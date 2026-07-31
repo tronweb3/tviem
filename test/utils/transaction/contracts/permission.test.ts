@@ -17,22 +17,22 @@ const operations =
 
 test('encodeAccountPermissionUpdateContract: owner/witness/actives + 32-byte operations bitmap', () => {
   const x: AccountPermissionUpdateContract = {
-    ownerAddress: v1,
+    owner_address: v1,
     owner: {
       type: PermissionType.OWNER,
       id: 0,
-      permissionName: 'owner',
+      permission_name: 'owner',
       threshold: 1n,
-      parentId: 0,
+      parent_id: 0,
       operations: '0x',
       keys: [{ address: v1, weight: 1n }],
     },
     witness: {
       type: PermissionType.WITNESS,
       id: 0,
-      permissionName: 'witness',
+      permission_name: 'witness',
       threshold: 1n,
-      parentId: 0,
+      parent_id: 0,
       operations: '0x',
       keys: [{ address: v1, weight: 1n }],
     },
@@ -40,9 +40,9 @@ test('encodeAccountPermissionUpdateContract: owner/witness/actives + 32-byte ope
       {
         type: PermissionType.ACTIVE,
         id: 2,
-        permissionName: 'active',
+        permission_name: 'active',
         threshold: 1n,
-        parentId: 0,
+        parent_id: 0,
         operations,
         keys: [{ address: v2, weight: 1n }],
       },
@@ -55,33 +55,47 @@ test('encodeAccountPermissionUpdateContract: owner/witness/actives + 32-byte ope
   const activePerm = `080210021a0661637469766520013220${operations.slice(2)}3a190a15${v2}1001`
   const expected = `0x0a15${v1}1224${ownerPerm}1a28${witnessPerm}224b${activePerm}`
   expect(bytesToHex(encodeAccountPermissionUpdateContract(x))).toBe(expected)
+  // decode canonicalizes: enum names, number int64, bare-hex bytes,
+  // proto3 defaults (type/id/parent_id 0, empty operations) omitted.
   expect(
     decodeAccountPermissionUpdateContract(
       encodeAccountPermissionUpdateContract(x),
     ),
-  ).toStrictEqual(x)
+  ).toStrictEqual({
+    owner_address: v1,
+    owner: {
+      permission_name: 'owner',
+      threshold: 1,
+      keys: [{ address: v1, weight: 1 }],
+    },
+    witness: {
+      type: 'Witness',
+      permission_name: 'witness',
+      threshold: 1,
+      keys: [{ address: v1, weight: 1 }],
+    },
+    actives: [
+      {
+        type: 'Active',
+        id: 2,
+        permission_name: 'active',
+        threshold: 1,
+        operations: operations.slice(2),
+        keys: [{ address: v2, weight: 1 }],
+      },
+    ],
+  })
 })
 
-test('empty nested Permission encodes as an empty message and decodes with defaults', () => {
+test('empty nested Permission encodes as an empty message and decodes empty', () => {
   const encoded = encodeAccountPermissionUpdateContract({
-    ownerAddress: v1,
+    owner_address: v1,
     owner: {},
   })
   expect(bytesToHex(encoded)).toBe(`0x0a15${v1}1200`)
   const decoded = decodeAccountPermissionUpdateContract(encoded)
-  expect(decoded).toStrictEqual({
-    ownerAddress: v1,
-    owner: {
-      type: 0,
-      id: 0,
-      permissionName: '',
-      threshold: 0n,
-      parentId: 0,
-      operations: '0x',
-      keys: [],
-    },
-    actives: [],
-  })
-  // Absent witness permission stays absent.
+  // Defaults are omitted (JsonFormat prints only set fields); the empty
+  // nested message itself survives as {}.
+  expect(decoded).toStrictEqual({ owner_address: v1, owner: {} })
   expect('witness' in decoded).toBe(false)
 })

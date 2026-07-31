@@ -73,14 +73,14 @@ test('builds, signs and broadcasts a TRC20 transfer byte-for-byte (feeLimit)', a
 
   const body = parseBroadcast(bodyOf('broadcasthex')) as {
     txID: string
-    raw_data: { feeLimit?: bigint }
+    raw_data: { fee_limit?: number }
     raw_data_hex: string
     signature: string[]
   }
   expect(body.txID).toBe(TX_ID_FEELIMIT)
   expect(body.raw_data_hex).toBe(RAW_FEELIMIT)
   expect(body.signature).toEqual([SIG_FEELIMIT])
-  expect(body.raw_data.feeLimit).toBe(FEE_LIMIT)
+  expect(body.raw_data.fee_limit).toBe(Number(FEE_LIMIT))
 })
 
 test('attaches callValue to the TriggerSmartContract byte-for-byte', async () => {
@@ -117,9 +117,9 @@ test('defaults feeLimit to defaultFeeLimit when omitted', async () => {
   })
 
   const body = parseBroadcast(bodyOf('broadcasthex')) as {
-    raw_data: { feeLimit?: bigint }
+    raw_data: { fee_limit?: number }
   }
-  expect(body.raw_data.feeLimit).toBe(defaultFeeLimit)
+  expect(body.raw_data.fee_limit).toBe(Number(defaultFeeLimit))
 })
 
 test('throws AccountNotFoundError when no account is available (bare action)', async () => {

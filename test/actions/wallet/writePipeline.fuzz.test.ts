@@ -74,7 +74,7 @@ function writeMock() {
 
 type BroadcastBody = {
   txID: string
-  raw_data: { feeLimit?: bigint; data?: string }
+  raw_data: { fee_limit?: number; data?: string }
   raw_data_hex: string
   signature: string[]
 }
@@ -163,7 +163,7 @@ test.each(
   expect(body.raw_data_hex).toBe(gold.rawDataHex)
   expect(body.txID).toBe(gold.txID)
   expect(body.signature).toEqual([goldSig])
-  expect(body.raw_data.feeLimit).toBe(feeLimit)
+  expect(body.raw_data.fee_limit).toBe(Number(feeLimit))
 })
 
 // ---------------------------------------------------------------------------

@@ -41,10 +41,8 @@ test('a formatted Block satisfies BlockRef (feeds TaPoS derivation)', async () =
 
   const block = await client.getNowBlock()
   const ref: BlockRef = block // compile-time: Block is assignable to BlockRef.
-  const { refBlockBytes, refBlockHash } = deriveRefBlockParams(
-    ref.number,
-    ref.blockID,
-  )
+  const { ref_block_bytes: refBlockBytes, ref_block_hash: refBlockHash } =
+    deriveRefBlockParams(ref.number, ref.blockID)
   expect(refBlockBytes).toBe('1234')
   expect(refBlockHash).toBe('0102030405060708')
 })

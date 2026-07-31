@@ -1034,6 +1034,7 @@ export {
 } from './utils/transaction/getTransactionId.js'
 export { int64ToJson } from './utils/transaction/int64.js'
 export {
+  type FlexErrorType,
   type FlexInput,
   flexToHex,
 } from './utils/transaction/normalize.js'

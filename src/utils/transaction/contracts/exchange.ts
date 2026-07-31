@@ -51,7 +51,7 @@ export function decodeExchangeCreateContract(
 /** `ExchangeInjectContract` (type 42) field schema. */
 const exchangeInjectContractSpec: MessageSpec = [
   { no: 1, name: 'owner_address', kind: 'address' },
-  { no: 2, name: 'exchangeId', kind: 'i64' },
+  { no: 2, name: 'exchange_id', kind: 'i64' },
   { no: 3, name: 'token_id', kind: 'bytes' },
   { no: 4, name: 'quant', kind: 'i64' },
 ]
@@ -84,7 +84,7 @@ export function decodeExchangeInjectContract(
 /** `ExchangeWithdrawContract` (type 43) field schema. */
 const exchangeWithdrawContractSpec: MessageSpec = [
   { no: 1, name: 'owner_address', kind: 'address' },
-  { no: 2, name: 'exchangeId', kind: 'i64' },
+  { no: 2, name: 'exchange_id', kind: 'i64' },
   { no: 3, name: 'token_id', kind: 'bytes' },
   { no: 4, name: 'quant', kind: 'i64' },
 ]
@@ -117,7 +117,7 @@ export function decodeExchangeWithdrawContract(
 /** `ExchangeTransactionContract` (type 44) field schema. */
 const exchangeTransactionContractSpec: MessageSpec = [
   { no: 1, name: 'owner_address', kind: 'address' },
-  { no: 2, name: 'exchangeId', kind: 'i64' },
+  { no: 2, name: 'exchange_id', kind: 'i64' },
   { no: 3, name: 'token_id', kind: 'bytes' },
   { no: 4, name: 'quant', kind: 'i64' },
   { no: 5, name: 'expected', kind: 'i64' },

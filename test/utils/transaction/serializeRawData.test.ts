@@ -1,7 +1,10 @@
 import { expect, test } from 'vitest'
 import { decodeRawData } from '../../../src/utils/transaction/decodeRawData.js'
 import { getTransactionId } from '../../../src/utils/transaction/getTransactionId.js'
-import { ContractType } from '../../../src/utils/transaction/registry.js'
+import {
+  ContractType,
+  contractTypeNameOf,
+} from '../../../src/utils/transaction/registry.js'
 import {
   type RawData,
   toRawDataHex,
@@ -17,15 +20,15 @@ const canonical = loadTxFixtures().find(
 
 test('§2.3 canonical: forward-serialize a hand-built raw data', () => {
   const rawData: RawData = {
-    refBlockBytes: '1234',
-    refBlockHash: '0102030405060708',
+    ref_block_bytes: '1234',
+    ref_block_hash: '0102030405060708',
     expiration: 1700000060000n,
     contract: [
       {
         type: ContractType.TransferContract,
         parameter: {
-          typeUrl: 'type.googleapis.com/protocol.TransferContract',
-          value: { ownerAddress: owner, toAddress: to, amount: 1000000n },
+          type_url: 'type.googleapis.com/protocol.TransferContract',
+          value: { owner_address: owner, to_address: to, amount: 1000000n },
         },
       },
     ],
@@ -39,17 +42,17 @@ test('§2.3 canonical: Permission_id is contract field 5', () => {
     (f) => f.name === 'transfer with Permission_id=2',
   )!
   const rawData: RawData = {
-    refBlockBytes: '1234',
-    refBlockHash: '0102030405060708',
+    ref_block_bytes: '1234',
+    ref_block_hash: '0102030405060708',
     expiration: 1700000060000n,
     contract: [
       {
         type: ContractType.TransferContract,
         parameter: {
-          typeUrl: 'type.googleapis.com/protocol.TransferContract',
-          value: { ownerAddress: owner, toAddress: to, amount: 1000000n },
+          type_url: 'type.googleapis.com/protocol.TransferContract',
+          value: { owner_address: owner, to_address: to, amount: 1000000n },
         },
-        permissionId: 2,
+        Permission_id: 2,
       },
     ],
     timestamp: 1700000000000n,
@@ -70,26 +73,28 @@ test.each(
 )('serialize round-trips gold raw_data_hex: $name', (fixture) => {
   const rawData = decodeRawData(fixture.rawDataHex)
   expect(toRawDataHex(rawData)).toBe(fixture.rawDataHex)
-  expect(rawData.contract[0]!.type).toBe(fixture.contractType)
-  expect(rawData.contract[0]!.parameter.typeUrl).toBe(fixture.typeUrl)
+  expect(rawData.contract[0]!.type).toBe(
+    contractTypeNameOf(fixture.contractType) ?? fixture.contractType,
+  )
+  expect(rawData.contract[0]!.parameter.type_url).toBe(fixture.typeUrl)
 })
 
 test('serializeRawData omits zero fee_limit / timestamp (proto3 defaults)', () => {
   const rawData: RawData = {
-    refBlockBytes: '1234',
-    refBlockHash: '0102030405060708',
+    ref_block_bytes: '1234',
+    ref_block_hash: '0102030405060708',
     expiration: 1700000060000n,
     contract: [
       {
         type: ContractType.TransferContract,
         parameter: {
-          typeUrl: 'type.googleapis.com/protocol.TransferContract',
-          value: { ownerAddress: owner, toAddress: to, amount: 1000000n },
+          type_url: 'type.googleapis.com/protocol.TransferContract',
+          value: { owner_address: owner, to_address: to, amount: 1000000n },
         },
       },
     ],
     timestamp: 0n,
-    feeLimit: 0n,
+    fee_limit: 0n,
   }
   const hex = toRawDataHex(rawData)
   // No trailing f14 (0x70) timestamp; raw ends at the contract's amount field.
@@ -105,17 +110,17 @@ test('serializeRawData omits zero fee_limit / timestamp (proto3 defaults)', () =
 test('serializes a 1MB contract bytecode to a txID without a stack overflow (K4)', () => {
   const bytecode = new Uint8Array(1024 * 1024).fill(0xab)
   const rawData: RawData = {
-    refBlockBytes: '1234',
-    refBlockHash: '0102030405060708',
+    ref_block_bytes: '1234',
+    ref_block_hash: '0102030405060708',
     expiration: 1700000060000n,
     contract: [
       {
         type: ContractType.CreateSmartContract,
         parameter: {
-          typeUrl: 'type.googleapis.com/protocol.CreateSmartContract',
+          type_url: 'type.googleapis.com/protocol.CreateSmartContract',
           value: {
-            ownerAddress: owner,
-            newContract: { originAddress: owner, bytecode },
+            owner_address: owner,
+            new_contract: { origin_address: owner, bytecode },
           },
         },
       },

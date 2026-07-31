@@ -33,8 +33,11 @@ function freezeContract(): RawContract {
   return {
     type: ContractType.FreezeBalanceV2Contract,
     parameter: {
-      typeUrl: `${contractTypeUrlPrefix}FreezeBalanceV2Contract`,
-      value: { ownerAddress: toHex(account.address), frozenBalance: 1000000n },
+      type_url: `${contractTypeUrlPrefix}FreezeBalanceV2Contract`,
+      value: {
+        owner_address: toHex(account.address),
+        frozen_balance: 1000000n,
+      },
     },
   }
 }
@@ -58,14 +61,14 @@ test('runs getNowBlock → sign → broadcast and returns the local txID', async
   const body = parseBroadcast(bodyOf('broadcasthex')) as {
     txID: string
     raw_data_hex: string
-    raw_data: { feeLimit?: bigint | undefined }
+    raw_data: { fee_limit?: number | undefined }
     signature: string[]
   }
   expect(body.txID).toBe(bandwidth?.txID)
   expect(body.raw_data_hex).toBe(bandwidth?.rawDataHex)
   expect(body.signature).toHaveLength(1)
   // No feeLimit is set on the raw_data model when none was supplied.
-  expect(body.raw_data.feeLimit).toBeUndefined()
+  expect(body.raw_data.fee_limit).toBeUndefined()
 })
 
 test('writes fee_limit into raw_data when supplied', async () => {
@@ -80,9 +83,9 @@ test('writes fee_limit into raw_data when supplied', async () => {
   })
 
   const body = parseBroadcast(bodyOf('broadcasthex')) as {
-    raw_data: { feeLimit?: bigint | undefined }
+    raw_data: { fee_limit?: number | undefined }
   }
-  expect(body.raw_data.feeLimit).toBe(15000000n)
+  expect(body.raw_data.fee_limit).toBe(15000000)
 })
 
 test('derives timing from the latest block when blockHeader is omitted', async () => {
@@ -97,5 +100,5 @@ test('derives timing from the latest block when blockHeader is omitted', async (
   }
   // getnowblock.fixed pins block_header timestamp = 1700000000000; timing is
   // taken verbatim from the fetched block rather than a wall clock.
-  expect(body.raw_data.timestamp).toBe(1700000000000n)
+  expect(body.raw_data.timestamp).toBe(1700000000000)
 })

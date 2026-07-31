@@ -43,7 +43,7 @@ function withOwner(rawData: RawData, owner: string): RawData {
         ...first!,
         parameter: {
           ...first!.parameter,
-          value: { ...first!.parameter.value, ownerAddress: owner } as never,
+          value: { ...first!.parameter.value, owner_address: owner } as never,
         },
       },
       ...rawData.contract.slice(1),
@@ -170,14 +170,17 @@ describe('signTransaction', () => {
     )
   })
 
-  test('node-JSON raw_data without raw_data_hex is refused', () => {
+  test('node-JSON raw_data alone signs identically (single dialect)', () => {
+    // The node JSON IS the model now — no accompanying raw_data_hex needed;
+    // the raw_data is canonicalized via the encode∘decode roundtrip.
     const fixture = txFixtures.find((f) => f.txID === canonicalTxID)!
-    expect(() =>
-      signTransaction({
-        transaction: { raw_data: fixture.rawData } as never,
-        privateKey: pk1,
-      }),
-    ).toThrow(/raw_data_hex/)
+    const signed = signTransaction({
+      transaction: { raw_data: fixture.rawData } as never,
+      privateKey: pk1,
+    })
+    expect(signed.txID).toBe(canonicalTxID)
+    expect(signed.signature).toEqual([canonicalSig])
+    expect(signed.raw_data_hex).toBe(fixture.rawDataHex)
   })
 
   test('node-JSON raw_data that misdescribes the bytes is refused', () => {
@@ -196,7 +199,7 @@ describe('signTransaction', () => {
         } as never,
         privateKey: pk1,
       }),
-    ).toThrow(/does not describe/)
+    ).toThrow(/does not serialize to/)
   })
 
   test('signed output raw_data is node dialect even for model input', () => {

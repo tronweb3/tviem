@@ -11,8 +11,8 @@ const pk1 = `0x${'0'.repeat(63)}1` as const
 
 /** The single pinned reference block every build test builds against. */
 export const tviemHeader = {
-  refBlockBytes: '1234',
-  refBlockHash: '0102030405060708',
+  ref_block_bytes: '1234',
+  ref_block_hash: '0102030405060708',
   timestamp: 1700000000000n,
   expiration: 1700000060000n,
 }

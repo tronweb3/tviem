@@ -24,8 +24,8 @@ const calldata =
 
 test('encodeTriggerSmartContract: §2.4 TRC20 transfer call', () => {
   const encoded = encodeTriggerSmartContract({
-    ownerAddress: v1,
-    contractAddress: 'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t',
+    owner_address: v1,
+    contract_address: 'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t',
     data: calldata,
   })
   expect(bytesToHex(encoded)).toBe(
@@ -35,9 +35,9 @@ test('encodeTriggerSmartContract: §2.4 TRC20 transfer call', () => {
 
 test('encodeTriggerSmartContract: call_value is field 3', () => {
   const encoded = encodeTriggerSmartContract({
-    ownerAddress: v1,
-    contractAddress: usdt,
-    callValue: 1_000_000n,
+    owner_address: v1,
+    contract_address: usdt,
+    call_value: 1_000_000n,
     data: calldata,
   })
   expect(bytesToHex(encoded)).toBe(
@@ -45,24 +45,29 @@ test('encodeTriggerSmartContract: call_value is field 3', () => {
   )
 })
 
-test('decode(encode(x)) round-trips (TriggerSmartContract)', () => {
+test('decode(encode(x)) canonicalizes (TriggerSmartContract)', () => {
   const x: TriggerSmartContract = {
-    ownerAddress: v1,
-    contractAddress: usdt,
-    callValue: 0n,
+    owner_address: v1,
+    contract_address: usdt,
+    call_value: 0n,
     data: calldata,
-    callTokenValue: 0n,
-    tokenId: 0n,
+    call_token_value: 0n,
+    token_id: 0n,
   }
+  // Zero int64s are proto3 defaults (omitted); data decodes to bare hex.
   expect(
     decodeTriggerSmartContract(encodeTriggerSmartContract(x)),
-  ).toStrictEqual(x)
+  ).toStrictEqual({
+    owner_address: v1,
+    contract_address: usdt,
+    data: calldata.slice(2),
+  })
 })
 
 test('encodeCreateSmartContract: call_value lives on SmartContract (field 5)', () => {
   const encoded = encodeCreateSmartContract({
-    ownerAddress: v1,
-    newContract: { originAddress: v1, callValue: 1_000_000n, name: 'Token' },
+    owner_address: v1,
+    new_contract: { origin_address: v1, call_value: 1_000_000n, name: 'Token' },
   })
   expect(bytesToHex(encoded)).toBe(
     `0x0a15${v1}12220a15${v1}28c0843d3a05546f6b656e`,
@@ -71,21 +76,21 @@ test('encodeCreateSmartContract: call_value lives on SmartContract (field 5)', (
 
 test('encodeCreateSmartContract: call_token_value(3) / token_id(4)', () => {
   const encoded = encodeCreateSmartContract({
-    ownerAddress: v1,
-    callTokenValue: 5n,
-    tokenId: 1_000_001n,
+    owner_address: v1,
+    call_token_value: 5n,
+    token_id: 1_000_001n,
   })
   expect(bytesToHex(encoded)).toBe(`0x0a15${v1}180520c1843d`)
   // Absent message fields stay absent after decode.
   const decoded = decodeCreateSmartContract(encoded)
-  expect('newContract' in decoded).toBe(false)
+  expect('new_contract' in decoded).toBe(false)
 })
 
 test('full nested SmartContract/ABI/Entry/Param encodes and round-trips', () => {
   const x: CreateSmartContract = {
-    ownerAddress: v1,
-    newContract: {
-      originAddress: v1,
+    owner_address: v1,
+    new_contract: {
+      origin_address: v1,
       abi: {
         entrys: [
           {
@@ -104,16 +109,16 @@ test('full nested SmartContract/ABI/Entry/Param encodes and round-trips', () => 
         ],
       },
       bytecode: '0x6080',
-      callValue: 0n,
-      consumeUserResourcePercent: 100n,
+      call_value: 0n,
+      consume_user_resource_percent: 100n,
       name: 'Token',
-      originEnergyLimit: 10_000_000n,
-      codeHash: '0x',
-      trxHash: '0x',
+      origin_energy_limit: 10_000_000n,
+      code_hash: '0x',
+      trx_hash: '0x',
       version: 1,
     },
-    callTokenValue: 0n,
-    tokenId: 0n,
+    call_token_value: 0n,
+    token_id: 0n,
   }
   // Param { name(2), type(3) } — `indexed: false` omitted.
   const param1 = '12035f746f1a0761646472657373'
@@ -125,7 +130,31 @@ test('full nested SmartContract/ABI/Entry/Param encodes and round-trips', () => 
   // SmartContract { origin(1), abi(3), bytecode(4), consume(6), name(7), energy(8), version(11) }.
   const sc = `0a15${v1}1a33${abi}2202608030643a05546f6b656e4080ade2045801`
   expect(bytesToHex(encodeCreateSmartContract(x))).toBe(`0x0a15${v1}1260${sc}`)
+  // Canonical decode: enum names, bare hex, number int64, defaults omitted.
   expect(decodeCreateSmartContract(encodeCreateSmartContract(x))).toStrictEqual(
-    x,
+    {
+      owner_address: v1,
+      new_contract: {
+        origin_address: v1,
+        abi: {
+          entrys: [
+            {
+              name: 'transfer',
+              inputs: [
+                { name: '_to', type: 'address' },
+                { name: '_value', type: 'uint256' },
+              ],
+              type: 'Function',
+              stateMutability: 'Nonpayable',
+            },
+          ],
+        },
+        bytecode: '6080',
+        consume_user_resource_percent: 100,
+        name: 'Token',
+        origin_energy_limit: 10_000_000,
+        version: 1,
+      },
+    },
   )
 })

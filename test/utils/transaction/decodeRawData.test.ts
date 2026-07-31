@@ -1,13 +1,13 @@
 import { expect, test } from 'vitest'
 import { concatBytes } from '../../../src/utils/data/concat.js'
 import { hexToBytes } from '../../../src/utils/encoding/toBytes.js'
-import { bytesToHex } from '../../../src/utils/encoding/toHex.js'
 import { decodeRawData } from '../../../src/utils/transaction/decodeRawData.js'
 import {
   fBytes,
   fInt,
   fMessage,
 } from '../../../src/utils/transaction/protobuf/writer.js'
+import { contractTypeNameOf } from '../../../src/utils/transaction/registry.js'
 import type { UnknownContractParameter } from '../../../src/utils/transaction/types.js'
 import { loadTxFixtures } from '../../fixtures/tx/loader.js'
 
@@ -15,25 +15,25 @@ const canonical = loadTxFixtures().find(
   (f) => f.name === 'transfer canonical (reference vector)',
 )!
 
-test('§2.3 canonical: decode deeply equals the raw data model', () => {
+test('§2.3 canonical: decode deeply equals the node-JSON raw data', () => {
   expect(decodeRawData(canonical.rawDataHex)).toStrictEqual({
-    refBlockBytes: '1234',
-    refBlockHash: '0102030405060708',
-    expiration: 1700000060000n,
+    ref_block_bytes: '1234',
+    ref_block_hash: '0102030405060708',
+    expiration: 1700000060000,
     contract: [
       {
-        type: 1,
+        type: 'TransferContract',
         parameter: {
-          typeUrl: 'type.googleapis.com/protocol.TransferContract',
+          type_url: 'type.googleapis.com/protocol.TransferContract',
           value: {
-            ownerAddress: '417e5f4552091a69125d5dfcb7b8c2659029395bdf',
-            toAddress: '41928c9af0651632157ef27a2cf17ca72c575a4d21',
-            amount: 1000000n,
+            owner_address: '417e5f4552091a69125d5dfcb7b8c2659029395bdf',
+            to_address: '41928c9af0651632157ef27a2cf17ca72c575a4d21',
+            amount: 1000000,
           },
         },
       },
     ],
-    timestamp: 1700000000000n,
+    timestamp: 1700000000000,
   })
 })
 
@@ -50,7 +50,7 @@ test('§2.3 canonical: Permission_id decodes onto the contract', () => {
     (f) => f.name === 'transfer with Permission_id=2',
   )!
   const decoded = decodeRawData(withPermission.rawDataHex)
-  expect(decoded.contract[0]!.permissionId).toBe(2)
+  expect(decoded.contract[0]!.Permission_id).toBe(2)
 })
 
 test.each(
@@ -58,8 +58,11 @@ test.each(
 )('decode recovers contract type and type URL: $name', (fixture) => {
   const decoded = decodeRawData(fixture.rawDataHex)
   expect(decoded.contract).toHaveLength(1)
-  expect(decoded.contract[0]!.type).toBe(fixture.contractType)
-  expect(decoded.contract[0]!.parameter.typeUrl).toBe(fixture.typeUrl)
+  // The canonical form carries the type NAME (java-tron's JSON rendering).
+  expect(decoded.contract[0]!.type).toBe(
+    contractTypeNameOf(fixture.contractType) ?? fixture.contractType,
+  )
+  expect(decoded.contract[0]!.parameter.type_url).toBe(fixture.typeUrl)
 })
 
 test('unregistered contract type falls back to UnknownContractParameter', () => {
@@ -74,8 +77,8 @@ test('unregistered contract type falls back to UnknownContractParameter', () => 
   const decoded = decodeRawData(raw)
   const value = decoded.contract[0]!.parameter.value as UnknownContractParameter
   expect(value.__unknown).toBe(true)
-  expect(value.typeUrl).toBe(typeUrl)
-  expect(bytesToHex(value.valueBytes)).toBe('0xdeadbeef')
+  expect(value.type_url).toBe(typeUrl)
+  expect(value.value).toBe('deadbeef')
 })
 
 test('tolerates unknown raw-level and contract-level fields without throwing', () => {
@@ -84,5 +87,5 @@ test('tolerates unknown raw-level and contract-level fields without throwing', (
   const withExtra = concatBytes([base, fInt(3, 42)])
   expect(() => decodeRawData(withExtra)).not.toThrow()
   const decoded = decodeRawData(withExtra)
-  expect(decoded.contract[0]!.parameter.typeUrl).toBe(canonical.typeUrl)
+  expect(decoded.contract[0]!.parameter.type_url).toBe(canonical.typeUrl)
 })
