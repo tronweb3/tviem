@@ -160,6 +160,10 @@ export {
 } from './data/slice.js'
 export { type TrimErrorType, type TrimReturnType, trim } from './data/trim.js'
 export {
+  type BareHexErrorType,
+  bareHex,
+} from './encoding/bareHex.js'
+export {
   type BytesToBigIntErrorType,
   type BytesToBigIntOpts,
   type BytesToBoolErrorType,

@@ -2,8 +2,8 @@ import { BaseError, type BaseErrorType } from '../../errors/base.js'
 import type { ErrorType } from '../../errors/utils.js'
 import type { ByteArray, Hex } from '../../types/misc.js'
 import { concatBytes } from '../data/concat.js'
+import { type BareHexErrorType, bareHex } from '../encoding/bareHex.js'
 import { type HexToBytesErrorType, hexToBytes } from '../encoding/toBytes.js'
-import { type BytesToHexErrorType, bytesToHex } from '../encoding/toHex.js'
 import {
   type FBytesErrorType,
   type FMessageErrorType,
@@ -29,7 +29,7 @@ export type SerializableTransaction = {
 export type SerializeTransactionErrorType =
   | SerializeRawDataErrorType
   | HexToBytesErrorType
-  | BytesToHexErrorType
+  | BareHexErrorType
   | FMessageErrorType
   | FBytesErrorType
   | BaseErrorType
@@ -84,5 +84,5 @@ export function serializeTransaction(
  * @returns Bare lowercase hex of the full `Transaction` protobuf.
  */
 export function toBroadcastHex(transaction: SerializableTransaction): string {
-  return bytesToHex(serializeTransaction(transaction)).slice(2)
+  return bareHex(serializeTransaction(transaction))
 }

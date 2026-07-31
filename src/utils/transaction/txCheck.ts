@@ -1,15 +1,9 @@
 import type { ErrorType } from '../../errors/utils.js'
 import type { ByteArray, Hex } from '../../types/misc.js'
-import { bytesToHex } from '../encoding/toHex.js'
+import { bareHex } from '../encoding/bareHex.js'
 import { decodeRawData } from './decodeRawData.js'
 import { getTransactionId } from './getTransactionId.js'
 import { toRawDataHex } from './serializeRawData.js'
-
-/** Normalizes hex/bytes input to bare lowercase hex (no `0x`). */
-function bareHex(input: ByteArray | string): string {
-  const hex = typeof input === 'string' ? input : bytesToHex(input)
-  return (hex.startsWith('0x') ? hex.slice(2) : hex).toLowerCase()
-}
 
 export type TxCheckErrorType = ErrorType
 

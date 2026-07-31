@@ -887,6 +887,10 @@ export {
   trim,
 } from './utils/data/trim.js'
 export {
+  type BareHexErrorType,
+  bareHex,
+} from './utils/encoding/bareHex.js'
+export {
   type BytesToBigIntErrorType,
   type BytesToBigIntOpts,
   type BytesToBoolErrorType,

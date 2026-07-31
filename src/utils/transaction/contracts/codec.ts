@@ -3,6 +3,7 @@ import type { ErrorType } from '../../../errors/utils.js'
 import type { TronHexAddress } from '../../../types/address.js'
 import type { ByteArray, Hex } from '../../../types/misc.js'
 import { concatBytes } from '../../data/concat.js'
+import { bareHex } from '../../encoding/bareHex.js'
 import { bytesToString } from '../../encoding/fromBytes.js'
 import {
   type HexToBytesErrorType,
@@ -214,7 +215,7 @@ export function decodeMessage(
         ) as TronHexAddress
         break
       case 'bytes':
-        message[field.name] = bytesToHex(wire.value as ByteArray).slice(2)
+        message[field.name] = bareHex(wire.value as ByteArray)
         break
       case 'string':
         message[field.name] = bytesToString(wire.value as ByteArray)

@@ -1,6 +1,6 @@
 import { BaseError, type BaseErrorType } from '../../errors/base.js'
 import type { ErrorType } from '../../errors/utils.js'
-import { bytesToHex } from '../encoding/toHex.js'
+import { bareHex } from '../encoding/bareHex.js'
 import { type DecodeRawDataErrorType, decodeRawData } from './decodeRawData.js'
 import {
   type RawData,
@@ -23,11 +23,6 @@ export type ResolveRawDataErrorType =
   | DecodeRawDataErrorType
   | BaseErrorType
   | ErrorType
-
-/** Bare lowercase hex (no `0x`) of a hex string. */
-function bareHex(hex: string): string {
-  return (hex.startsWith('0x') ? hex.slice(2) : hex).toLowerCase()
-}
 
 /**
  * Resolves a signable transaction's `raw_data` to the canonical model:
@@ -54,7 +49,7 @@ export function resolveRawData(transaction: {
   if (raw_data) {
     const bytes = serializeRawData(raw_data)
     if (raw_data_hex !== undefined) {
-      if (bytesToHex(bytes).slice(2) !== bareHex(raw_data_hex))
+      if (bareHex(bytes) !== bareHex(raw_data_hex))
         throw new BaseError(
           'The supplied `raw_data` JSON does not serialize to the `raw_data_hex` bytes. The bytes are what gets signed — refusing to sign a transaction whose human-readable form disagrees with them.',
         )

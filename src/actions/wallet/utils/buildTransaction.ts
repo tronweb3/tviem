@@ -1,6 +1,6 @@
 import type { SignableTransaction } from '../../../accounts/types.js'
 import type { Client } from '../../../clients/createClient.js'
-import { bytesToHex } from '../../../utils/encoding/toHex.js'
+import { bareHex } from '../../../utils/encoding/bareHex.js'
 import { getAction } from '../../../utils/getAction.js'
 import { sha256 } from '../../../utils/hash/sha256.js'
 import { decodeRawData } from '../../../utils/transaction/decodeRawData.js'
@@ -118,6 +118,6 @@ export async function buildTransaction(
   return {
     txID: sha256(bytes, 'hex').slice(2),
     raw_data: canonical,
-    raw_data_hex: bytesToHex(bytes).slice(2),
+    raw_data_hex: bareHex(bytes),
   }
 }

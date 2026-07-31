@@ -5,7 +5,7 @@ import { parseAccount } from '../../types/account.js'
 import type { Address } from '../../types/address.js'
 import type { ByteArray, Hex } from '../../types/misc.js'
 import { toHex } from '../../utils/address/toHex.js'
-import { bytesToHex } from '../../utils/encoding/toHex.js'
+import { bareHex } from '../../utils/encoding/bareHex.js'
 import {
   ContractType,
   contractTypeUrlPrefix,
@@ -78,7 +78,7 @@ function assemble(
   return {
     account,
     contract,
-    data: memo !== undefined ? memoToHex(memo) : undefined,
+    data: memo !== undefined ? bareHex(memo) : undefined,
   }
 }
 
@@ -129,11 +129,4 @@ export async function sendTrx(
     data,
     blockHeader: parameters.blockHeader,
   })
-}
-
-/** Normalizes a memo to bare (no `0x`), lowercase hex. */
-function memoToHex(memo: Hex | ByteArray): string {
-  if (typeof memo === 'string')
-    return (memo.startsWith('0x') ? memo.slice(2) : memo).toLowerCase()
-  return bytesToHex(memo).slice(2)
 }

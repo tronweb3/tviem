@@ -1,5 +1,5 @@
 import type { ByteArray } from '../../types/misc.js'
-import { bytesToHex } from '../encoding/toHex.js'
+import { bareHex } from '../encoding/bareHex.js'
 import {
   decodeAccountCreateContract,
   decodeAccountUpdateContract,
@@ -446,7 +446,7 @@ export function decodeContractParameter(
     return {
       __unknown: true,
       type_url: typeUrl,
-      value: bytesToHex(valueBytes).slice(2),
+      value: bareHex(valueBytes),
     }
   return codec.decode(valueBytes) as ContractMessage
 }

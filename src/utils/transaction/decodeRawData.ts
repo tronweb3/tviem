@@ -1,8 +1,8 @@
 import type { ErrorType } from '../../errors/utils.js'
 import type { ByteArray, Hex } from '../../types/misc.js'
+import { bareHex } from '../encoding/bareHex.js'
 import { bytesToString } from '../encoding/fromBytes.js'
 import { hexToBytes } from '../encoding/toBytes.js'
-import { bytesToHex } from '../encoding/toHex.js'
 import { int64ToJson } from './int64.js'
 import {
   type ReadFieldsErrorType,
@@ -19,11 +19,6 @@ const twoPow64 = 18446744073709551616n
 /** Reinterprets a raw unsigned varint as a signed two's-complement `int64`. */
 function toInt64(value: bigint): bigint {
   return value > maxInt64 ? value - twoPow64 : value
-}
-
-/** Bare lowercase hex (no `0x`) of a byte payload. */
-function bareHex(bytes: ByteArray): string {
-  return bytesToHex(bytes).slice(2)
 }
 
 /** Decodes a `google.protobuf.Any`, returning its type URL and value bytes. */

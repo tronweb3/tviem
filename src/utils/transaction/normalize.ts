@@ -5,13 +5,13 @@ import {
   normalizeAddress,
 } from '../address/normalize.js'
 import { isHex } from '../data/isHex.js'
+import { bareHex } from '../encoding/bareHex.js'
 import {
   type HexToBytesErrorType,
   hexToBytes,
   type StringToBytesErrorType,
   stringToBytes,
 } from '../encoding/toBytes.js'
-import { bytesToHex } from '../encoding/toHex.js'
 
 /**
  * Dual-form ("flex") ACTION-parameter input, e.g. a TRC10 asset name/id:
@@ -68,5 +68,5 @@ export function flex(
  * (asset names, token ids, URLs) never enter the model un-encoded.
  */
 export function flexToHex(value: FlexInput, visible?: boolean): string {
-  return bytesToHex(flex(value, visible)).slice(2)
+  return bareHex(flex(value, visible))
 }

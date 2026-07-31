@@ -2,13 +2,13 @@ import { BaseError } from '../../errors/base.js'
 import type { ErrorType } from '../../errors/utils.js'
 import type { ByteArray, Hex } from '../../types/misc.js'
 import { concatBytes } from '../data/concat.js'
+import { bareHex } from '../encoding/bareHex.js'
 import {
   type HexToBytesErrorType,
   hexToBytes,
   type StringToBytesErrorType,
   stringToBytes,
 } from '../encoding/toBytes.js'
-import { bytesToHex } from '../encoding/toHex.js'
 import {
   type FBytesErrorType,
   type FIntErrorType,
@@ -193,5 +193,5 @@ export type ToRawDataHexErrorType = SerializeRawDataErrorType | ErrorType
  * @returns `raw_data_hex` string.
  */
 export function toRawDataHex(rawData: RawData): string {
-  return bytesToHex(serializeRawData(rawData)).slice(2)
+  return bareHex(serializeRawData(rawData))
 }
