@@ -67,18 +67,18 @@ function assemble(
   const account = parseAccount(source)
 
   const value: FreezeBalanceContract = {
-    ownerAddress: toHex(account.address),
-    frozenBalance,
-    frozenDuration,
+    owner_address: toHex(account.address),
+    frozen_balance: frozenBalance,
+    frozen_duration: frozenDuration,
     resource: ResourceCode[resource],
   }
   if (receiverAddress !== undefined)
-    value.receiverAddress = toHex(receiverAddress)
+    value.receiver_address = toHex(receiverAddress)
 
   const contract: RawContract = {
     type: ContractType.FreezeBalanceContract,
     parameter: {
-      typeUrl: `${contractTypeUrlPrefix}FreezeBalanceContract`,
+      type_url: `${contractTypeUrlPrefix}FreezeBalanceContract`,
       value,
     },
   }

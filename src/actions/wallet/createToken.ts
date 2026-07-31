@@ -4,6 +4,7 @@ import { AccountNotFoundError } from '../../errors/rpc.js'
 import { parseAccount } from '../../types/account.js'
 import type { Hex } from '../../types/misc.js'
 import { toHex } from '../../utils/address/toHex.js'
+import { type FlexInput, flexToHex } from '../../utils/transaction/normalize.js'
 import {
   ContractType,
   contractTypeUrlPrefix,
@@ -13,10 +14,7 @@ import {
   type NodeTransaction,
   toNodeTransaction,
 } from '../../utils/transaction/toNodeTransaction.js'
-import type {
-  AssetIssueContract,
-  FlexInput,
-} from '../../utils/transaction/types.js'
+import type { AssetIssueContract } from '../../utils/transaction/types.js'
 import {
   type BuildAndBroadcastReturnType,
   buildAndBroadcast,
@@ -104,32 +102,32 @@ function assemble(
   const account = parseAccount(source)
 
   const value: AssetIssueContract = {
-    ownerAddress: toHex(account.address),
-    name,
-    abbr,
-    totalSupply,
-    trxNum,
+    owner_address: toHex(account.address),
+    name: flexToHex(name),
+    abbr: flexToHex(abbr),
+    total_supply: totalSupply,
+    trx_num: trxNum,
     num,
-    startTime,
-    endTime,
-    description,
-    url,
+    start_time: startTime,
+    end_time: endTime,
+    description: flexToHex(description),
+    url: flexToHex(url),
   }
   if (precision !== undefined) value.precision = precision
   if (freeAssetNetLimit !== undefined)
-    value.freeAssetNetLimit = freeAssetNetLimit
+    value.free_asset_net_limit = freeAssetNetLimit
   if (publicFreeAssetNetLimit !== undefined)
-    value.publicFreeAssetNetLimit = publicFreeAssetNetLimit
+    value.public_free_asset_net_limit = publicFreeAssetNetLimit
   if (frozenSupply !== undefined && frozenSupply.length > 0)
-    value.frozenSupply = frozenSupply.map((entry) => ({
-      frozenAmount: entry.frozenAmount,
-      frozenDays: entry.frozenDays,
+    value.frozen_supply = frozenSupply.map((entry) => ({
+      frozen_amount: entry.frozenAmount,
+      frozen_days: entry.frozenDays,
     }))
 
   const contract: RawContract = {
     type: ContractType.AssetIssueContract,
     parameter: {
-      typeUrl: `${contractTypeUrlPrefix}AssetIssueContract`,
+      type_url: `${contractTypeUrlPrefix}AssetIssueContract`,
       value,
     },
   }

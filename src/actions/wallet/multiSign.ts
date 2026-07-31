@@ -87,18 +87,18 @@ export async function multiSign(
   // would change the txID and orphan every collected signature.
   for (const contract of rawData.contract)
     if (
-      contract.permissionId !== undefined &&
-      contract.permissionId !== permissionId
+      contract.Permission_id !== undefined &&
+      contract.Permission_id !== permissionId
     )
       throw new BaseError(
-        `Permission id mismatch: the transaction is bound to permission ${contract.permissionId}, but ${permissionId} was supplied.`,
+        `Permission id mismatch: the transaction is bound to permission ${contract.Permission_id}, but ${permissionId} was supplied.`,
       )
 
   // A fresh positive bind changes the serialized bytes (id 0 encodes to
   // nothing), so signatures collected over the unbound bytes would go stale.
   const binds =
     permissionId > 0 &&
-    rawData.contract.some((contract) => contract.permissionId === undefined)
+    rawData.contract.some((contract) => contract.Permission_id === undefined)
   if (binds && transaction.signature?.length)
     throw new BaseError(
       `Cannot bind permission id ${permissionId}: the transaction already carries ${transaction.signature.length} signature(s) over the unbound bytes; binding now would invalidate them.`,

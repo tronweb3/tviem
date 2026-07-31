@@ -51,13 +51,13 @@ function assemble(
   const account = parseAccount(source)
 
   const value: WithdrawBalanceContract = {
-    ownerAddress: toHex(account.address),
+    owner_address: toHex(account.address),
   }
 
   const contract: RawContract = {
     type: ContractType.WithdrawBalanceContract,
     parameter: {
-      typeUrl: `${contractTypeUrlPrefix}WithdrawBalanceContract`,
+      type_url: `${contractTypeUrlPrefix}WithdrawBalanceContract`,
       value,
     },
   }

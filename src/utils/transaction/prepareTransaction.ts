@@ -19,12 +19,12 @@ export type BlockRef = {
   timestamp: bigint | number
 }
 
-/** TaPoS reference fields derived from a block. */
+/** TaPoS reference fields derived from a block (a `raw_data` fragment). */
 export type RefBlockParams = {
-  /** `ref_block_bytes`: last 2 bytes of the block number (bare hex). */
-  refBlockBytes: string
-  /** `ref_block_hash`: bytes 8..16 of the block id (bare hex). */
-  refBlockHash: string
+  /** Last 2 bytes of the block number (bare hex). */
+  ref_block_bytes: string
+  /** Bytes 8..16 of the block id (bare hex). */
+  ref_block_hash: string
 }
 
 export type DeriveRefBlockParamsErrorType = ErrorType
@@ -44,7 +44,7 @@ export function deriveRefBlockParams(
 ): RefBlockParams {
   const refBlockBytes = blockNumber.toString(16).slice(-4).padStart(4, '0')
   const id = blockID.startsWith('0x') ? blockID.slice(2) : blockID
-  return { refBlockBytes, refBlockHash: id.slice(16, 32) }
+  return { ref_block_bytes: refBlockBytes, ref_block_hash: id.slice(16, 32) }
 }
 
 export type FillBlockHeaderErrorType = DeriveRefBlockParamsErrorType | ErrorType
@@ -62,15 +62,10 @@ export type FillBlockHeaderErrorType = DeriveRefBlockParamsErrorType | ErrorType
  * @returns A new raw data model with TaPoS, timestamp and expiration set.
  */
 export function fillBlockHeader(rawData: RawData, block: BlockRef): RawData {
-  const { refBlockBytes, refBlockHash } = deriveRefBlockParams(
-    block.number,
-    block.blockID,
-  )
   const timestamp = BigInt(block.timestamp)
   return {
     ...rawData,
-    refBlockBytes,
-    refBlockHash,
+    ...deriveRefBlockParams(block.number, block.blockID),
     timestamp,
     expiration: timestamp + defaultExpirationMs,
   }

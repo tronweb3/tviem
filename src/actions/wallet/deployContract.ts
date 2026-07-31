@@ -186,11 +186,11 @@ function assemble(
   const contract: RawContract = {
     type: ContractType.CreateSmartContract,
     parameter: {
-      typeUrl: `${contractTypeUrlPrefix}CreateSmartContract`,
+      type_url: `${contractTypeUrlPrefix}CreateSmartContract`,
       value: {
-        ownerAddress,
-        newContract: {
-          originAddress: ownerAddress,
+        owner_address: ownerAddress,
+        new_contract: {
+          origin_address: ownerAddress,
           abi: toSmartContractAbi(abi),
           bytecode: encodeDeployData({ abi, bytecode, args }),
           ...(callValue !== undefined ? { callValue } : {}),

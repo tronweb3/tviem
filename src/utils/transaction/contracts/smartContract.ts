@@ -1,6 +1,7 @@
 import type { ErrorType } from '../../../errors/utils.js'
 import type { ByteArray } from '../../../types/misc.js'
 import type { CreateSmartContract, TriggerSmartContract } from '../types.js'
+import { EntryTypeName, StateMutabilityTypeName } from '../types.js'
 import {
   type DecodeMessageErrorType,
   decodeMessage,
@@ -33,9 +34,14 @@ const smartContractAbiEntrySpec: MessageSpec = [
     kind: 'repeated-message',
     spec: smartContractAbiParamSpec,
   },
-  { no: 6, name: 'type', kind: 'enum' },
+  { no: 6, name: 'type', kind: 'enum', names: EntryTypeName },
   { no: 7, name: 'payable', kind: 'bool' },
-  { no: 8, name: 'stateMutability', kind: 'enum' },
+  {
+    no: 8,
+    name: 'stateMutability',
+    kind: 'enum',
+    names: StateMutabilityTypeName,
+  },
 ]
 
 /** `SmartContract.ABI` field schema. */
@@ -54,25 +60,25 @@ const smartContractAbiSpec: MessageSpec = [
  * `CreateSmartContract` message.
  */
 const smartContractSpec: MessageSpec = [
-  { no: 1, name: 'originAddress', kind: 'address' },
-  { no: 2, name: 'contractAddress', kind: 'address' },
+  { no: 1, name: 'origin_address', kind: 'address' },
+  { no: 2, name: 'contract_address', kind: 'address' },
   { no: 3, name: 'abi', kind: 'message', spec: smartContractAbiSpec },
   { no: 4, name: 'bytecode', kind: 'bytes' },
-  { no: 5, name: 'callValue', kind: 'i64' },
-  { no: 6, name: 'consumeUserResourcePercent', kind: 'i64' },
+  { no: 5, name: 'call_value', kind: 'i64' },
+  { no: 6, name: 'consume_user_resource_percent', kind: 'i64' },
   { no: 7, name: 'name', kind: 'string' },
-  { no: 8, name: 'originEnergyLimit', kind: 'i64' },
-  { no: 9, name: 'codeHash', kind: 'bytes' },
-  { no: 10, name: 'trxHash', kind: 'bytes' },
+  { no: 8, name: 'origin_energy_limit', kind: 'i64' },
+  { no: 9, name: 'code_hash', kind: 'bytes' },
+  { no: 10, name: 'trx_hash', kind: 'bytes' },
   { no: 11, name: 'version', kind: 'i32' },
 ]
 
 /** `CreateSmartContract` (type 30) field schema. */
 const createSmartContractSpec: MessageSpec = [
-  { no: 1, name: 'ownerAddress', kind: 'address' },
-  { no: 2, name: 'newContract', kind: 'message', spec: smartContractSpec },
-  { no: 3, name: 'callTokenValue', kind: 'i64' },
-  { no: 4, name: 'tokenId', kind: 'i64' },
+  { no: 1, name: 'owner_address', kind: 'address' },
+  { no: 2, name: 'new_contract', kind: 'message', spec: smartContractSpec },
+  { no: 3, name: 'call_token_value', kind: 'i64' },
+  { no: 4, name: 'token_id', kind: 'i64' },
 ]
 
 export type EncodeCreateSmartContractErrorType =
@@ -99,12 +105,12 @@ export function decodeCreateSmartContract(
 
 /** `TriggerSmartContract` (type 31) field schema. */
 const triggerSmartContractSpec: MessageSpec = [
-  { no: 1, name: 'ownerAddress', kind: 'address' },
-  { no: 2, name: 'contractAddress', kind: 'address' },
-  { no: 3, name: 'callValue', kind: 'i64' },
+  { no: 1, name: 'owner_address', kind: 'address' },
+  { no: 2, name: 'contract_address', kind: 'address' },
+  { no: 3, name: 'call_value', kind: 'i64' },
   { no: 4, name: 'data', kind: 'bytes' },
-  { no: 5, name: 'callTokenValue', kind: 'i64' },
-  { no: 6, name: 'tokenId', kind: 'i64' },
+  { no: 5, name: 'call_token_value', kind: 'i64' },
+  { no: 6, name: 'token_id', kind: 'i64' },
 ]
 
 export type EncodeTriggerSmartContractErrorType =

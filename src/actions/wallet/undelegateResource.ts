@@ -67,16 +67,16 @@ function assemble(
   const account = parseAccount(source)
 
   const value: UnDelegateResourceContract = {
-    ownerAddress: toHex(account.address),
+    owner_address: toHex(account.address),
     resource: ResourceCode[resource],
     balance,
-    receiverAddress: toHex(receiverAddress),
+    receiver_address: toHex(receiverAddress),
   }
 
   const contract: RawContract = {
     type: ContractType.UnDelegateResourceContract,
     parameter: {
-      typeUrl: `${contractTypeUrlPrefix}UnDelegateResourceContract`,
+      type_url: `${contractTypeUrlPrefix}UnDelegateResourceContract`,
       value,
     },
   }

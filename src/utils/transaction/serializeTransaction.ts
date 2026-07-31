@@ -4,7 +4,6 @@ import type { ByteArray, Hex } from '../../types/misc.js'
 import { concatBytes } from '../data/concat.js'
 import { type HexToBytesErrorType, hexToBytes } from '../encoding/toBytes.js'
 import { type BytesToHexErrorType, bytesToHex } from '../encoding/toHex.js'
-import { isNodeRawData } from './nodeRawData.js'
 import {
   type FBytesErrorType,
   type FMessageErrorType,
@@ -16,12 +15,11 @@ import {
   type SerializeRawDataErrorType,
   serializeRawData,
 } from './serializeRawData.js'
-import type { NodeRawData } from './toNodeRawData.js'
 
 /** A signed transaction reduced to the fields the wire form needs. */
 export type SerializableTransaction = {
-  /** The `Transaction.raw_data` (either dialect; used when `raw_data_hex` is absent). */
-  raw_data?: RawData | NodeRawData | undefined
+  /** The `Transaction.raw_data` (used when `raw_data_hex` is absent). */
+  raw_data?: RawData | undefined
   /** Serialized `raw_data` bytes (bare hex) — preferred when present. */
   raw_data_hex?: string | undefined
   /** Accumulated signatures (TRON wire form, bare lowercase hex). */
@@ -61,13 +59,11 @@ export function serializeTransaction(
   const rawDataBytes =
     raw_data_hex !== undefined
       ? bareHexToBytes(raw_data_hex)
-      : raw_data !== undefined && !isNodeRawData(raw_data)
+      : raw_data !== undefined
         ? serializeRawData(raw_data)
         : (() => {
             throw new BaseError(
-              raw_data !== undefined
-                ? 'Cannot serialize a node-JSON `raw_data` without its `raw_data_hex` (the authoritative bytes).'
-                : 'Cannot serialize a transaction without `raw_data` or `raw_data_hex`.',
+              'Cannot serialize a transaction without `raw_data` or `raw_data_hex`.',
             )
           })()
 

@@ -17,48 +17,58 @@ import {
   fInt,
   fMessage,
 } from './protobuf/writer.js'
-import { getContractCodecByTypeUrl } from './registry.js'
-import type { ContractMessage, UnknownContractParameter } from './types.js'
+import {
+  ContractType,
+  type ContractTypeName,
+  getContractCodecByTypeUrl,
+} from './registry.js'
+import type {
+  ContractMessage,
+  Int64,
+  UnknownContractParameter,
+} from './types.js'
 
 /**
- * One `Transaction.Contract` entry: the contract `type` integer, the
- * `Any`-wrapped parameter (its type URL and decoded message body), and an
- * optional multi-sig `Permission_id`.
+ * One `Transaction.Contract` entry, in java-tron's JSON shape: the contract
+ * `type` name, the `Any`-wrapped parameter (`type_url` + decoded message),
+ * and an optional multi-sig `Permission_id` (java-tron's own capital-P
+ * spelling).
  */
 export type RawContract = {
-  /** `Transaction.Contract.type` integer (see `ContractType`). */
-  type: number
+  /** Contract type name (or the integer for an unregistered type). */
+  type: ContractTypeName | number
   /** `Any`-wrapped contract parameter. */
   parameter: {
     /** `Any.type_url`. */
-    typeUrl: string
+    type_url: string
     /** Decoded contract message, or the unknown-parameter fallback. */
     value: ContractMessage | UnknownContractParameter
   }
   /** Multi-sig permission id (`Transaction.Contract.Permission_id`). */
-  permissionId?: number | undefined
+  Permission_id?: number | undefined
 }
 
 /**
- * A `Transaction.raw` model. Byte fields (`refBlockBytes`, `refBlockHash`,
- * `data`) are bare lowercase hex (no `0x`); `int64` fields are `bigint`
- * (numbers are accepted on the encode side).
+ * A `Transaction.raw` in java-tron's JSON shape. Byte fields
+ * (`ref_block_bytes`, `ref_block_hash`, `data`) are bare lowercase hex (no
+ * `0x`); `int64` fields accept `bigint | number | string` on the encode side
+ * (the canonical decoded form is a number, or a decimal string past 2^53).
  */
 export type RawData = {
   /** TaPoS reference block bytes (field 1, bare hex). */
-  refBlockBytes?: string | undefined
+  ref_block_bytes?: string | undefined
   /** TaPoS reference block hash (field 4, bare hex). */
-  refBlockHash?: string | undefined
+  ref_block_hash?: string | undefined
   /** Expiration timestamp in ms (field 8, `int64`). */
-  expiration?: bigint | number | undefined
+  expiration?: Int64 | undefined
   /** Memo/extra data (field 10, bare hex). */
   data?: string | undefined
   /** Contracts (field 11, repeated). */
   contract: RawContract[]
   /** Creation timestamp in ms (field 14, `int64`). */
-  timestamp?: bigint | number | undefined
+  timestamp?: Int64 | undefined
   /** Energy/bandwidth fee ceiling in SUN (field 18, `int64`). */
-  feeLimit?: bigint | number | undefined
+  fee_limit?: Int64 | undefined
 }
 
 /** Prefixes a bare hex string with `0x` (leaves an already-prefixed one). */
@@ -73,23 +83,56 @@ function isUnknownParameter(
   return (value as UnknownContractParameter).__unknown === true
 }
 
+/** Resolves a contract `type` (name or integer) to its wire integer. */
+function contractTypeOf(type: ContractTypeName | number): number {
+  if (typeof type === 'number') return type
+  const value = ContractType[type]
+  if (value === undefined)
+    throw new BaseError(`Unknown contract type name "${type}".`)
+  return value
+}
+
+/** Throws when `object` carries a defined key outside `allowed`. */
+function assertOnlyKeys(
+  object: Record<string, unknown>,
+  allowed: readonly string[],
+  what: string,
+): void {
+  for (const key of Object.keys(object))
+    if (object[key] !== undefined && !allowed.includes(key))
+      throw new BaseError(`Unknown ${what} field "${key}".`)
+}
+
 /** Encodes one `Transaction.Contract` (type + `Any` parameter + permission). */
 function serializeContract(contract: RawContract): ByteArray {
-  const { typeUrl, value } = contract.parameter
+  // Strict by design (like `encodeMessage`): the sign path verifies supplied
+  // JSON by re-serializing and comparing bytes — a silently dropped key
+  // would let the JSON claim things the signed bytes do not carry.
+  assertOnlyKeys(contract, ['type', 'parameter', 'Permission_id'], 'contract')
+  assertOnlyKeys(
+    contract.parameter,
+    ['type_url', 'value'],
+    'contract.parameter',
+  )
+  const { type_url, value } = contract.parameter
   let valueBytes: ByteArray
-  if (isUnknownParameter(value)) valueBytes = value.valueBytes
+  if (isUnknownParameter(value))
+    valueBytes = hexToBytes(toHexInput(value.value))
   else {
-    const codec = getContractCodecByTypeUrl(typeUrl)
+    const codec = getContractCodecByTypeUrl(type_url)
     if (!codec)
-      throw new BaseError(`No contract codec registered for "${typeUrl}".`)
+      throw new BaseError(`No contract codec registered for "${type_url}".`)
     valueBytes = codec.encode(value)
   }
   const any = concatBytes([
-    fBytes(1, stringToBytes(typeUrl)),
+    fBytes(1, stringToBytes(type_url)),
     fBytes(2, valueBytes),
   ])
-  const parts = [fInt(1, contract.type), fBytes(2, any, { emitDefault: true })]
-  if (contract.permissionId) parts.push(fInt(5, contract.permissionId))
+  const parts = [
+    fInt(1, contractTypeOf(contract.type)),
+    fBytes(2, any, { emitDefault: true }),
+  ]
+  if (contract.Permission_id) parts.push(fInt(5, contract.Permission_id))
   return concatBytes(parts)
 }
 
@@ -113,17 +156,30 @@ export type SerializeRawDataErrorType =
  * @returns Canonical `raw_data` bytes.
  */
 export function serializeRawData(rawData: RawData): ByteArray {
+  assertOnlyKeys(
+    rawData,
+    [
+      'ref_block_bytes',
+      'ref_block_hash',
+      'expiration',
+      'data',
+      'contract',
+      'timestamp',
+      'fee_limit',
+    ],
+    'raw_data',
+  )
   const parts: ByteArray[] = []
-  if (rawData.refBlockBytes)
-    parts.push(fBytes(1, hexToBytes(toHexInput(rawData.refBlockBytes))))
-  if (rawData.refBlockHash)
-    parts.push(fBytes(4, hexToBytes(toHexInput(rawData.refBlockHash))))
+  if (rawData.ref_block_bytes)
+    parts.push(fBytes(1, hexToBytes(toHexInput(rawData.ref_block_bytes))))
+  if (rawData.ref_block_hash)
+    parts.push(fBytes(4, hexToBytes(toHexInput(rawData.ref_block_hash))))
   if (rawData.expiration) parts.push(fInt(8, BigInt(rawData.expiration)))
   if (rawData.data) parts.push(fBytes(10, hexToBytes(toHexInput(rawData.data))))
   for (const contract of rawData.contract)
     parts.push(fMessage(11, serializeContract(contract), { emitDefault: true }))
   if (rawData.timestamp) parts.push(fInt(14, BigInt(rawData.timestamp)))
-  if (rawData.feeLimit) parts.push(fInt(18, BigInt(rawData.feeLimit)))
+  if (rawData.fee_limit) parts.push(fInt(18, BigInt(rawData.fee_limit)))
   return concatBytes(parts)
 }
 

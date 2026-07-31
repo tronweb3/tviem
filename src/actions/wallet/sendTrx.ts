@@ -66,10 +66,10 @@ function assemble(
   const contract: RawContract = {
     type: ContractType.TransferContract,
     parameter: {
-      typeUrl: `${contractTypeUrlPrefix}TransferContract`,
+      type_url: `${contractTypeUrlPrefix}TransferContract`,
       value: {
-        ownerAddress: toHex(account.address),
-        toAddress: toHex(to),
+        owner_address: toHex(account.address),
+        to_address: toHex(to),
         amount,
       },
     },

@@ -73,18 +73,18 @@ function assemble(
   const account = parseAccount(source)
 
   const value: DelegateResourceContract = {
-    ownerAddress: toHex(account.address),
+    owner_address: toHex(account.address),
     resource: ResourceCode[resource],
     balance,
-    receiverAddress: toHex(receiverAddress),
+    receiver_address: toHex(receiverAddress),
   }
   if (lock !== undefined) value.lock = lock
-  if (lockPeriod !== undefined) value.lockPeriod = lockPeriod
+  if (lockPeriod !== undefined) value.lock_period = lockPeriod
 
   const contract: RawContract = {
     type: ContractType.DelegateResourceContract,
     parameter: {
-      typeUrl: `${contractTypeUrlPrefix}DelegateResourceContract`,
+      type_url: `${contractTypeUrlPrefix}DelegateResourceContract`,
       value,
     },
   }
