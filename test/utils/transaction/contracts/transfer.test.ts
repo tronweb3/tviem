@@ -9,6 +9,7 @@ import {
   encodeTransferAssetContract,
   encodeTransferContract,
 } from '../../../../src/utils/transaction/contracts/transfer.js'
+import { flexToHex } from '../../../../src/utils/transaction/normalize.js'
 import type {
   TransferAssetContract,
   TransferContract,
@@ -21,8 +22,8 @@ const to = '41928c9af0651632157ef27a2cf17ca72c575a4d21' as const
 
 test('encodeTransferContract: §2.3 acceptance bytes', () => {
   const encoded = encodeTransferContract({
-    ownerAddress: v1,
-    toAddress: 'TPL66VK2gCXNCD7EJg9pgJRfqcRazjhUZY',
+    owner_address: v1,
+    to_address: 'TPL66VK2gCXNCD7EJg9pgJRfqcRazjhUZY',
     amount: 1_000_000n,
   })
   // `0a15<owner21> 1215<to21> 18c0843d` — the Any-value of the §2.3 fixture.
@@ -31,23 +32,23 @@ test('encodeTransferContract: §2.3 acceptance bytes', () => {
 
 test('encodeTransferContract: every owner address form encodes identically', () => {
   const expected = `0x0a15${v1}1215${to}18c0843d`
-  const message = { toAddress: to, amount: 1_000_000n }
+  const message = { to_address: to, amount: 1_000_000n }
   expect(
     bytesToHex(
       encodeTransferContract({
         ...message,
-        ownerAddress: 'TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC',
+        owner_address: 'TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC',
       }),
     ),
   ).toBe(expected)
   expect(
-    bytesToHex(encodeTransferContract({ ...message, ownerAddress: v1 })),
+    bytesToHex(encodeTransferContract({ ...message, owner_address: v1 })),
   ).toBe(expected)
   expect(
     bytesToHex(
       encodeTransferContract({
         ...message,
-        ownerAddress: '0x7e5f4552091a69125d5dfcb7b8c2659029395bdf',
+        owner_address: '0x7e5f4552091a69125d5dfcb7b8c2659029395bdf',
       }),
     ),
   ).toBe(expected)
@@ -55,7 +56,7 @@ test('encodeTransferContract: every owner address form encodes identically', () 
     bytesToHex(
       encodeTransferContract({
         ...message,
-        ownerAddress: hexToBytes(`0x${v1}`),
+        owner_address: hexToBytes(`0x${v1}`),
       }),
     ),
   ).toBe(expected)
@@ -63,50 +64,64 @@ test('encodeTransferContract: every owner address form encodes identically', () 
 
 test('encodeTransferContract: zero amount is omitted (proto3 default)', () => {
   const encoded = encodeTransferContract({
-    ownerAddress: v1,
-    toAddress: to,
+    owner_address: v1,
+    to_address: to,
     amount: 0n,
   })
   expect(bytesToHex(encoded)).toBe(`0x0a15${v1}1215${to}`)
 })
 
-test('decode(encode(x)) round-trips', () => {
+test('decode(encode(x)) canonicalizes to the node-JSON form', () => {
   const x: TransferContract = {
-    ownerAddress: v1,
-    toAddress: to,
+    owner_address: v1,
+    to_address: to,
     amount: 1_000_000n,
   }
-  expect(decodeTransferContract(encodeTransferContract(x))).toStrictEqual(x)
+  // int64 decodes to its canonical JSON form (a number here).
+  expect(decodeTransferContract(encodeTransferContract(x))).toStrictEqual({
+    owner_address: v1,
+    to_address: to,
+    amount: 1_000_000,
+  })
 
-  const zero: TransferContract = { ownerAddress: v1, toAddress: to, amount: 0n }
-  expect(decodeTransferContract(encodeTransferContract(zero))).toStrictEqual(
-    zero,
-  )
+  // A zero amount is a proto3 default: omitted on the wire AND in the
+  // decoded JSON (java-tron's JsonFormat prints only set fields).
+  const zero: TransferContract = {
+    owner_address: v1,
+    to_address: to,
+    amount: 0n,
+  }
+  expect(decodeTransferContract(encodeTransferContract(zero))).toStrictEqual({
+    owner_address: v1,
+    to_address: to,
+  })
 })
 
 test('decodeTransferContract: unknown fields land in __unknown', () => {
   const bytes = concatBytes([
-    encodeTransferContract({ ownerAddress: v1, toAddress: to, amount: 1n }),
+    encodeTransferContract({ owner_address: v1, to_address: to, amount: 1n }),
     // Field 15, VARINT, value 7 — not part of the schema.
     new Uint8Array([0x78, 0x07]),
   ])
   expect(decodeTransferContract(bytes)).toStrictEqual({
-    ownerAddress: v1,
-    toAddress: to,
-    amount: 1n,
+    owner_address: v1,
+    to_address: to,
+    amount: 1,
     __unknown: [{ fieldNo: 15, wireType: 0, value: 7n }],
   })
 })
 
-test('encodeTransferAssetContract: asset_name is field 1', () => {
+test('encodeTransferAssetContract: asset_name is field 1 (bytes = hex)', () => {
   const expected = `0x0a07313030303030311215${v1}1a15${v2}2005`
-  // UTF-8 and hex forms of the same TRC10 asset id encode identically.
+  // asset_name is a bytes field: bare and 0x-prefixed hex encode identically
+  // (the model speaks java-tron's visible:false dialect — UTF-8 text
+  // convenience lives in the ACTION parameters via flexToHex).
   expect(
     bytesToHex(
       encodeTransferAssetContract({
-        assetName: '1000001',
-        ownerAddress: v1,
-        toAddress: v2,
+        asset_name: flexToHex('1000001'),
+        owner_address: v1,
+        to_address: v2,
         amount: 5n,
       }),
     ),
@@ -114,23 +129,29 @@ test('encodeTransferAssetContract: asset_name is field 1', () => {
   expect(
     bytesToHex(
       encodeTransferAssetContract({
-        assetName: '0x31303030303031',
-        ownerAddress: v1,
-        toAddress: v2,
+        asset_name: '0x31303030303031',
+        owner_address: v1,
+        to_address: v2,
         amount: 5n,
       }),
     ),
   ).toBe(expected)
 })
 
-test('decode(encode(x)) round-trips (TransferAssetContract)', () => {
+test('decode(encode(x)) canonicalizes (TransferAssetContract)', () => {
   const x: TransferAssetContract = {
-    assetName: '0x31303030303031',
-    ownerAddress: v1,
-    toAddress: v2,
+    asset_name: '0x31303030303031',
+    owner_address: v1,
+    to_address: v2,
     amount: 5n,
   }
+  // Canonical form: bare-hex bytes, number int64.
   expect(
     decodeTransferAssetContract(encodeTransferAssetContract(x)),
-  ).toStrictEqual(x)
+  ).toStrictEqual({
+    asset_name: '31303030303031',
+    owner_address: v1,
+    to_address: v2,
+    amount: 5,
+  })
 })

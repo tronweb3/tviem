@@ -887,6 +887,10 @@ export {
   trim,
 } from './utils/data/trim.js'
 export {
+  type BareHexErrorType,
+  bareHex,
+} from './utils/encoding/bareHex.js'
+export {
   type BytesToBigIntErrorType,
   type BytesToBigIntOpts,
   type BytesToBoolErrorType,
@@ -1032,6 +1036,12 @@ export {
   type GetTransactionIdErrorType,
   getTransactionId,
 } from './utils/transaction/getTransactionId.js'
+export { int64ToJson } from './utils/transaction/int64.js'
+export {
+  type FlexErrorType,
+  type FlexInput,
+  flexToHex,
+} from './utils/transaction/normalize.js'
 export {
   type BlockRef,
   type DeriveRefBlockParamsErrorType,
@@ -1044,7 +1054,9 @@ export {
 export {
   type ContractCodec,
   ContractType,
+  type ContractTypeName,
   contractCodecs,
+  contractTypeNameOf,
   contractTypeUrlPrefix,
   decodeContractParameter,
   getContractCodecByType,
@@ -1064,11 +1076,6 @@ export {
   serializeTransaction,
   toBroadcastHex,
 } from './utils/transaction/serializeTransaction.js'
-export {
-  type NodeRawData,
-  type ToNodeRawDataErrorType,
-  toNodeRawData,
-} from './utils/transaction/toNodeRawData.js'
 export {
   type NodeTransaction,
   type ToNodeTransactionErrorType,
@@ -1092,9 +1099,9 @@ export type {
   ContractMessage,
   CreateSmartContract,
   DelegateResourceContract,
-  FlexInput,
   FreezeBalanceContract,
   FreezeBalanceV2Contract,
+  Int64,
   ParticipateAssetIssueContract,
   Permission,
   PermissionKey,
@@ -1128,10 +1135,15 @@ export type {
   WitnessUpdateContract,
 } from './utils/transaction/types.js'
 export {
+  AccountTypeName,
   EntryType,
+  EntryTypeName,
   PermissionType,
+  PermissionTypeName,
   ResourceCode,
+  ResourceCodeName,
   StateMutabilityType,
+  StateMutabilityTypeName,
 } from './utils/transaction/types.js'
 export {
   type FormatTrxErrorType,

@@ -19,7 +19,7 @@ const spec: MessageSpec = [
   { no: 3, name: 'amount', kind: 'i64' },
   { no: 4, name: 'flag', kind: 'bool' },
   { no: 5, name: 'payload', kind: 'bytes' },
-  { no: 6, name: 'mode', kind: 'enum' },
+  { no: 6, name: 'mode', kind: 'enum', names: ['OFF', 'SLOW', 'FAST'] },
   { no: 7, name: 'count', kind: 'i32' },
 ]
 
@@ -35,6 +35,8 @@ test('encodeMessage: proto3 defaults and undefined are omitted', () => {
     }),
   ).toStrictEqual(new Uint8Array(0))
   expect(encodeMessage(spec, {})).toStrictEqual(new Uint8Array(0))
+  // The enum default by NAME is a default too.
+  expect(encodeMessage(spec, { mode: 'OFF' })).toStrictEqual(new Uint8Array(0))
 })
 
 test('encodeMessage: fields are written in ascending field-number order', () => {
@@ -53,18 +55,70 @@ test('encodeMessage: fields are written in ascending field-number order', () => 
   )
 })
 
-test('decodeMessage: empty input fills proto3 defaults (addresses stay absent)', () => {
-  const decoded = decodeMessage(spec, new Uint8Array(0))
-  expect(decoded).toStrictEqual({
-    amount: 0n,
-    count: 0,
-    flag: false,
-    mode: 0,
-    note: '',
-    payload: '0x',
+test('encodeMessage: int64 and enum accept their canonical JSON forms', () => {
+  // amount as number / decimal string, enum by name — same bytes as above.
+  const byName = encodeMessage(spec, {
+    count: 3,
+    mode: 'FAST',
+    payload: 'dead',
+    flag: true,
+    amount: '1',
+    note: 'hi',
+    owner: v1,
   })
-  expect('owner' in decoded).toBe(false)
-  expect('__unknown' in decoded).toBe(false)
+  expect(bytesToHex(byName)).toBe(`0x0a15${v1}12026869180120012a02dead30023803`)
+})
+
+test('encodeMessage: an unknown enum name throws', () => {
+  expect(() => encodeMessage(spec, { mode: 'TURBO' })).toThrow(
+    'Unknown mode enum name "TURBO".',
+  )
+})
+
+test('encodeMessage: a field outside the schema throws (strict)', () => {
+  expect(() => encodeMessage(spec, { amount: 1n, memo: 'claim' })).toThrow(
+    'Unknown contract message field "memo".',
+  )
+  // ...but undefined values and the decode-side __unknown mixin are ignored.
+  expect(
+    encodeMessage(spec, { amount: 0n, memo: undefined, __unknown: [] }),
+  ).toStrictEqual(new Uint8Array(0))
+})
+
+test('decodeMessage: empty input decodes to an empty message (defaults omitted)', () => {
+  const decoded = decodeMessage(spec, new Uint8Array(0))
+  expect(decoded).toStrictEqual({})
+})
+
+test('decodeMessage: canonical output — number int64, name enum, bare-hex bytes', () => {
+  const encoded = encodeMessage(spec, {
+    count: 3,
+    mode: 2,
+    payload: '0xdead',
+    flag: true,
+    amount: 1n,
+    note: 'hi',
+    owner: v1,
+  })
+  expect(decodeMessage(spec, encoded)).toStrictEqual({
+    owner: v1,
+    note: 'hi',
+    amount: 1,
+    flag: true,
+    payload: 'dead',
+    mode: 'FAST',
+    count: 3,
+  })
+})
+
+test('decodeMessage: int64 past 2^53 decodes to a decimal string', () => {
+  const encoded = encodeMessage(spec, { amount: 9007199254740993n })
+  expect(decodeMessage(spec, encoded).amount).toBe('9007199254740993')
+})
+
+test('decodeMessage: an enum value outside the table stays numeric', () => {
+  const encoded = encodeMessage(spec, { mode: 9 })
+  expect(decodeMessage(spec, encoded).mode).toBe(9)
 })
 
 test('decodeMessage: unknown fields land in __unknown (never throws)', () => {
@@ -80,7 +134,7 @@ test('decodeMessage: unknown fields land in __unknown (never throws)', () => {
     new Uint8Array([0xa9, 0x01, 1, 2, 3, 4, 5, 6, 7, 8]),
   ])
   const decoded = decodeMessage(spec, bytes)
-  expect(decoded.amount).toBe(5n)
+  expect(decoded.amount).toBe(5)
   expect(decoded.__unknown).toStrictEqual([
     { fieldNo: 15, wireType: 0, value: 7n },
     { fieldNo: 16, wireType: 2, value: '0xbeef' },
@@ -92,7 +146,7 @@ test('decodeMessage: unknown fields land in __unknown (never throws)', () => {
 test('decodeMessage: wire-type mismatch on a known field goes to __unknown', () => {
   // Field 3 is declared `i64` but arrives as LEN.
   const decoded = decodeMessage(spec, hexToBytes('0x1a020102'))
-  expect(decoded.amount).toBe(0n)
+  expect('amount' in decoded).toBe(false)
   expect(decoded.__unknown).toStrictEqual([
     { fieldNo: 3, wireType: 2, value: '0x0102' },
   ])
@@ -100,11 +154,11 @@ test('decodeMessage: wire-type mismatch on a known field goes to __unknown', () 
 
 test('decodeMessage: duplicated non-repeated field follows last-one-wins', () => {
   const decoded = decodeMessage(spec, hexToBytes('0x18051807'))
-  expect(decoded.amount).toBe(7n)
+  expect(decoded.amount).toBe(7)
 })
 
 test("negative int64 round-trips through two's-complement encoding", () => {
   const encoded = encodeMessage(spec, { amount: -3n })
   expect(bytesToHex(encoded)).toBe('0x18fdffffffffffffffff01')
-  expect(decodeMessage(spec, encoded).amount).toBe(-3n)
+  expect(decodeMessage(spec, encoded).amount).toBe(-3)
 })

@@ -14,8 +14,8 @@ const to = '41928c9af0651632157ef27a2cf17ca72c575a4d21' as const
 
 test('encodeVoteWitnessContract: repeated votes', () => {
   const encoded = encodeVoteWitnessContract({
-    ownerAddress: v1,
-    votes: [{ voteAddress: v2, voteCount: 5n }],
+    owner_address: v1,
+    votes: [{ vote_address: v2, vote_count: 5n }],
     support: true,
   })
   expect(bytesToHex(encoded)).toBe(`0x0a15${v1}12190a15${v2}10051801`)
@@ -23,10 +23,10 @@ test('encodeVoteWitnessContract: repeated votes', () => {
 
 test('encodeVoteWitnessContract: one field-2 entry per vote', () => {
   const encoded = encodeVoteWitnessContract({
-    ownerAddress: v1,
+    owner_address: v1,
     votes: [
-      { voteAddress: v2, voteCount: 5n },
-      { voteAddress: to, voteCount: 1_000_000n },
+      { vote_address: v2, vote_count: 5n },
+      { vote_address: to, vote_count: 1_000_000n },
     ],
   })
   expect(bytesToHex(encoded)).toBe(
@@ -34,27 +34,30 @@ test('encodeVoteWitnessContract: one field-2 entry per vote', () => {
   )
 })
 
-test('decodeVoteWitnessContract: missing repeated/bool fields fill defaults', () => {
+test('decodeVoteWitnessContract: absent fields stay absent (defaults omitted)', () => {
   const decoded = decodeVoteWitnessContract(
-    encodeVoteWitnessContract({ ownerAddress: v1 }),
+    encodeVoteWitnessContract({ owner_address: v1 }),
   )
-  expect(decoded).toStrictEqual({
-    ownerAddress: v1,
-    votes: [],
-    support: false,
-  })
+  expect(decoded).toStrictEqual({ owner_address: v1 })
 })
 
-test('decode(encode(x)) round-trips', () => {
+test('decode(encode(x)) canonicalizes to the node-JSON form', () => {
   const x: VoteWitnessContract = {
-    ownerAddress: v1,
+    owner_address: v1,
     votes: [
-      { voteAddress: v2, voteCount: 5n },
-      { voteAddress: to, voteCount: 1_000_000n },
+      { vote_address: v2, vote_count: 5n },
+      { vote_address: to, vote_count: 1_000_000n },
     ],
     support: true,
   }
   expect(decodeVoteWitnessContract(encodeVoteWitnessContract(x))).toStrictEqual(
-    x,
+    {
+      owner_address: v1,
+      votes: [
+        { vote_address: v2, vote_count: 5 },
+        { vote_address: to, vote_count: 1_000_000 },
+      ],
+      support: true,
+    },
   )
 })

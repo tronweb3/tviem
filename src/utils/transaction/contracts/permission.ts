@@ -1,6 +1,7 @@
 import type { ErrorType } from '../../../errors/utils.js'
 import type { ByteArray } from '../../../types/misc.js'
 import type { AccountPermissionUpdateContract } from '../types.js'
+import { PermissionTypeName } from '../types.js'
 import {
   type DecodeMessageErrorType,
   decodeMessage,
@@ -20,18 +21,18 @@ const permissionKeySpec: MessageSpec = [
  * allowed contract types.
  */
 const permissionSpec: MessageSpec = [
-  { no: 1, name: 'type', kind: 'enum' },
+  { no: 1, name: 'type', kind: 'enum', names: PermissionTypeName },
   { no: 2, name: 'id', kind: 'i32' },
-  { no: 3, name: 'permissionName', kind: 'string' },
+  { no: 3, name: 'permission_name', kind: 'string' },
   { no: 4, name: 'threshold', kind: 'i64' },
-  { no: 5, name: 'parentId', kind: 'i32' },
+  { no: 5, name: 'parent_id', kind: 'i32' },
   { no: 6, name: 'operations', kind: 'bytes' },
   { no: 7, name: 'keys', kind: 'repeated-message', spec: permissionKeySpec },
 ]
 
 /** `AccountPermissionUpdateContract` (type 46) field schema. */
 const accountPermissionUpdateContractSpec: MessageSpec = [
-  { no: 1, name: 'ownerAddress', kind: 'address' },
+  { no: 1, name: 'owner_address', kind: 'address' },
   { no: 2, name: 'owner', kind: 'message', spec: permissionSpec },
   { no: 3, name: 'witness', kind: 'message', spec: permissionSpec },
   { no: 4, name: 'actives', kind: 'repeated-message', spec: permissionSpec },

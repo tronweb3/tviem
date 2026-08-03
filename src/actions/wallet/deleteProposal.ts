@@ -55,14 +55,14 @@ function assemble(
   const account = parseAccount(source)
 
   const value: ProposalDeleteContract = {
-    ownerAddress: toHex(account.address),
-    proposalId: BigInt(proposalId),
+    owner_address: toHex(account.address),
+    proposal_id: BigInt(proposalId),
   }
 
   const contract: RawContract = {
     type: ContractType.ProposalDeleteContract,
     parameter: {
-      typeUrl: `${contractTypeUrlPrefix}ProposalDeleteContract`,
+      type_url: `${contractTypeUrlPrefix}ProposalDeleteContract`,
       value,
     },
   }

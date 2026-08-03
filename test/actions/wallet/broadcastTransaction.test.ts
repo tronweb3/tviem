@@ -6,6 +6,7 @@ import {
   TransactionExpiredError,
   TronRpcError,
 } from '../../../src/errors/rpc.js'
+import { decodeRawData } from '../../../src/utils/transaction/decodeRawData.js'
 import { rpc } from '../../fixtures/rpc/loader.js'
 import { createMockTransport } from '../../mock/createMockTransport.js'
 
@@ -19,6 +20,7 @@ const FULL_TX_HEX = `0a8501${RAW_DATA_HEX}1241${SIG}`
 
 const signedTransaction = {
   txID: TX_ID,
+  raw_data: decodeRawData(RAW_DATA_HEX),
   raw_data_hex: RAW_DATA_HEX,
   signature: [SIG],
 }
@@ -50,7 +52,7 @@ test('throws TronRpcError when the transaction carries no signature', async () =
   const client = createClient({ transport })
   await expect(
     broadcastTransaction(client, {
-      signedTransaction: { txID: TX_ID, signature: [] },
+      signedTransaction: { ...signedTransaction, signature: [] },
     }),
   ).rejects.toBeInstanceOf(TronRpcError)
 })

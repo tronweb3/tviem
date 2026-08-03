@@ -55,14 +55,14 @@ function assemble(
   const account = parseAccount(source)
 
   const value: UpdateBrokerageContract = {
-    ownerAddress: toHex(account.address),
+    owner_address: toHex(account.address),
     brokerage,
   }
 
   const contract: RawContract = {
     type: ContractType.UpdateBrokerageContract,
     parameter: {
-      typeUrl: `${contractTypeUrlPrefix}UpdateBrokerageContract`,
+      type_url: `${contractTypeUrlPrefix}UpdateBrokerageContract`,
       value,
     },
   }

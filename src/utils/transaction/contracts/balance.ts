@@ -7,6 +7,7 @@ import type {
   WithdrawBalanceContract,
   WithdrawExpireUnfreezeContract,
 } from '../types.js'
+import { ResourceCodeName } from '../types.js'
 import {
   type DecodeMessageErrorType,
   decodeMessage,
@@ -17,7 +18,7 @@ import {
 
 /** Shared schema of the owner-only contract messages. */
 const ownerOnlySpec: MessageSpec = [
-  { no: 1, name: 'ownerAddress', kind: 'address' },
+  { no: 1, name: 'owner_address', kind: 'address' },
 ]
 
 export type EncodeWithdrawBalanceContractErrorType =
@@ -44,9 +45,9 @@ export function decodeWithdrawBalanceContract(
 
 /** `FreezeBalanceV2Contract` (type 54) field schema. */
 const freezeBalanceV2ContractSpec: MessageSpec = [
-  { no: 1, name: 'ownerAddress', kind: 'address' },
-  { no: 2, name: 'frozenBalance', kind: 'i64' },
-  { no: 3, name: 'resource', kind: 'enum' },
+  { no: 1, name: 'owner_address', kind: 'address' },
+  { no: 2, name: 'frozen_balance', kind: 'i64' },
+  { no: 3, name: 'resource', kind: 'enum', names: ResourceCodeName },
 ]
 
 export type EncodeFreezeBalanceV2ContractErrorType =
@@ -76,9 +77,9 @@ export function decodeFreezeBalanceV2Contract(
 
 /** `UnfreezeBalanceV2Contract` (type 55) field schema. */
 const unfreezeBalanceV2ContractSpec: MessageSpec = [
-  { no: 1, name: 'ownerAddress', kind: 'address' },
-  { no: 2, name: 'unfreezeBalance', kind: 'i64' },
-  { no: 3, name: 'resource', kind: 'enum' },
+  { no: 1, name: 'owner_address', kind: 'address' },
+  { no: 2, name: 'unfreeze_balance', kind: 'i64' },
+  { no: 3, name: 'resource', kind: 'enum', names: ResourceCodeName },
 ]
 
 export type EncodeUnfreezeBalanceV2ContractErrorType =

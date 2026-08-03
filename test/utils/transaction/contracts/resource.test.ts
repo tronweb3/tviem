@@ -19,12 +19,12 @@ const v2 = '412b5ad5c4795c026514f8317c7a215e218dccd6cf' as const
 
 test('encodeDelegateResourceContract: §6 field order regression', () => {
   const encoded = encodeDelegateResourceContract({
-    ownerAddress: v1,
+    owner_address: v1,
     resource: ResourceCode.ENERGY,
     balance: 1_000_000n,
-    receiverAddress: v2,
+    receiver_address: v2,
     lock: true,
-    lockPeriod: 144n,
+    lock_period: 144n,
   })
   // owner(1) · resource(2) · balance(3) · receiver(4) · lock(5) · lock_period(6)
   expect(bytesToHex(encoded)).toBe(`0x0a15${v1}100118c0843d2215${v2}2801309001`)
@@ -32,66 +32,75 @@ test('encodeDelegateResourceContract: §6 field order regression', () => {
 
 test('encodeDelegateResourceContract: proto3 defaults omitted', () => {
   const encoded = encodeDelegateResourceContract({
-    ownerAddress: v1,
+    owner_address: v1,
     resource: ResourceCode.BANDWIDTH,
     balance: 1_000_000n,
-    receiverAddress: v2,
+    receiver_address: v2,
     lock: false,
-    lockPeriod: 0n,
+    lock_period: 0n,
   })
   expect(bytesToHex(encoded)).toBe(`0x0a15${v1}18c0843d2215${v2}`)
 })
 
 test('encodeUnDelegateResourceContract: same field order', () => {
   const encoded = encodeUnDelegateResourceContract({
-    ownerAddress: v1,
+    owner_address: v1,
     resource: ResourceCode.ENERGY,
     balance: 1_000_000n,
-    receiverAddress: v2,
+    receiver_address: v2,
   })
   expect(bytesToHex(encoded)).toBe(`0x0a15${v1}100118c0843d2215${v2}`)
 })
 
-test('decode(encode(x)) round-trips', () => {
+test('decode(encode(x)) canonicalizes to the node-JSON form', () => {
   const delegate: DelegateResourceContract = {
-    ownerAddress: v1,
+    owner_address: v1,
     resource: ResourceCode.ENERGY,
     balance: 1_000_000n,
-    receiverAddress: v2,
+    receiver_address: v2,
     lock: true,
-    lockPeriod: 144n,
+    lock_period: 144n,
   }
   expect(
     decodeDelegateResourceContract(encodeDelegateResourceContract(delegate)),
-  ).toStrictEqual(delegate)
+  ).toStrictEqual({
+    owner_address: v1,
+    resource: 'ENERGY',
+    balance: 1_000_000,
+    receiver_address: v2,
+    lock: true,
+    lock_period: 144,
+  })
 
+  // BANDWIDTH is the zero enum — omitted from wire and canonical JSON alike.
   const undelegate: UnDelegateResourceContract = {
-    ownerAddress: v1,
+    owner_address: v1,
     resource: ResourceCode.BANDWIDTH,
     balance: 1_000_000n,
-    receiverAddress: v2,
+    receiver_address: v2,
   }
   expect(
     decodeUnDelegateResourceContract(
       encodeUnDelegateResourceContract(undelegate),
     ),
-  ).toStrictEqual(undelegate)
+  ).toStrictEqual({
+    owner_address: v1,
+    balance: 1_000_000,
+    receiver_address: v2,
+  })
 })
 
-test('decodeDelegateResourceContract: defaults fill on partial input', () => {
+test('decodeDelegateResourceContract: absent fields stay absent', () => {
   const decoded = decodeDelegateResourceContract(
     encodeDelegateResourceContract({
-      ownerAddress: v1,
+      owner_address: v1,
       balance: 1n,
-      receiverAddress: v2,
+      receiver_address: v2,
     }),
   )
   expect(decoded).toStrictEqual({
-    ownerAddress: v1,
-    resource: 0,
-    balance: 1n,
-    receiverAddress: v2,
-    lock: false,
-    lockPeriod: 0n,
+    owner_address: v1,
+    balance: 1,
+    receiver_address: v2,
   })
 })

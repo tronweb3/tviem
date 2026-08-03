@@ -54,9 +54,9 @@ function assemble(
   const contract: RawContract = {
     type: ContractType.CancelAllUnfreezeV2Contract,
     parameter: {
-      typeUrl: `${contractTypeUrlPrefix}CancelAllUnfreezeV2Contract`,
+      type_url: `${contractTypeUrlPrefix}CancelAllUnfreezeV2Contract`,
       value: {
-        ownerAddress: toHex(account.address),
+        owner_address: toHex(account.address),
       },
     },
   }

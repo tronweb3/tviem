@@ -4,33 +4,37 @@ import type { Hex, SignableMessage } from '../types/misc.js'
 import type { HashTypedDataParameters } from '../utils/signature/hashTypedData.js'
 import type { Signature } from '../utils/signature/sign.js'
 import type { RawData } from '../utils/transaction/serializeRawData.js'
-import type { NodeRawData } from '../utils/transaction/toNodeRawData.js'
 
 export type { SignableMessage } from '../types/misc.js'
 
 /**
- * A transaction in signable shape: it carries a `txID` and/or a `raw_data`
- * model (from which the id is derived when `txID` is absent), plus the running
- * `signature` list. `signTransaction` appends its signature to `signature` and
- * returns a new object — the input is never mutated.
+ * A transaction in signable shape: the full triple — `txID`, the `raw_data`
+ * model and the serialized `raw_data_hex` bytes — plus the running
+ * `signature` list. The three must be mutually consistent; `txCheck`
+ * verifies this at signing time. `signTransaction` appends its signature to
+ * `signature` and returns a new object — the input is never mutated.
  */
 export type SignableTransaction = {
   /**
-   * Transaction id (64 hex chars, no `0x` prefix). Derived from `raw_data`
-   * when omitted.
+   * Transaction id (64 hex chars, no `0x` prefix): the SHA-256 of the
+   * `raw_data_hex` bytes. Verified — never derived — at signing time.
    */
-  txID?: string | undefined
+  txID: string
   /**
-   * The `Transaction.raw_data` — the SDK model, or java-tron's node JSON as
-   * returned by the chain/TronWeb (which must be accompanied by
-   * `raw_data_hex`, the authoritative bytes). Signed results carry the node
-   * JSON form.
+   * The `Transaction.raw_data` in the canonical node-JSON shape (java-tron's
+   * `visible: false` rendering) — the same shape whether built by this SDK,
+   * returned by a node, or handed over by TronWeb. The `raw_data_hex` bytes
+   * are authoritative; the JSON is verified to serialize to exactly those
+   * bytes at signing time.
    */
-  raw_data?: RawData | NodeRawData | undefined
-  /** Serialized `raw_data` bytes (bare hex), passed through untouched. */
-  raw_data_hex?: string | undefined
+  raw_data: RawData
+  /**
+   * Serialized `raw_data` bytes (bare hex) — what the signature covers
+   * (`txID` is their SHA-256).
+   */
+  raw_data_hex: string
   /** Accumulated signatures (TRON wire form, bare lowercase hex). */
-  signature?: string[] | undefined
+  signature?: string[]
 }
 
 /** Parameters for an account's `signMessage`. */
@@ -52,8 +56,9 @@ export type AccountSignTypedDataParameters = HashTypedDataParameters
  *
  * Deliberately, there is NO raw-digest `sign({ hash })`: signing an opaque
  * 32-byte hash is blind signing — the signer cannot know what it authorizes.
- * Every signature an account produces carries context: a transaction (five
- * sign guards), a TIP-191-prefixed message, or a TIP-712 typed-data domain.
+ * Every signature an account produces carries context: a transaction
+ * (integrity-checked against its bytes, owner-guarded), a TIP-191-prefixed
+ * message, or a TIP-712 typed-data domain.
  */
 export type TronCustomSource = {
   /** The account's canonical Base58Check address. */

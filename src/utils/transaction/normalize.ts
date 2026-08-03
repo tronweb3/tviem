@@ -5,13 +5,21 @@ import {
   normalizeAddress,
 } from '../address/normalize.js'
 import { isHex } from '../data/isHex.js'
+import { bareHex } from '../encoding/bareHex.js'
 import {
   type HexToBytesErrorType,
   hexToBytes,
   type StringToBytesErrorType,
   stringToBytes,
 } from '../encoding/toBytes.js'
-import type { FlexInput } from './types.js'
+
+/**
+ * Dual-form ("flex") ACTION-parameter input, e.g. a TRC10 asset name/id:
+ * UTF-8 text, hex, or raw bytes — see {@link flex}. This is an action-layer
+ * convenience only; the transaction model itself carries such fields as
+ * bare hex (java-tron's `visible: false` JSON form).
+ */
+export type FlexInput = string | Hex | ByteArray
 
 export type { NormalizeAddressErrorType }
 // Address fields of every contract message pivot on the same 21-byte
@@ -51,4 +59,14 @@ export function flex(
     return hexToBytes((value.startsWith('0x') ? value : `0x${value}`) as Hex)
   if (isHex(value)) return hexToBytes(value)
   return stringToBytes(value)
+}
+
+/**
+ * Normalizes a dual-form ("flex") action input to the bare lowercase hex
+ * the transaction model carries — {@link flex} followed by hex rendering.
+ * Actions call this while assembling a contract, so text conveniences
+ * (asset names, token ids, URLs) never enter the model un-encoded.
+ */
+export function flexToHex(value: FlexInput, visible?: boolean): string {
+  return bareHex(flex(value, visible))
 }

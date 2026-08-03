@@ -71,7 +71,7 @@ function assemble(
 
   // Each permission's `type` is forced from the slot it was passed in.
   const value: AccountPermissionUpdateContract = {
-    ownerAddress: toHex(account.address),
+    owner_address: toHex(account.address),
     ...(owner ? { owner: { ...owner, type: PermissionType.OWNER } } : {}),
     ...(witness
       ? { witness: { ...witness, type: PermissionType.WITNESS } }
@@ -84,7 +84,7 @@ function assemble(
   const contract: RawContract = {
     type: ContractType.AccountPermissionUpdateContract,
     parameter: {
-      typeUrl: `${contractTypeUrlPrefix}AccountPermissionUpdateContract`,
+      type_url: `${contractTypeUrlPrefix}AccountPermissionUpdateContract`,
       value,
     },
   }

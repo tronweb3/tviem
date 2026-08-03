@@ -55,8 +55,8 @@ test('a custom blockHeader is used verbatim and skips the getnowblock fetch', as
     unfreezeBalance: 500000n,
     resource: 'BANDWIDTH',
     blockHeader: {
-      refBlockBytes: '1234',
-      refBlockHash: '0102030405060708',
+      ref_block_bytes: '1234',
+      ref_block_hash: '0102030405060708',
       timestamp: blockTimestamp,
       expiration: blockTimestamp + 60000n,
     },

@@ -11,8 +11,8 @@ import {
 
 /** `TransferContract` (type 1) field schema. */
 const transferContractSpec: MessageSpec = [
-  { no: 1, name: 'ownerAddress', kind: 'address' },
-  { no: 2, name: 'toAddress', kind: 'address' },
+  { no: 1, name: 'owner_address', kind: 'address' },
+  { no: 2, name: 'to_address', kind: 'address' },
   { no: 3, name: 'amount', kind: 'i64' },
 ]
 
@@ -32,9 +32,9 @@ export function decodeTransferContract(bytes: ByteArray): TransferContract {
 
 /** `TransferAssetContract` (type 2) field schema — `asset_name` is field 1. */
 const transferAssetContractSpec: MessageSpec = [
-  { no: 1, name: 'assetName', kind: 'flex' },
-  { no: 2, name: 'ownerAddress', kind: 'address' },
-  { no: 3, name: 'toAddress', kind: 'address' },
+  { no: 1, name: 'asset_name', kind: 'bytes' },
+  { no: 2, name: 'owner_address', kind: 'address' },
+  { no: 3, name: 'to_address', kind: 'address' },
   { no: 4, name: 'amount', kind: 'i64' },
 ]
 

@@ -29,7 +29,7 @@ test('updates owner + active permissions byte-for-byte against the gold vector',
 
   const { txID } = await accountPermissionUpdate(client, {
     owner: {
-      permissionName: 'owner',
+      permission_name: 'owner',
       threshold: 2n,
       keys: [
         { address: 'TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC', weight: 1n },
@@ -39,7 +39,7 @@ test('updates owner + active permissions byte-for-byte against the gold vector',
     actives: [
       {
         id: 2,
-        permissionName: 'active0',
+        permission_name: 'active0',
         threshold: 1n,
         operations:
           '0x7fff1fc0033e0300000000000000000000000000000000000000000000000000',

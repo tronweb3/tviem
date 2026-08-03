@@ -1,7 +1,9 @@
+import { BaseError, type BaseErrorType } from '../../../errors/base.js'
 import type { ErrorType } from '../../../errors/utils.js'
 import type { TronHexAddress } from '../../../types/address.js'
 import type { ByteArray, Hex } from '../../../types/misc.js'
 import { concatBytes } from '../../data/concat.js'
+import { bareHex } from '../../encoding/bareHex.js'
 import { bytesToString } from '../../encoding/fromBytes.js'
 import {
   type HexToBytesErrorType,
@@ -9,9 +11,8 @@ import {
   stringToBytes,
 } from '../../encoding/toBytes.js'
 import { bytesToHex } from '../../encoding/toHex.js'
+import { int64ToJson } from '../int64.js'
 import {
-  type FlexErrorType,
-  flex,
   type NormalizeAddressErrorType,
   normalizeAddress,
 } from '../normalize.js'
@@ -32,31 +33,27 @@ import {
 import type {
   BytesInput,
   ContractAddressInput,
-  FlexInput,
+  Int64,
   UnknownField,
 } from '../types.js'
 
 /**
- * Declarative schema of a single protobuf field of a contract message.
+ * Declarative schema of a single protobuf field of a contract message. The
+ * `name` is the canonical JSON key — the proto field name exactly as
+ * java-tron's JsonFormat renders it. `enum` fields carry their value→name
+ * table (`names[wireValue]`), matching JsonFormat's name rendering.
  *
  * Scalar kinds map to wire types as follows: `i64`/`i32`/`enum`/`bool` →
- * `VARINT` (0); `address`/`bytes`/`string`/`flex`/`message`/
- * `repeated-message` → `LEN` (2).
+ * `VARINT` (0); `address`/`bytes`/`string`/`message`/`repeated-message` →
+ * `LEN` (2).
  */
 export type FieldSpec =
   | {
       no: number
       name: string
-      kind:
-        | 'address'
-        | 'bytes'
-        | 'string'
-        | 'flex'
-        | 'i64'
-        | 'i32'
-        | 'enum'
-        | 'bool'
+      kind: 'address' | 'bytes' | 'string' | 'i64' | 'i32' | 'bool'
     }
+  | { no: number; name: string; kind: 'enum'; names: readonly string[] }
   | { no: number; name: string; kind: 'message'; spec: MessageSpec }
   | { no: number; name: string; kind: 'repeated-message'; spec: MessageSpec }
 
@@ -70,11 +67,11 @@ const twoPow64 = 18446744073709551616n
 
 export type EncodeMessageErrorType =
   | NormalizeAddressErrorType
-  | FlexErrorType
   | HexToBytesErrorType
   | FBytesErrorType
   | FIntErrorType
   | FBoolErrorType
+  | BaseErrorType
   | ErrorType
 
 /**
@@ -82,6 +79,11 @@ export type EncodeMessageErrorType =
  * fields in ascending field-number order, proto3 defaults (zero/empty/false)
  * omitted. `undefined`/`null` values are omitted. The `__unknown` property
  * (produced by `decodeMessage`) is ignored.
+ *
+ * Strict by design: a property that is not in the schema throws. The sign
+ * path verifies a supplied `raw_data` JSON by re-serializing it and
+ * comparing bytes — silently dropping unknown properties would let a JSON
+ * claim fields that are not in the bytes it describes.
  *
  * @param spec Message field schema.
  * @param message Message object (keyed by `FieldSpec.name`).
@@ -91,6 +93,13 @@ export function encodeMessage(
   spec: MessageSpec,
   message: Record<string, unknown>,
 ): ByteArray {
+  for (const key of Object.keys(message))
+    if (
+      message[key] !== undefined &&
+      key !== '__unknown' &&
+      !spec.some((field) => field.name === key)
+    )
+      throw new BaseError(`Unknown contract message field "${key}".`)
   const parts: ByteArray[] = []
   for (const field of [...spec].sort((a, b) => a.no - b.no)) {
     const value = message[field.name]
@@ -109,12 +118,16 @@ function encodeField(field: FieldSpec, value: unknown): ByteArray {
       return fBytes(field.no, bytesInputToBytes(value as BytesInput))
     case 'string':
       return fBytes(field.no, stringToBytes(value as string))
-    case 'flex':
-      return fBytes(field.no, flex(value as FlexInput))
     case 'i64':
     case 'i32':
-    case 'enum':
-      return fInt(field.no, value as bigint | number)
+      return fInt(field.no, int64InputToBigInt(value as Int64))
+    case 'enum': {
+      if (typeof value !== 'string') return fInt(field.no, value as number)
+      const index = field.names.indexOf(value)
+      if (index === -1)
+        throw new BaseError(`Unknown ${field.name} enum name "${value}".`)
+      return fInt(field.no, index)
+    }
     case 'bool':
       return fBool(field.no, Boolean(value))
     case 'message':
@@ -134,6 +147,11 @@ function encodeField(field: FieldSpec, value: unknown): ByteArray {
   }
 }
 
+/** Converts an `int64` input (bigint, number, or decimal string) to bigint. */
+function int64InputToBigInt(value: Int64): bigint {
+  return BigInt(value)
+}
+
 /** Converts a bytes field input (hex or raw bytes) to bytes. */
 function bytesInputToBytes(value: BytesInput): ByteArray {
   if (value instanceof Uint8Array) return value
@@ -143,17 +161,19 @@ function bytesInputToBytes(value: BytesInput): ByteArray {
 export type DecodeMessageErrorType = ReadFieldsErrorType | ErrorType
 
 /**
- * Decodes a message body against its field schema. Tolerant by design:
+ * Decodes a message body against its field schema into the canonical form —
+ * exactly what java-tron's JsonFormat emits for `visible: false`:
  *
+ * - Addresses decode to `41…` bare lowercase hex; `bytes` fields to bare
+ *   lowercase hex (no `0x`).
+ * - `int64` decodes via `int64ToJson` (a JSON number within `±(2^53 − 1)`,
+ *   else a decimal string); `enum` decodes to its name string (falling back
+ *   to the number for values outside the table).
+ * - proto3 defaults are omitted: a field absent from the wire is absent
+ *   from the result (JsonFormat prints only set fields).
  * - Wire fields outside the schema (or with an unexpected wire type) are
- *   collected into `__unknown` instead of throwing.
- * - Missing scalar fields are filled with their proto3 defaults (`0n`, `0`,
- *   `false`, `''`, `'0x'`); missing repeated fields become `[]`; missing
- *   `address` and `message` fields stay absent.
- * - Duplicated non-repeated fields follow last-one-wins.
- *
- * Addresses decode to the TRON hex form (`41…`, no `0x`); bytes decode to
- * `0x`-prefixed hex; `int64` decodes to a signed `bigint`.
+ *   collected into `__unknown` instead of throwing; duplicated
+ *   non-repeated fields follow last-one-wins.
  *
  * @param spec Message field schema.
  * @param bytes Encoded message body.
@@ -176,12 +196,16 @@ export function decodeMessage(
     }
     switch (field.kind) {
       case 'i64':
-        message[field.name] = toInt64(wire.value as bigint)
+        message[field.name] = int64ToJson(toInt64(wire.value as bigint))
         break
       case 'i32':
-      case 'enum':
         message[field.name] = Number(toInt64(wire.value as bigint))
         break
+      case 'enum': {
+        const value = Number(toInt64(wire.value as bigint))
+        message[field.name] = field.names[value] ?? value
+        break
+      }
       case 'bool':
         message[field.name] = (wire.value as bigint) !== 0n
         break
@@ -191,8 +215,7 @@ export function decodeMessage(
         ) as TronHexAddress
         break
       case 'bytes':
-      case 'flex':
-        message[field.name] = bytesToHex(wire.value as ByteArray)
+        message[field.name] = bareHex(wire.value as ByteArray)
         break
       case 'string':
         message[field.name] = bytesToString(wire.value as ByteArray)
@@ -206,35 +229,6 @@ export function decodeMessage(
         message[field.name] = list
         break
       }
-    }
-  }
-
-  for (const field of spec) {
-    if (field.name in message) continue
-    switch (field.kind) {
-      case 'i64':
-        message[field.name] = 0n
-        break
-      case 'i32':
-      case 'enum':
-        message[field.name] = 0
-        break
-      case 'bool':
-        message[field.name] = false
-        break
-      case 'string':
-        message[field.name] = ''
-        break
-      case 'bytes':
-      case 'flex':
-        message[field.name] = '0x'
-        break
-      case 'repeated-message':
-        message[field.name] = []
-        break
-      // 'address' and 'message' fields stay absent when not on the wire.
-      default:
-        break
     }
   }
 

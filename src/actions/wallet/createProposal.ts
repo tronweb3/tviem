@@ -84,14 +84,14 @@ function assemble(
   const account = parseAccount(source)
 
   const value: ProposalCreateContract = {
-    ownerAddress: toHex(account.address),
+    owner_address: toHex(account.address),
     parameters: normalizeParameters(parameters.parameters),
   }
 
   const contract: RawContract = {
     type: ContractType.ProposalCreateContract,
     parameter: {
-      typeUrl: `${contractTypeUrlPrefix}ProposalCreateContract`,
+      type_url: `${contractTypeUrlPrefix}ProposalCreateContract`,
       value,
     },
   }

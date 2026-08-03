@@ -6,10 +6,10 @@
 //   - for owner-matching cases the full signTransaction pipeline is exercised
 //     and its appended signature[0] is diffed byte-for-byte.
 import { describe, expect, test } from 'vitest'
+import type { SignableTransaction } from '../../src/accounts/types.js'
 import { signTransaction } from '../../src/accounts/utils/signTransaction.js'
 import { sign } from '../../src/utils/signature/sign.js'
 import { decodeRawData } from '../../src/utils/transaction/decodeRawData.js'
-import type { RawData } from '../../src/utils/transaction/serializeRawData.js'
 import {
   loadSigFuzzFixtures,
   type SigFuzzTransactionFixture,
@@ -28,10 +28,13 @@ const rawDataHexByTxId = new Map(
   loadTxFixtures().map((f) => [f.txID, f.rawDataHex] as const),
 )
 
-function rawDataFor(txID: string): RawData {
-  const hex = rawDataHexByTxId.get(txID)
-  if (!hex) throw new Error(`no tx fixture for ${txID}`)
-  return decodeRawData(hex)
+// Builds the full consistent { txID, raw_data, raw_data_hex } triple from the
+// fixture's own canonical bytes — identical bytes, identical txID, identical
+// deterministic signature.
+function transactionFor(txID: string): SignableTransaction {
+  const raw_data_hex = rawDataHexByTxId.get(txID)
+  if (!raw_data_hex) throw new Error(`no tx fixture for ${txID}`)
+  return { txID, raw_data: decodeRawData(raw_data_hex), raw_data_hex }
 }
 
 describe('signTransaction fuzz (differential vs TronWeb)', () => {
@@ -52,14 +55,14 @@ describe('signTransaction fuzz (differential vs TronWeb)', () => {
     const raw = sign({ hash: `0x${fixture.txID}`, privateKey }).hex
     expect(raw).toBe(fixture.signature)
 
-    // Full pipeline (only when the signer owns the transaction): the id is
-    // recomputed locally and the appended signature is byte-identical.
+    // Full pipeline (only when the signer owns the transaction): the triple
+    // passes txCheck, txID/raw_data_hex pass through unchanged, and the
+    // appended signature is byte-identical to TronWeb's.
     if (fixture.ownerMatches) {
-      const signed = signTransaction({
-        transaction: { raw_data: rawDataFor(fixture.txID) },
-        privateKey,
-      })
+      const transaction = transactionFor(fixture.txID)
+      const signed = signTransaction({ transaction, privateKey })
       expect(signed.txID).toBe(fixture.txID)
+      expect(signed.raw_data_hex).toBe(transaction.raw_data_hex)
       expect(signed.signature).toEqual([fixture.signature])
     }
   })

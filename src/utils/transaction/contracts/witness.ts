@@ -15,7 +15,7 @@ import {
 
 /** `UpdateBrokerageContract` (type 49) field schema. */
 const updateBrokerageContractSpec: MessageSpec = [
-  { no: 1, name: 'ownerAddress', kind: 'address' },
+  { no: 1, name: 'owner_address', kind: 'address' },
   { no: 2, name: 'brokerage', kind: 'i32' },
 ]
 
@@ -46,8 +46,8 @@ export function decodeUpdateBrokerageContract(
 
 /** `WitnessCreateContract` (type 5) field schema. */
 const witnessCreateContractSpec: MessageSpec = [
-  { no: 1, name: 'ownerAddress', kind: 'address' },
-  { no: 2, name: 'url', kind: 'flex' },
+  { no: 1, name: 'owner_address', kind: 'address' },
+  { no: 2, name: 'url', kind: 'bytes' },
 ]
 
 export type EncodeWitnessCreateContractErrorType =
@@ -77,8 +77,8 @@ export function decodeWitnessCreateContract(
 
 /** `WitnessUpdateContract` (type 8) field schema. */
 const witnessUpdateContractSpec: MessageSpec = [
-  { no: 1, name: 'ownerAddress', kind: 'address' },
-  { no: 12, name: 'updateUrl', kind: 'flex' },
+  { no: 1, name: 'owner_address', kind: 'address' },
+  { no: 12, name: 'update_url', kind: 'bytes' },
 ]
 
 export type EncodeWitnessUpdateContractErrorType =

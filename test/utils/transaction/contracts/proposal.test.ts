@@ -14,7 +14,7 @@ const owner = '417e5f4552091a69125d5dfcb7b8c2659029395bdf' as const
 // proposals.
 test('multi-entry map is emitted in stringified-key order (byte gold)', () => {
   const encoded = encodeProposalCreateContract({
-    ownerAddress: owner,
+    owner_address: owner,
     parameters: [
       { key: 2n, value: 1n },
       { key: 10n, value: 1n },
@@ -27,14 +27,14 @@ test('multi-entry map is emitted in stringified-key order (byte gold)', () => {
 
 test('encoding is independent of caller entry order (canonical)', () => {
   const ascending = encodeProposalCreateContract({
-    ownerAddress: owner,
+    owner_address: owner,
     parameters: [
       { key: 2n, value: 1n },
       { key: 10n, value: 1n },
     ],
   })
   const descending = encodeProposalCreateContract({
-    ownerAddress: owner,
+    owner_address: owner,
     parameters: [
       { key: 10n, value: 1n },
       { key: 2n, value: 1n },
@@ -45,7 +45,7 @@ test('encoding is independent of caller entry order (canonical)', () => {
 
 test('decode reflects the stringified-key order, not numeric', () => {
   const encoded = encodeProposalCreateContract({
-    ownerAddress: owner,
+    owner_address: owner,
     parameters: [
       { key: 2n, value: 1n },
       { key: 10n, value: 1n },
@@ -54,20 +54,20 @@ test('decode reflects the stringified-key order, not numeric', () => {
   const decoded = decodeProposalCreateContract(encoded)
   // "10" sorts before "2" lexicographically; a numeric sort would give [2, 10].
   expect(decoded.parameters).toStrictEqual([
-    { key: 10n, value: 1n },
-    { key: 2n, value: 1n },
+    { key: 10, value: 1 },
+    { key: 2, value: 1 },
   ])
 })
 
 test('a value-0 map entry is force-emitted and round-trips', () => {
   const encoded = encodeProposalCreateContract({
-    ownerAddress: owner,
+    owner_address: owner,
     parameters: [{ key: 5n, value: 0n }],
   })
   // key 5 (0805) + value 0 force-emitted (1000): entry body = 0805 1000,
   // wrapped as map entry 1204 08051000.
   expect(bytesToHex(encoded)).toBe(`0x0a15${owner}120408051000`)
   expect(decodeProposalCreateContract(encoded).parameters).toStrictEqual([
-    { key: 5n, value: 0n },
+    { key: 5, value: 0 },
   ])
 })

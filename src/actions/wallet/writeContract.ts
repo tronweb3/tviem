@@ -73,16 +73,16 @@ function assemble(
 
   // ② build the TriggerSmartContract (addresses enter the body as 41-hex).
   const value: TriggerSmartContract = {
-    ownerAddress: toHex(account.address),
-    contractAddress: toHex(address),
+    owner_address: toHex(account.address),
+    contract_address: toHex(address),
     data,
   }
-  if (callValue !== undefined) value.callValue = callValue
+  if (callValue !== undefined) value.call_value = callValue
 
   const contract: RawContract = {
     type: ContractType.TriggerSmartContract,
     parameter: {
-      typeUrl: `${contractTypeUrlPrefix}TriggerSmartContract`,
+      type_url: `${contractTypeUrlPrefix}TriggerSmartContract`,
       value,
     },
   }

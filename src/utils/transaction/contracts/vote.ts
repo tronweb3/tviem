@@ -11,13 +11,13 @@ import {
 
 /** `Vote` field schema (nested in `VoteWitnessContract`). */
 const voteSpec: MessageSpec = [
-  { no: 1, name: 'voteAddress', kind: 'address' },
-  { no: 2, name: 'voteCount', kind: 'i64' },
+  { no: 1, name: 'vote_address', kind: 'address' },
+  { no: 2, name: 'vote_count', kind: 'i64' },
 ]
 
 /** `VoteWitnessContract` (type 4) field schema. */
 const voteWitnessContractSpec: MessageSpec = [
-  { no: 1, name: 'ownerAddress', kind: 'address' },
+  { no: 1, name: 'owner_address', kind: 'address' },
   { no: 2, name: 'votes', kind: 'repeated-message', spec: voteSpec },
   { no: 3, name: 'support', kind: 'bool' },
 ]

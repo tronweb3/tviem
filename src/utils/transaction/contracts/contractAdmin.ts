@@ -15,8 +15,8 @@ import {
 
 /** `ClearABIContract` (type 48) field schema. */
 const clearABIContractSpec: MessageSpec = [
-  { no: 1, name: 'ownerAddress', kind: 'address' },
-  { no: 2, name: 'contractAddress', kind: 'address' },
+  { no: 1, name: 'owner_address', kind: 'address' },
+  { no: 2, name: 'contract_address', kind: 'address' },
 ]
 
 export type EncodeClearABIContractErrorType = EncodeMessageErrorType | ErrorType
@@ -35,9 +35,9 @@ export function decodeClearABIContract(bytes: ByteArray): ClearABIContract {
 
 /** `UpdateSettingContract` (type 33) field schema. */
 const updateSettingContractSpec: MessageSpec = [
-  { no: 1, name: 'ownerAddress', kind: 'address' },
-  { no: 2, name: 'contractAddress', kind: 'address' },
-  { no: 3, name: 'consumeUserResourcePercent', kind: 'i64' },
+  { no: 1, name: 'owner_address', kind: 'address' },
+  { no: 2, name: 'contract_address', kind: 'address' },
+  { no: 3, name: 'consume_user_resource_percent', kind: 'i64' },
 ]
 
 export type EncodeUpdateSettingContractErrorType =
@@ -67,9 +67,9 @@ export function decodeUpdateSettingContract(
 
 /** `UpdateEnergyLimitContract` (type 45) field schema. */
 const updateEnergyLimitContractSpec: MessageSpec = [
-  { no: 1, name: 'ownerAddress', kind: 'address' },
-  { no: 2, name: 'contractAddress', kind: 'address' },
-  { no: 3, name: 'originEnergyLimit', kind: 'i64' },
+  { no: 1, name: 'owner_address', kind: 'address' },
+  { no: 2, name: 'contract_address', kind: 'address' },
+  { no: 3, name: 'origin_energy_limit', kind: 'i64' },
 ]
 
 export type EncodeUpdateEnergyLimitContractErrorType =

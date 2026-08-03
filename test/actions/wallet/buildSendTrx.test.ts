@@ -82,8 +82,8 @@ test('a custom blockHeader is used verbatim and skips the getnowblock fetch', as
     to,
     amount: 1000000n,
     blockHeader: {
-      refBlockBytes: '1234',
-      refBlockHash: '0102030405060708',
+      ref_block_bytes: '1234',
+      ref_block_hash: '0102030405060708',
       timestamp: blockTimestamp,
       expiration: blockTimestamp + 60000n,
     },
@@ -105,8 +105,8 @@ test('a custom blockHeader with different timing changes the built bytes', async
     to,
     amount: 1000000n,
     blockHeader: {
-      refBlockBytes: '1234',
-      refBlockHash: '0102030405060708',
+      ref_block_bytes: '1234',
+      ref_block_hash: '0102030405060708',
       timestamp: blockTimestamp + 1000n,
       expiration: blockTimestamp + 61000n,
     },

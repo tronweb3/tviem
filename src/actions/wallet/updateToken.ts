@@ -4,6 +4,7 @@ import { AccountNotFoundError } from '../../errors/rpc.js'
 import { parseAccount } from '../../types/account.js'
 import type { Hex } from '../../types/misc.js'
 import { toHex } from '../../utils/address/toHex.js'
+import { type FlexInput, flexToHex } from '../../utils/transaction/normalize.js'
 import {
   ContractType,
   contractTypeUrlPrefix,
@@ -13,10 +14,7 @@ import {
   type NodeTransaction,
   toNodeTransaction,
 } from '../../utils/transaction/toNodeTransaction.js'
-import type {
-  FlexInput,
-  UpdateAssetContract,
-} from '../../utils/transaction/types.js'
+import type { UpdateAssetContract } from '../../utils/transaction/types.js'
 import {
   type BuildAndBroadcastReturnType,
   buildAndBroadcast,
@@ -64,17 +62,17 @@ function assemble(
   const account = parseAccount(source)
 
   const value: UpdateAssetContract = {
-    ownerAddress: toHex(account.address),
-    description,
-    url,
-    newLimit,
-    newPublicLimit,
+    owner_address: toHex(account.address),
+    description: flexToHex(description),
+    url: flexToHex(url),
+    new_limit: newLimit,
+    new_public_limit: newPublicLimit,
   }
 
   const contract: RawContract = {
     type: ContractType.UpdateAssetContract,
     parameter: {
-      typeUrl: `${contractTypeUrlPrefix}UpdateAssetContract`,
+      type_url: `${contractTypeUrlPrefix}UpdateAssetContract`,
       value,
     },
   }

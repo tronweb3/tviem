@@ -39,10 +39,11 @@ describe('rpc fixtures loader', () => {
       blockID: string
       block_header: { raw_data: { number: number } }
     }>('getnowblock.fixed')
-    const { refBlockBytes, refBlockHash } = deriveRefBlockParams(
-      response.block_header.raw_data.number,
-      response.blockID,
-    )
+    const { ref_block_bytes: refBlockBytes, ref_block_hash: refBlockHash } =
+      deriveRefBlockParams(
+        response.block_header.raw_data.number,
+        response.blockID,
+      )
     const transfer = loadTxFixtureFile('transfer-contract.json')[0]!
     const rawData = transfer.rawData as {
       ref_block_bytes: string

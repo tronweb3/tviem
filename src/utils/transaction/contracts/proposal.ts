@@ -33,7 +33,7 @@ const proposalParameterSpec: MessageSpec = [
 
 /** `ProposalCreateContract` (type 16) field schema (decode path). */
 const proposalCreateContractSpec: MessageSpec = [
-  { no: 1, name: 'ownerAddress', kind: 'address' },
+  { no: 1, name: 'owner_address', kind: 'address' },
   {
     no: 2,
     name: 'parameters',
@@ -64,7 +64,7 @@ export function encodeProposalCreateContract(
   message: ProposalCreateContract,
 ): ByteArray {
   const parts: ByteArray[] = [
-    fBytes(1, normalizeAddress(message.ownerAddress as ContractAddressInput)),
+    fBytes(1, normalizeAddress(message.owner_address as ContractAddressInput)),
   ]
   // `parameters` is a `map<int64,int64>`: each entry force-emits key + value.
   // A protobuf map serializes its entries sorted by the STRINGIFIED key in
@@ -78,8 +78,8 @@ export function encodeProposalCreateContract(
   })
   for (const entry of entries) {
     const body = concatBytes([
-      fIntMapEntry(1, entry.key),
-      fIntMapEntry(2, entry.value),
+      fIntMapEntry(1, BigInt(entry.key)),
+      fIntMapEntry(2, BigInt(entry.value)),
     ])
     parts.push(fMessage(2, body, { emitDefault: true }))
   }
@@ -102,9 +102,9 @@ export function decodeProposalCreateContract(
 
 /** `ProposalApproveContract` (type 17) field schema. */
 const proposalApproveContractSpec: MessageSpec = [
-  { no: 1, name: 'ownerAddress', kind: 'address' },
-  { no: 2, name: 'proposalId', kind: 'i64' },
-  { no: 3, name: 'isAddApproval', kind: 'bool' },
+  { no: 1, name: 'owner_address', kind: 'address' },
+  { no: 2, name: 'proposal_id', kind: 'i64' },
+  { no: 3, name: 'is_add_approval', kind: 'bool' },
 ]
 
 export type EncodeProposalApproveContractErrorType =
@@ -134,8 +134,8 @@ export function decodeProposalApproveContract(
 
 /** `ProposalDeleteContract` (type 18) field schema. */
 const proposalDeleteContractSpec: MessageSpec = [
-  { no: 1, name: 'ownerAddress', kind: 'address' },
-  { no: 2, name: 'proposalId', kind: 'i64' },
+  { no: 1, name: 'owner_address', kind: 'address' },
+  { no: 2, name: 'proposal_id', kind: 'i64' },
 ]
 
 export type EncodeProposalDeleteContractErrorType =

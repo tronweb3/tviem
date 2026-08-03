@@ -65,17 +65,17 @@ function assemble(
 
   // Build the VoteWitnessContract (addresses enter the body as 41-hex).
   const value: VoteWitnessContract = {
-    ownerAddress: toHex(account.address),
+    owner_address: toHex(account.address),
     votes: votes.map((vote) => ({
-      voteAddress: toHex(vote.voteAddress),
-      voteCount: vote.voteCount,
+      vote_address: toHex(vote.voteAddress),
+      vote_count: vote.voteCount,
     })),
   }
 
   const contract: RawContract = {
     type: ContractType.VoteWitnessContract,
     parameter: {
-      typeUrl: `${contractTypeUrlPrefix}VoteWitnessContract`,
+      type_url: `${contractTypeUrlPrefix}VoteWitnessContract`,
       value,
     },
   }

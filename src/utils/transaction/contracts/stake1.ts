@@ -4,6 +4,7 @@ import type {
   FreezeBalanceContract,
   UnfreezeBalanceContract,
 } from '../types.js'
+import { ResourceCodeName } from '../types.js'
 import {
   type DecodeMessageErrorType,
   decodeMessage,
@@ -14,11 +15,11 @@ import {
 
 /** `FreezeBalanceContract` (type 11, Stake 1.0) field schema. */
 const freezeBalanceContractSpec: MessageSpec = [
-  { no: 1, name: 'ownerAddress', kind: 'address' },
-  { no: 2, name: 'frozenBalance', kind: 'i64' },
-  { no: 3, name: 'frozenDuration', kind: 'i64' },
-  { no: 10, name: 'resource', kind: 'enum' },
-  { no: 15, name: 'receiverAddress', kind: 'address' },
+  { no: 1, name: 'owner_address', kind: 'address' },
+  { no: 2, name: 'frozen_balance', kind: 'i64' },
+  { no: 3, name: 'frozen_duration', kind: 'i64' },
+  { no: 10, name: 'resource', kind: 'enum', names: ResourceCodeName },
+  { no: 15, name: 'receiver_address', kind: 'address' },
 ]
 
 export type EncodeFreezeBalanceContractErrorType =
@@ -48,9 +49,9 @@ export function decodeFreezeBalanceContract(
 
 /** `UnfreezeBalanceContract` (type 12, Stake 1.0) field schema. */
 const unfreezeBalanceContractSpec: MessageSpec = [
-  { no: 1, name: 'ownerAddress', kind: 'address' },
-  { no: 10, name: 'resource', kind: 'enum' },
-  { no: 15, name: 'receiverAddress', kind: 'address' },
+  { no: 1, name: 'owner_address', kind: 'address' },
+  { no: 10, name: 'resource', kind: 'enum', names: ResourceCodeName },
+  { no: 15, name: 'receiver_address', kind: 'address' },
 ]
 
 export type EncodeUnfreezeBalanceContractErrorType =

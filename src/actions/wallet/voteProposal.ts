@@ -61,15 +61,15 @@ function assemble(
   const account = parseAccount(source)
 
   const value: ProposalApproveContract = {
-    ownerAddress: toHex(account.address),
-    proposalId: BigInt(proposalId),
-    isAddApproval: isApproval ?? true,
+    owner_address: toHex(account.address),
+    proposal_id: BigInt(proposalId),
+    is_add_approval: isApproval ?? true,
   }
 
   const contract: RawContract = {
     type: ContractType.ProposalApproveContract,
     parameter: {
-      typeUrl: `${contractTypeUrlPrefix}ProposalApproveContract`,
+      type_url: `${contractTypeUrlPrefix}ProposalApproveContract`,
       value,
     },
   }
