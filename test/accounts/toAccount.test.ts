@@ -17,10 +17,14 @@ const canonicalSig =
 const helloWorldSig =
   '0x0dc0b53d525e0103a6013061cf18e60cf158809149f2b8994a545af65a7004cb1eeaff560e801ab51b28df5d42549aa024c2aa7e9d34de1e01294b9afb5e6c7e1c'
 
-const canonicalRawData = () => {
+const canonicalTransaction = () => {
   const fixture = loadTxFixtures().find((f) => f.txID === txID)
   if (!fixture) throw new Error('canonical fixture missing')
-  return decodeRawData(fixture.rawDataHex)
+  return {
+    txID: fixture.txID,
+    raw_data: decodeRawData(fixture.rawDataHex),
+    raw_data_hex: fixture.rawDataHex,
+  }
 }
 
 describe('toAccount', () => {
@@ -69,7 +73,7 @@ describe('toAccount', () => {
     expect(account.signMessage({ message: 'hello world' }).serialized).toBe(
       helloWorldSig,
     )
-    const signed = account.signTransaction({ raw_data: canonicalRawData() })
+    const signed = account.signTransaction(canonicalTransaction())
     expect(signed.txID).toBe(txID)
     expect(signed.signature).toEqual([canonicalSig])
   })

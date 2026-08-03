@@ -54,6 +54,12 @@ test.each(cases)('differential vs TronWeb gold: $name', (fixture) => {
   // decodeRawData is a stable deep round-trip through our codec.
   expect(decodeRawData(serializeRawData(model))).toStrictEqual(model)
 
-  // The (rawDataHex, txID) pair is self-consistent.
-  expect(txCheck(fixture.rawDataHex, fixture.txID)).toBe(true)
+  // The (raw_data, rawDataHex, txID) triple is self-consistent.
+  expect(
+    txCheck({
+      txID: fixture.txID,
+      raw_data: model,
+      raw_data_hex: fixture.rawDataHex,
+    }),
+  ).toBe(true)
 })

@@ -3,8 +3,11 @@ import type { SignableTransaction } from '../../../src/accounts/types.js'
 import { assertUnchangedTransaction } from '../../../src/actions/utils/assertUnchangedTransaction.js'
 import { TransactionTamperedError } from '../../../src/errors/rpc.js'
 
+// The comparison covers only `txID` and `raw_data_hex` — the `raw_data`
+// model is present to satisfy the full-triple `SignableTransaction` shape.
 const local: SignableTransaction = {
   txID: 'aabbccdd',
+  raw_data: { contract: [] },
   raw_data_hex: '0a02deadbeef',
 }
 

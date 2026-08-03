@@ -7,25 +7,27 @@ import type { Client } from '../../clients/createClient.js'
 import { BaseError, type BaseErrorType } from '../../errors/base.js'
 import type { ErrorType } from '../../errors/utils.js'
 import type { Hex } from '../../types/misc.js'
-import {
-  type ResolveRawDataErrorType,
-  resolveRawData,
-} from '../../utils/transaction/nodeRawData.js'
+import { getTransactionId, toRawDataHex } from '../../utils/index.js'
+import { txCheck } from '../../utils/transaction/txCheck.js'
 
 export type MultiSignParameters = {
   /** The transaction to co-sign — fresh or already carrying other signatures. */
   transaction: SignableTransaction
   /** A signer's secp256k1 private key, `0x`-prefixed or bare hex. */
   privateKey: Hex | string
-  /** The active/owner permission id (`Permission.id`) this signature is for. */
-  permissionId: number
+  /**
+   * The active/owner permission id (`Permission.id`) this signature is for.
+   * Defaults to the id already baked into the transaction
+   * (`contract[0].Permission_id`); absent everywhere means the owner
+   * permission (id 0).
+   */
+  permissionId?: number
 }
 
 export type MultiSignReturnType = SignableTransaction
 
 export type MultiSignErrorType =
   | SignTransactionErrorType
-  | ResolveRawDataErrorType
   | BaseErrorType
   | ErrorType
 
@@ -36,10 +38,12 @@ export type MultiSignErrorType =
  * air-gapped and can never be influenced by a node (the flaw in TronWeb's
  * `multiSign`, which adopts and signs the transaction the node hands back).
  *
- * The multi-sig guards live here (the underlying `signTransaction` writes a
- * given `permissionId` unconditionally — the low-level escape hatch):
- * - `permissionId` must be a non-negative integer, and the transaction must
- *   carry a `raw_data` (or `raw_data_hex`) to bind it into;
+ * The multi-sig guards AND the bind live here; the transaction must arrive
+ * as a self-consistent `txID` + `raw_data` + `raw_data_hex` triple (it is
+ * gated by `txCheck`, like every signing path):
+ * - `permissionId` must be a non-negative integer when given; when omitted
+ *   it adopts the id already baked into `contract[0]` (absent = the owner
+ *   permission, id 0);
  * - a transaction already bound to a **different** permission id throws — a
  *   re-bind would change the txID and orphan every collected signature; an
  *   equal, already-baked id is idempotent;
@@ -47,10 +51,14 @@ export type MultiSignErrorType =
  *   signatures throws (they would go stale; id 0 encodes to nothing, so an
  *   owner-permission co-sign of signed bytes stays allowed).
  *
- * Signing itself is delegated to {@link signTransaction}: the txID is always
- * recomputed locally from `raw_data` (a node-supplied id is never trusted),
- * the owner-address guard is skipped so a non-owner co-signer can sign, and
- * this key's signature is de-duplicated (hex-case-insensitively).
+ * A fresh bind changes the serialized bytes, so `txID` and `raw_data_hex`
+ * are recomputed locally from the bound model (a node-supplied id is never
+ * trusted; the recompute is a no-op when nothing was bound) before
+ * delegating to {@link signTransaction}, which re-verifies the triple and
+ * signs. Its owner guard is satisfied by passing the transaction's own
+ * `owner_address` as the expected address — that is what lets a non-owner
+ * co-signer sign here — and this key's signature is de-duplicated
+ * (hex-case-insensitively).
  *
  * The canonical flow bakes the permission id at build time (`buildX(...,
  * { permissionId })`), so every signer — first or later — signs offline with
@@ -61,31 +69,31 @@ export type MultiSignErrorType =
  *
  * @param _client The Client (unused — signing is local; kept for the action
  * calling convention).
- * @param parameters Transaction, a signer's private key, the permission id.
+ * @param parameters Transaction, a signer's private key, and optionally the
+ * permission id (defaults to the baked one).
  * @returns A new {@link SignableTransaction} with this signature appended.
  */
 export async function multiSign(
   _client: Client,
   parameters: MultiSignParameters,
 ): Promise<MultiSignReturnType> {
-  const { transaction, privateKey, permissionId } = parameters
+  const { transaction, privateKey } = parameters
 
-  if (!Number.isInteger(permissionId) || permissionId < 0)
+  if (!txCheck(transaction))
+    throw new BaseError('The transaction failed its integrity check (txCheck).')
+
+  const { raw_data } = transaction
+
+  const permissionId = parameters.permissionId ?? raw_data.contract[0]?.Permission_id
+
+  if (permissionId !== undefined && (!Number.isInteger(permissionId) || permissionId < 0))
     throw new BaseError(
       `Invalid multi-sig permission id: ${permissionId}. Expected a non-negative integer (an active permission's id is >= 2).`,
     )
 
-  // Resolves either dialect (SDK model or node JSON) to the model; a node
-  // JSON is verified against its raw_data_hex bytes.
-  const rawData = resolveRawData(transaction)
-  if (!rawData)
-    throw new BaseError(
-      'Cannot bind a permission id: the transaction carries no `raw_data` (or `raw_data_hex`) to write it into.',
-    )
-
   // A transaction already bound to a different id is never re-bound — that
   // would change the txID and orphan every collected signature.
-  for (const contract of rawData.contract)
+  for (const contract of raw_data.contract)
     if (
       contract.Permission_id !== undefined &&
       contract.Permission_id !== permissionId
@@ -97,12 +105,35 @@ export async function multiSign(
   // A fresh positive bind changes the serialized bytes (id 0 encodes to
   // nothing), so signatures collected over the unbound bytes would go stale.
   const binds =
+    permissionId !== undefined &&
     permissionId > 0 &&
-    rawData.contract.some((contract) => contract.Permission_id === undefined)
+    raw_data.contract.some((contract) => contract.Permission_id === undefined)
+
   if (binds && transaction.signature?.length)
     throw new BaseError(
       `Cannot bind permission id ${permissionId}: the transaction already carries ${transaction.signature.length} signature(s) over the unbound bytes; binding now would invalidate them.`,
     )
 
-  return signTransaction({ transaction, privateKey, permissionId })
+  // All guards passed — write the permission id into every contract. A fresh
+  // bind changes the bytes, so txID and raw_data_hex are recomputed from the
+  // bound model below (a no-op recompute when nothing was bound).
+  const bound = binds
+    ? {
+      ...raw_data,
+      contract: raw_data.contract.map((contract) => ({
+        ...contract,
+        Permission_id: permissionId,
+      })),
+    } : raw_data
+
+  return signTransaction({
+    transaction: {
+      ...transaction,
+      txID: getTransactionId(bound),
+      raw_data: bound,
+      raw_data_hex: toRawDataHex(bound),
+    },
+    privateKey,
+    address: (raw_data.contract[0]?.parameter.value as any).owner_address,
+  })
 }
