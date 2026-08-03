@@ -1,7 +1,6 @@
-import type { Abi, AbiEvent, AbiParameter } from 'abitype'
+import type { AbiEvent, AbiParameter } from 'abitype'
 
 import type { Hex } from '../types/misc.js'
-import { formatAbiItem, formatAbiParams } from '../utils/abi/formatAbiItem.js'
 import { size } from '../utils/data/size.js'
 
 import { BaseError } from './base.js'
@@ -74,16 +73,22 @@ export class AbiDecodingDataSizeTooSmallError extends BaseError {
 
   constructor({
     data,
+    formattedParams,
     params,
     size,
-  }: { data: Hex; params: readonly AbiParameter[]; size: number }) {
+  }: {
+    data: Hex
+    formattedParams: string
+    params: readonly AbiParameter[]
+    size: number
+  }) {
     super(
       [`Data size of ${size} bytes is too small for given parameters.`].join(
         '\n',
       ),
       {
         metaMessages: [
-          `Params: (${formatAbiParams(params, { includeName: true })})`,
+          `Params: (${formattedParams})`,
           `Data:   ${data} (${size} bytes)`,
         ],
         name: 'AbiDecodingDataSizeTooSmallError',
@@ -354,13 +359,13 @@ export type AbiItemAmbiguityErrorType = AbiItemAmbiguityError & {
 }
 export class AbiItemAmbiguityError extends BaseError {
   constructor(
-    x: { abiItem: Abi[number]; type: string },
-    y: { abiItem: Abi[number]; type: string },
+    x: { formattedAbiItem: string; type: string },
+    y: { formattedAbiItem: string; type: string },
   ) {
     super('Found ambiguous types in overloaded ABI items.', {
       metaMessages: [
-        `\`${x.type}\` in \`${formatAbiItem(x.abiItem)}\`, and`,
-        `\`${y.type}\` in \`${formatAbiItem(y.abiItem)}\``,
+        `\`${x.type}\` in \`${x.formattedAbiItem}\`, and`,
+        `\`${y.type}\` in \`${y.formattedAbiItem}\``,
         '',
         'These types encode differently and cannot be distinguished at runtime.',
         'Remove one of the ambiguous items in the ABI.',
@@ -396,11 +401,13 @@ export class DecodeLogDataMismatch extends BaseError {
   constructor({
     abiItem,
     data,
+    formattedParams,
     params,
     size,
   }: {
     abiItem: AbiEvent
     data: Hex
+    formattedParams: string
     params: readonly AbiParameter[]
     size: number
   }) {
@@ -410,7 +417,7 @@ export class DecodeLogDataMismatch extends BaseError {
       ].join('\n'),
       {
         metaMessages: [
-          `Params: (${formatAbiParams(params, { includeName: true })})`,
+          `Params: (${formattedParams})`,
           `Data:   ${data} (${size} bytes)`,
         ],
         name: 'DecodeLogDataMismatch',
@@ -432,16 +439,18 @@ export class DecodeLogTopicsMismatch extends BaseError {
 
   constructor({
     abiItem,
+    formattedAbiItem,
     param,
   }: {
     abiItem: AbiEvent
+    formattedAbiItem: string
     param: AbiParameter & { indexed: boolean }
   }) {
     super(
       [
         `Expected a topic for indexed event parameter${
           param.name ? ` "${param.name}"` : ''
-        } on event "${formatAbiItem(abiItem, { includeName: true })}".`,
+        } on event "${formattedAbiItem}".`,
       ].join('\n'),
       { name: 'DecodeLogTopicsMismatch' },
     )

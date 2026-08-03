@@ -30,6 +30,7 @@ test('AbiDecodingDataSizeTooSmallError', () => {
   expect(
     new AbiDecodingDataSizeTooSmallError({
       data: '0x1234',
+      formattedParams: 'uint256 a, uint256 b',
       params: [
         { name: 'a', type: 'uint256' },
         { name: 'b', type: 'uint256' },
@@ -112,6 +113,7 @@ test('DecodeLogDataMismatch', () => {
         type: 'event',
       },
       data: '0x1234',
+      formattedParams: 'uint256 a, uint256 b',
       params: [
         { name: 'a', type: 'uint256' },
         { name: 'b', type: 'uint256' },
@@ -153,6 +155,7 @@ describe('DecodeLogTopicsMismatch', () => {
           name: 'Transfer',
           type: 'event',
         },
+        formattedAbiItem: 'Transfer(address from, address to, uint256 id)',
         param: {
           indexed: true,
           name: 'id',
@@ -187,6 +190,7 @@ describe('DecodeLogTopicsMismatch', () => {
           name: 'Transfer',
           type: 'event',
         },
+        formattedAbiItem: 'Transfer(address, address, uint256)',
         param: {
           indexed: true,
           type: 'uint256',

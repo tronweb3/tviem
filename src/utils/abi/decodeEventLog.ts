@@ -24,7 +24,7 @@ import {
   decodeAbiParameters,
 } from './decodeAbiParameters.js'
 import { getArrayComponents } from './encodeAbiParameters.js'
-import { formatAbiItem } from './formatAbiItem.js'
+import { formatAbiItem, formatAbiParams } from './formatAbiItem.js'
 
 export type DecodeEventLogParameters = {
   /** ABI containing the event definition. */
@@ -98,6 +98,7 @@ export function decodeEventLog(
     if (topic === undefined)
       throw new DecodeLogTopicsMismatch({
         abiItem,
+        formattedAbiItem: formatAbiItem(abiItem, { includeName: true }),
         param: input as AbiParameter & { indexed: boolean },
       })
     setArg(input, i, decodeTopic(input, topic))
@@ -121,6 +122,9 @@ export function decodeEventLog(
       throw new DecodeLogDataMismatch({
         abiItem,
         data: data ?? '0x',
+        formattedParams: formatAbiParams(nonIndexedInputs, {
+          includeName: true,
+        }),
         params: nonIndexedInputs,
         size: data ? size(data) : 0,
       })

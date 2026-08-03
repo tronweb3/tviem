@@ -16,6 +16,7 @@ import { isAddress } from '../address/isAddress.js'
 import { isHex } from '../data/isHex.js'
 import { toEventSelector } from '../hash/toEventSelector.js'
 import { toFunctionSelector } from '../hash/toFunctionSelector.js'
+import { formatAbiItem } from './formatAbiItem.js'
 
 export type GetAbiItemParameters<
   abi extends Abi | readonly unknown[] = Abi,
@@ -119,8 +120,14 @@ export function getAbiItem<
         )
         if (ambiguousTypes)
           throw new AbiItemAmbiguityError(
-            { abiItem, type: ambiguousTypes[0]! },
-            { abiItem: matchedAbiItem, type: ambiguousTypes[1]! },
+            {
+              formattedAbiItem: formatAbiItem(abiItem),
+              type: ambiguousTypes[0]!,
+            },
+            {
+              formattedAbiItem: formatAbiItem(matchedAbiItem),
+              type: ambiguousTypes[1]!,
+            },
           )
       }
       // Advance to this match so the next candidate is disambiguated against

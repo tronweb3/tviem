@@ -36,6 +36,7 @@ import {
   getArrayComponents,
   type TronAbiParametersToPrimitiveTypes,
 } from './encodeAbiParameters.js'
+import { formatAbiParams } from './formatAbiItem.js'
 
 export type DecodeAbiParametersReturnType<
   params extends
@@ -86,6 +87,9 @@ export function decodeAbiParameters<
   if (bytes.length > 0 && bytes.length < 32 * params.length)
     throw new AbiDecodingDataSizeTooSmallError({
       data: typeof data === 'string' ? data : bytesToHex(data),
+      formattedParams: formatAbiParams(params as readonly AbiParameter[], {
+        includeName: true,
+      }),
       params: params as readonly AbiParameter[],
       size: bytes.length,
     })
