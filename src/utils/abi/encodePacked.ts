@@ -33,12 +33,15 @@ import {
   type TronAbiParameterToPrimitiveType,
 } from './encodeAbiParameters.js'
 
-/** Runtime types accepted by `encodePacked`. */
-export type PackedAbiType = AbiType
+/**
+ * Runtime types accepted by `encodePacked`. Includes the TRON-native
+ * `trcToken`, which packs exactly like `uint256`.
+ */
+export type PackedAbiType = AbiType | 'trcToken'
 
 /** Positional primitive types for a list of packable ABI types. */
 export type EncodePackedValues<types extends readonly unknown[]> = {
-  [key in keyof types]: types[key] extends AbiType
+  [key in keyof types]: types[key] extends PackedAbiType
     ? TronAbiParameterToPrimitiveType<{ type: types[key] }, 'inputs'>
     : unknown
 }
@@ -65,7 +68,8 @@ export type EncodePackedErrorType =
  * Packing rules:
  * - static types occupy their own natural width — `address` is 20 bytes
  *   (TRON forms are converted to their EVM 20-byte body first), `uintN`/`intN`
- *   is `N / 8` bytes, `bool` is 1 byte, `bytesN` is `N` bytes;
+ *   is `N / 8` bytes, the TRON-native `trcToken` packs as a full 32-byte word
+ *   (like `uint256`), `bool` is 1 byte, `bytesN` is `N` bytes;
  * - dynamic `bytes` and `string` are emitted raw with no padding;
  * - array elements are each padded to a full 32-byte word;
  * - nested dynamic types, nested arrays, and tuples are not packable and throw.
@@ -99,6 +103,8 @@ export function encodePacked<
 // Internal
 
 function encode(type: string, value: unknown, isArray = false): Hex {
+  // `trcToken` packs exactly like `uint256` — delegate to the integer path.
+  if (type === 'trcToken') return encode('uint256', value, isArray)
   if (type === 'address') {
     const hex = addressToHex(value as AddressInput)
     return isArray ? padHex(hex, { size: 32 }) : hex

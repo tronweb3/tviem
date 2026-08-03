@@ -67,6 +67,33 @@ describe('encodePacked (units)', () => {
     )
   })
 
+  test('trcToken packs exactly like uint256', () => {
+    // A lone `trcToken` occupies a full 32-byte word.
+    expect(encodePacked(['trcToken'], [1002000n])).toBe(
+      '0x00000000000000000000000000000000000000000000000000000000000f4a10',
+    )
+    // Byte-identical to the equivalent uint256 encoding — scalar, array, and
+    // when mixed with other packed types. (No `as never`: the widened
+    // `PackedAbiType` types `trcToken` values as `bigint | number`.)
+    expect(encodePacked(['trcToken'], [1002000n])).toBe(
+      encodePacked(['uint256'], [1002000n]),
+    )
+    expect(encodePacked(['trcToken[]'], [[1n, 1002000n]])).toBe(
+      encodePacked(['uint256[]'], [[1n, 1002000n]]),
+    )
+    expect(
+      encodePacked(
+        ['address', 'trcToken'],
+        ['TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t', 1002000n],
+      ),
+    ).toBe(
+      encodePacked(
+        ['address', 'uint256'],
+        ['TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t', 1002000n],
+      ),
+    )
+  })
+
   test('rejects unpackable nested dynamic / tuple types', () => {
     expect(() => encodePacked(['tuple'], [[1n]] as never)).toThrow(
       UnsupportedPackedAbiType,
