@@ -98,7 +98,7 @@ export function signTransaction(
     throw new BaseError(
       `The transaction's owner_address does not match the signing account (${address}).`,
     )
-  
+
   const sig = sign({ hash: `0x${txID}`, privateKey }).hex
   const existing = transaction.signature ?? []
   const signature = existing.some((s) => s.toLowerCase() === sig)

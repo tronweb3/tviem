@@ -84,9 +84,13 @@ export async function multiSign(
 
   const { raw_data } = transaction
 
-  const permissionId = parameters.permissionId ?? raw_data.contract[0]?.Permission_id
+  const permissionId =
+    parameters.permissionId ?? raw_data.contract[0]?.Permission_id
 
-  if (permissionId !== undefined && (!Number.isInteger(permissionId) || permissionId < 0))
+  if (
+    permissionId !== undefined &&
+    (!Number.isInteger(permissionId) || permissionId < 0)
+  )
     throw new BaseError(
       `Invalid multi-sig permission id: ${permissionId}. Expected a non-negative integer (an active permission's id is >= 2).`,
     )
@@ -119,12 +123,13 @@ export async function multiSign(
   // bound model below (a no-op recompute when nothing was bound).
   const bound = binds
     ? {
-      ...raw_data,
-      contract: raw_data.contract.map((contract) => ({
-        ...contract,
-        Permission_id: permissionId,
-      })),
-    } : raw_data
+        ...raw_data,
+        contract: raw_data.contract.map((contract) => ({
+          ...contract,
+          Permission_id: permissionId,
+        })),
+      }
+    : raw_data
 
   return signTransaction({
     transaction: {
