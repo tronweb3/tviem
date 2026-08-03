@@ -6,7 +6,7 @@ test('BaseError', () => {
   expect(new BaseError('An error occurred.')).toMatchInlineSnapshot(`
     [BaseError: An error occurred.
 
-    Version: @tronweb3/tviem@0.1.0]
+    Version: @tronweb3/tviem@1.0.0-beta.1]
   `)
 
   expect(
@@ -15,14 +15,14 @@ test('BaseError', () => {
     [BaseError: An error occurred.
 
     Details: details
-    Version: @tronweb3/tviem@0.1.0]
+    Version: @tronweb3/tviem@1.0.0-beta.1]
   `)
 
   expect(new BaseError('', { details: 'details' })).toMatchInlineSnapshot(`
     [BaseError: An error occurred.
 
     Details: details
-    Version: @tronweb3/tviem@0.1.0]
+    Version: @tronweb3/tviem@1.0.0-beta.1]
   `)
 })
 
@@ -37,7 +37,7 @@ test('BaseError (w/ docsPath)', () => {
 
     Docs: https://github.com/tronweb3/tviem/lol
     Details: details
-    Version: @tronweb3/tviem@0.1.0]
+    Version: @tronweb3/tviem@1.0.0-beta.1]
   `)
   expect(
     new BaseError('An error occurred.', {
@@ -47,7 +47,7 @@ test('BaseError (w/ docsPath)', () => {
     [BaseError: An error occurred.
 
     Docs: https://github.com/tronweb3/tviem/docs
-    Version: @tronweb3/tviem@0.1.0]
+    Version: @tronweb3/tviem@1.0.0-beta.1]
   `)
   expect(
     new BaseError('An error occurred.', {
@@ -58,7 +58,7 @@ test('BaseError (w/ docsPath)', () => {
     [BaseError: An error occurred.
 
     Docs: https://github.com/tronweb3/tviem/lol
-    Version: @tronweb3/tviem@0.1.0]
+    Version: @tronweb3/tviem@1.0.0-beta.1]
   `)
   expect(
     new BaseError('An error occurred.', {
@@ -70,7 +70,7 @@ test('BaseError (w/ docsPath)', () => {
 
     Docs: https://github.com/tronweb3/tviem/lol
     Details: details
-    Version: @tronweb3/tviem@0.1.0]
+    Version: @tronweb3/tviem@1.0.0-beta.1]
   `)
 })
 
@@ -86,7 +86,7 @@ test('BaseError (w/ docsBaseUrl)', () => {
 
     Docs: https://test/lol
     Details: details
-    Version: @tronweb3/tviem@0.1.0]
+    Version: @tronweb3/tviem@1.0.0-beta.1]
   `)
 })
 
@@ -103,7 +103,7 @@ test('BaseError (w/ metaMessages)', () => {
     Cause: lol
 
     Details: details
-    Version: @tronweb3/tviem@0.1.0]
+    Version: @tronweb3/tviem@1.0.0-beta.1]
   `)
 })
 
@@ -121,7 +121,7 @@ test('inherited BaseError', () => {
 
     Docs: https://github.com/tronweb3/tviem/lol
     Details: details
-    Version: @tronweb3/tviem@0.1.0]
+    Version: @tronweb3/tviem@1.0.0-beta.1]
   `)
 })
 
@@ -137,7 +137,7 @@ test('inherited Error', () => {
 
     Docs: https://github.com/tronweb3/tviem/lol
     Details: details
-    Version: @tronweb3/tviem@0.1.0]
+    Version: @tronweb3/tviem@1.0.0-beta.1]
   `)
 })
 
@@ -151,7 +151,7 @@ test('walk: no predicate fn (walks to leaf)', () => {
   expect(err.walk()).toMatchInlineSnapshot(`
     [BaseError: test3
 
-    Version: @tronweb3/tviem@0.1.0]
+    Version: @tronweb3/tviem@1.0.0-beta.1]
   `)
 })
 
@@ -165,7 +165,7 @@ test('walk: predicate fn', () => {
   expect(err.walk((err) => err instanceof FooError)).toMatchInlineSnapshot(`
     [BaseError: test2
 
-    Version: @tronweb3/tviem@0.1.0]
+    Version: @tronweb3/tviem@1.0.0-beta.1]
   `)
 })
 

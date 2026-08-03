@@ -49,7 +49,7 @@ describe('converts bytes to number', () => {
     ).toThrowErrorMatchingInlineSnapshot(`
       [SizeOverflowError: Size cannot exceed 32 bytes. Given size: 64 bytes.
 
-      Version: @tronweb3/tviem@0.1.0]
+      Version: @tronweb3/tviem@1.0.0-beta.1]
     `)
   })
 })
@@ -107,7 +107,7 @@ describe('converts bytes to bigint', () => {
     ).toThrowErrorMatchingInlineSnapshot(`
       [SizeOverflowError: Size cannot exceed 32 bytes. Given size: 64 bytes.
 
-      Version: @tronweb3/tviem@0.1.0]
+      Version: @tronweb3/tviem@1.0.0-beta.1]
     `)
   })
 })
@@ -142,7 +142,7 @@ describe('converts bytes to boolean', () => {
     ).toThrowErrorMatchingInlineSnapshot(`
       [SizeOverflowError: Size cannot exceed 32 bytes. Given size: 64 bytes.
 
-      Version: @tronweb3/tviem@0.1.0]
+      Version: @tronweb3/tviem@1.0.0-beta.1]
     `)
   })
 
@@ -152,14 +152,14 @@ describe('converts bytes to boolean', () => {
     ).toThrowErrorMatchingInlineSnapshot(`
       [InvalidBytesBooleanError: Bytes value "69" is not a valid boolean. The bytes array must contain a single byte of either a 0 or 1 value.
 
-      Version: @tronweb3/tviem@0.1.0]
+      Version: @tronweb3/tviem@1.0.0-beta.1]
     `)
     expect(() =>
       bytesToBool(new Uint8Array([1, 2])),
     ).toThrowErrorMatchingInlineSnapshot(`
       [InvalidBytesBooleanError: Bytes value "1,2" is not a valid boolean. The bytes array must contain a single byte of either a 0 or 1 value.
 
-      Version: @tronweb3/tviem@0.1.0]
+      Version: @tronweb3/tviem@1.0.0-beta.1]
     `)
   })
 })
@@ -216,7 +216,7 @@ describe('converts bytes to string', () => {
     ).toThrowErrorMatchingInlineSnapshot(`
       [SizeOverflowError: Size cannot exceed 32 bytes. Given size: 64 bytes.
 
-      Version: @tronweb3/tviem@0.1.0]
+      Version: @tronweb3/tviem@1.0.0-beta.1]
     `)
   })
 })
@@ -281,7 +281,7 @@ describe('converts bytes to hex', () => {
     ).toThrowErrorMatchingInlineSnapshot(`
       [SizeOverflowError: Size cannot exceed 32 bytes. Given size: 64 bytes.
 
-      Version: @tronweb3/tviem@0.1.0]
+      Version: @tronweb3/tviem@1.0.0-beta.1]
     `)
   })
 })

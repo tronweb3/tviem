@@ -140,7 +140,7 @@ test('error: invalid signatures', () => {
     `
     [BaseError: Unable to normalize signature.
 
-    Version: @tronweb3/tviem@0.1.0]
+    Version: @tronweb3/tviem@1.0.0-beta.1]
   `,
   )
 
@@ -149,7 +149,7 @@ test('error: invalid signatures', () => {
   ).toThrowErrorMatchingInlineSnapshot(`
     [BaseError: Unable to normalize signature.
 
-    Version: @tronweb3/tviem@0.1.0]
+    Version: @tronweb3/tviem@1.0.0-beta.1]
   `)
 
   expect(() =>
@@ -157,7 +157,7 @@ test('error: invalid signatures', () => {
   ).toThrowErrorMatchingInlineSnapshot(`
     [BaseError: Unable to normalize signature.
 
-    Version: @tronweb3/tviem@0.1.0]
+    Version: @tronweb3/tviem@1.0.0-beta.1]
   `)
 
   expect(() =>
@@ -165,6 +165,6 @@ test('error: invalid signatures', () => {
   ).toThrowErrorMatchingInlineSnapshot(`
     [BaseError: Unable to normalize signature.
 
-    Version: @tronweb3/tviem@0.1.0]
+    Version: @tronweb3/tviem@1.0.0-beta.1]
   `)
 })

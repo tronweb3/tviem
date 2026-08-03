@@ -129,7 +129,7 @@ test('throws on unsupported wire types', () => {
   ).toThrowErrorMatchingInlineSnapshot(`
     [UnsupportedWireTypeError: Wire type \`3\` is not supported.
 
-    Version: @tronweb3/tviem@0.1.0]
+    Version: @tronweb3/tviem@1.0.0-beta.1]
   `)
 })
 

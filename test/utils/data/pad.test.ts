@@ -69,7 +69,7 @@ describe('hex', () => {
       `
       [SizeExceedsPaddingSizeError: Hex size (43) exceeds padding size (32).
 
-      Version: @tronweb3/tviem@0.1.0]
+      Version: @tronweb3/tviem@1.0.0-beta.1]
     `,
     )
   })
@@ -91,7 +91,7 @@ describe('hex', () => {
       `
       [SizeExceedsPaddingSizeError: Hex size (5) exceeds padding size (4).
 
-      Version: @tronweb3/tviem@0.1.0]
+      Version: @tronweb3/tviem@1.0.0-beta.1]
     `,
     )
   })
@@ -203,7 +203,7 @@ describe('bytes', () => {
       `
       [SizeExceedsPaddingSizeError: Bytes size (44) exceeds padding size (32).
 
-      Version: @tronweb3/tviem@0.1.0]
+      Version: @tronweb3/tviem@1.0.0-beta.1]
     `,
     )
   })
@@ -254,7 +254,7 @@ describe('bytes', () => {
       `
       [SizeExceedsPaddingSizeError: Bytes size (5) exceeds padding size (4).
 
-      Version: @tronweb3/tviem@0.1.0]
+      Version: @tronweb3/tviem@1.0.0-beta.1]
     `,
     )
   })

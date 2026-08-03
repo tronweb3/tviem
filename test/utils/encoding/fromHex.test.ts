@@ -68,7 +68,7 @@ describe('converts hex to number', () => {
     ).toThrowErrorMatchingInlineSnapshot(`
       [SizeOverflowError: Size cannot exceed 32 bytes. Given size: 64 bytes.
 
-      Version: @tronweb3/tviem@0.1.0]
+      Version: @tronweb3/tviem@1.0.0-beta.1]
     `)
   })
 
@@ -78,14 +78,14 @@ describe('converts hex to number', () => {
     ).toThrowErrorMatchingInlineSnapshot(`
       [IntegerOutOfRangeError: Number "9007199254740992n" is not in safe integer range (-9007199254740991 to 9007199254740991)
 
-      Version: @tronweb3/tviem@0.1.0]
+      Version: @tronweb3/tviem@1.0.0-beta.1]
     `)
     expect(() =>
       hexToNumber('0xffdfffffffffffff', { signed: true }),
     ).toThrowErrorMatchingInlineSnapshot(`
       [IntegerOutOfRangeError: Number "-9007199254740993n" is not in safe integer range (-9007199254740991 to 9007199254740991)
 
-      Version: @tronweb3/tviem@0.1.0]
+      Version: @tronweb3/tviem@1.0.0-beta.1]
     `)
   })
 })
@@ -151,7 +151,7 @@ describe('converts hex to bigint', () => {
     ).toThrowErrorMatchingInlineSnapshot(`
       [SizeOverflowError: Size cannot exceed 32 bytes. Given size: 64 bytes.
 
-      Version: @tronweb3/tviem@0.1.0]
+      Version: @tronweb3/tviem@1.0.0-beta.1]
     `)
   })
 })
@@ -178,7 +178,7 @@ describe('converts hex to boolean', () => {
     ).toThrowErrorMatchingInlineSnapshot(`
       [SizeOverflowError: Size cannot exceed 32 bytes. Given size: 64 bytes.
 
-      Version: @tronweb3/tviem@0.1.0]
+      Version: @tronweb3/tviem@1.0.0-beta.1]
     `)
   })
 
@@ -187,7 +187,7 @@ describe('converts hex to boolean', () => {
       `
       [InvalidHexBooleanError: Hex value "0xa" is not a valid boolean. The hex value must be "0x0" (false) or "0x1" (true).
 
-      Version: @tronweb3/tviem@0.1.0]
+      Version: @tronweb3/tviem@1.0.0-beta.1]
     `,
     )
   })
@@ -228,7 +228,7 @@ describe('converts hex to string', () => {
     ).toThrowErrorMatchingInlineSnapshot(`
       [SizeOverflowError: Size cannot exceed 32 bytes. Given size: 64 bytes.
 
-      Version: @tronweb3/tviem@0.1.0]
+      Version: @tronweb3/tviem@1.0.0-beta.1]
     `)
   })
 })
@@ -362,7 +362,7 @@ describe('converts hex to bytes', () => {
     ).toThrowErrorMatchingInlineSnapshot(`
       [SizeOverflowError: Size cannot exceed 32 bytes. Given size: 64 bytes.
 
-      Version: @tronweb3/tviem@0.1.0]
+      Version: @tronweb3/tviem@1.0.0-beta.1]
     `)
   })
 
@@ -372,7 +372,7 @@ describe('converts hex to bytes', () => {
     ).toThrowErrorMatchingInlineSnapshot(`
       [BaseError: Invalid byte sequence ("gg" in "420fggf11a").
 
-      Version: @tronweb3/tviem@0.1.0]
+      Version: @tronweb3/tviem@1.0.0-beta.1]
     `)
   })
 })

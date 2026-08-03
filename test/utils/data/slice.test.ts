@@ -34,7 +34,7 @@ test('hex', () => {
     `
     [SliceOffsetOutOfBoundsError: Slice starting at offset "5" is out-of-bounds (size: 5).
 
-    Version: @tronweb3/tviem@0.1.0]
+    Version: @tronweb3/tviem@1.0.0-beta.1]
   `,
   )
 
@@ -44,7 +44,7 @@ test('hex', () => {
     `
     [SliceOffsetOutOfBoundsError: Slice ending at offset "6" is out-of-bounds (size: 5).
 
-    Version: @tronweb3/tviem@0.1.0]
+    Version: @tronweb3/tviem@1.0.0-beta.1]
   `,
   )
   expect(() =>
@@ -53,7 +53,7 @@ test('hex', () => {
     `
     [SliceOffsetOutOfBoundsError: Slice ending at offset "10" is out-of-bounds (size: 5).
 
-    Version: @tronweb3/tviem@0.1.0]
+    Version: @tronweb3/tviem@1.0.0-beta.1]
   `,
   )
 })
@@ -224,7 +224,7 @@ test('bytes', () => {
     `
     [SliceOffsetOutOfBoundsError: Slice starting at offset "10" is out-of-bounds (size: 10).
 
-    Version: @tronweb3/tviem@0.1.0]
+    Version: @tronweb3/tviem@1.0.0-beta.1]
   `,
   )
 
@@ -236,7 +236,7 @@ test('bytes', () => {
     `
     [SliceOffsetOutOfBoundsError: Slice ending at offset "11" is out-of-bounds (size: 10).
 
-    Version: @tronweb3/tviem@0.1.0]
+    Version: @tronweb3/tviem@1.0.0-beta.1]
   `,
   )
   expect(() =>
@@ -247,7 +247,7 @@ test('bytes', () => {
     `
     [SliceOffsetOutOfBoundsError: Slice ending at offset "15" is out-of-bounds (size: 5).
 
-    Version: @tronweb3/tviem@0.1.0]
+    Version: @tronweb3/tviem@1.0.0-beta.1]
   `,
   )
 })

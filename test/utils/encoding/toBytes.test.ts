@@ -58,7 +58,7 @@ describe('converts numbers to bytes', () => {
       `
       [IntegerOutOfRangeError: Number "-69" is not in safe integer range (0 to 9007199254740991)
 
-      Version: @tronweb3/tviem@0.1.0]
+      Version: @tronweb3/tviem@1.0.0-beta.1]
     `,
     )
   })
@@ -126,7 +126,7 @@ describe('converts numbers to bytes', () => {
       `
       [IntegerOutOfRangeError: Number "-7" is not in safe 8-bit unsigned integer range (0 to 255)
 
-      Version: @tronweb3/tviem@0.1.0]
+      Version: @tronweb3/tviem@1.0.0-beta.1]
     `,
     )
     expect(() =>
@@ -135,7 +135,7 @@ describe('converts numbers to bytes', () => {
       `
       [IntegerOutOfRangeError: Number "256" is not in safe 8-bit unsigned integer range (0 to 255)
 
-      Version: @tronweb3/tviem@0.1.0]
+      Version: @tronweb3/tviem@1.0.0-beta.1]
     `,
     )
     expect(() =>
@@ -144,7 +144,7 @@ describe('converts numbers to bytes', () => {
       `
       [IntegerOutOfRangeError: Number "65536" is not in safe 16-bit unsigned integer range (0 to 65535)
 
-      Version: @tronweb3/tviem@0.1.0]
+      Version: @tronweb3/tviem@1.0.0-beta.1]
     `,
     )
   })
@@ -219,7 +219,7 @@ describe('converts numbers to bytes', () => {
       `
       [IntegerOutOfRangeError: Number "32768" is not in safe 16-bit signed integer range (-32768 to 32767)
 
-      Version: @tronweb3/tviem@0.1.0]
+      Version: @tronweb3/tviem@1.0.0-beta.1]
     `,
     )
     expect(() =>
@@ -228,7 +228,7 @@ describe('converts numbers to bytes', () => {
       `
       [IntegerOutOfRangeError: Number "-32769" is not in safe 16-bit signed integer range (-32768 to 32767)
 
-      Version: @tronweb3/tviem@0.1.0]
+      Version: @tronweb3/tviem@1.0.0-beta.1]
     `,
     )
   })
@@ -394,7 +394,7 @@ describe('converts bigints to bytes', () => {
       `
       [IntegerOutOfRangeError: Number "-7n" is not in safe 8-bit unsigned integer range (0n to 255n)
 
-      Version: @tronweb3/tviem@0.1.0]
+      Version: @tronweb3/tviem@1.0.0-beta.1]
     `,
     )
     expect(() =>
@@ -403,7 +403,7 @@ describe('converts bigints to bytes', () => {
       `
       [IntegerOutOfRangeError: Number "256n" is not in safe 8-bit unsigned integer range (0n to 255n)
 
-      Version: @tronweb3/tviem@0.1.0]
+      Version: @tronweb3/tviem@1.0.0-beta.1]
     `,
     )
     expect(() =>
@@ -412,7 +412,7 @@ describe('converts bigints to bytes', () => {
       `
       [IntegerOutOfRangeError: Number "65536n" is not in safe 16-bit unsigned integer range (0n to 65535n)
 
-      Version: @tronweb3/tviem@0.1.0]
+      Version: @tronweb3/tviem@1.0.0-beta.1]
     `,
     )
     expect(() =>
@@ -421,7 +421,7 @@ describe('converts bigints to bytes', () => {
       `
       [IntegerOutOfRangeError: Number "18446744073709551616n" is not in safe 64-bit unsigned integer range (0n to 18446744073709551615n)
 
-      Version: @tronweb3/tviem@0.1.0]
+      Version: @tronweb3/tviem@1.0.0-beta.1]
     `,
     )
   })
@@ -581,7 +581,7 @@ describe('converts bigints to bytes', () => {
       `
       [IntegerOutOfRangeError: Number "170141183460469231731687303715884105728n" is not in safe 128-bit signed integer range (-170141183460469231731687303715884105728n to 170141183460469231731687303715884105727n)
 
-      Version: @tronweb3/tviem@0.1.0]
+      Version: @tronweb3/tviem@1.0.0-beta.1]
     `,
     )
     expect(() =>
@@ -593,7 +593,7 @@ describe('converts bigints to bytes', () => {
       `
       [IntegerOutOfRangeError: Number "-170141183460469231731687303715884105729n" is not in safe 128-bit signed integer range (-170141183460469231731687303715884105728n to 170141183460469231731687303715884105727n)
 
-      Version: @tronweb3/tviem@0.1.0]
+      Version: @tronweb3/tviem@1.0.0-beta.1]
     `,
     )
   })
@@ -752,7 +752,7 @@ describe('converts boolean to bytes', () => {
       `
       [SizeOverflowError: Size cannot exceed 0 bytes. Given size: 1 bytes.
 
-      Version: @tronweb3/tviem@0.1.0]
+      Version: @tronweb3/tviem@1.0.0-beta.1]
     `,
     )
     expect(() =>
@@ -760,7 +760,7 @@ describe('converts boolean to bytes', () => {
     ).toThrowErrorMatchingInlineSnapshot(`
       [SizeOverflowError: Size cannot exceed 0 bytes. Given size: 1 bytes.
 
-      Version: @tronweb3/tviem@0.1.0]
+      Version: @tronweb3/tviem@1.0.0-beta.1]
     `)
   })
 })
@@ -989,14 +989,14 @@ describe('converts hex to bytes', () => {
     ).toThrowErrorMatchingInlineSnapshot(`
       [SizeOverflowError: Size cannot exceed 8 bytes. Given size: 12 bytes.
 
-      Version: @tronweb3/tviem@0.1.0]
+      Version: @tronweb3/tviem@1.0.0-beta.1]
     `)
     expect(() =>
       hexToBytes('0x48656c6c6f20576f726c6421', { size: 8 }),
     ).toThrowErrorMatchingInlineSnapshot(`
       [SizeOverflowError: Size cannot exceed 8 bytes. Given size: 12 bytes.
 
-      Version: @tronweb3/tviem@0.1.0]
+      Version: @tronweb3/tviem@1.0.0-beta.1]
     `)
   })
 
@@ -1004,7 +1004,7 @@ describe('converts hex to bytes', () => {
     expect(() => hexToBytes('0xabcdefgh')).toThrowErrorMatchingInlineSnapshot(`
       [BaseError: Invalid byte sequence ("gh" in "abcdefgh").
 
-      Version: @tronweb3/tviem@0.1.0]
+      Version: @tronweb3/tviem@1.0.0-beta.1]
     `)
   })
 })
@@ -1205,14 +1205,14 @@ describe('converts string to bytes', () => {
     ).toThrowErrorMatchingInlineSnapshot(`
       [SizeOverflowError: Size cannot exceed 8 bytes. Given size: 12 bytes.
 
-      Version: @tronweb3/tviem@0.1.0]
+      Version: @tronweb3/tviem@1.0.0-beta.1]
     `)
     expect(() =>
       stringToBytes('Hello World!', { size: 8 }),
     ).toThrowErrorMatchingInlineSnapshot(`
       [SizeOverflowError: Size cannot exceed 8 bytes. Given size: 12 bytes.
 
-      Version: @tronweb3/tviem@0.1.0]
+      Version: @tronweb3/tviem@1.0.0-beta.1]
     `)
   })
 })
@@ -1260,7 +1260,7 @@ test('@tronweb3/tviem: max uint256 boundary', () => {
   ).toThrowErrorMatchingInlineSnapshot(`
     [IntegerOutOfRangeError: Number "115792089237316195423570985008687907853269984665640564039457584007913129639936n" is not in safe 256-bit unsigned integer range (0n to 115792089237316195423570985008687907853269984665640564039457584007913129639935n)
 
-    Version: @tronweb3/tviem@0.1.0]
+    Version: @tronweb3/tviem@1.0.0-beta.1]
   `)
 })
 
@@ -1348,7 +1348,7 @@ test('@tronweb3/tviem: int256 extremes', () => {
   ).toThrowErrorMatchingInlineSnapshot(`
     [IntegerOutOfRangeError: Number "57896044618658097711785492504343953926634992332820282019728792003956564819968n" is not in safe 256-bit signed integer range (-57896044618658097711785492504343953926634992332820282019728792003956564819968n to 57896044618658097711785492504343953926634992332820282019728792003956564819967n)
 
-    Version: @tronweb3/tviem@0.1.0]
+    Version: @tronweb3/tviem@1.0.0-beta.1]
   `)
 })
 
