@@ -1,6 +1,6 @@
 import { BaseError, type BaseErrorType } from '../../errors/base.js'
 import type { ErrorType } from '../../errors/utils.js'
-import type { Address } from '../../types/address.js'
+import type { AddressInput } from '../../types/address.js'
 import type { Hex } from '../../types/misc.js'
 import {
   type IsAddressEqualErrorType,
@@ -37,7 +37,7 @@ export type SignTransactionParameters = {
    * transaction's own `owner_address` here, behind its permission
    * validations, so a non-owner co-signer can sign.
    */
-  address?: Address | undefined
+  address?: AddressInput | undefined
 }
 
 export type SignTransactionErrorType =
