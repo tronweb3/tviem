@@ -6,7 +6,7 @@ import type { Assign, Prettify } from '../types/utils.js'
  * shallow-merges an overlay (object or `(base) => overlay` function) onto the
  * chain, preferring the overlay's fields, and re-attaches `.extend`.
  */
-type Extendable<chain> = chain & {
+export type Extendable<chain> = chain & {
   extend: <const extended extends Record<string, unknown>>(
     extended: extended | ((base: chain) => extended),
   ) => Extendable<Assign<chain, extended>>
