@@ -5,6 +5,7 @@ import { parseAccount } from '../../types/account.js'
 import type { Address } from '../../types/address.js'
 import type { Hex } from '../../types/misc.js'
 import { toHex } from '../../utils/address/toHex.js'
+import { type FlexInput, flexToHex } from '../../utils/transaction/normalize.js'
 import {
   ContractType,
   contractTypeUrlPrefix,
@@ -14,7 +15,6 @@ import {
   type NodeTransaction,
   toNodeTransaction,
 } from '../../utils/transaction/toNodeTransaction.js'
-import type { FlexInput } from '../../utils/transaction/types.js'
 import {
   type BuildAndBroadcastReturnType,
   buildAndBroadcast,
@@ -65,11 +65,11 @@ function assemble(
   const contract: RawContract = {
     type: ContractType.ParticipateAssetIssueContract,
     parameter: {
-      typeUrl: `${contractTypeUrlPrefix}ParticipateAssetIssueContract`,
+      type_url: `${contractTypeUrlPrefix}ParticipateAssetIssueContract`,
       value: {
-        ownerAddress: toHex(account.address),
-        toAddress: toHex(issuerAddress),
-        assetName: tokenId,
+        owner_address: toHex(account.address),
+        to_address: toHex(issuerAddress),
+        asset_name: flexToHex(tokenId),
         amount,
       },
     },

@@ -3,7 +3,6 @@ import type { Client } from '../../clients/createClient.js'
 import { BaseError } from '../../errors/base.js'
 import type { Address, AddressInput } from '../../types/address.js'
 import { toBase58 } from '../../utils/address/toBase58.js'
-import { nodeRawDataOf } from '../../utils/transaction/nodeRawData.js'
 import { assertUnchangedTransaction } from '../utils/assertUnchangedTransaction.js'
 import { recoverEchoedResultBody } from '../utils/recoverMultisigResult.js'
 
@@ -65,7 +64,7 @@ export async function getApprovedList(
         txID: transaction.txID,
         // Node dialect: these endpoints rebuild the transaction from the
         // snake_case raw_data JSON (raw_data_hex is ignored server-side).
-        raw_data: nodeRawDataOf(transaction),
+        raw_data: transaction.raw_data,
         raw_data_hex: transaction.raw_data_hex,
         signature: transaction.signature ?? [],
       },

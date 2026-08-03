@@ -60,10 +60,10 @@ function assemble(
   const contract: RawContract = {
     type: ContractType.UnfreezeBalanceV2Contract,
     parameter: {
-      typeUrl: `${contractTypeUrlPrefix}UnfreezeBalanceV2Contract`,
+      type_url: `${contractTypeUrlPrefix}UnfreezeBalanceV2Contract`,
       value: {
-        ownerAddress: toHex(account.address),
-        unfreezeBalance,
+        owner_address: toHex(account.address),
+        unfreeze_balance: unfreezeBalance,
         resource: ResourceCode[resource],
       },
     },

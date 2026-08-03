@@ -12,6 +12,7 @@ import type {
 import type { Address } from '../../src/types/address.js'
 import type { Hex } from '../../src/types/misc.js'
 import type { Signature } from '../../src/utils/signature/sign.js'
+import type { RawData } from '../../src/utils/transaction/serializeRawData.js'
 
 test('privateKeyToAccount returns a TronLocalAccount', () => {
   const account = privateKeyToAccount('0x01')
@@ -31,9 +32,24 @@ test('signing methods are synchronous and return a TRON-wire Signature', () => {
   expectTypeOf(
     account.signMessage({ message: 'gm' }),
   ).toEqualTypeOf<Signature>()
+  const transaction: SignableTransaction = {
+    txID: 'ab',
+    raw_data: {} as RawData,
+    raw_data_hex: 'ab',
+  }
   expectTypeOf(
-    account.signTransaction({ txID: 'ab' }),
+    account.signTransaction(transaction),
   ).toEqualTypeOf<SignableTransaction>()
+})
+
+test('SignableTransaction requires the full triple — partial forms are a type error', () => {
+  const account = privateKeyToAccount('0x01')
+  // @ts-expect-error a bare txID (blind signing) is no longer assignable
+  account.signTransaction({ txID: 'ab' })
+  // @ts-expect-error raw_data alone is not assignable
+  account.signTransaction({ raw_data: {} as RawData })
+  // @ts-expect-error txID + raw_data without raw_data_hex is not assignable
+  account.signTransaction({ txID: 'ab', raw_data: {} as RawData })
 })
 
 test('signMessage accepts both string and { raw } messages', () => {

@@ -56,14 +56,14 @@ function assemble(
   const account = parseAccount(source)
 
   const value: ClearABIContract = {
-    ownerAddress: toHex(account.address),
-    contractAddress: toHex(contractAddress),
+    owner_address: toHex(account.address),
+    contract_address: toHex(contractAddress),
   }
 
   const contract: RawContract = {
     type: ContractType.ClearABIContract,
     parameter: {
-      typeUrl: `${contractTypeUrlPrefix}ClearABIContract`,
+      type_url: `${contractTypeUrlPrefix}ClearABIContract`,
       value,
     },
   }

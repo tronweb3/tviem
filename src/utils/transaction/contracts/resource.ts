@@ -4,6 +4,7 @@ import type {
   DelegateResourceContract,
   UnDelegateResourceContract,
 } from '../types.js'
+import { ResourceCodeName } from '../types.js'
 import {
   type DecodeMessageErrorType,
   decodeMessage,
@@ -20,12 +21,12 @@ import {
  * `receiver_address`.
  */
 const delegateResourceContractSpec: MessageSpec = [
-  { no: 1, name: 'ownerAddress', kind: 'address' },
-  { no: 2, name: 'resource', kind: 'enum' },
+  { no: 1, name: 'owner_address', kind: 'address' },
+  { no: 2, name: 'resource', kind: 'enum', names: ResourceCodeName },
   { no: 3, name: 'balance', kind: 'i64' },
-  { no: 4, name: 'receiverAddress', kind: 'address' },
+  { no: 4, name: 'receiver_address', kind: 'address' },
   { no: 5, name: 'lock', kind: 'bool' },
-  { no: 6, name: 'lockPeriod', kind: 'i64' },
+  { no: 6, name: 'lock_period', kind: 'i64' },
 ]
 
 export type EncodeDelegateResourceContractErrorType =
@@ -55,10 +56,10 @@ export function decodeDelegateResourceContract(
 
 /** `UnDelegateResourceContract` (type 58) field schema — same order. */
 const unDelegateResourceContractSpec: MessageSpec = [
-  { no: 1, name: 'ownerAddress', kind: 'address' },
-  { no: 2, name: 'resource', kind: 'enum' },
+  { no: 1, name: 'owner_address', kind: 'address' },
+  { no: 2, name: 'resource', kind: 'enum', names: ResourceCodeName },
   { no: 3, name: 'balance', kind: 'i64' },
-  { no: 4, name: 'receiverAddress', kind: 'address' },
+  { no: 4, name: 'receiver_address', kind: 'address' },
 ]
 
 export type EncodeUnDelegateResourceContractErrorType =

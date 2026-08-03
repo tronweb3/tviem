@@ -15,9 +15,9 @@ import {
 
 /** `ParticipateAssetIssueContract` (type 9) field schema. */
 const participateAssetIssueContractSpec: MessageSpec = [
-  { no: 1, name: 'ownerAddress', kind: 'address' },
-  { no: 2, name: 'toAddress', kind: 'address' },
-  { no: 3, name: 'assetName', kind: 'flex' },
+  { no: 1, name: 'owner_address', kind: 'address' },
+  { no: 2, name: 'to_address', kind: 'address' },
+  { no: 3, name: 'asset_name', kind: 'bytes' },
   { no: 4, name: 'amount', kind: 'i64' },
 ]
 
@@ -48,32 +48,32 @@ export function decodeParticipateAssetIssueContract(
 
 /** `AssetIssueContract.FrozenSupply` field schema. */
 const frozenSupplySpec: MessageSpec = [
-  { no: 1, name: 'frozenAmount', kind: 'i64' },
-  { no: 2, name: 'frozenDays', kind: 'i64' },
+  { no: 1, name: 'frozen_amount', kind: 'i64' },
+  { no: 2, name: 'frozen_days', kind: 'i64' },
 ]
 
 /** `AssetIssueContract` (type 6) field schema. */
 const assetIssueContractSpec: MessageSpec = [
-  { no: 1, name: 'ownerAddress', kind: 'address' },
-  { no: 2, name: 'name', kind: 'flex' },
-  { no: 3, name: 'abbr', kind: 'flex' },
-  { no: 4, name: 'totalSupply', kind: 'i64' },
+  { no: 1, name: 'owner_address', kind: 'address' },
+  { no: 2, name: 'name', kind: 'bytes' },
+  { no: 3, name: 'abbr', kind: 'bytes' },
+  { no: 4, name: 'total_supply', kind: 'i64' },
   {
     no: 5,
-    name: 'frozenSupply',
+    name: 'frozen_supply',
     kind: 'repeated-message',
     spec: frozenSupplySpec,
   },
-  { no: 6, name: 'trxNum', kind: 'i32' },
+  { no: 6, name: 'trx_num', kind: 'i32' },
   { no: 7, name: 'precision', kind: 'i32' },
   { no: 8, name: 'num', kind: 'i32' },
-  { no: 9, name: 'startTime', kind: 'i64' },
-  { no: 10, name: 'endTime', kind: 'i64' },
-  { no: 16, name: 'voteScore', kind: 'i32' },
-  { no: 20, name: 'description', kind: 'flex' },
-  { no: 21, name: 'url', kind: 'flex' },
-  { no: 22, name: 'freeAssetNetLimit', kind: 'i64' },
-  { no: 23, name: 'publicFreeAssetNetLimit', kind: 'i64' },
+  { no: 9, name: 'start_time', kind: 'i64' },
+  { no: 10, name: 'end_time', kind: 'i64' },
+  { no: 16, name: 'vote_score', kind: 'i32' },
+  { no: 20, name: 'description', kind: 'bytes' },
+  { no: 21, name: 'url', kind: 'bytes' },
+  { no: 22, name: 'free_asset_net_limit', kind: 'i64' },
+  { no: 23, name: 'public_free_asset_net_limit', kind: 'i64' },
 ]
 
 export type EncodeAssetIssueContractErrorType =
@@ -98,11 +98,11 @@ export function decodeAssetIssueContract(bytes: ByteArray): AssetIssueContract {
 
 /** `UpdateAssetContract` (type 15) field schema. */
 const updateAssetContractSpec: MessageSpec = [
-  { no: 1, name: 'ownerAddress', kind: 'address' },
-  { no: 2, name: 'description', kind: 'flex' },
-  { no: 3, name: 'url', kind: 'flex' },
-  { no: 4, name: 'newLimit', kind: 'i64' },
-  { no: 5, name: 'newPublicLimit', kind: 'i64' },
+  { no: 1, name: 'owner_address', kind: 'address' },
+  { no: 2, name: 'description', kind: 'bytes' },
+  { no: 3, name: 'url', kind: 'bytes' },
+  { no: 4, name: 'new_limit', kind: 'i64' },
+  { no: 5, name: 'new_public_limit', kind: 'i64' },
 ]
 
 export type EncodeUpdateAssetContractErrorType =

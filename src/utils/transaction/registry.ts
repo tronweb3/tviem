@@ -1,4 +1,5 @@
 import type { ByteArray } from '../../types/misc.js'
+import { bareHex } from '../encoding/bareHex.js'
 import {
   decodeAccountCreateContract,
   decodeAccountUpdateContract,
@@ -133,6 +134,26 @@ export const ContractType = {
   UpdateBrokerageContract: 49,
 } as const
 export type ContractType = (typeof ContractType)[keyof typeof ContractType]
+
+/** A registered `Transaction.Contract.type` enum name. */
+export type ContractTypeName = keyof typeof ContractType
+
+const contractTypeNames = new Map<number, ContractTypeName>(
+  (Object.entries(ContractType) as [ContractTypeName, number][]).map(
+    ([name, type]) => [type, name],
+  ),
+)
+
+/**
+ * Resolves a `Transaction.Contract.type` integer to its enum name — the
+ * string java-tron's JSON carries as the contract `type`.
+ *
+ * @param type Contract type integer (e.g. `1`).
+ * @returns The name (e.g. `'TransferContract'`), or `undefined` if unregistered.
+ */
+export function contractTypeNameOf(type: number): ContractTypeName | undefined {
+  return contractTypeNames.get(type)
+}
 
 /** `google.protobuf.Any` type URL prefix of TRON protocol messages. */
 export const contractTypeUrlPrefix = 'type.googleapis.com/protocol.'
@@ -410,7 +431,7 @@ export function getContractCodecByType(
 /**
  * Decodes an `Any`-wrapped contract parameter. Never throws on an
  * unregistered type URL: the raw payload is returned as
- * `{ __unknown: true, typeUrl, valueBytes }` instead.
+ * `{ __unknown: true, type_url, value }` (bare-hex value) instead.
  *
  * @param typeUrl `Any.type_url` of the parameter.
  * @param valueBytes `Any.value` bytes of the parameter.
@@ -422,6 +443,10 @@ export function decodeContractParameter(
 ): ContractMessage | UnknownContractParameter {
   const codec = codecsByTypeUrl.get(typeUrl)
   if (!codec)
-    return { __unknown: true, typeUrl, valueBytes: Uint8Array.from(valueBytes) }
+    return {
+      __unknown: true,
+      type_url: typeUrl,
+      value: bareHex(valueBytes),
+    }
   return codec.decode(valueBytes) as ContractMessage
 }

@@ -24,10 +24,9 @@ const expirationCodes = new Set(['TRANSACTION_EXPIRATION_ERROR', 'TAPOS_ERROR'])
 /**
  * Broadcasts an already-signed transaction via `broadcasthex` (full node): the
  * body is the full signed `Transaction` protobuf as hex, which the node relays
- * verbatim without re-parsing any JSON. This is what lets a locally-built
- * transaction reach a real java-tron node — `broadcasttransaction` rebuilds the
- * transaction from a snake_case `raw_data` JSON and ignores `raw_data_hex`, so
- * the SDK's camelCase model would not deserialize there.
+ * verbatim without re-parsing any JSON. `broadcasttransaction` would instead
+ * rebuild the transaction from the `raw_data` JSON and ignore `raw_data_hex`;
+ * relaying the exact signed bytes leaves no room for that re-parse to drift.
  *
  * Trustless invariant: the returned `txid` is the transaction's **local**
  * `txID` (recomputed at signing time by the four sign guards), never the value

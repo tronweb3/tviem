@@ -4,6 +4,7 @@ import { AccountNotFoundError } from '../../errors/rpc.js'
 import { parseAccount } from '../../types/account.js'
 import type { Hex } from '../../types/misc.js'
 import { toHex } from '../../utils/address/toHex.js'
+import { flexToHex } from '../../utils/transaction/normalize.js'
 import {
   ContractType,
   contractTypeUrlPrefix,
@@ -62,17 +63,17 @@ function assemble(
   const account = parseAccount(source)
 
   const value: ExchangeCreateContract = {
-    ownerAddress: toHex(account.address),
-    firstTokenId,
-    firstTokenBalance,
-    secondTokenId,
-    secondTokenBalance,
+    owner_address: toHex(account.address),
+    first_token_id: flexToHex(firstTokenId),
+    first_token_balance: firstTokenBalance,
+    second_token_id: flexToHex(secondTokenId),
+    second_token_balance: secondTokenBalance,
   }
 
   const contract: RawContract = {
     type: ContractType.ExchangeCreateContract,
     parameter: {
-      typeUrl: `${contractTypeUrlPrefix}ExchangeCreateContract`,
+      type_url: `${contractTypeUrlPrefix}ExchangeCreateContract`,
       value,
     },
   }

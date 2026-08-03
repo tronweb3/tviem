@@ -24,19 +24,19 @@ import { ResourceCode } from '../../../../src/utils/transaction/types.js'
 const v1 = '417e5f4552091a69125d5dfcb7b8c2659029395bdf' as const
 
 test('owner-only contracts encode to a single address field', () => {
-  expect(bytesToHex(encodeWithdrawBalanceContract({ ownerAddress: v1 }))).toBe(
+  expect(bytesToHex(encodeWithdrawBalanceContract({ owner_address: v1 }))).toBe(
     `0x0a15${v1}`,
   )
   expect(
-    bytesToHex(encodeWithdrawExpireUnfreezeContract({ ownerAddress: v1 })),
+    bytesToHex(encodeWithdrawExpireUnfreezeContract({ owner_address: v1 })),
   ).toBe(`0x0a15${v1}`)
   expect(
-    bytesToHex(encodeCancelAllUnfreezeV2Contract({ ownerAddress: v1 })),
+    bytesToHex(encodeCancelAllUnfreezeV2Contract({ owner_address: v1 })),
   ).toBe(`0x0a15${v1}`)
 })
 
 test('owner-only contracts round-trip', () => {
-  const x = { ownerAddress: v1 }
+  const x = { owner_address: v1 }
   expect(
     decodeWithdrawBalanceContract(encodeWithdrawBalanceContract(x)),
   ).toStrictEqual(x)
@@ -55,8 +55,8 @@ test('owner-only contracts round-trip', () => {
 
 test('encodeFreezeBalanceV2Contract', () => {
   const encoded = encodeFreezeBalanceV2Contract({
-    ownerAddress: v1,
-    frozenBalance: 1_000_000n,
+    owner_address: v1,
+    frozen_balance: 1_000_000n,
     resource: ResourceCode.ENERGY,
   })
   expect(bytesToHex(encoded)).toBe(`0x0a15${v1}10c0843d1801`)
@@ -64,8 +64,8 @@ test('encodeFreezeBalanceV2Contract', () => {
 
 test('encodeFreezeBalanceV2Contract: zero enum (BANDWIDTH) is omitted', () => {
   const encoded = encodeFreezeBalanceV2Contract({
-    ownerAddress: v1,
-    frozenBalance: 1_000_000n,
+    owner_address: v1,
+    frozen_balance: 1_000_000n,
     resource: ResourceCode.BANDWIDTH,
   })
   expect(bytesToHex(encoded)).toBe(`0x0a15${v1}10c0843d`)
@@ -73,29 +73,37 @@ test('encodeFreezeBalanceV2Contract: zero enum (BANDWIDTH) is omitted', () => {
 
 test('encodeUnfreezeBalanceV2Contract', () => {
   const encoded = encodeUnfreezeBalanceV2Contract({
-    ownerAddress: v1,
-    unfreezeBalance: 1_000_000n,
+    owner_address: v1,
+    unfreeze_balance: 1_000_000n,
     resource: ResourceCode.TRON_POWER,
   })
   expect(bytesToHex(encoded)).toBe(`0x0a15${v1}10c0843d1802`)
 })
 
-test('freeze/unfreeze round-trip', () => {
+test('freeze/unfreeze decode to the canonical form (name enums, number int64)', () => {
   const freeze: FreezeBalanceV2Contract = {
-    ownerAddress: v1,
-    frozenBalance: 1_000_000n,
+    owner_address: v1,
+    frozen_balance: 1_000_000n,
     resource: ResourceCode.ENERGY,
   }
   expect(
     decodeFreezeBalanceV2Contract(encodeFreezeBalanceV2Contract(freeze)),
-  ).toStrictEqual(freeze)
+  ).toStrictEqual({
+    owner_address: v1,
+    frozen_balance: 1_000_000,
+    resource: 'ENERGY',
+  })
 
+  // BANDWIDTH is the zero enum: omitted on the wire and in the decoded JSON.
   const unfreeze: UnfreezeBalanceV2Contract = {
-    ownerAddress: v1,
-    unfreezeBalance: 1_000_000n,
+    owner_address: v1,
+    unfreeze_balance: 1_000_000n,
     resource: ResourceCode.BANDWIDTH,
   }
   expect(
     decodeUnfreezeBalanceV2Contract(encodeUnfreezeBalanceV2Contract(unfreeze)),
-  ).toStrictEqual(unfreeze)
+  ).toStrictEqual({
+    owner_address: v1,
+    unfreeze_balance: 1_000_000,
+  })
 })

@@ -54,9 +54,9 @@ function assemble(
   const contract: RawContract = {
     type: ContractType.WithdrawExpireUnfreezeContract,
     parameter: {
-      typeUrl: `${contractTypeUrlPrefix}WithdrawExpireUnfreezeContract`,
+      type_url: `${contractTypeUrlPrefix}WithdrawExpireUnfreezeContract`,
       value: {
-        ownerAddress: toHex(account.address),
+        owner_address: toHex(account.address),
       },
     },
   }

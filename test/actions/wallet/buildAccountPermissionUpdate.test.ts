@@ -19,7 +19,7 @@ const [fixture] = loadTxFixtureFile('account-permission-update-contract.json')
 // The same params the full accountPermissionUpdate test pins against the vector.
 const params = {
   owner: {
-    permissionName: 'owner',
+    permission_name: 'owner',
     threshold: 2n,
     keys: [
       { address: 'TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC' as const, weight: 1n },
@@ -29,7 +29,7 @@ const params = {
   actives: [
     {
       id: 2,
-      permissionName: 'active0',
+      permission_name: 'active0',
       threshold: 1n,
       operations:
         '0x7fff1fc0033e0300000000000000000000000000000000000000000000000000' as const,
@@ -74,8 +74,8 @@ test('a custom blockHeader is used verbatim and skips the getnowblock fetch', as
   const tx = await buildAccountPermissionUpdate(client, {
     ...params,
     blockHeader: {
-      refBlockBytes: '1234',
-      refBlockHash: '0102030405060708',
+      ref_block_bytes: '1234',
+      ref_block_hash: '0102030405060708',
       timestamp: 1700000000000n,
       expiration: 1700000000000n + 60000n,
     },

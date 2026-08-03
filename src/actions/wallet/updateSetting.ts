@@ -58,15 +58,15 @@ function assemble(
   const account = parseAccount(source)
 
   const value: UpdateSettingContract = {
-    ownerAddress: toHex(account.address),
-    contractAddress: toHex(contractAddress),
-    consumeUserResourcePercent,
+    owner_address: toHex(account.address),
+    contract_address: toHex(contractAddress),
+    consume_user_resource_percent: consumeUserResourcePercent,
   }
 
   const contract: RawContract = {
     type: ContractType.UpdateSettingContract,
     parameter: {
-      typeUrl: `${contractTypeUrlPrefix}UpdateSettingContract`,
+      type_url: `${contractTypeUrlPrefix}UpdateSettingContract`,
       value,
     },
   }

@@ -1,38 +1,54 @@
+import type { SignableTransaction } from '../../accounts/types.js'
+import { BaseError, type BaseErrorType } from '../../errors/base.js'
 import type { ErrorType } from '../../errors/utils.js'
-import type { ByteArray, Hex } from '../../types/misc.js'
-import { bytesToHex } from '../encoding/toHex.js'
-import { decodeRawData } from './decodeRawData.js'
+import { bareHex } from '../encoding/bareHex.js'
 import { getTransactionId } from './getTransactionId.js'
-import { toRawDataHex } from './serializeRawData.js'
+import { type RawData, toRawDataHex } from './serializeRawData.js'
 
-/** Normalizes hex/bytes input to bare lowercase hex (no `0x`). */
-function bareHex(input: ByteArray | string): string {
-  const hex = typeof input === 'string' ? input : bytesToHex(input)
-  return (hex.startsWith('0x') ? hex.slice(2) : hex).toLowerCase()
-}
-
-export type TxCheckErrorType = ErrorType
+export type TxCheckErrorType = BaseErrorType | ErrorType
 
 /**
- * Verifies a serialized transaction against its id. The `raw_data` is
- * decoded and re-serialized canonically, and its id recomputed; the check
- * passes only when both the re-serialized `raw_data_hex` and the recomputed
- * id match the inputs. Structurally invalid `raw_data` (e.g. truncated or a
- * corrupted length prefix) returns `false` rather than throwing.
+ * Verifies a signable transaction's `raw_data`, `raw_data_hex` and `txID`
+ * are mutually consistent: the `raw_data` model must serialize to exactly
+ * the `raw_data_hex` bytes, and the id derived from that content must equal
+ * `txID`. All three fields are required — a transaction missing any of them
+ * is not verifiably consistent and fails the check. Structurally invalid
+ * `raw_data` (e.g. an unknown key or a malformed model) returns `false`
+ * rather than throwing, as does a `raw_data` that serializes to zero bytes
+ * (a contract-less shell is not a transaction). The one exception is API
+ * misuse: a non-object argument (e.g. a legacy `(rawDataHex, txId)` call)
+ * throws immediately.
  *
- * @param rawDataHex `raw_data` bytes or hex (bare or `0x`-prefixed).
- * @param txId Expected transaction id (bare or `0x`-prefixed hex).
- * @returns `true` when the transaction is self-consistent.
+ * The bytes are what a signature covers, so the bytes are authoritative:
+ * model content the serializer never encodes (a decode-produced `__unknown`
+ * escape hatch, proto3-default field values like `Permission_id: 0`) does
+ * not affect the verdict.
+ *
+ * @param transaction The transaction to verify (a `SignableTransaction`);
+ * hex fields accept bare or `0x`-prefixed hex (lowercase prefix), with hex
+ * digits in either case.
+ * @returns `true` when the transaction is self-consistent — doubling as a
+ * type guard that narrows the argument to {@link SignableTransaction}.
  */
-export function txCheck(
-  rawDataHex: ByteArray | Hex | string,
-  txId: string,
-): boolean {
+export function txCheck(transaction: {
+  txID?: string | undefined
+  raw_data?: RawData | undefined
+  raw_data_hex?: string | undefined
+}): transaction is SignableTransaction {
+  if (typeof transaction !== 'object' || transaction === null)
+    throw new BaseError(
+      `txCheck expects a signable transaction object (\`{ txID, raw_data, raw_data_hex }\`), got ${
+        transaction === null ? 'null' : typeof transaction
+      }.`,
+    )
+  const { txID, raw_data, raw_data_hex } = transaction
+  if (!txID || !raw_data || !raw_data_hex) return false
   try {
-    const rawData = decodeRawData(rawDataHex)
+    const hex = toRawDataHex(raw_data)
+    if (hex === '') return false
     return (
-      toRawDataHex(rawData) === bareHex(rawDataHex) &&
-      getTransactionId(rawData) === bareHex(txId)
+      hex === bareHex(raw_data_hex) &&
+      getTransactionId(raw_data) === bareHex(txID)
     )
   } catch {
     return false
