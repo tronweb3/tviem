@@ -11,10 +11,6 @@ import {
 } from '../../utils/transaction/registry.js'
 import type { RawContract } from '../../utils/transaction/serializeRawData.js'
 import {
-  type NodeTransaction,
-  toNodeTransaction,
-} from '../../utils/transaction/toNodeTransaction.js'
-import {
   type DelegateResourceContract,
   ResourceCode,
 } from '../../utils/transaction/types.js'
@@ -23,6 +19,7 @@ import {
   buildAndBroadcast,
 } from './utils/buildAndBroadcast.js'
 import {
+  type BuildTransactionReturnType,
   buildTransaction,
   type TransactionHeader,
 } from './utils/buildTransaction.js'
@@ -58,7 +55,7 @@ export type BuildDelegateResourceParameters = DelegateResourceParameters & {
    */
   permissionId?: number | undefined
 }
-export type BuildDelegateResourceReturnType = NodeTransaction
+export type BuildDelegateResourceReturnType = BuildTransactionReturnType
 
 /** The signing (delegator) account plus the assembled `DelegateResourceContract`. */
 function assemble(
@@ -102,19 +99,18 @@ function assemble(
  *
  * @param client The Client to use.
  * @param parameters Receiver, amount, resource, optional lock/account/permissionId/blockHeader.
- * @returns A TronWeb-shaped unsigned {@link NodeTransaction}.
+ * @returns A TronWeb-shaped unsigned transaction ({@link BuildTransactionReturnType}).
  */
 export async function buildDelegateResource(
   client: Client,
   parameters: BuildDelegateResourceParameters,
 ): Promise<BuildDelegateResourceReturnType> {
   const { contract } = assemble(client, parameters)
-  const unsigned = await buildTransaction(client, {
+  return buildTransaction(client, {
     contract,
     permissionId: parameters.permissionId,
     blockHeader: parameters.blockHeader,
   })
-  return toNodeTransaction(unsigned)
 }
 
 /**

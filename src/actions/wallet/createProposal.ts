@@ -9,16 +9,13 @@ import {
   contractTypeUrlPrefix,
 } from '../../utils/transaction/registry.js'
 import type { RawContract } from '../../utils/transaction/serializeRawData.js'
-import {
-  type NodeTransaction,
-  toNodeTransaction,
-} from '../../utils/transaction/toNodeTransaction.js'
 import type { ProposalCreateContract } from '../../utils/transaction/types.js'
 import {
   type BuildAndBroadcastReturnType,
   buildAndBroadcast,
 } from './utils/buildAndBroadcast.js'
 import {
+  type BuildTransactionReturnType,
   buildTransaction,
   type TransactionHeader,
 } from './utils/buildTransaction.js'
@@ -56,7 +53,7 @@ export type BuildCreateProposalParameters = CreateProposalParameters & {
   /** Multi-sig permission id (`Contract.Permission_id`). */
   permissionId?: number | undefined
 }
-export type BuildCreateProposalReturnType = NodeTransaction
+export type BuildCreateProposalReturnType = BuildTransactionReturnType
 
 /** Normalizes proposal parameters to ascending-key `{ key, value }` bigints. */
 function normalizeParameters(
@@ -109,19 +106,18 @@ function assemble(
  *
  * @param client The Client to use.
  * @param parameters Proposed changes, optional account/permissionId/blockHeader.
- * @returns A TronWeb-shaped unsigned {@link NodeTransaction}.
+ * @returns A TronWeb-shaped unsigned transaction ({@link BuildTransactionReturnType}).
  */
 export async function buildCreateProposal(
   client: Client,
   parameters: BuildCreateProposalParameters,
 ): Promise<BuildCreateProposalReturnType> {
   const { contract } = assemble(client, parameters)
-  const unsigned = await buildTransaction(client, {
+  return buildTransaction(client, {
     contract,
     permissionId: parameters.permissionId,
     blockHeader: parameters.blockHeader,
   })
-  return toNodeTransaction(unsigned)
 }
 
 /**

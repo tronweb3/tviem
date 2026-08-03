@@ -10,10 +10,6 @@ import {
 } from '../../utils/transaction/registry.js'
 import type { RawContract } from '../../utils/transaction/serializeRawData.js'
 import {
-  type NodeTransaction,
-  toNodeTransaction,
-} from '../../utils/transaction/toNodeTransaction.js'
-import {
   type AccountPermissionUpdateContract,
   type Permission,
   PermissionType,
@@ -23,6 +19,7 @@ import {
   buildAndBroadcast,
 } from './utils/buildAndBroadcast.js'
 import {
+  type BuildTransactionReturnType,
   buildTransaction,
   type TransactionHeader,
 } from './utils/buildTransaction.js'
@@ -51,7 +48,7 @@ export type BuildAccountPermissionUpdateParameters =
     /** Multi-sig permission id (`Contract.Permission_id`). */
     permissionId?: number | undefined
   }
-export type BuildAccountPermissionUpdateReturnType = NodeTransaction
+export type BuildAccountPermissionUpdateReturnType = BuildTransactionReturnType
 
 /** The signing account plus the assembled `AccountPermissionUpdateContract` and `fee_limit`. */
 function assemble(
@@ -102,20 +99,19 @@ function assemble(
  *
  * @param client The Client to use.
  * @param parameters The new permission set, optional account/fee/permissionId/blockHeader.
- * @returns A TronWeb-shaped unsigned {@link NodeTransaction}.
+ * @returns A TronWeb-shaped unsigned transaction ({@link BuildTransactionReturnType}).
  */
 export async function buildAccountPermissionUpdate(
   client: Client,
   parameters: BuildAccountPermissionUpdateParameters,
 ): Promise<BuildAccountPermissionUpdateReturnType> {
   const { contract, feeLimit } = assemble(client, parameters)
-  const unsigned = await buildTransaction(client, {
+  return buildTransaction(client, {
     contract,
     feeLimit,
     permissionId: parameters.permissionId,
     blockHeader: parameters.blockHeader,
   })
-  return toNodeTransaction(unsigned)
 }
 
 /**

@@ -12,14 +12,11 @@ import {
 } from '../../utils/transaction/registry.js'
 import type { RawContract } from '../../utils/transaction/serializeRawData.js'
 import {
-  type NodeTransaction,
-  toNodeTransaction,
-} from '../../utils/transaction/toNodeTransaction.js'
-import {
   type BuildAndBroadcastReturnType,
   buildAndBroadcast,
 } from './utils/buildAndBroadcast.js'
 import {
+  type BuildTransactionReturnType,
   buildTransaction,
   type TransactionHeader,
 } from './utils/buildTransaction.js'
@@ -48,7 +45,7 @@ export type BuildSendTrxParameters = SendTrxParameters & {
    */
   permissionId?: number | undefined
 }
-export type BuildSendTrxReturnType = NodeTransaction
+export type BuildSendTrxReturnType = BuildTransactionReturnType
 
 /** The signing account plus the assembled `TransferContract` and memo `data`. */
 function assemble(
@@ -91,20 +88,19 @@ function assemble(
  *
  * @param client The Client to use.
  * @param parameters Recipient, amount, optional memo/account/permissionId/blockHeader.
- * @returns A TronWeb-shaped unsigned {@link NodeTransaction}.
+ * @returns A TronWeb-shaped unsigned transaction ({@link BuildTransactionReturnType}).
  */
 export async function buildSendTrx(
   client: Client,
   parameters: BuildSendTrxParameters,
 ): Promise<BuildSendTrxReturnType> {
   const { contract, data } = assemble(client, parameters)
-  const unsigned = await buildTransaction(client, {
+  return buildTransaction(client, {
     contract,
     data,
     permissionId: parameters.permissionId,
     blockHeader: parameters.blockHeader,
   })
-  return toNodeTransaction(unsigned)
 }
 
 /**

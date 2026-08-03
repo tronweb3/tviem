@@ -349,12 +349,6 @@ export {
   serializeTransaction,
   toBroadcastHex,
 } from './transaction/serializeTransaction.js'
-export {
-  type NodeTransaction,
-  type ToNodeTransactionErrorType,
-  type ToNodeTransactionInput,
-  toNodeTransaction,
-} from './transaction/toNodeTransaction.js'
 export { type TxCheckErrorType, txCheck } from './transaction/txCheck.js'
 export type {
   AccountCreateContract,

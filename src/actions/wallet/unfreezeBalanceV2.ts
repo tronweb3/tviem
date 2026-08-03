@@ -9,10 +9,6 @@ import {
   contractTypeUrlPrefix,
 } from '../../utils/transaction/registry.js'
 import type { RawContract } from '../../utils/transaction/serializeRawData.js'
-import {
-  type NodeTransaction,
-  toNodeTransaction,
-} from '../../utils/transaction/toNodeTransaction.js'
 import { ResourceCode } from '../../utils/transaction/types.js'
 import type { StakeResource } from './freezeBalanceV2.js'
 import {
@@ -20,6 +16,7 @@ import {
   buildAndBroadcast,
 } from './utils/buildAndBroadcast.js'
 import {
+  type BuildTransactionReturnType,
   buildTransaction,
   type TransactionHeader,
 } from './utils/buildTransaction.js'
@@ -43,7 +40,7 @@ export type BuildUnfreezeBalanceV2Parameters = UnfreezeBalanceV2Parameters & {
   /** Multi-sig permission id (`Contract.Permission_id`). */
   permissionId?: number | undefined
 }
-export type BuildUnfreezeBalanceV2ReturnType = NodeTransaction
+export type BuildUnfreezeBalanceV2ReturnType = BuildTransactionReturnType
 
 /** The signing account plus the assembled `UnfreezeBalanceV2Contract`. */
 function assemble(
@@ -82,19 +79,18 @@ function assemble(
  *
  * @param client The Client to use.
  * @param parameters Amount, resource, optional account/permissionId/blockHeader.
- * @returns A TronWeb-shaped unsigned {@link NodeTransaction}.
+ * @returns A TronWeb-shaped unsigned transaction ({@link BuildTransactionReturnType}).
  */
 export async function buildUnfreezeBalanceV2(
   client: Client,
   parameters: BuildUnfreezeBalanceV2Parameters,
 ): Promise<BuildUnfreezeBalanceV2ReturnType> {
   const { contract } = assemble(client, parameters)
-  const unsigned = await buildTransaction(client, {
+  return buildTransaction(client, {
     contract,
     permissionId: parameters.permissionId,
     blockHeader: parameters.blockHeader,
   })
-  return toNodeTransaction(unsigned)
 }
 
 /**

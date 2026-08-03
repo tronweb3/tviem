@@ -10,16 +10,13 @@ import {
   contractTypeUrlPrefix,
 } from '../../utils/transaction/registry.js'
 import type { RawContract } from '../../utils/transaction/serializeRawData.js'
-import {
-  type NodeTransaction,
-  toNodeTransaction,
-} from '../../utils/transaction/toNodeTransaction.js'
 import type { UpdateEnergyLimitContract } from '../../utils/transaction/types.js'
 import {
   type BuildAndBroadcastReturnType,
   buildAndBroadcast,
 } from './utils/buildAndBroadcast.js'
 import {
+  type BuildTransactionReturnType,
   buildTransaction,
   type TransactionHeader,
 } from './utils/buildTransaction.js'
@@ -43,7 +40,7 @@ export type BuildUpdateEnergyLimitParameters = UpdateEnergyLimitParameters & {
   /** Multi-sig permission id (`Contract.Permission_id`). */
   permissionId?: number | undefined
 }
-export type BuildUpdateEnergyLimitReturnType = NodeTransaction
+export type BuildUpdateEnergyLimitReturnType = BuildTransactionReturnType
 
 /** The signing account plus the assembled `UpdateEnergyLimitContract`. */
 function assemble(
@@ -84,19 +81,18 @@ function assemble(
  *
  * @param client The Client to use.
  * @param parameters Contract address, energy limit, optional account/permissionId/blockHeader.
- * @returns A TronWeb-shaped unsigned {@link NodeTransaction}.
+ * @returns A TronWeb-shaped unsigned transaction ({@link BuildTransactionReturnType}).
  */
 export async function buildUpdateEnergyLimit(
   client: Client,
   parameters: BuildUpdateEnergyLimitParameters,
 ): Promise<BuildUpdateEnergyLimitReturnType> {
   const { contract } = assemble(client, parameters)
-  const unsigned = await buildTransaction(client, {
+  return buildTransaction(client, {
     contract,
     permissionId: parameters.permissionId,
     blockHeader: parameters.blockHeader,
   })
-  return toNodeTransaction(unsigned)
 }
 
 /**

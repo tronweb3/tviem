@@ -1080,12 +1080,6 @@ export {
   toBroadcastHex,
 } from './utils/transaction/serializeTransaction.js'
 export {
-  type NodeTransaction,
-  type ToNodeTransactionErrorType,
-  type ToNodeTransactionInput,
-  toNodeTransaction,
-} from './utils/transaction/toNodeTransaction.js'
-export {
   type TxCheckErrorType,
   txCheck,
 } from './utils/transaction/txCheck.js'

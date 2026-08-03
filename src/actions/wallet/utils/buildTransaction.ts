@@ -56,10 +56,12 @@ export type BuildTransactionParameters = {
 
 /**
  * A fully built but **unsigned** transaction: `txID` + `raw_data` +
- * `raw_data_hex`, with an empty `signature`. Ready to hand to an account's
+ * `raw_data_hex`, with no `signature` yet. Ready to hand to an account's
  * `signTransaction`, to `multiSign`, or to `getSignWeight`.
  */
-export type BuildTransactionReturnType = SignableTransaction
+export type BuildTransactionReturnType = SignableTransaction & {
+  visible: false
+}
 
 /**
  * The shared TRON build phase extracted from {@link buildAndBroadcast}: wrap a
@@ -116,6 +118,7 @@ export async function buildTransaction(
   const bytes = serializeRawData(rawData)
   const canonical = decodeRawData(bytes)
   return {
+    visible: false,
     txID: sha256(bytes, 'hex').slice(2),
     raw_data: canonical,
     raw_data_hex: bareHex(bytes),

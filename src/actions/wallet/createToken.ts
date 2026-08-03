@@ -10,16 +10,13 @@ import {
   contractTypeUrlPrefix,
 } from '../../utils/transaction/registry.js'
 import type { RawContract } from '../../utils/transaction/serializeRawData.js'
-import {
-  type NodeTransaction,
-  toNodeTransaction,
-} from '../../utils/transaction/toNodeTransaction.js'
 import type { AssetIssueContract } from '../../utils/transaction/types.js'
 import {
   type BuildAndBroadcastReturnType,
   buildAndBroadcast,
 } from './utils/buildAndBroadcast.js'
 import {
+  type BuildTransactionReturnType,
   buildTransaction,
   type TransactionHeader,
 } from './utils/buildTransaction.js'
@@ -73,7 +70,7 @@ export type BuildCreateTokenParameters = CreateTokenParameters & {
   /** Multi-sig permission id (`Contract.Permission_id`). */
   permissionId?: number | undefined
 }
-export type BuildCreateTokenReturnType = NodeTransaction
+export type BuildCreateTokenReturnType = BuildTransactionReturnType
 
 /** The signing account plus the assembled `AssetIssueContract`. */
 function assemble(
@@ -145,19 +142,18 @@ function assemble(
  *
  * @param client The Client to use.
  * @param parameters Token issuance parameters, optional account/permissionId/blockHeader.
- * @returns A TronWeb-shaped unsigned {@link NodeTransaction}.
+ * @returns A TronWeb-shaped unsigned transaction ({@link BuildTransactionReturnType}).
  */
 export async function buildCreateToken(
   client: Client,
   parameters: BuildCreateTokenParameters,
 ): Promise<BuildCreateTokenReturnType> {
   const { contract } = assemble(client, parameters)
-  const unsigned = await buildTransaction(client, {
+  return buildTransaction(client, {
     contract,
     permissionId: parameters.permissionId,
     blockHeader: parameters.blockHeader,
   })
-  return toNodeTransaction(unsigned)
 }
 
 /**

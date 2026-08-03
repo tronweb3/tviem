@@ -18,10 +18,6 @@ import {
 } from '../../utils/transaction/registry.js'
 import type { RawContract } from '../../utils/transaction/serializeRawData.js'
 import {
-  type NodeTransaction,
-  toNodeTransaction,
-} from '../../utils/transaction/toNodeTransaction.js'
-import {
   EntryType,
   type SmartContractAbi,
   type SmartContractAbiEntry,
@@ -33,6 +29,7 @@ import {
   buildAndBroadcast,
 } from './utils/buildAndBroadcast.js'
 import {
+  type BuildTransactionReturnType,
   buildTransaction,
   type TransactionHeader,
 } from './utils/buildTransaction.js'
@@ -148,7 +145,7 @@ export type BuildDeployContractParameters<
   /** Multi-sig permission id (`Contract.Permission_id`). */
   permissionId?: number | undefined
 }
-export type BuildDeployContractReturnType = NodeTransaction
+export type BuildDeployContractReturnType = BuildTransactionReturnType
 
 /** The signing account plus the assembled `CreateSmartContract` and fee limit. */
 function assemble(
@@ -228,7 +225,7 @@ function assemble(
  *
  * @param client The Client to use.
  * @param parameters ABI, bytecode, optional args/limits/permissionId/blockHeader.
- * @returns A TronWeb-shaped unsigned {@link NodeTransaction}.
+ * @returns A TronWeb-shaped unsigned transaction ({@link BuildTransactionReturnType}).
  */
 export async function buildDeployContract<
   const abi extends Abi | readonly unknown[],
@@ -240,13 +237,12 @@ export async function buildDeployContract<
     client,
     parameters as DeployContractParameters<Abi>,
   )
-  const unsigned = await buildTransaction(client, {
+  return buildTransaction(client, {
     contract,
     feeLimit,
     permissionId: parameters.permissionId,
     blockHeader: parameters.blockHeader,
   })
-  return toNodeTransaction(unsigned)
 }
 
 /**
