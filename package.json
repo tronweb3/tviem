@@ -8,7 +8,7 @@
   "sideEffects": false,
   "packageManager": "pnpm@9.15.0",
   "engines": {
-    "node": ">=18"
+    "node": ">=22"
   },
   "keywords": [
     "tron",
