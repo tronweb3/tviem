@@ -5,8 +5,7 @@ import {
 import type { ErrorType } from '../../errors/utils.js'
 import type { ByteArray, Hex } from '../../types/misc.js'
 import { type PadErrorType, pad } from '../data/pad.js'
-
-import { type AssertSizeErrorType, assertSize } from './fromHex.js'
+import { type AssertSizeErrorType, assertSize } from '../data/size.js'
 
 const hexes = /*#__PURE__*/ Array.from({ length: 256 }, (_v, i) =>
   i.toString(16).padStart(2, '0'),

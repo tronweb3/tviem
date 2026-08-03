@@ -1,3 +1,7 @@
+import {
+  SizeOverflowError,
+  type SizeOverflowErrorType,
+} from '../../errors/encoding.js'
 import type { ErrorType } from '../../errors/utils.js'
 import type { ByteArray, Hex } from '../../types/misc.js'
 
@@ -14,4 +18,20 @@ export type SizeErrorType = IsHexErrorType | ErrorType
 export function size(value: Hex | ByteArray) {
   if (isHex(value, { strict: false })) return Math.ceil((value.length - 2) / 2)
   return value.length
+}
+
+export type AssertSizeErrorType =
+  | SizeOverflowErrorType
+  | SizeErrorType
+  | ErrorType
+
+export function assertSize(
+  hexOrBytes: Hex | ByteArray,
+  { size: size_ }: { size: number },
+): void {
+  if (size(hexOrBytes) > size_)
+    throw new SizeOverflowError({
+      givenSize: size(hexOrBytes),
+      maxSize: size_,
+    })
 }

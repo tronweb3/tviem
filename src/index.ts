@@ -869,7 +869,11 @@ export {
   padBytes,
   padHex,
 } from './utils/data/pad.js'
-export { type SizeErrorType, size } from './utils/data/size.js'
+export {
+  type AssertSizeErrorType,
+  type SizeErrorType,
+  size,
+} from './utils/data/size.js'
 export {
   type AssertEndOffsetErrorType,
   type AssertStartOffsetErrorType,
@@ -910,7 +914,6 @@ export {
   fromBytes,
 } from './utils/encoding/fromBytes.js'
 export {
-  type AssertSizeErrorType,
   type FromHexErrorType,
   type FromHexParameters,
   type FromHexReturnType,

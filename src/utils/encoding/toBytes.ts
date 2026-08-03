@@ -3,8 +3,8 @@ import type { ErrorType } from '../../errors/utils.js'
 import type { ByteArray, Hex } from '../../types/misc.js'
 import { type IsHexErrorType, isHex } from '../data/isHex.js'
 import { type PadErrorType, pad } from '../data/pad.js'
+import { type AssertSizeErrorType, assertSize } from '../data/size.js'
 
-import { type AssertSizeErrorType, assertSize } from './fromHex.js'
 import {
   type NumberToHexErrorType,
   type NumberToHexOpts,

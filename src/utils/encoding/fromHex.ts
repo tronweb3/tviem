@@ -3,31 +3,13 @@ import {
   type IntegerOutOfRangeErrorType,
   InvalidHexBooleanError,
   type InvalidHexBooleanErrorType,
-  SizeOverflowError,
-  type SizeOverflowErrorType,
 } from '../../errors/encoding.js'
 import type { ErrorType } from '../../errors/utils.js'
 import type { ByteArray, Hex } from '../../types/misc.js'
-import { type SizeErrorType, size as size_ } from '../data/size.js'
+import { type AssertSizeErrorType, assertSize } from '../data/size.js'
 import { type TrimErrorType, trim } from '../data/trim.js'
 
 import { type HexToBytesErrorType, hexToBytes } from './toBytes.js'
-
-export type AssertSizeErrorType =
-  | SizeOverflowErrorType
-  | SizeErrorType
-  | ErrorType
-
-export function assertSize(
-  hexOrBytes: Hex | ByteArray,
-  { size }: { size: number },
-): void {
-  if (size_(hexOrBytes) > size)
-    throw new SizeOverflowError({
-      givenSize: size_(hexOrBytes),
-      maxSize: size,
-    })
-}
 
 export type FromHexParameters<
   to extends 'string' | 'bigint' | 'number' | 'bytes' | 'boolean',

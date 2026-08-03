@@ -1,11 +1,10 @@
 import { InvalidBytesBooleanError } from '../../errors/encoding.js'
 import type { ErrorType } from '../../errors/utils.js'
 import type { ByteArray, Hex } from '../../types/misc.js'
+import { type AssertSizeErrorType, assertSize } from '../data/size.js'
 import { type TrimErrorType, trim } from '../data/trim.js'
 
 import {
-  type AssertSizeErrorType,
-  assertSize,
   type HexToBigIntErrorType,
   type HexToNumberErrorType,
   hexToBigInt,
