@@ -5,17 +5,33 @@ import { getSignWeight } from '../../../src/actions/public/getSignWeight.js'
 import { createPublicClient } from '../../../src/clients/createPublicClient.js'
 import { BaseError } from '../../../src/errors/base.js'
 import { TransactionTamperedError } from '../../../src/errors/rpc.js'
+import { decodeRawData } from '../../../src/utils/transaction/decodeRawData.js'
+import { getTransactionId } from '../../../src/utils/transaction/getTransactionId.js'
+import { toRawDataHex } from '../../../src/utils/transaction/serializeRawData.js'
 import { loadTxFixtureFile } from '../../fixtures/tx/loader.js'
 import { createMockTransport } from '../../mock/createMockTransport.js'
 
 const pk1 = `0x${'0'.repeat(63)}1` as const
 const [transfer] = loadTxFixtureFile('transfer-contract.json')
 
-// A locally built, partially-signed multi-sig transaction.
+// A locally built, partially-signed multi-sig transaction (the fixture bytes
+// with permission id 2 baked in — signTransaction never binds it itself, so
+// the full consistent triple is built from the bound model before signing).
+const baseRawData = decodeRawData(transfer!.rawDataHex)
+const boundRawData = {
+  ...baseRawData,
+  contract: baseRawData.contract.map((contract) => ({
+    ...contract,
+    Permission_id: 2,
+  })),
+}
 const tx = signTransaction({
-  transaction: { raw_data_hex: transfer!.rawDataHex },
+  transaction: {
+    txID: getTransactionId(boundRawData),
+    raw_data: boundRawData,
+    raw_data_hex: toRawDataHex(boundRawData),
+  },
   privateKey: pk1,
-  permissionId: 2,
 })
 
 const permission = {
@@ -95,7 +111,7 @@ test('throws when the transaction has not been built (no raw_data_hex/txID)', as
   const client = createPublicClient({ transport })
   await expect(
     getSignWeight(client, {
-      transaction: { signature: [] } as SignableTransaction,
+      transaction: { signature: [] } as unknown as SignableTransaction,
     }),
   ).rejects.toBeInstanceOf(BaseError)
 })
