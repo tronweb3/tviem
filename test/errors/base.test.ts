@@ -35,7 +35,6 @@ test('BaseError (w/ docsPath)', () => {
   ).toMatchInlineSnapshot(`
     [BaseError: An error occurred.
 
-    Docs: https://github.com/tronweb3/tviem/lol
     Details: details
     Version: @tronweb3/tviem@1.0.0-beta.1]
   `)
@@ -46,7 +45,6 @@ test('BaseError (w/ docsPath)', () => {
   ).toMatchInlineSnapshot(`
     [BaseError: An error occurred.
 
-    Docs: https://github.com/tronweb3/tviem/docs
     Version: @tronweb3/tviem@1.0.0-beta.1]
   `)
   expect(
@@ -57,7 +55,6 @@ test('BaseError (w/ docsPath)', () => {
   ).toMatchInlineSnapshot(`
     [BaseError: An error occurred.
 
-    Docs: https://github.com/tronweb3/tviem/lol
     Version: @tronweb3/tviem@1.0.0-beta.1]
   `)
   expect(
@@ -68,7 +65,6 @@ test('BaseError (w/ docsPath)', () => {
   ).toMatchInlineSnapshot(`
     [BaseError: An error occurred.
 
-    Docs: https://github.com/tronweb3/tviem/lol
     Details: details
     Version: @tronweb3/tviem@1.0.0-beta.1]
   `)
@@ -84,7 +80,6 @@ test('BaseError (w/ docsBaseUrl)', () => {
   ).toMatchInlineSnapshot(`
     [BaseError: An error occurred.
 
-    Docs: https://test/lol
     Details: details
     Version: @tronweb3/tviem@1.0.0-beta.1]
   `)
@@ -119,7 +114,6 @@ test('inherited BaseError', () => {
   ).toMatchInlineSnapshot(`
     [BaseError: An internal error occurred.
 
-    Docs: https://github.com/tronweb3/tviem/lol
     Details: details
     Version: @tronweb3/tviem@1.0.0-beta.1]
   `)
@@ -135,7 +129,6 @@ test('inherited Error', () => {
   ).toMatchInlineSnapshot(`
     [BaseError: An internal error occurred.
 
-    Docs: https://github.com/tronweb3/tviem/lol
     Details: details
     Version: @tronweb3/tviem@1.0.0-beta.1]
   `)

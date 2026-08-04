@@ -25,7 +25,6 @@ test('NotImplementedError (named feature + docsPath)', () => {
   ).toMatchInlineSnapshot(`
     [NotImplementedError: getContract().getEvents is not implemented yet.
 
-    Docs: https://github.com/tronweb3/tviem/docs/contract/events
     Version: @tronweb3/tviem@1.0.0-beta.1]
   `)
 })

@@ -12,7 +12,6 @@ test('UrlRequiredError', () => {
   expect(err).toMatchInlineSnapshot(`
     [UrlRequiredError: No URL was provided to the Transport. Please provide a valid node URL to the Transport.
 
-    Docs: https://github.com/tronweb3/tviem/docs/clients/intro
     Version: @tronweb3/tviem@1.0.0-beta.1]
   `)
 })
