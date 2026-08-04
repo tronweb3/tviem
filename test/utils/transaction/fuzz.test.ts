@@ -9,11 +9,14 @@ import { serializeRawData } from '../../../src/utils/transaction/serializeRawDat
 import { txCheck } from '../../../src/utils/transaction/txCheck.js'
 
 /**
- * Differential fuzz corpus: 126 randomized cases across all 13 v0.1 contract
+ * Differential fuzz corpus: 256 randomized cases across all 34 v0.1 contract
  * types, each carrying the gold-standard `rawDataHex` / `txID` produced by
- * TronWeb's official protobuf stack (see scripts/gen-tx-fuzz.mjs). Every case
- * is re-derived through our own codec and asserted byte-for-byte against the
- * gold vector — an end-to-end cross-check of our encode / decode / txID paths.
+ * TronWeb's official protobuf stack (see scripts/gen-tx-fuzz.mjs). The cases
+ * added for the 21 types beyond the original 13-type corpus were additionally
+ * cross-verified byte-for-byte with an unrelated second implementation
+ * (protobufjs driven by java-tron's .proto files). Every case is re-derived
+ * through our own codec and asserted byte-for-byte against the gold vector —
+ * an end-to-end cross-check of our encode / decode / txID paths.
  */
 type FuzzCase = {
   name: string
@@ -30,9 +33,9 @@ const cases = JSON.parse(
   ),
 ) as FuzzCase[]
 
-test('fuzz corpus covers all 13 contract types with >=120 cases', () => {
-  expect(cases.length).toBeGreaterThanOrEqual(120)
-  expect(new Set(cases.map((c) => c.contractType)).size).toBe(13)
+test('fuzz corpus covers all 34 contract types with >=250 cases', () => {
+  expect(cases.length).toBeGreaterThanOrEqual(250)
+  expect(new Set(cases.map((c) => c.contractType)).size).toBe(34)
 })
 
 test.each(cases)('differential vs TronWeb gold: $name', (fixture) => {
