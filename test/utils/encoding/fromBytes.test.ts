@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest'
+import { version } from '../../../src/errors/version.js'
 
 import {
   bytesToBigInt,
@@ -46,11 +47,14 @@ describe('converts bytes to number', () => {
   test('error: size overflow', () => {
     expect(() =>
       bytesToNumber(numberToBytes(69420, { size: 64 }), { size: 32 }),
-    ).toThrowErrorMatchingInlineSnapshot(`
-      [SizeOverflowError: Size cannot exceed 32 bytes. Given size: 64 bytes.
+    ).toThrowError(
+      expect.objectContaining({
+        name: 'SizeOverflowError',
+        message: `Size cannot exceed 32 bytes. Given size: 64 bytes.
 
-      Version: @tronweb3/tviem@1.0.0-beta.1]
-    `)
+Version: @tronweb3/tviem@${version}`,
+      }),
+    )
   })
 })
 
@@ -104,11 +108,14 @@ describe('converts bytes to bigint', () => {
   test('error: size overflow', () => {
     expect(() =>
       bytesToBigInt(numberToBytes(69420, { size: 64 }), { size: 32 }),
-    ).toThrowErrorMatchingInlineSnapshot(`
-      [SizeOverflowError: Size cannot exceed 32 bytes. Given size: 64 bytes.
+    ).toThrowError(
+      expect.objectContaining({
+        name: 'SizeOverflowError',
+        message: `Size cannot exceed 32 bytes. Given size: 64 bytes.
 
-      Version: @tronweb3/tviem@1.0.0-beta.1]
-    `)
+Version: @tronweb3/tviem@${version}`,
+      }),
+    )
   })
 })
 
@@ -139,28 +146,33 @@ describe('converts bytes to boolean', () => {
   test('error: size overflow', () => {
     expect(() =>
       bytesToBool(boolToBytes(true, { size: 64 }), { size: 32 }),
-    ).toThrowErrorMatchingInlineSnapshot(`
-      [SizeOverflowError: Size cannot exceed 32 bytes. Given size: 64 bytes.
+    ).toThrowError(
+      expect.objectContaining({
+        name: 'SizeOverflowError',
+        message: `Size cannot exceed 32 bytes. Given size: 64 bytes.
 
-      Version: @tronweb3/tviem@1.0.0-beta.1]
-    `)
+Version: @tronweb3/tviem@${version}`,
+      }),
+    )
   })
 
   test('error: invalid boolean', () => {
-    expect(() =>
-      bytesToBool(new Uint8Array([69])),
-    ).toThrowErrorMatchingInlineSnapshot(`
-      [InvalidBytesBooleanError: Bytes value "69" is not a valid boolean. The bytes array must contain a single byte of either a 0 or 1 value.
+    expect(() => bytesToBool(new Uint8Array([69]))).toThrowError(
+      expect.objectContaining({
+        name: 'InvalidBytesBooleanError',
+        message: `Bytes value "69" is not a valid boolean. The bytes array must contain a single byte of either a 0 or 1 value.
 
-      Version: @tronweb3/tviem@1.0.0-beta.1]
-    `)
-    expect(() =>
-      bytesToBool(new Uint8Array([1, 2])),
-    ).toThrowErrorMatchingInlineSnapshot(`
-      [InvalidBytesBooleanError: Bytes value "1,2" is not a valid boolean. The bytes array must contain a single byte of either a 0 or 1 value.
+Version: @tronweb3/tviem@${version}`,
+      }),
+    )
+    expect(() => bytesToBool(new Uint8Array([1, 2]))).toThrowError(
+      expect.objectContaining({
+        name: 'InvalidBytesBooleanError',
+        message: `Bytes value "1,2" is not a valid boolean. The bytes array must contain a single byte of either a 0 or 1 value.
 
-      Version: @tronweb3/tviem@1.0.0-beta.1]
-    `)
+Version: @tronweb3/tviem@${version}`,
+      }),
+    )
   })
 })
 
@@ -213,11 +225,14 @@ describe('converts bytes to string', () => {
   test('error: size overflow', () => {
     expect(() =>
       bytesToString(stringToBytes('wagmi', { size: 64 }), { size: 32 }),
-    ).toThrowErrorMatchingInlineSnapshot(`
-      [SizeOverflowError: Size cannot exceed 32 bytes. Given size: 64 bytes.
+    ).toThrowError(
+      expect.objectContaining({
+        name: 'SizeOverflowError',
+        message: `Size cannot exceed 32 bytes. Given size: 64 bytes.
 
-      Version: @tronweb3/tviem@1.0.0-beta.1]
-    `)
+Version: @tronweb3/tviem@${version}`,
+      }),
+    )
   })
 })
 
@@ -278,11 +293,14 @@ describe('converts bytes to hex', () => {
   test('error: size overflow', () => {
     expect(() =>
       bytesToHex(hexToBytes('0x420696', { size: 64 }), { size: 32 }),
-    ).toThrowErrorMatchingInlineSnapshot(`
-      [SizeOverflowError: Size cannot exceed 32 bytes. Given size: 64 bytes.
+    ).toThrowError(
+      expect.objectContaining({
+        name: 'SizeOverflowError',
+        message: `Size cannot exceed 32 bytes. Given size: 64 bytes.
 
-      Version: @tronweb3/tviem@1.0.0-beta.1]
-    `)
+Version: @tronweb3/tviem@${version}`,
+      }),
+    )
   })
 })
 

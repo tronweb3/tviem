@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest'
+import { version } from '../../../src/errors/version.js'
 
 import {
   fromHex,
@@ -65,28 +66,35 @@ describe('converts hex to number', () => {
   test('error: size overflow', () => {
     expect(() =>
       hexToNumber(numberToHex(69420, { size: 64 }), { size: 32 }),
-    ).toThrowErrorMatchingInlineSnapshot(`
-      [SizeOverflowError: Size cannot exceed 32 bytes. Given size: 64 bytes.
+    ).toThrowError(
+      expect.objectContaining({
+        name: 'SizeOverflowError',
+        message: `Size cannot exceed 32 bytes. Given size: 64 bytes.
 
-      Version: @tronweb3/tviem@1.0.0-beta.1]
-    `)
+Version: @tronweb3/tviem@${version}`,
+      }),
+    )
   })
 
   test('error: integer out of range', () => {
-    expect(() =>
-      hexToNumber('0x20000000000000'),
-    ).toThrowErrorMatchingInlineSnapshot(`
-      [IntegerOutOfRangeError: Number "9007199254740992n" is not in safe integer range (-9007199254740991 to 9007199254740991)
+    expect(() => hexToNumber('0x20000000000000')).toThrowError(
+      expect.objectContaining({
+        name: 'IntegerOutOfRangeError',
+        message: `Number "9007199254740992n" is not in safe integer range (-9007199254740991 to 9007199254740991)
 
-      Version: @tronweb3/tviem@1.0.0-beta.1]
-    `)
+Version: @tronweb3/tviem@${version}`,
+      }),
+    )
     expect(() =>
       hexToNumber('0xffdfffffffffffff', { signed: true }),
-    ).toThrowErrorMatchingInlineSnapshot(`
-      [IntegerOutOfRangeError: Number "-9007199254740993n" is not in safe integer range (-9007199254740991 to 9007199254740991)
+    ).toThrowError(
+      expect.objectContaining({
+        name: 'IntegerOutOfRangeError',
+        message: `Number "-9007199254740993n" is not in safe integer range (-9007199254740991 to 9007199254740991)
 
-      Version: @tronweb3/tviem@1.0.0-beta.1]
-    `)
+Version: @tronweb3/tviem@${version}`,
+      }),
+    )
   })
 })
 
@@ -148,11 +156,14 @@ describe('converts hex to bigint', () => {
   test('error: size overflow', () => {
     expect(() =>
       hexToBigInt(numberToHex(69420, { size: 64 }), { size: 32 }),
-    ).toThrowErrorMatchingInlineSnapshot(`
-      [SizeOverflowError: Size cannot exceed 32 bytes. Given size: 64 bytes.
+    ).toThrowError(
+      expect.objectContaining({
+        name: 'SizeOverflowError',
+        message: `Size cannot exceed 32 bytes. Given size: 64 bytes.
 
-      Version: @tronweb3/tviem@1.0.0-beta.1]
-    `)
+Version: @tronweb3/tviem@${version}`,
+      }),
+    )
   })
 })
 
@@ -175,20 +186,24 @@ describe('converts hex to boolean', () => {
   test('error: size overflow', () => {
     expect(() =>
       hexToBool(boolToHex(true, { size: 64 }), { size: 32 }),
-    ).toThrowErrorMatchingInlineSnapshot(`
-      [SizeOverflowError: Size cannot exceed 32 bytes. Given size: 64 bytes.
+    ).toThrowError(
+      expect.objectContaining({
+        name: 'SizeOverflowError',
+        message: `Size cannot exceed 32 bytes. Given size: 64 bytes.
 
-      Version: @tronweb3/tviem@1.0.0-beta.1]
-    `)
+Version: @tronweb3/tviem@${version}`,
+      }),
+    )
   })
 
   test('error: invalid boolean', () => {
-    expect(() => hexToBool('0xa')).toThrowErrorMatchingInlineSnapshot(
-      `
-      [InvalidHexBooleanError: Hex value "0xa" is not a valid boolean. The hex value must be "0x0" (false) or "0x1" (true).
+    expect(() => hexToBool('0xa')).toThrowError(
+      expect.objectContaining({
+        name: 'InvalidHexBooleanError',
+        message: `Hex value "0xa" is not a valid boolean. The hex value must be "0x0" (false) or "0x1" (true).
 
-      Version: @tronweb3/tviem@1.0.0-beta.1]
-    `,
+Version: @tronweb3/tviem@${version}`,
+      }),
     )
   })
 })
@@ -225,11 +240,14 @@ describe('converts hex to string', () => {
   test('error: size overflow', () => {
     expect(() =>
       hexToString(stringToHex('wagmi', { size: 64 }), { size: 32 }),
-    ).toThrowErrorMatchingInlineSnapshot(`
-      [SizeOverflowError: Size cannot exceed 32 bytes. Given size: 64 bytes.
+    ).toThrowError(
+      expect.objectContaining({
+        name: 'SizeOverflowError',
+        message: `Size cannot exceed 32 bytes. Given size: 64 bytes.
 
-      Version: @tronweb3/tviem@1.0.0-beta.1]
-    `)
+Version: @tronweb3/tviem@${version}`,
+      }),
+    )
   })
 })
 
@@ -359,21 +377,25 @@ describe('converts hex to bytes', () => {
       hexToString(bytesToHex(Uint8Array.from([69, 420]), { size: 64 }), {
         size: 32,
       }),
-    ).toThrowErrorMatchingInlineSnapshot(`
-      [SizeOverflowError: Size cannot exceed 32 bytes. Given size: 64 bytes.
+    ).toThrowError(
+      expect.objectContaining({
+        name: 'SizeOverflowError',
+        message: `Size cannot exceed 32 bytes. Given size: 64 bytes.
 
-      Version: @tronweb3/tviem@1.0.0-beta.1]
-    `)
+Version: @tronweb3/tviem@${version}`,
+      }),
+    )
   })
 
   test('error: invalid bytes', () => {
-    expect(() =>
-      fromHex('0x420fggf11a', 'bytes'),
-    ).toThrowErrorMatchingInlineSnapshot(`
-      [BaseError: Invalid byte sequence ("gg" in "420fggf11a").
+    expect(() => fromHex('0x420fggf11a', 'bytes')).toThrowError(
+      expect.objectContaining({
+        name: 'BaseError',
+        message: `Invalid byte sequence ("gg" in "420fggf11a").
 
-      Version: @tronweb3/tviem@1.0.0-beta.1]
-    `)
+Version: @tronweb3/tviem@${version}`,
+      }),
+    )
   })
 })
 

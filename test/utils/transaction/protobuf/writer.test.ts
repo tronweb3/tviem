@@ -1,9 +1,9 @@
 import { expect, test } from 'vitest'
-
 import {
   IntegerOutOfRangeError,
   UnsupportedWireTypeError,
 } from '../../../../src/errors/encoding.js'
+import { version } from '../../../../src/errors/version.js'
 import { concatBytes } from '../../../../src/utils/data/concat.js'
 import {
   hexToBytes,
@@ -44,22 +44,28 @@ test('tag: invalid field number', () => {
   expect(() => tag(-1, 2)).toThrow(IntegerOutOfRangeError)
   expect(() => tag(1.5, 2)).toThrow(IntegerOutOfRangeError)
   expect(() => tag(maxFieldNumber + 1, 2)).toThrow(IntegerOutOfRangeError)
-  expect(() => tag(0, 2)).toThrowErrorMatchingInlineSnapshot(`
-    [IntegerOutOfRangeError: Number "0" is not in safe integer range (1 to 536870911)
+  expect(() => tag(0, 2)).toThrowError(
+    expect.objectContaining({
+      name: 'IntegerOutOfRangeError',
+      message: `Number "0" is not in safe integer range (1 to 536870911)
 
-    Version: @tronweb3/tviem@1.0.0-beta.1]
-  `)
+Version: @tronweb3/tviem@${version}`,
+    }),
+  )
 })
 
 test('tag: unsupported wire type', () => {
   // 3 (SGROUP) and 4 (EGROUP) are deprecated; 6/7 are invalid.
   for (const wireType of [3, 4, 6, 7, -1, 0.5])
     expect(() => tag(1, wireType)).toThrow(UnsupportedWireTypeError)
-  expect(() => tag(1, 3)).toThrowErrorMatchingInlineSnapshot(`
-    [UnsupportedWireTypeError: Wire type \`3\` is not supported.
+  expect(() => tag(1, 3)).toThrowError(
+    expect.objectContaining({
+      name: 'UnsupportedWireTypeError',
+      message: `Wire type \`3\` is not supported.
 
-    Version: @tronweb3/tviem@1.0.0-beta.1]
-  `)
+Version: @tronweb3/tviem@${version}`,
+    }),
+  )
 })
 
 test('fInt', () => {
@@ -84,13 +90,14 @@ test('fInt', () => {
 test('fInt: out of range', () => {
   expect(() => fInt(1, 18446744073709551616n)).toThrow(IntegerOutOfRangeError)
   expect(() => fInt(1, -9223372036854775809n)).toThrow(IntegerOutOfRangeError)
-  expect(() =>
-    fInt(1, 18446744073709551616n),
-  ).toThrowErrorMatchingInlineSnapshot(`
-    [IntegerOutOfRangeError: Number "18446744073709551616" is not in safe integer range (-9223372036854775808 to 18446744073709551615)
+  expect(() => fInt(1, 18446744073709551616n)).toThrowError(
+    expect.objectContaining({
+      name: 'IntegerOutOfRangeError',
+      message: `Number "18446744073709551616" is not in safe integer range (-9223372036854775808 to 18446744073709551615)
 
-    Version: @tronweb3/tviem@1.0.0-beta.1]
-  `)
+Version: @tronweb3/tviem@${version}`,
+    }),
+  )
 })
 
 test('fBool', () => {

@@ -1,4 +1,5 @@
 import { expect, test } from 'vitest'
+import { version } from '../../../src/errors/version.js'
 import { normalizeSignature } from '../../../src/utils/hash/normalizeSignature.js'
 
 test('foo()', () => {
@@ -136,35 +137,39 @@ test('trim spaces', () => {
 })
 
 test('error: invalid signatures', () => {
-  expect(() => normalizeSignature('bar')).toThrowErrorMatchingInlineSnapshot(
-    `
-    [BaseError: Unable to normalize signature.
+  expect(() => normalizeSignature('bar')).toThrowError(
+    expect.objectContaining({
+      name: 'BaseError',
+      message: `Unable to normalize signature.
 
-    Version: @tronweb3/tviem@1.0.0-beta.1]
-  `,
+Version: @tronweb3/tviem@${version}`,
+    }),
   )
 
-  expect(() =>
-    normalizeSignature('bar(uint foo'),
-  ).toThrowErrorMatchingInlineSnapshot(`
-    [BaseError: Unable to normalize signature.
+  expect(() => normalizeSignature('bar(uint foo')).toThrowError(
+    expect.objectContaining({
+      name: 'BaseError',
+      message: `Unable to normalize signature.
 
-    Version: @tronweb3/tviem@1.0.0-beta.1]
-  `)
+Version: @tronweb3/tviem@${version}`,
+    }),
+  )
 
-  expect(() =>
-    normalizeSignature('baruint foo)'),
-  ).toThrowErrorMatchingInlineSnapshot(`
-    [BaseError: Unable to normalize signature.
+  expect(() => normalizeSignature('baruint foo)')).toThrowError(
+    expect.objectContaining({
+      name: 'BaseError',
+      message: `Unable to normalize signature.
 
-    Version: @tronweb3/tviem@1.0.0-beta.1]
-  `)
+Version: @tronweb3/tviem@${version}`,
+    }),
+  )
 
-  expect(() =>
-    normalizeSignature('bar(uint foo, (uint baz)'),
-  ).toThrowErrorMatchingInlineSnapshot(`
-    [BaseError: Unable to normalize signature.
+  expect(() => normalizeSignature('bar(uint foo, (uint baz)')).toThrowError(
+    expect.objectContaining({
+      name: 'BaseError',
+      message: `Unable to normalize signature.
 
-    Version: @tronweb3/tviem@1.0.0-beta.1]
-  `)
+Version: @tronweb3/tviem@${version}`,
+    }),
+  )
 })

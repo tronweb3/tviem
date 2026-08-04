@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest'
+import { version } from '../../../src/errors/version.js'
 
 import {
   boolToBytes,
@@ -54,12 +55,13 @@ describe('converts numbers to bytes', () => {
       ]
     `)
 
-    expect(() => toBytes(-69)).toThrowErrorMatchingInlineSnapshot(
-      `
-      [IntegerOutOfRangeError: Number "-69" is not in safe integer range (0 to 9007199254740991)
+    expect(() => toBytes(-69)).toThrowError(
+      expect.objectContaining({
+        name: 'IntegerOutOfRangeError',
+        message: `Number "-69" is not in safe integer range (0 to 9007199254740991)
 
-      Version: @tronweb3/tviem@1.0.0-beta.1]
-    `,
+Version: @tronweb3/tviem@${version}`,
+      }),
     )
   })
 
@@ -120,32 +122,29 @@ describe('converts numbers to bytes', () => {
       ]
     `)
 
-    expect(() =>
-      numberToBytes(-7, { size: 1 }),
-    ).toThrowErrorMatchingInlineSnapshot(
-      `
-      [IntegerOutOfRangeError: Number "-7" is not in safe 8-bit unsigned integer range (0 to 255)
+    expect(() => numberToBytes(-7, { size: 1 })).toThrowError(
+      expect.objectContaining({
+        name: 'IntegerOutOfRangeError',
+        message: `Number "-7" is not in safe 8-bit unsigned integer range (0 to 255)
 
-      Version: @tronweb3/tviem@1.0.0-beta.1]
-    `,
+Version: @tronweb3/tviem@${version}`,
+      }),
     )
-    expect(() =>
-      numberToBytes(256, { size: 1 }),
-    ).toThrowErrorMatchingInlineSnapshot(
-      `
-      [IntegerOutOfRangeError: Number "256" is not in safe 8-bit unsigned integer range (0 to 255)
+    expect(() => numberToBytes(256, { size: 1 })).toThrowError(
+      expect.objectContaining({
+        name: 'IntegerOutOfRangeError',
+        message: `Number "256" is not in safe 8-bit unsigned integer range (0 to 255)
 
-      Version: @tronweb3/tviem@1.0.0-beta.1]
-    `,
+Version: @tronweb3/tviem@${version}`,
+      }),
     )
-    expect(() =>
-      numberToBytes(65536, { size: 2 }),
-    ).toThrowErrorMatchingInlineSnapshot(
-      `
-      [IntegerOutOfRangeError: Number "65536" is not in safe 16-bit unsigned integer range (0 to 65535)
+    expect(() => numberToBytes(65536, { size: 2 })).toThrowError(
+      expect.objectContaining({
+        name: 'IntegerOutOfRangeError',
+        message: `Number "65536" is not in safe 16-bit unsigned integer range (0 to 65535)
 
-      Version: @tronweb3/tviem@1.0.0-beta.1]
-    `,
+Version: @tronweb3/tviem@${version}`,
+      }),
     )
   })
 
@@ -213,23 +212,21 @@ describe('converts numbers to bytes', () => {
         0,
       ]
     `)
-    expect(() =>
-      numberToBytes(32768, { size: 2, signed: true }),
-    ).toThrowErrorMatchingInlineSnapshot(
-      `
-      [IntegerOutOfRangeError: Number "32768" is not in safe 16-bit signed integer range (-32768 to 32767)
+    expect(() => numberToBytes(32768, { size: 2, signed: true })).toThrowError(
+      expect.objectContaining({
+        name: 'IntegerOutOfRangeError',
+        message: `Number "32768" is not in safe 16-bit signed integer range (-32768 to 32767)
 
-      Version: @tronweb3/tviem@1.0.0-beta.1]
-    `,
+Version: @tronweb3/tviem@${version}`,
+      }),
     )
-    expect(() =>
-      numberToBytes(-32769, { size: 2, signed: true }),
-    ).toThrowErrorMatchingInlineSnapshot(
-      `
-      [IntegerOutOfRangeError: Number "-32769" is not in safe 16-bit signed integer range (-32768 to 32767)
+    expect(() => numberToBytes(-32769, { size: 2, signed: true })).toThrowError(
+      expect.objectContaining({
+        name: 'IntegerOutOfRangeError',
+        message: `Number "-32769" is not in safe 16-bit signed integer range (-32768 to 32767)
 
-      Version: @tronweb3/tviem@1.0.0-beta.1]
-    `,
+Version: @tronweb3/tviem@${version}`,
+      }),
     )
   })
 })
@@ -388,41 +385,39 @@ describe('converts bigints to bytes', () => {
     `,
     )
 
-    expect(() =>
-      numberToBytes(-7n, { size: 1 }),
-    ).toThrowErrorMatchingInlineSnapshot(
-      `
-      [IntegerOutOfRangeError: Number "-7n" is not in safe 8-bit unsigned integer range (0n to 255n)
+    expect(() => numberToBytes(-7n, { size: 1 })).toThrowError(
+      expect.objectContaining({
+        name: 'IntegerOutOfRangeError',
+        message: `Number "-7n" is not in safe 8-bit unsigned integer range (0n to 255n)
 
-      Version: @tronweb3/tviem@1.0.0-beta.1]
-    `,
+Version: @tronweb3/tviem@${version}`,
+      }),
     )
-    expect(() =>
-      numberToBytes(256n, { size: 1 }),
-    ).toThrowErrorMatchingInlineSnapshot(
-      `
-      [IntegerOutOfRangeError: Number "256n" is not in safe 8-bit unsigned integer range (0n to 255n)
+    expect(() => numberToBytes(256n, { size: 1 })).toThrowError(
+      expect.objectContaining({
+        name: 'IntegerOutOfRangeError',
+        message: `Number "256n" is not in safe 8-bit unsigned integer range (0n to 255n)
 
-      Version: @tronweb3/tviem@1.0.0-beta.1]
-    `,
+Version: @tronweb3/tviem@${version}`,
+      }),
     )
-    expect(() =>
-      numberToBytes(65536n, { size: 2 }),
-    ).toThrowErrorMatchingInlineSnapshot(
-      `
-      [IntegerOutOfRangeError: Number "65536n" is not in safe 16-bit unsigned integer range (0n to 65535n)
+    expect(() => numberToBytes(65536n, { size: 2 })).toThrowError(
+      expect.objectContaining({
+        name: 'IntegerOutOfRangeError',
+        message: `Number "65536n" is not in safe 16-bit unsigned integer range (0n to 65535n)
 
-      Version: @tronweb3/tviem@1.0.0-beta.1]
-    `,
+Version: @tronweb3/tviem@${version}`,
+      }),
     )
     expect(() =>
       numberToBytes(18446744073709551616n, { size: 8 }),
-    ).toThrowErrorMatchingInlineSnapshot(
-      `
-      [IntegerOutOfRangeError: Number "18446744073709551616n" is not in safe 64-bit unsigned integer range (0n to 18446744073709551615n)
+    ).toThrowError(
+      expect.objectContaining({
+        name: 'IntegerOutOfRangeError',
+        message: `Number "18446744073709551616n" is not in safe 64-bit unsigned integer range (0n to 18446744073709551615n)
 
-      Version: @tronweb3/tviem@1.0.0-beta.1]
-    `,
+Version: @tronweb3/tviem@${version}`,
+      }),
     )
   })
 
@@ -577,24 +572,26 @@ describe('converts bigints to bytes', () => {
         size: 16,
         signed: true,
       }),
-    ).toThrowErrorMatchingInlineSnapshot(
-      `
-      [IntegerOutOfRangeError: Number "170141183460469231731687303715884105728n" is not in safe 128-bit signed integer range (-170141183460469231731687303715884105728n to 170141183460469231731687303715884105727n)
+    ).toThrowError(
+      expect.objectContaining({
+        name: 'IntegerOutOfRangeError',
+        message: `Number "170141183460469231731687303715884105728n" is not in safe 128-bit signed integer range (-170141183460469231731687303715884105728n to 170141183460469231731687303715884105727n)
 
-      Version: @tronweb3/tviem@1.0.0-beta.1]
-    `,
+Version: @tronweb3/tviem@${version}`,
+      }),
     )
     expect(() =>
       numberToBytes(-170141183460469231731687303715884105729n, {
         size: 16,
         signed: true,
       }),
-    ).toThrowErrorMatchingInlineSnapshot(
-      `
-      [IntegerOutOfRangeError: Number "-170141183460469231731687303715884105729n" is not in safe 128-bit signed integer range (-170141183460469231731687303715884105728n to 170141183460469231731687303715884105727n)
+    ).toThrowError(
+      expect.objectContaining({
+        name: 'IntegerOutOfRangeError',
+        message: `Number "-170141183460469231731687303715884105729n" is not in safe 128-bit signed integer range (-170141183460469231731687303715884105728n to 170141183460469231731687303715884105727n)
 
-      Version: @tronweb3/tviem@1.0.0-beta.1]
-    `,
+Version: @tronweb3/tviem@${version}`,
+      }),
     )
   })
 })
@@ -748,20 +745,22 @@ describe('converts boolean to bytes', () => {
   })
 
   test('error: size overflow', () => {
-    expect(() => toBytes(true, { size: 0 })).toThrowErrorMatchingInlineSnapshot(
-      `
-      [SizeOverflowError: Size cannot exceed 0 bytes. Given size: 1 bytes.
+    expect(() => toBytes(true, { size: 0 })).toThrowError(
+      expect.objectContaining({
+        name: 'SizeOverflowError',
+        message: `Size cannot exceed 0 bytes. Given size: 1 bytes.
 
-      Version: @tronweb3/tviem@1.0.0-beta.1]
-    `,
+Version: @tronweb3/tviem@${version}`,
+      }),
     )
-    expect(() =>
-      boolToBytes(false, { size: 0 }),
-    ).toThrowErrorMatchingInlineSnapshot(`
-      [SizeOverflowError: Size cannot exceed 0 bytes. Given size: 1 bytes.
+    expect(() => boolToBytes(false, { size: 0 })).toThrowError(
+      expect.objectContaining({
+        name: 'SizeOverflowError',
+        message: `Size cannot exceed 0 bytes. Given size: 1 bytes.
 
-      Version: @tronweb3/tviem@1.0.0-beta.1]
-    `)
+Version: @tronweb3/tviem@${version}`,
+      }),
+    )
   })
 })
 
@@ -986,26 +985,35 @@ describe('converts hex to bytes', () => {
   test('error: size overflow', () => {
     expect(() =>
       toBytes('0x48656c6c6f20576f726c6421', { size: 8 }),
-    ).toThrowErrorMatchingInlineSnapshot(`
-      [SizeOverflowError: Size cannot exceed 8 bytes. Given size: 12 bytes.
+    ).toThrowError(
+      expect.objectContaining({
+        name: 'SizeOverflowError',
+        message: `Size cannot exceed 8 bytes. Given size: 12 bytes.
 
-      Version: @tronweb3/tviem@1.0.0-beta.1]
-    `)
+Version: @tronweb3/tviem@${version}`,
+      }),
+    )
     expect(() =>
       hexToBytes('0x48656c6c6f20576f726c6421', { size: 8 }),
-    ).toThrowErrorMatchingInlineSnapshot(`
-      [SizeOverflowError: Size cannot exceed 8 bytes. Given size: 12 bytes.
+    ).toThrowError(
+      expect.objectContaining({
+        name: 'SizeOverflowError',
+        message: `Size cannot exceed 8 bytes. Given size: 12 bytes.
 
-      Version: @tronweb3/tviem@1.0.0-beta.1]
-    `)
+Version: @tronweb3/tviem@${version}`,
+      }),
+    )
   })
 
   test('error: invalid hex', () => {
-    expect(() => hexToBytes('0xabcdefgh')).toThrowErrorMatchingInlineSnapshot(`
-      [BaseError: Invalid byte sequence ("gh" in "abcdefgh").
+    expect(() => hexToBytes('0xabcdefgh')).toThrowError(
+      expect.objectContaining({
+        name: 'BaseError',
+        message: `Invalid byte sequence ("gh" in "abcdefgh").
 
-      Version: @tronweb3/tviem@1.0.0-beta.1]
-    `)
+Version: @tronweb3/tviem@${version}`,
+      }),
+    )
   })
 })
 
@@ -1200,20 +1208,22 @@ describe('converts string to bytes', () => {
   })
 
   test('error: size overflow', () => {
-    expect(() =>
-      toBytes('Hello World!', { size: 8 }),
-    ).toThrowErrorMatchingInlineSnapshot(`
-      [SizeOverflowError: Size cannot exceed 8 bytes. Given size: 12 bytes.
+    expect(() => toBytes('Hello World!', { size: 8 })).toThrowError(
+      expect.objectContaining({
+        name: 'SizeOverflowError',
+        message: `Size cannot exceed 8 bytes. Given size: 12 bytes.
 
-      Version: @tronweb3/tviem@1.0.0-beta.1]
-    `)
-    expect(() =>
-      stringToBytes('Hello World!', { size: 8 }),
-    ).toThrowErrorMatchingInlineSnapshot(`
-      [SizeOverflowError: Size cannot exceed 8 bytes. Given size: 12 bytes.
+Version: @tronweb3/tviem@${version}`,
+      }),
+    )
+    expect(() => stringToBytes('Hello World!', { size: 8 })).toThrowError(
+      expect.objectContaining({
+        name: 'SizeOverflowError',
+        message: `Size cannot exceed 8 bytes. Given size: 12 bytes.
 
-      Version: @tronweb3/tviem@1.0.0-beta.1]
-    `)
+Version: @tronweb3/tviem@${version}`,
+      }),
+    )
   })
 })
 
@@ -1255,13 +1265,14 @@ test('@tronweb3/tviem: max uint256 boundary', () => {
       255,
     ]
   `)
-  expect(() =>
-    numberToBytes(2n ** 256n, { size: 32 }),
-  ).toThrowErrorMatchingInlineSnapshot(`
-    [IntegerOutOfRangeError: Number "115792089237316195423570985008687907853269984665640564039457584007913129639936n" is not in safe 256-bit unsigned integer range (0n to 115792089237316195423570985008687907853269984665640564039457584007913129639935n)
+  expect(() => numberToBytes(2n ** 256n, { size: 32 })).toThrowError(
+    expect.objectContaining({
+      name: 'IntegerOutOfRangeError',
+      message: `Number "115792089237316195423570985008687907853269984665640564039457584007913129639936n" is not in safe 256-bit unsigned integer range (0n to 115792089237316195423570985008687907853269984665640564039457584007913129639935n)
 
-    Version: @tronweb3/tviem@1.0.0-beta.1]
-  `)
+Version: @tronweb3/tviem@${version}`,
+    }),
+  )
 })
 
 test('@tronweb3/tviem: int256 extremes', () => {
@@ -1345,11 +1356,14 @@ test('@tronweb3/tviem: int256 extremes', () => {
   `)
   expect(() =>
     numberToBytes(2n ** 255n, { size: 32, signed: true }),
-  ).toThrowErrorMatchingInlineSnapshot(`
-    [IntegerOutOfRangeError: Number "57896044618658097711785492504343953926634992332820282019728792003956564819968n" is not in safe 256-bit signed integer range (-57896044618658097711785492504343953926634992332820282019728792003956564819968n to 57896044618658097711785492504343953926634992332820282019728792003956564819967n)
+  ).toThrowError(
+    expect.objectContaining({
+      name: 'IntegerOutOfRangeError',
+      message: `Number "57896044618658097711785492504343953926634992332820282019728792003956564819968n" is not in safe 256-bit signed integer range (-57896044618658097711785492504343953926634992332820282019728792003956564819968n to 57896044618658097711785492504343953926634992332820282019728792003956564819967n)
 
-    Version: @tronweb3/tviem@1.0.0-beta.1]
-  `)
+Version: @tronweb3/tviem@${version}`,
+    }),
+  )
 })
 
 test('@tronweb3/tviem: odd-length hex', () => {

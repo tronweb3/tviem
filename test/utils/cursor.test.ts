@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest'
+import { version } from '../../src/errors/version.js'
 import { createCursor } from '../../src/utils/cursor.js'
 
 const generateBytes = (length: number) => {
@@ -63,27 +64,36 @@ describe('setPosition', () => {
 
   test('overflow', () => {
     const cursor_1 = createCursor(new Uint8Array(generateBytes(420)))
-    expect(() => cursor_1.setPosition(420)).toThrowErrorMatchingInlineSnapshot(`
-      [PositionOutOfBoundsError: Position \`420\` is out of bounds (\`0 < position < 420\`).
+    expect(() => cursor_1.setPosition(420)).toThrowError(
+      expect.objectContaining({
+        name: 'PositionOutOfBoundsError',
+        message: `Position \`420\` is out of bounds (\`0 < position < 420\`).
 
-      Version: @tronweb3/tviem@1.0.0-beta.1]
-    `)
+Version: @tronweb3/tviem@${version}`,
+      }),
+    )
 
     const cursor_2 = createCursor(new Uint8Array(generateBytes(421)))
-    expect(() => cursor_2.setPosition(421)).toThrowErrorMatchingInlineSnapshot(`
-      [PositionOutOfBoundsError: Position \`421\` is out of bounds (\`0 < position < 421\`).
+    expect(() => cursor_2.setPosition(421)).toThrowError(
+      expect.objectContaining({
+        name: 'PositionOutOfBoundsError',
+        message: `Position \`421\` is out of bounds (\`0 < position < 421\`).
 
-      Version: @tronweb3/tviem@1.0.0-beta.1]
-    `)
+Version: @tronweb3/tviem@${version}`,
+      }),
+    )
   })
 
   test('underflow', () => {
     const cursor_1 = createCursor(new Uint8Array(generateBytes(420)))
-    expect(() => cursor_1.setPosition(-1)).toThrowErrorMatchingInlineSnapshot(`
-      [PositionOutOfBoundsError: Position \`-1\` is out of bounds (\`0 < position < 420\`).
+    expect(() => cursor_1.setPosition(-1)).toThrowError(
+      expect.objectContaining({
+        name: 'PositionOutOfBoundsError',
+        message: `Position \`-1\` is out of bounds (\`0 < position < 420\`).
 
-      Version: @tronweb3/tviem@1.0.0-beta.1]
-    `)
+Version: @tronweb3/tviem@${version}`,
+      }),
+    )
   })
 })
 
@@ -103,33 +113,36 @@ describe('incrementPosition', () => {
 
   test('overflow', () => {
     const cursor_1 = createCursor(new Uint8Array(generateBytes(420)))
-    expect(() =>
-      cursor_1.incrementPosition(420),
-    ).toThrowErrorMatchingInlineSnapshot(`
-      [PositionOutOfBoundsError: Position \`420\` is out of bounds (\`0 < position < 420\`).
+    expect(() => cursor_1.incrementPosition(420)).toThrowError(
+      expect.objectContaining({
+        name: 'PositionOutOfBoundsError',
+        message: `Position \`420\` is out of bounds (\`0 < position < 420\`).
 
-      Version: @tronweb3/tviem@1.0.0-beta.1]
-    `)
+Version: @tronweb3/tviem@${version}`,
+      }),
+    )
 
     const cursor_2 = createCursor(new Uint8Array(generateBytes(421)))
-    expect(() =>
-      cursor_2.incrementPosition(421),
-    ).toThrowErrorMatchingInlineSnapshot(`
-      [PositionOutOfBoundsError: Position \`421\` is out of bounds (\`0 < position < 421\`).
+    expect(() => cursor_2.incrementPosition(421)).toThrowError(
+      expect.objectContaining({
+        name: 'PositionOutOfBoundsError',
+        message: `Position \`421\` is out of bounds (\`0 < position < 421\`).
 
-      Version: @tronweb3/tviem@1.0.0-beta.1]
-    `)
+Version: @tronweb3/tviem@${version}`,
+      }),
+    )
   })
 
   test('negative', () => {
     const cursor_1 = createCursor(new Uint8Array(generateBytes(420)))
-    expect(() =>
-      cursor_1.incrementPosition(-1),
-    ).toThrowErrorMatchingInlineSnapshot(`
-      [NegativeOffsetError: Offset \`-1\` cannot be negative.
+    expect(() => cursor_1.incrementPosition(-1)).toThrowError(
+      expect.objectContaining({
+        name: 'NegativeOffsetError',
+        message: `Offset \`-1\` cannot be negative.
 
-      Version: @tronweb3/tviem@1.0.0-beta.1]
-    `)
+Version: @tronweb3/tviem@${version}`,
+      }),
+    )
   })
 })
 
@@ -150,25 +163,27 @@ describe('decrementPosition', () => {
 
   test('underflow', () => {
     const cursor_1 = createCursor(new Uint8Array(generateBytes(420)))
-    expect(() =>
-      cursor_1.decrementPosition(1),
-    ).toThrowErrorMatchingInlineSnapshot(`
-      [PositionOutOfBoundsError: Position \`-1\` is out of bounds (\`0 < position < 420\`).
+    expect(() => cursor_1.decrementPosition(1)).toThrowError(
+      expect.objectContaining({
+        name: 'PositionOutOfBoundsError',
+        message: `Position \`-1\` is out of bounds (\`0 < position < 420\`).
 
-      Version: @tronweb3/tviem@1.0.0-beta.1]
-    `)
+Version: @tronweb3/tviem@${version}`,
+      }),
+    )
   })
 
   test('negative', () => {
     const cursor = createCursor(new Uint8Array(generateBytes(420)))
     cursor.setPosition(419)
-    expect(() =>
-      cursor.decrementPosition(-1),
-    ).toThrowErrorMatchingInlineSnapshot(`
-      [NegativeOffsetError: Offset \`-1\` cannot be negative.
+    expect(() => cursor.decrementPosition(-1)).toThrowError(
+      expect.objectContaining({
+        name: 'NegativeOffsetError',
+        message: `Offset \`-1\` cannot be negative.
 
-      Version: @tronweb3/tviem@1.0.0-beta.1]
-    `)
+Version: @tronweb3/tviem@${version}`,
+      }),
+    )
   })
 })
 
@@ -184,11 +199,14 @@ describe('inspectByte', () => {
 
   test('overflow', () => {
     const cursor = createCursor(new Uint8Array(generateBytes(420)))
-    expect(() => cursor.inspectByte(420)).toThrowErrorMatchingInlineSnapshot(`
-      [PositionOutOfBoundsError: Position \`420\` is out of bounds (\`0 < position < 420\`).
+    expect(() => cursor.inspectByte(420)).toThrowError(
+      expect.objectContaining({
+        name: 'PositionOutOfBoundsError',
+        message: `Position \`420\` is out of bounds (\`0 < position < 420\`).
 
-      Version: @tronweb3/tviem@1.0.0-beta.1]
-    `)
+Version: @tronweb3/tviem@${version}`,
+      }),
+    )
   })
 })
 
@@ -218,31 +236,34 @@ describe('inspectBytes', () => {
   test('overflow', () => {
     const cursor = createCursor(new Uint8Array(generateBytes(420)))
     cursor.setPosition(415)
-    expect(() => cursor.inspectBytes(10)).toThrowErrorMatchingInlineSnapshot(`
-      [PositionOutOfBoundsError: Position \`424\` is out of bounds (\`0 < position < 420\`).
+    expect(() => cursor.inspectBytes(10)).toThrowError(
+      expect.objectContaining({
+        name: 'PositionOutOfBoundsError',
+        message: `Position \`424\` is out of bounds (\`0 < position < 420\`).
 
-      Version: @tronweb3/tviem@1.0.0-beta.1]
-    `)
+Version: @tronweb3/tviem@${version}`,
+      }),
+    )
 
     const cursor_2 = createCursor(new Uint8Array(generateBytes(20)))
     cursor_2.setPosition(10)
-    expect(() => cursor_2.inspectBytes(11)).toThrowErrorMatchingInlineSnapshot(
-      `
-      [PositionOutOfBoundsError: Position \`20\` is out of bounds (\`0 < position < 20\`).
+    expect(() => cursor_2.inspectBytes(11)).toThrowError(
+      expect.objectContaining({
+        name: 'PositionOutOfBoundsError',
+        message: `Position \`20\` is out of bounds (\`0 < position < 20\`).
 
-      Version: @tronweb3/tviem@1.0.0-beta.1]
-    `,
+Version: @tronweb3/tviem@${version}`,
+      }),
     )
 
     const cursor_3 = createCursor(new Uint8Array(generateBytes(20)))
-    expect(() =>
-      cursor_3.inspectBytes(11, 10),
-    ).toThrowErrorMatchingInlineSnapshot(
-      `
-      [PositionOutOfBoundsError: Position \`20\` is out of bounds (\`0 < position < 20\`).
+    expect(() => cursor_3.inspectBytes(11, 10)).toThrowError(
+      expect.objectContaining({
+        name: 'PositionOutOfBoundsError',
+        message: `Position \`20\` is out of bounds (\`0 < position < 20\`).
 
-      Version: @tronweb3/tviem@1.0.0-beta.1]
-    `,
+Version: @tronweb3/tviem@${version}`,
+      }),
     )
   })
 })
@@ -259,11 +280,14 @@ describe('inspectUint8', () => {
 
   test('overflow', () => {
     const cursor = createCursor(new Uint8Array(generateBytes(420)))
-    expect(() => cursor.inspectUint8(420)).toThrowErrorMatchingInlineSnapshot(`
-      [PositionOutOfBoundsError: Position \`420\` is out of bounds (\`0 < position < 420\`).
+    expect(() => cursor.inspectUint8(420)).toThrowError(
+      expect.objectContaining({
+        name: 'PositionOutOfBoundsError',
+        message: `Position \`420\` is out of bounds (\`0 < position < 420\`).
 
-      Version: @tronweb3/tviem@1.0.0-beta.1]
-    `)
+Version: @tronweb3/tviem@${version}`,
+      }),
+    )
   })
 })
 
@@ -279,21 +303,27 @@ describe('inspectUint16', () => {
     const cursor = createCursor(new Uint8Array([1, 0, 1, 164]))
     expect(cursor.inspectUint16()).toBe(256)
     cursor.incrementPosition(3)
-    expect(() => cursor.inspectUint16()).toThrowErrorMatchingInlineSnapshot(`
-      [PositionOutOfBoundsError: Position \`4\` is out of bounds (\`0 < position < 4\`).
+    expect(() => cursor.inspectUint16()).toThrowError(
+      expect.objectContaining({
+        name: 'PositionOutOfBoundsError',
+        message: `Position \`4\` is out of bounds (\`0 < position < 4\`).
 
-      Version: @tronweb3/tviem@1.0.0-beta.1]
-    `)
+Version: @tronweb3/tviem@${version}`,
+      }),
+    )
   })
 
   test('overflow', () => {
     const cursor = createCursor(new Uint8Array([1, 0, 1, 164]))
     expect(cursor.inspectUint16()).toBe(256)
-    expect(() => cursor.inspectUint16(3)).toThrowErrorMatchingInlineSnapshot(`
-      [PositionOutOfBoundsError: Position \`4\` is out of bounds (\`0 < position < 4\`).
+    expect(() => cursor.inspectUint16(3)).toThrowError(
+      expect.objectContaining({
+        name: 'PositionOutOfBoundsError',
+        message: `Position \`4\` is out of bounds (\`0 < position < 4\`).
 
-      Version: @tronweb3/tviem@1.0.0-beta.1]
-    `)
+Version: @tronweb3/tviem@${version}`,
+      }),
+    )
   })
 })
 
@@ -309,21 +339,27 @@ describe('inspectUint24', () => {
     const cursor = createCursor(new Uint8Array([1, 0, 1, 0xf2, 0xc0]))
     expect(cursor.inspectUint24()).toBe(65537)
     cursor.incrementPosition(3)
-    expect(() => cursor.inspectUint24()).toThrowErrorMatchingInlineSnapshot(`
-      [PositionOutOfBoundsError: Position \`5\` is out of bounds (\`0 < position < 5\`).
+    expect(() => cursor.inspectUint24()).toThrowError(
+      expect.objectContaining({
+        name: 'PositionOutOfBoundsError',
+        message: `Position \`5\` is out of bounds (\`0 < position < 5\`).
 
-      Version: @tronweb3/tviem@1.0.0-beta.1]
-    `)
+Version: @tronweb3/tviem@${version}`,
+      }),
+    )
   })
 
   test('overflow', () => {
     const cursor = createCursor(new Uint8Array([1, 0, 1, 0xf2, 0xc0]))
     expect(cursor.inspectUint24()).toBe(65537)
-    expect(() => cursor.inspectUint24(3)).toThrowErrorMatchingInlineSnapshot(`
-      [PositionOutOfBoundsError: Position \`5\` is out of bounds (\`0 < position < 5\`).
+    expect(() => cursor.inspectUint24(3)).toThrowError(
+      expect.objectContaining({
+        name: 'PositionOutOfBoundsError',
+        message: `Position \`5\` is out of bounds (\`0 < position < 5\`).
 
-      Version: @tronweb3/tviem@1.0.0-beta.1]
-    `)
+Version: @tronweb3/tviem@${version}`,
+      }),
+    )
   })
 })
 
@@ -343,11 +379,14 @@ describe('inspectUint32', () => {
     )
     expect(cursor.inspectUint32()).toBe(16777257)
     cursor.incrementPosition(4)
-    expect(() => cursor.inspectUint32()).toThrowErrorMatchingInlineSnapshot(`
-      [PositionOutOfBoundsError: Position \`7\` is out of bounds (\`0 < position < 7\`).
+    expect(() => cursor.inspectUint32()).toThrowError(
+      expect.objectContaining({
+        name: 'PositionOutOfBoundsError',
+        message: `Position \`7\` is out of bounds (\`0 < position < 7\`).
 
-      Version: @tronweb3/tviem@1.0.0-beta.1]
-    `)
+Version: @tronweb3/tviem@${version}`,
+      }),
+    )
   })
 
   test('overflow', () => {
@@ -355,11 +394,14 @@ describe('inspectUint32', () => {
       new Uint8Array([1, 0, 0, 0x29, 0x60, 0xc1, 0xde]),
     )
     expect(cursor.inspectUint32()).toBe(16777257)
-    expect(() => cursor.inspectUint32(4)).toThrowErrorMatchingInlineSnapshot(`
-      [PositionOutOfBoundsError: Position \`7\` is out of bounds (\`0 < position < 7\`).
+    expect(() => cursor.inspectUint32(4)).toThrowError(
+      expect.objectContaining({
+        name: 'PositionOutOfBoundsError',
+        message: `Position \`7\` is out of bounds (\`0 < position < 7\`).
 
-      Version: @tronweb3/tviem@1.0.0-beta.1]
-    `)
+Version: @tronweb3/tviem@${version}`,
+      }),
+    )
   })
 })
 
@@ -377,11 +419,14 @@ describe('pushByte', () => {
     const cursor = createCursor(new Uint8Array(420))
     cursor.setPosition(419)
     cursor.pushByte(1)
-    expect(() => cursor.pushByte(2)).toThrowErrorMatchingInlineSnapshot(`
-      [PositionOutOfBoundsError: Position \`420\` is out of bounds (\`0 < position < 420\`).
+    expect(() => cursor.pushByte(2)).toThrowError(
+      expect.objectContaining({
+        name: 'PositionOutOfBoundsError',
+        message: `Position \`420\` is out of bounds (\`0 < position < 420\`).
 
-      Version: @tronweb3/tviem@1.0.0-beta.1]
-    `)
+Version: @tronweb3/tviem@${version}`,
+      }),
+    )
   })
 })
 
@@ -404,11 +449,14 @@ describe('pushBytes', () => {
     cursor.setPosition(417)
     expect(() =>
       cursor.pushBytes(Uint8Array.from([69, 420, 69, 420])),
-    ).toThrowErrorMatchingInlineSnapshot(`
-      [PositionOutOfBoundsError: Position \`420\` is out of bounds (\`0 < position < 420\`).
+    ).toThrowError(
+      expect.objectContaining({
+        name: 'PositionOutOfBoundsError',
+        message: `Position \`420\` is out of bounds (\`0 < position < 420\`).
 
-      Version: @tronweb3/tviem@1.0.0-beta.1]
-    `)
+Version: @tronweb3/tviem@${version}`,
+      }),
+    )
   })
 
   test('overflow', () => {
@@ -417,11 +465,14 @@ describe('pushBytes', () => {
     cursor.pushBytes(Uint8Array.from([69]))
     expect(() =>
       cursor.pushBytes(Uint8Array.from([69, 420, 69, 420])),
-    ).toThrowErrorMatchingInlineSnapshot(`
-      [PositionOutOfBoundsError: Position \`420\` is out of bounds (\`0 < position < 420\`).
+    ).toThrowError(
+      expect.objectContaining({
+        name: 'PositionOutOfBoundsError',
+        message: `Position \`420\` is out of bounds (\`0 < position < 420\`).
 
-      Version: @tronweb3/tviem@1.0.0-beta.1]
-    `)
+Version: @tronweb3/tviem@${version}`,
+      }),
+    )
   })
 })
 
@@ -439,11 +490,14 @@ describe('pushUint8', () => {
     const cursor = createCursor(new Uint8Array(420))
     cursor.setPosition(419)
     cursor.pushUint8(1)
-    expect(() => cursor.pushUint8(2)).toThrowErrorMatchingInlineSnapshot(`
-      [PositionOutOfBoundsError: Position \`420\` is out of bounds (\`0 < position < 420\`).
+    expect(() => cursor.pushUint8(2)).toThrowError(
+      expect.objectContaining({
+        name: 'PositionOutOfBoundsError',
+        message: `Position \`420\` is out of bounds (\`0 < position < 420\`).
 
-      Version: @tronweb3/tviem@1.0.0-beta.1]
-    `)
+Version: @tronweb3/tviem@${version}`,
+      }),
+    )
   })
 })
 
@@ -467,11 +521,14 @@ describe('pushUint16', () => {
     const cursor = createCursor(new Uint8Array(420))
     cursor.setPosition(417)
     cursor.pushUint16(420)
-    expect(() => cursor.pushUint16(420)).toThrowErrorMatchingInlineSnapshot(`
-      [PositionOutOfBoundsError: Position \`420\` is out of bounds (\`0 < position < 420\`).
+    expect(() => cursor.pushUint16(420)).toThrowError(
+      expect.objectContaining({
+        name: 'PositionOutOfBoundsError',
+        message: `Position \`420\` is out of bounds (\`0 < position < 420\`).
 
-      Version: @tronweb3/tviem@1.0.0-beta.1]
-    `)
+Version: @tronweb3/tviem@${version}`,
+      }),
+    )
   })
 })
 
@@ -495,11 +552,14 @@ describe('pushUint24', () => {
     const cursor = createCursor(new Uint8Array(420))
     cursor.setPosition(415)
     cursor.pushUint24(420)
-    expect(() => cursor.pushUint24(420)).toThrowErrorMatchingInlineSnapshot(`
-      [PositionOutOfBoundsError: Position \`420\` is out of bounds (\`0 < position < 420\`).
+    expect(() => cursor.pushUint24(420)).toThrowError(
+      expect.objectContaining({
+        name: 'PositionOutOfBoundsError',
+        message: `Position \`420\` is out of bounds (\`0 < position < 420\`).
 
-      Version: @tronweb3/tviem@1.0.0-beta.1]
-    `)
+Version: @tronweb3/tviem@${version}`,
+      }),
+    )
   })
 })
 
@@ -523,11 +583,14 @@ describe('pushUint32', () => {
     const cursor = createCursor(new Uint8Array(420))
     cursor.setPosition(413)
     cursor.pushUint32(420)
-    expect(() => cursor.pushUint32(420)).toThrowErrorMatchingInlineSnapshot(`
-      [PositionOutOfBoundsError: Position \`420\` is out of bounds (\`0 < position < 420\`).
+    expect(() => cursor.pushUint32(420)).toThrowError(
+      expect.objectContaining({
+        name: 'PositionOutOfBoundsError',
+        message: `Position \`420\` is out of bounds (\`0 < position < 420\`).
 
-      Version: @tronweb3/tviem@1.0.0-beta.1]
-    `)
+Version: @tronweb3/tviem@${version}`,
+      }),
+    )
   })
 })
 
@@ -547,11 +610,14 @@ describe('readByte', () => {
     const cursor = createCursor(new Uint8Array(generateBytes(420)))
     cursor.setPosition(419)
     cursor.readByte()
-    expect(() => cursor.readByte()).toThrowErrorMatchingInlineSnapshot(`
-      [PositionOutOfBoundsError: Position \`420\` is out of bounds (\`0 < position < 420\`).
+    expect(() => cursor.readByte()).toThrowError(
+      expect.objectContaining({
+        name: 'PositionOutOfBoundsError',
+        message: `Position \`420\` is out of bounds (\`0 < position < 420\`).
 
-      Version: @tronweb3/tviem@1.0.0-beta.1]
-    `)
+Version: @tronweb3/tviem@${version}`,
+      }),
+    )
   })
 })
 
@@ -572,20 +638,24 @@ describe('readBytes', () => {
   test('overflow', () => {
     const cursor = createCursor(new Uint8Array(generateBytes(420)))
     cursor.setPosition(415)
-    expect(() => cursor.readBytes(10)).toThrowErrorMatchingInlineSnapshot(`
-      [PositionOutOfBoundsError: Position \`424\` is out of bounds (\`0 < position < 420\`).
+    expect(() => cursor.readBytes(10)).toThrowError(
+      expect.objectContaining({
+        name: 'PositionOutOfBoundsError',
+        message: `Position \`424\` is out of bounds (\`0 < position < 420\`).
 
-      Version: @tronweb3/tviem@1.0.0-beta.1]
-    `)
+Version: @tronweb3/tviem@${version}`,
+      }),
+    )
 
     const cursor_2 = createCursor(new Uint8Array(generateBytes(20)))
     cursor_2.setPosition(10)
-    expect(() => cursor_2.readBytes(11)).toThrowErrorMatchingInlineSnapshot(
-      `
-      [PositionOutOfBoundsError: Position \`20\` is out of bounds (\`0 < position < 20\`).
+    expect(() => cursor_2.readBytes(11)).toThrowError(
+      expect.objectContaining({
+        name: 'PositionOutOfBoundsError',
+        message: `Position \`20\` is out of bounds (\`0 < position < 20\`).
 
-      Version: @tronweb3/tviem@1.0.0-beta.1]
-    `,
+Version: @tronweb3/tviem@${version}`,
+      }),
     )
   })
 })
@@ -607,11 +677,14 @@ describe('readUint8', () => {
     const cursor = createCursor(new Uint8Array(generateBytes(420)))
     cursor.setPosition(419)
     cursor.readUint8()
-    expect(() => cursor.readUint8()).toThrowErrorMatchingInlineSnapshot(`
-      [PositionOutOfBoundsError: Position \`420\` is out of bounds (\`0 < position < 420\`).
+    expect(() => cursor.readUint8()).toThrowError(
+      expect.objectContaining({
+        name: 'PositionOutOfBoundsError',
+        message: `Position \`420\` is out of bounds (\`0 < position < 420\`).
 
-      Version: @tronweb3/tviem@1.0.0-beta.1]
-    `)
+Version: @tronweb3/tviem@${version}`,
+      }),
+    )
   })
 })
 
@@ -626,11 +699,14 @@ describe('readUint16', () => {
     const cursor = createCursor(new Uint8Array([1, 0, 1, 164]))
     expect(cursor.readUint16()).toBe(256)
     expect(cursor.readUint16()).toBe(420)
-    expect(() => cursor.readUint16()).toThrowErrorMatchingInlineSnapshot(`
-      [PositionOutOfBoundsError: Position \`5\` is out of bounds (\`0 < position < 4\`).
+    expect(() => cursor.readUint16()).toThrowError(
+      expect.objectContaining({
+        name: 'PositionOutOfBoundsError',
+        message: `Position \`5\` is out of bounds (\`0 < position < 4\`).
 
-      Version: @tronweb3/tviem@1.0.0-beta.1]
-    `)
+Version: @tronweb3/tviem@${version}`,
+      }),
+    )
   })
 })
 
@@ -644,11 +720,14 @@ describe('readUint24', () => {
   test('overflow', () => {
     const cursor = createCursor(new Uint8Array([1, 0, 1, 0xf2, 0xc0]))
     expect(cursor.readUint24()).toBe(65537)
-    expect(() => cursor.readUint24()).toThrowErrorMatchingInlineSnapshot(`
-      [PositionOutOfBoundsError: Position \`5\` is out of bounds (\`0 < position < 5\`).
+    expect(() => cursor.readUint24()).toThrowError(
+      expect.objectContaining({
+        name: 'PositionOutOfBoundsError',
+        message: `Position \`5\` is out of bounds (\`0 < position < 5\`).
 
-      Version: @tronweb3/tviem@1.0.0-beta.1]
-    `)
+Version: @tronweb3/tviem@${version}`,
+      }),
+    )
   })
 })
 
@@ -664,11 +743,14 @@ describe('readUint32', () => {
       new Uint8Array([1, 0, 0, 0x29, 0x60, 0xc1, 0xde]),
     )
     expect(cursor.readUint32()).toBe(16777257)
-    expect(() => cursor.readUint32()).toThrowErrorMatchingInlineSnapshot(`
-      [PositionOutOfBoundsError: Position \`7\` is out of bounds (\`0 < position < 7\`).
+    expect(() => cursor.readUint32()).toThrowError(
+      expect.objectContaining({
+        name: 'PositionOutOfBoundsError',
+        message: `Position \`7\` is out of bounds (\`0 < position < 7\`).
 
-      Version: @tronweb3/tviem@1.0.0-beta.1]
-    `)
+Version: @tronweb3/tviem@${version}`,
+      }),
+    )
   })
 })
 
@@ -703,10 +785,13 @@ describe('args: recursiveReadLimit', () => {
     cursor.setPosition(0)
     cursor.readBytes(10)
     cursor.setPosition(20)
-    expect(() => cursor.readBytes(10)).toThrowErrorMatchingInlineSnapshot(`
-      [RecursiveReadLimitExceededError: Recursive read limit of \`2\` exceeded (recursive read count: \`3\`).
+    expect(() => cursor.readBytes(10)).toThrowError(
+      expect.objectContaining({
+        name: 'RecursiveReadLimitExceededError',
+        message: `Recursive read limit of \`2\` exceeded (recursive read count: \`3\`).
 
-      Version: @tronweb3/tviem@1.0.0-beta.1]
-    `)
+Version: @tronweb3/tviem@${version}`,
+      }),
+    )
   })
 })

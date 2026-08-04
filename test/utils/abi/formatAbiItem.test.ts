@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest'
+import { version } from '../../../src/errors/version.js'
 
 import {
   formatAbiItem,
@@ -286,12 +287,15 @@ describe('formatAbiItem', () => {
         stateMutability: 'nonpayable',
         type: 'constructor',
       }),
-    ).toThrowErrorMatchingInlineSnapshot(`
-      [InvalidDefinitionTypeError: "constructor" is not a valid definition type.
-      Valid types: "function", "event", "error"
+    ).toThrowError(
+      expect.objectContaining({
+        name: 'InvalidDefinitionTypeError',
+        message: `"constructor" is not a valid definition type.
+Valid types: "function", "event", "error"
 
-      Version: @tronweb3/tviem@1.0.0-beta.1]
-    `)
+Version: @tronweb3/tviem@${version}`,
+      }),
+    )
   })
 })
 

@@ -1,5 +1,4 @@
 import { expect, test } from 'vitest'
-
 import {
   NegativeOffsetError,
   PositionOutOfBoundsError,
@@ -8,6 +7,7 @@ import {
   IntegerOutOfRangeError,
   VarintOverflowError,
 } from '../../../../src/errors/encoding.js'
+import { version } from '../../../../src/errors/version.js'
 import {
   maxUvarint,
   readUvarint,
@@ -46,11 +46,14 @@ test('writeUvarint', () => {
 test('writeUvarint: out of range', () => {
   expect(() => writeUvarint(-1n)).toThrow(IntegerOutOfRangeError)
   expect(() => writeUvarint(maxUvarint + 1n)).toThrow(IntegerOutOfRangeError)
-  expect(() => writeUvarint(-1n)).toThrowErrorMatchingInlineSnapshot(`
-    [IntegerOutOfRangeError: Number "-1" is not in safe 64-bit unsigned integer range (0 to 18446744073709551615)
+  expect(() => writeUvarint(-1n)).toThrowError(
+    expect.objectContaining({
+      name: 'IntegerOutOfRangeError',
+      message: `Number "-1" is not in safe 64-bit unsigned integer range (0 to 18446744073709551615)
 
-    Version: @tronweb3/tviem@1.0.0-beta.1]
-  `)
+Version: @tronweb3/tviem@${version}`,
+    }),
+  )
 })
 
 test('readUvarint', () => {
@@ -111,13 +114,14 @@ test('readUvarint: truncated', () => {
   expect(() => readUvarint(new Uint8Array([0x80]))).toThrow(
     PositionOutOfBoundsError,
   )
-  expect(() =>
-    readUvarint(new Uint8Array([0xff, 0xff, 0xff])),
-  ).toThrowErrorMatchingInlineSnapshot(`
-    [PositionOutOfBoundsError: Position \`3\` is out of bounds (\`0 < position < 3\`).
+  expect(() => readUvarint(new Uint8Array([0xff, 0xff, 0xff]))).toThrowError(
+    expect.objectContaining({
+      name: 'PositionOutOfBoundsError',
+      message: `Position \`3\` is out of bounds (\`0 < position < 3\`).
 
-    Version: @tronweb3/tviem@1.0.0-beta.1]
-  `)
+Version: @tronweb3/tviem@${version}`,
+    }),
+  )
 })
 
 test('readUvarint: overflow', () => {
@@ -133,11 +137,12 @@ test('readUvarint: overflow', () => {
   expect(() => readUvarint(new Uint8Array(11).fill(0x80))).toThrow(
     VarintOverflowError,
   )
-  expect(() =>
-    readUvarint(new Uint8Array(11).fill(0x80)),
-  ).toThrowErrorMatchingInlineSnapshot(`
-    [VarintOverflowError: Varint exceeds the maximum size of a 64-bit unsigned integer.
+  expect(() => readUvarint(new Uint8Array(11).fill(0x80))).toThrowError(
+    expect.objectContaining({
+      name: 'VarintOverflowError',
+      message: `Varint exceeds the maximum size of a 64-bit unsigned integer.
 
-    Version: @tronweb3/tviem@1.0.0-beta.1]
-  `)
+Version: @tronweb3/tviem@${version}`,
+    }),
+  )
 })

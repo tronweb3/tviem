@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest'
+import { version } from '../../../src/errors/version.js'
 
 import { pad, padBytes, padHex } from '../../../src/utils/data/pad.js'
 
@@ -65,12 +66,13 @@ describe('hex', () => {
       padHex(
         '0x1a4e12a45a21323123aaa87a897a897a898a6567a578a867a98778a667a85a875a87a6a787a65a675a6a9',
       ),
-    ).toThrowErrorMatchingInlineSnapshot(
-      `
-      [SizeExceedsPaddingSizeError: Hex size (43) exceeds padding size (32).
+    ).toThrowError(
+      expect.objectContaining({
+        name: 'SizeExceedsPaddingSizeError',
+        message: `Hex size (43) exceeds padding size (32).
 
-      Version: @tronweb3/tviem@1.0.0-beta.1]
-    `,
+Version: @tronweb3/tviem@${version}`,
+      }),
     )
   })
 
@@ -85,14 +87,13 @@ describe('hex', () => {
       '"0xa4e12a45ab"',
     )
 
-    expect(() =>
-      padHex('0x1a4e12a45', { size: 4 }),
-    ).toThrowErrorMatchingInlineSnapshot(
-      `
-      [SizeExceedsPaddingSizeError: Hex size (5) exceeds padding size (4).
+    expect(() => padHex('0x1a4e12a45', { size: 4 })).toThrowError(
+      expect.objectContaining({
+        name: 'SizeExceedsPaddingSizeError',
+        message: `Hex size (5) exceeds padding size (4).
 
-      Version: @tronweb3/tviem@1.0.0-beta.1]
-    `,
+Version: @tronweb3/tviem@${version}`,
+      }),
     )
   })
 
@@ -199,12 +200,13 @@ describe('bytes', () => {
           122, 51, 123, 1, 122, 51, 123, 1, 122, 51, 123,
         ]),
       ),
-    ).toThrowErrorMatchingInlineSnapshot(
-      `
-      [SizeExceedsPaddingSizeError: Bytes size (44) exceeds padding size (32).
+    ).toThrowError(
+      expect.objectContaining({
+        name: 'SizeExceedsPaddingSizeError',
+        message: `Bytes size (44) exceeds padding size (32).
 
-      Version: @tronweb3/tviem@1.0.0-beta.1]
-    `,
+Version: @tronweb3/tviem@${version}`,
+      }),
     )
   })
 
@@ -250,12 +252,13 @@ describe('bytes', () => {
 
     expect(() =>
       padBytes(new Uint8Array([1, 122, 51, 123, 11]), { size: 4 }),
-    ).toThrowErrorMatchingInlineSnapshot(
-      `
-      [SizeExceedsPaddingSizeError: Bytes size (5) exceeds padding size (4).
+    ).toThrowError(
+      expect.objectContaining({
+        name: 'SizeExceedsPaddingSizeError',
+        message: `Bytes size (5) exceeds padding size (4).
 
-      Version: @tronweb3/tviem@1.0.0-beta.1]
-    `,
+Version: @tronweb3/tviem@${version}`,
+      }),
     )
   })
 

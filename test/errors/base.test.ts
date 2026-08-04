@@ -1,29 +1,32 @@
 import { expect, test } from 'vitest'
-
 import { BaseError, setErrorConfig } from '../../src/errors/base.js'
+import { version } from '../../src/errors/version.js'
 
 test('BaseError', () => {
-  expect(new BaseError('An error occurred.')).toMatchInlineSnapshot(`
-    [BaseError: An error occurred.
+  expect(new BaseError('An error occurred.')).toMatchObject({
+    name: 'BaseError',
+    message: `An error occurred.
 
-    Version: @tronweb3/tviem@1.0.0-beta.1]
-  `)
+Version: @tronweb3/tviem@${version}`,
+  })
 
   expect(
     new BaseError('An error occurred.', { details: 'details' }),
-  ).toMatchInlineSnapshot(`
-    [BaseError: An error occurred.
+  ).toMatchObject({
+    name: 'BaseError',
+    message: `An error occurred.
 
-    Details: details
-    Version: @tronweb3/tviem@1.0.0-beta.1]
-  `)
+Details: details
+Version: @tronweb3/tviem@${version}`,
+  })
 
-  expect(new BaseError('', { details: 'details' })).toMatchInlineSnapshot(`
-    [BaseError: An error occurred.
+  expect(new BaseError('', { details: 'details' })).toMatchObject({
+    name: 'BaseError',
+    message: `An error occurred.
 
-    Details: details
-    Version: @tronweb3/tviem@1.0.0-beta.1]
-  `)
+Details: details
+Version: @tronweb3/tviem@${version}`,
+  })
 })
 
 test('BaseError (w/ docsPath)', () => {
@@ -32,42 +35,46 @@ test('BaseError (w/ docsPath)', () => {
       details: 'details',
       docsPath: '/lol',
     }),
-  ).toMatchInlineSnapshot(`
-    [BaseError: An error occurred.
+  ).toMatchObject({
+    name: 'BaseError',
+    message: `An error occurred.
 
-    Details: details
-    Version: @tronweb3/tviem@1.0.0-beta.1]
-  `)
+Details: details
+Version: @tronweb3/tviem@${version}`,
+  })
   expect(
     new BaseError('An error occurred.', {
       cause: new BaseError('error', { docsPath: '/docs' }),
     }),
-  ).toMatchInlineSnapshot(`
-    [BaseError: An error occurred.
+  ).toMatchObject({
+    name: 'BaseError',
+    message: `An error occurred.
 
-    Version: @tronweb3/tviem@1.0.0-beta.1]
-  `)
+Version: @tronweb3/tviem@${version}`,
+  })
   expect(
     new BaseError('An error occurred.', {
       cause: new BaseError('error'),
       docsPath: '/lol',
     }),
-  ).toMatchInlineSnapshot(`
-    [BaseError: An error occurred.
+  ).toMatchObject({
+    name: 'BaseError',
+    message: `An error occurred.
 
-    Version: @tronweb3/tviem@1.0.0-beta.1]
-  `)
+Version: @tronweb3/tviem@${version}`,
+  })
   expect(
     new BaseError('An error occurred.', {
       details: 'details',
       docsPath: '/lol',
     }),
-  ).toMatchInlineSnapshot(`
-    [BaseError: An error occurred.
+  ).toMatchObject({
+    name: 'BaseError',
+    message: `An error occurred.
 
-    Details: details
-    Version: @tronweb3/tviem@1.0.0-beta.1]
-  `)
+Details: details
+Version: @tronweb3/tviem@${version}`,
+  })
 })
 
 test('BaseError (w/ docsBaseUrl)', () => {
@@ -77,12 +84,13 @@ test('BaseError (w/ docsBaseUrl)', () => {
       details: 'details',
       docsPath: '/lol',
     }),
-  ).toMatchInlineSnapshot(`
-    [BaseError: An error occurred.
+  ).toMatchObject({
+    name: 'BaseError',
+    message: `An error occurred.
 
-    Details: details
-    Version: @tronweb3/tviem@1.0.0-beta.1]
-  `)
+Details: details
+Version: @tronweb3/tviem@${version}`,
+  })
 })
 
 test('BaseError (w/ metaMessages)', () => {
@@ -91,15 +99,16 @@ test('BaseError (w/ metaMessages)', () => {
       details: 'details',
       metaMessages: ['Reason: idk', 'Cause: lol'],
     }),
-  ).toMatchInlineSnapshot(`
-    [BaseError: An error occurred.
+  ).toMatchObject({
+    name: 'BaseError',
+    message: `An error occurred.
 
-    Reason: idk
-    Cause: lol
+Reason: idk
+Cause: lol
 
-    Details: details
-    Version: @tronweb3/tviem@1.0.0-beta.1]
-  `)
+Details: details
+Version: @tronweb3/tviem@${version}`,
+  })
 })
 
 test('inherited BaseError', () => {
@@ -111,12 +120,13 @@ test('inherited BaseError', () => {
     new BaseError('An internal error occurred.', {
       cause: err,
     }),
-  ).toMatchInlineSnapshot(`
-    [BaseError: An internal error occurred.
+  ).toMatchObject({
+    name: 'BaseError',
+    message: `An internal error occurred.
 
-    Details: details
-    Version: @tronweb3/tviem@1.0.0-beta.1]
-  `)
+Details: details
+Version: @tronweb3/tviem@${version}`,
+  })
 })
 
 test('inherited Error', () => {
@@ -126,12 +136,13 @@ test('inherited Error', () => {
       cause: err,
       docsPath: '/lol',
     }),
-  ).toMatchInlineSnapshot(`
-    [BaseError: An internal error occurred.
+  ).toMatchObject({
+    name: 'BaseError',
+    message: `An internal error occurred.
 
-    Details: details
-    Version: @tronweb3/tviem@1.0.0-beta.1]
-  `)
+Details: details
+Version: @tronweb3/tviem@${version}`,
+  })
 })
 
 test('walk: no predicate fn (walks to leaf)', () => {
@@ -141,11 +152,12 @@ test('walk: no predicate fn (walks to leaf)', () => {
   const err = new BaseError('test1', {
     cause: new FooError('test2', { cause: new BarError('test3') }),
   })
-  expect(err.walk()).toMatchInlineSnapshot(`
-    [BaseError: test3
+  expect(err.walk()).toMatchObject({
+    name: 'BaseError',
+    message: `test3
 
-    Version: @tronweb3/tviem@1.0.0-beta.1]
-  `)
+Version: @tronweb3/tviem@${version}`,
+  })
 })
 
 test('walk: predicate fn', () => {
@@ -155,11 +167,12 @@ test('walk: predicate fn', () => {
   const err = new BaseError('test1', {
     cause: new FooError('test2', { cause: new BarError('test3') }),
   })
-  expect(err.walk((err) => err instanceof FooError)).toMatchInlineSnapshot(`
-    [BaseError: test2
+  expect(err.walk((err) => err instanceof FooError)).toMatchObject({
+    name: 'BaseError',
+    message: `test2
 
-    Version: @tronweb3/tviem@1.0.0-beta.1]
-  `)
+Version: @tronweb3/tviem@${version}`,
+  })
 })
 
 test('walk: predicate fn (no match)', () => {
@@ -192,22 +205,22 @@ test('setErrorConfig', () => {
 
   setErrorConfig({
     getDocsUrl({ name }) {
-      if (name === 'FooError') return 'https://sweetlib.com/xyz'
+      if (name === 'FooError') return 'https://example.com/'
       return undefined
     },
-    version: 'sweetlib@1.2.3',
+    version: '@tronweb3/tviem@1.2.3',
   })
 
   expect(new BaseError('An error occurred.')).toMatchInlineSnapshot(`
     [BaseError: An error occurred.
 
-    Version: sweetlib@1.2.3]
+    Version: @tronweb3/tviem@1.2.3]
   `)
 
   expect(new FooError()).toMatchInlineSnapshot(`
     [FooError: An error occurred
 
-    Docs: https://sweetlib.com/xyz
-    Version: sweetlib@1.2.3]
+    Docs: https://example.com/
+    Version: @tronweb3/tviem@1.2.3]
   `)
 })

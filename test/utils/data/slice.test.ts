@@ -1,4 +1,5 @@
 import { expect, test } from 'vitest'
+import { version } from '../../../src/errors/version.js'
 
 import { slice, sliceBytes, sliceHex } from '../../../src/utils/data/slice.js'
 
@@ -30,31 +31,30 @@ test('hex', () => {
   )
   expect(sliceHex('0x0123456789', -10)).toMatchInlineSnapshot('"0x0123456789"')
 
-  expect(() => sliceHex('0x0123456789', 5)).toThrowErrorMatchingInlineSnapshot(
-    `
-    [SliceOffsetOutOfBoundsError: Slice starting at offset "5" is out-of-bounds (size: 5).
+  expect(() => sliceHex('0x0123456789', 5)).toThrowError(
+    expect.objectContaining({
+      name: 'SliceOffsetOutOfBoundsError',
+      message: `Slice starting at offset "5" is out-of-bounds (size: 5).
 
-    Version: @tronweb3/tviem@1.0.0-beta.1]
-  `,
+Version: @tronweb3/tviem@${version}`,
+    }),
   )
 
-  expect(() =>
-    sliceHex('0x0123456789', 0, 6, { strict: true }),
-  ).toThrowErrorMatchingInlineSnapshot(
-    `
-    [SliceOffsetOutOfBoundsError: Slice ending at offset "6" is out-of-bounds (size: 5).
+  expect(() => sliceHex('0x0123456789', 0, 6, { strict: true })).toThrowError(
+    expect.objectContaining({
+      name: 'SliceOffsetOutOfBoundsError',
+      message: `Slice ending at offset "6" is out-of-bounds (size: 5).
 
-    Version: @tronweb3/tviem@1.0.0-beta.1]
-  `,
+Version: @tronweb3/tviem@${version}`,
+    }),
   )
-  expect(() =>
-    sliceHex('0x0123456789', 0, 10, { strict: true }),
-  ).toThrowErrorMatchingInlineSnapshot(
-    `
-    [SliceOffsetOutOfBoundsError: Slice ending at offset "10" is out-of-bounds (size: 5).
+  expect(() => sliceHex('0x0123456789', 0, 10, { strict: true })).toThrowError(
+    expect.objectContaining({
+      name: 'SliceOffsetOutOfBoundsError',
+      message: `Slice ending at offset "10" is out-of-bounds (size: 5).
 
-    Version: @tronweb3/tviem@1.0.0-beta.1]
-  `,
+Version: @tronweb3/tviem@${version}`,
+    }),
   )
 })
 
@@ -220,34 +220,37 @@ test('bytes', () => {
 
   expect(() =>
     sliceBytes(new Uint8Array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]), 10),
-  ).toThrowErrorMatchingInlineSnapshot(
-    `
-    [SliceOffsetOutOfBoundsError: Slice starting at offset "10" is out-of-bounds (size: 10).
+  ).toThrowError(
+    expect.objectContaining({
+      name: 'SliceOffsetOutOfBoundsError',
+      message: `Slice starting at offset "10" is out-of-bounds (size: 10).
 
-    Version: @tronweb3/tviem@1.0.0-beta.1]
-  `,
+Version: @tronweb3/tviem@${version}`,
+    }),
   )
 
   expect(() =>
     sliceBytes(new Uint8Array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]), 0, 11, {
       strict: true,
     }),
-  ).toThrowErrorMatchingInlineSnapshot(
-    `
-    [SliceOffsetOutOfBoundsError: Slice ending at offset "11" is out-of-bounds (size: 10).
+  ).toThrowError(
+    expect.objectContaining({
+      name: 'SliceOffsetOutOfBoundsError',
+      message: `Slice ending at offset "11" is out-of-bounds (size: 10).
 
-    Version: @tronweb3/tviem@1.0.0-beta.1]
-  `,
+Version: @tronweb3/tviem@${version}`,
+    }),
   )
   expect(() =>
     sliceBytes(new Uint8Array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]), 5, 15, {
       strict: true,
     }),
-  ).toThrowErrorMatchingInlineSnapshot(
-    `
-    [SliceOffsetOutOfBoundsError: Slice ending at offset "15" is out-of-bounds (size: 5).
+  ).toThrowError(
+    expect.objectContaining({
+      name: 'SliceOffsetOutOfBoundsError',
+      message: `Slice ending at offset "15" is out-of-bounds (size: 5).
 
-    Version: @tronweb3/tviem@1.0.0-beta.1]
-  `,
+Version: @tronweb3/tviem@${version}`,
+    }),
   )
 })

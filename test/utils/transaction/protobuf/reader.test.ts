@@ -1,10 +1,10 @@
 import { expect, test } from 'vitest'
-
 import { PositionOutOfBoundsError } from '../../../../src/errors/cursor.js'
 import {
   IntegerOutOfRangeError,
   UnsupportedWireTypeError,
 } from '../../../../src/errors/encoding.js'
+import { version } from '../../../../src/errors/version.js'
 import type { ByteArray } from '../../../../src/types/misc.js'
 import { concatBytes } from '../../../../src/utils/data/concat.js'
 import { bytesToString } from '../../../../src/utils/encoding/fromBytes.js'
@@ -124,13 +124,14 @@ test('throws on unsupported wire types', () => {
     expect(() => readMessageFields(new Uint8Array([key]))).toThrow(
       UnsupportedWireTypeError,
     )
-  expect(() =>
-    readMessageFields(new Uint8Array([0x0b])),
-  ).toThrowErrorMatchingInlineSnapshot(`
-    [UnsupportedWireTypeError: Wire type \`3\` is not supported.
+  expect(() => readMessageFields(new Uint8Array([0x0b]))).toThrowError(
+    expect.objectContaining({
+      name: 'UnsupportedWireTypeError',
+      message: `Wire type \`3\` is not supported.
 
-    Version: @tronweb3/tviem@1.0.0-beta.1]
-  `)
+Version: @tronweb3/tviem@${version}`,
+    }),
+  )
 })
 
 test('throws on invalid field numbers', () => {

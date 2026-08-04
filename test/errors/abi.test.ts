@@ -1,5 +1,4 @@
 import { describe, expect, test } from 'vitest'
-
 import {
   AbiDecodingDataSizeInvalidError,
   AbiDecodingDataSizeTooSmallError,
@@ -13,18 +12,20 @@ import {
   InvalidAbiEncodingTypeError,
   InvalidArrayError,
 } from '../../src/errors/abi.js'
+import { version } from '../../src/errors/version.js'
 
 test('AbiDecodingDataSizeInvalidError', () => {
   expect(
     new AbiDecodingDataSizeInvalidError({ data: '0x1234', size: 2 }),
-  ).toMatchInlineSnapshot(`
-    [AbiDecodingDataSizeInvalidError: Data size of 2 bytes is invalid.
-    Size must be in increments of 32 bytes (size % 32 === 0).
+  ).toMatchObject({
+    name: 'AbiDecodingDataSizeInvalidError',
+    message: `Data size of 2 bytes is invalid.
+Size must be in increments of 32 bytes (size % 32 === 0).
 
-    Data: 0x1234 (2 bytes)
+Data: 0x1234 (2 bytes)
 
-    Version: @tronweb3/tviem@1.0.0-beta.1]
-  `)
+Version: @tronweb3/tviem@${version}`,
+  })
 })
 
 test('AbiDecodingDataSizeTooSmallError', () => {
@@ -38,35 +39,38 @@ test('AbiDecodingDataSizeTooSmallError', () => {
       ],
       size: 2,
     }),
-  ).toMatchInlineSnapshot(`
-    [AbiDecodingDataSizeTooSmallError: Data size of 2 bytes is too small for given parameters.
+  ).toMatchObject({
+    name: 'AbiDecodingDataSizeTooSmallError',
+    message: `Data size of 2 bytes is too small for given parameters.
 
-    Params: (uint256 a, uint256 b)
-    Data:   0x1234 (2 bytes)
+Params: (uint256 a, uint256 b)
+Data:   0x1234 (2 bytes)
 
-    Version: @tronweb3/tviem@1.0.0-beta.1]
-  `)
+Version: @tronweb3/tviem@${version}`,
+  })
 })
 
 test('AbiDecodingZeroSizeElementError', () => {
-  expect(new AbiDecodingZeroSizeElementError('tuple')).toMatchInlineSnapshot(`
-    [AbiDecodingZeroSizeElementError: Array element type "tuple" consumes no bytes.
-    A zero-size element never advances the decoder, so the array length cannot be trusted to terminate it.
-    Solidity does not emit such a type; check where this ABI came from.
+  expect(new AbiDecodingZeroSizeElementError('tuple')).toMatchObject({
+    name: 'AbiDecodingZeroSizeElementError',
+    message: `Array element type "tuple" consumes no bytes.
+A zero-size element never advances the decoder, so the array length cannot be trusted to terminate it.
+Solidity does not emit such a type; check where this ABI came from.
 
-    Version: @tronweb3/tviem@1.0.0-beta.1]
-  `)
+Version: @tronweb3/tviem@${version}`,
+  })
 })
 
 test('InvalidAbiDecodingTypeError', () => {
   expect(
     new InvalidAbiDecodingTypeError('lol', { docsPath: '/lol' }),
-  ).toMatchInlineSnapshot(`
-    [InvalidAbiDecodingType: Type "lol" is not a valid decoding type.
-    Please provide a valid ABI type.
+  ).toMatchObject({
+    name: 'InvalidAbiDecodingType',
+    message: `Type "lol" is not a valid decoding type.
+Please provide a valid ABI type.
 
-    Version: @tronweb3/tviem@1.0.0-beta.1]
-  `)
+Version: @tronweb3/tviem@${version}`,
+  })
 })
 
 test('AbiEncodingArrayLengthMismatchError', () => {
@@ -76,13 +80,14 @@ test('AbiEncodingArrayLengthMismatchError', () => {
       givenLength: 420,
       type: 'uint256[3]',
     }),
-  ).toMatchInlineSnapshot(`
-    [AbiEncodingArrayLengthMismatchError: ABI encoding array length mismatch for type uint256[3].
-    Expected length: 69
-    Given length: 420
+  ).toMatchObject({
+    name: 'AbiEncodingArrayLengthMismatchError',
+    message: `ABI encoding array length mismatch for type uint256[3].
+Expected length: 69
+Given length: 420
 
-    Version: @tronweb3/tviem@1.0.0-beta.1]
-  `)
+Version: @tronweb3/tviem@${version}`,
+  })
 })
 
 test('AbiEncodingLengthMismatchError', () => {
@@ -91,23 +96,25 @@ test('AbiEncodingLengthMismatchError', () => {
       expectedLength: 69,
       givenLength: 420,
     }),
-  ).toMatchInlineSnapshot(`
-    [AbiEncodingLengthMismatchError: ABI encoding params/values length mismatch.
-    Expected length (params): 69
-    Given length (values): 420
+  ).toMatchObject({
+    name: 'AbiEncodingLengthMismatchError',
+    message: `ABI encoding params/values length mismatch.
+Expected length (params): 69
+Given length (values): 420
 
-    Version: @tronweb3/tviem@1.0.0-beta.1]
-  `)
+Version: @tronweb3/tviem@${version}`,
+  })
 })
 
 test('AbiEventSignatureEmptyTopicsError', () => {
   expect(
     new AbiEventSignatureEmptyTopicsError({ docsPath: '/test' }),
-  ).toMatchInlineSnapshot(`
-    [AbiEventSignatureEmptyTopicsError: Cannot extract event signature from empty topics.
+  ).toMatchObject({
+    name: 'AbiEventSignatureEmptyTopicsError',
+    message: `Cannot extract event signature from empty topics.
 
-    Version: @tronweb3/tviem@1.0.0-beta.1]
-  `)
+Version: @tronweb3/tviem@${version}`,
+  })
 })
 
 test('DecodeLogDataMismatch', () => {
@@ -129,14 +136,15 @@ test('DecodeLogDataMismatch', () => {
       ],
       size: 2,
     }),
-  ).toMatchInlineSnapshot(`
-    [DecodeLogDataMismatch: Data size of 2 bytes is too small for non-indexed event parameters.
+  ).toMatchObject({
+    name: 'DecodeLogDataMismatch',
+    message: `Data size of 2 bytes is too small for non-indexed event parameters.
 
-    Params: (uint256 a, uint256 b)
-    Data:   0x1234 (2 bytes)
+Params: (uint256 a, uint256 b)
+Data:   0x1234 (2 bytes)
 
-    Version: @tronweb3/tviem@1.0.0-beta.1]
-  `)
+Version: @tronweb3/tviem@${version}`,
+  })
 })
 
 describe('DecodeLogTopicsMismatch', () => {
@@ -171,11 +179,12 @@ describe('DecodeLogTopicsMismatch', () => {
           type: 'uint256',
         },
       }),
-    ).toMatchInlineSnapshot(`
-      [DecodeLogTopicsMismatch: Expected a topic for indexed event parameter "id" on event "Transfer(address from, address to, uint256 id)".
+    ).toMatchObject({
+      name: 'DecodeLogTopicsMismatch',
+      message: `Expected a topic for indexed event parameter "id" on event "Transfer(address from, address to, uint256 id)".
 
-      Version: @tronweb3/tviem@1.0.0-beta.1]
-    `)
+Version: @tronweb3/tviem@${version}`,
+    })
   })
 
   test('unnamed', () => {
@@ -205,29 +214,32 @@ describe('DecodeLogTopicsMismatch', () => {
           type: 'uint256',
         },
       }),
-    ).toMatchInlineSnapshot(`
-      [DecodeLogTopicsMismatch: Expected a topic for indexed event parameter on event "Transfer(address, address, uint256)".
+    ).toMatchObject({
+      name: 'DecodeLogTopicsMismatch',
+      message: `Expected a topic for indexed event parameter on event "Transfer(address, address, uint256)".
 
-      Version: @tronweb3/tviem@1.0.0-beta.1]
-    `)
+Version: @tronweb3/tviem@${version}`,
+    })
   })
 })
 
 test('InvalidAbiEncodingTypeError', () => {
   expect(
     new InvalidAbiEncodingTypeError('lol', { docsPath: '/lol' }),
-  ).toMatchInlineSnapshot(`
-    [InvalidAbiEncodingType: Type "lol" is not a valid encoding type.
-    Please provide a valid ABI type.
+  ).toMatchObject({
+    name: 'InvalidAbiEncodingType',
+    message: `Type "lol" is not a valid encoding type.
+Please provide a valid ABI type.
 
-    Version: @tronweb3/tviem@1.0.0-beta.1]
-  `)
+Version: @tronweb3/tviem@${version}`,
+  })
 })
 
 test('InvalidArrayError', () => {
-  expect(new InvalidArrayError('lol')).toMatchInlineSnapshot(`
-    [InvalidArrayError: Value "lol" is not a valid array.
+  expect(new InvalidArrayError('lol')).toMatchObject({
+    name: 'InvalidArrayError',
+    message: `Value "lol" is not a valid array.
 
-    Version: @tronweb3/tviem@1.0.0-beta.1]
-  `)
+Version: @tronweb3/tviem@${version}`,
+  })
 })
