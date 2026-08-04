@@ -6,16 +6,7 @@ type ErrorConfig = {
 }
 
 let errorConfig: ErrorConfig = {
-  getDocsUrl: ({
-    docsBaseUrl,
-    docsPath = '',
-    docsSlug,
-  }: BaseErrorParameters) =>
-    docsPath
-      ? `${docsBaseUrl ?? 'https://github.com/tronweb3/tviem'}${docsPath}${
-          docsSlug ? `#${docsSlug}` : ''
-        }`
-      : undefined,
+  getDocsUrl: (_parameters: BaseErrorParameters) => undefined,
   version: `@tronweb3/tviem@${version}`,
 }
 
