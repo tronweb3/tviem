@@ -7,6 +7,7 @@ import {
   isAddressEqual,
 } from '../../utils/address/isAddressEqual.js'
 import { type ToHexErrorType, toHex } from '../../utils/address/toHex.js'
+import { bareHex } from '../../utils/index.js'
 import { type SignErrorType, sign } from '../../utils/signature/sign.js'
 import {
   type GetTransactionIdErrorType,
@@ -99,7 +100,7 @@ export function signTransaction(
       `The transaction's owner_address does not match the signing account (${address}).`,
     )
 
-  const sig = sign({ hash: `0x${txID}`, privateKey }).hex
+  const sig = sign({ hash: `0x${bareHex(txID)}`, privateKey }).hex
   const existing = transaction.signature ?? []
   const signature = existing.some((s) => s.toLowerCase() === sig)
     ? [...existing]
