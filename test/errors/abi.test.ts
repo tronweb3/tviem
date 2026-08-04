@@ -3,6 +3,7 @@ import { describe, expect, test } from 'vitest'
 import {
   AbiDecodingDataSizeInvalidError,
   AbiDecodingDataSizeTooSmallError,
+  AbiDecodingZeroSizeElementError,
   AbiEncodingArrayLengthMismatchError,
   AbiEncodingLengthMismatchError,
   AbiEventSignatureEmptyTopicsError,
@@ -42,6 +43,16 @@ test('AbiDecodingDataSizeTooSmallError', () => {
 
     Params: (uint256 a, uint256 b)
     Data:   0x1234 (2 bytes)
+
+    Version: @tronweb3/tviem@1.0.0-beta.1]
+  `)
+})
+
+test('AbiDecodingZeroSizeElementError', () => {
+  expect(new AbiDecodingZeroSizeElementError('tuple')).toMatchInlineSnapshot(`
+    [AbiDecodingZeroSizeElementError: Array element type "tuple" consumes no bytes.
+    A zero-size element never advances the decoder, so the array length cannot be trusted to terminate it.
+    Solidity does not emit such a type; check where this ABI came from.
 
     Version: @tronweb3/tviem@1.0.0-beta.1]
   `)

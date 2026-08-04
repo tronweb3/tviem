@@ -207,10 +207,9 @@ function decodeArray(
         staticPosition: startOfData,
       })
       // `arrayLength` is attacker-controlled and the loop's only backstop is
-      // the cursor running out of bounds, so a static element occupying zero
-      // bytes (degenerate `tuple` with no components, `X[0]`) would spin here.
-      if (!dynamicChild && consumed_ === 0)
-        throw new AbiDecodingZeroSizeElementError(param.type)
+      // the cursor running out of bounds, so an element occupying zero bytes
+      // (degenerate `tuple` with no components, `X[0]`) would spin here.
+      if (consumed_ === 0) throw new AbiDecodingZeroSizeElementError(param.type)
       consumed += consumed_
       value.push(element)
     }
