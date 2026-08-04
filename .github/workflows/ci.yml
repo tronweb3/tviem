@@ -1,0 +1,73 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # pnpm version comes from the `packageManager` field in package.json.
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Build
+        run: pnpm build
+
+      - name: Type-check (whole project)
+        run: pnpm check:types
+
+      - name: Test (unit + type tests)
+        run: pnpm test
+
+      - name: Package lint (publint --strict + are-the-types-wrong)
+        run: pnpm test:build
+
+      # Consumer-perspective gate: install the real tarball into a throwaway
+      # project and type-check it with skipLibCheck:false — the ONLY view that
+      # catches broken emitted .d.ts (e.g. B2's dangling `U`), which every
+      # in-repo check misses because they run with skipLibCheck:true.
+      - name: Consumer type-check (skipLibCheck:false)
+        run: |
+          set -euo pipefail
+          ( cd src && pnpm pack --pack-destination "$RUNNER_TEMP/pkg" )
+          consumer="$RUNNER_TEMP/consumer"
+          mkdir -p "$consumer"
+          cd "$consumer"
+          echo '{"name":"consumer","private":true,"type":"module"}' > package.json
+          npm install --no-audit --no-fund "$RUNNER_TEMP"/pkg/*.tgz
+          printf '%s\n' \
+            '{' \
+            '  "compilerOptions": {' \
+            '    "strict": true,' \
+            '    "skipLibCheck": false,' \
+            '    "module": "nodenext",' \
+            '    "moduleResolution": "nodenext",' \
+            '    "target": "es2022",' \
+            '    "noEmit": true' \
+            '  },' \
+            '  "include": ["index.ts"]' \
+            '}' > tsconfig.json
+          printf '%s\n' \
+            "import { createPublicClient, http } from '@tronweb3/tviem'" \
+            "import { mainnet, nile, shasta } from '@tronweb3/tviem/chains'" \
+            "const client = createPublicClient({ chain: mainnet, transport: http() })" \
+            "const extended = nile.extend({ foo: 'bar' })" \
+            "export { client, extended, shasta }" > index.ts
+          node "$GITHUB_WORKSPACE/node_modules/typescript/bin/tsc" -p tsconfig.json
+          echo "OK — consumer type-checks with skipLibCheck:false"
