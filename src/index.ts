@@ -65,6 +65,16 @@ export {
   estimateEnergy,
 } from './actions/public/estimateEnergy.js'
 export {
+  type AccountFrozenV1,
+  type AccountFrozenV2,
+  type AccountPermission,
+  type AccountState,
+  type AccountUnfrozenV2,
+  type GetAccountParameters,
+  type GetAccountReturnType,
+  getAccount,
+} from './actions/public/getAccount.js'
+export {
   type GetAccountResourcesParameters,
   type GetAccountResourcesReturnType,
   getAccountResources,
@@ -125,6 +135,12 @@ export {
   type GetSignWeightReturnType,
   getSignWeight,
 } from './actions/public/getSignWeight.js'
+export {
+  type GetTransactionParameters,
+  type GetTransactionReturnType,
+  getTransaction,
+  type TransactionRet,
+} from './actions/public/getTransaction.js'
 export {
   type GetTransactionInfoParameters,
   type GetTransactionInfoReturnType,

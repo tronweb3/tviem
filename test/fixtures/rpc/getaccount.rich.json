@@ -1,0 +1,117 @@
+{
+  "endpoint": "getaccount",
+  "description": "Hand-crafted getaccount (SolidityNode) response for a fully populated account (TPL66VK2gCXNCD7EJg9pgJRfqcRazjhUZY, 41-hex 41928c9af0651632157ef27a2cf17ca72c575a4d21): balance, Stake 2.0 frozen/unfrozen/delegated fields, legacy Stake 1.0 fields (frozen / tron_power / old_tron_power / v1 delegations / frozen_balance_for_energy), rewards (allowance / latest_withdraw_time / is_witness), votes, TRC10 balances (assetV2 + free_asset_net_usageV2), owner/active/witness permissions and the node's `latest_opration_time` (sic) key. Exercises every formatted field of getAccount.",
+  "request": {
+    "node": "solidity",
+    "path": "getaccount",
+    "method": "POST",
+    "body": {
+      "address": "41928c9af0651632157ef27a2cf17ca72c575a4d21"
+    }
+  },
+  "response": {
+    "address": "41928c9af0651632157ef27a2cf17ca72c575a4d21",
+    "account_name": "746573742d6163636f756e74",
+    "type": "Contract",
+    "balance": 5000000000,
+    "create_time": 1690000000000,
+    "latest_opration_time": 1700000001000,
+    "allowance": 12500000,
+    "latest_withdraw_time": 1699913600000,
+    "is_witness": true,
+    "net_usage": 120,
+    "free_net_usage": 300,
+    "latest_consume_time": 1700000000500,
+    "latest_consume_free_time": 1700000000600,
+    "net_window_size": 28800000,
+    "frozenV2": [
+      { "amount": 2000000 },
+      { "type": "ENERGY", "amount": 3000000 },
+      { "type": "TRON_POWER" }
+    ],
+    "unfrozenV2": [
+      {
+        "type": "ENERGY",
+        "unfreeze_amount": 1000000,
+        "unfreeze_expire_time": 1701209600000
+      }
+    ],
+    "delegated_frozenV2_balance_for_bandwidth": 7000000,
+    "acquired_delegated_frozenV2_balance_for_bandwidth": 8000000,
+    "frozen": [
+      { "frozen_balance": 734686656, "expire_time": 1638390999000 }
+    ],
+    "tron_power": { "frozen_balance": 1000000, "expire_time": 1638390999000 },
+    "old_tron_power": -1,
+    "delegated_frozen_balance_for_bandwidth": 1500000,
+    "acquired_delegated_frozen_balance_for_bandwidth": 2500000,
+    "account_resource": {
+      "energy_usage": 5432,
+      "latest_consume_time_for_energy": 1700000002000,
+      "energy_window_size": 28800000,
+      "delegated_frozenV2_balance_for_energy": 9000000,
+      "acquired_delegated_frozenV2_balance_for_energy": 10000000,
+      "frozen_balance_for_energy": {
+        "frozen_balance": 3500000,
+        "expire_time": 1638391000000
+      },
+      "delegated_frozen_balance_for_energy": 4500000,
+      "acquired_delegated_frozen_balance_for_energy": 5500000
+    },
+    "votes": [
+      {
+        "vote_address": "417e5f4552091a69125d5dfcb7b8c2659029395bdf",
+        "vote_count": 25
+      }
+    ],
+    "assetV2": [
+      { "key": "1000001", "value": 42 },
+      { "key": "1004031", "value": 500000000 }
+    ],
+    "free_asset_net_usageV2": [{ "key": "1000001", "value": 150 }],
+    "owner_permission": {
+      "permission_name": "owner",
+      "threshold": 1,
+      "keys": [
+        {
+          "address": "41928c9af0651632157ef27a2cf17ca72c575a4d21",
+          "weight": 1
+        }
+      ]
+    },
+    "witness_permission": {
+      "type": "Witness",
+      "id": 1,
+      "permission_name": "witness",
+      "threshold": 1,
+      "keys": [
+        {
+          "address": "417e5f4552091a69125d5dfcb7b8c2659029395bdf",
+          "weight": 1
+        }
+      ]
+    },
+    "active_permission": [
+      {
+        "type": "Active",
+        "id": 2,
+        "permission_name": "active",
+        "threshold": 2,
+        "operations": "7fff1fc0033e0300000000000000000000000000000000000000000000000000",
+        "keys": [
+          {
+            "address": "417e5f4552091a69125d5dfcb7b8c2659029395bdf",
+            "weight": 1
+          },
+          {
+            "address": "41928c9af0651632157ef27a2cf17ca72c575a4d21",
+            "weight": 1
+          }
+        ]
+      }
+    ],
+    "asset_optimized": true
+  },
+  "recordedAt": "2026-08-04T00:00:00.000Z",
+  "source": "hand-crafted"
+}

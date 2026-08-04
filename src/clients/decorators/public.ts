@@ -4,6 +4,11 @@ import {
   estimateEnergy,
 } from '../../actions/public/estimateEnergy.js'
 import {
+  type GetAccountParameters,
+  type GetAccountReturnType,
+  getAccount,
+} from '../../actions/public/getAccount.js'
+import {
   type GetAccountResourcesParameters,
   type GetAccountResourcesReturnType,
   getAccountResources,
@@ -62,6 +67,11 @@ import {
   getSignWeight,
 } from '../../actions/public/getSignWeight.js'
 import {
+  type GetTransactionParameters,
+  type GetTransactionReturnType,
+  getTransaction,
+} from '../../actions/public/getTransaction.js'
+import {
   type GetTransactionInfoParameters,
   type GetTransactionInfoReturnType,
   getTransactionInfo,
@@ -84,6 +94,10 @@ export type PublicActions = {
   getBalance: (
     parameters: GetBalanceParameters,
   ) => Promise<GetBalanceReturnType>
+  /** Reads an account's full on-chain state (balance, stake, votes, permissions). */
+  getAccount: (
+    parameters: GetAccountParameters,
+  ) => Promise<GetAccountReturnType>
   /** Reads an account's resource (bandwidth/energy/TRON-power) usage/limits. */
   getAccountResources: (
     parameters: GetAccountResourcesParameters,
@@ -112,6 +126,10 @@ export type PublicActions = {
   ) => Promise<GetEventsOfLatestBlockReturnType>
   /** Fetches the latest (unconfirmed) block. */
   getNowBlock: () => Promise<GetNowBlockReturnType>
+  /** Fetches a transaction by id (the original transaction, not its receipt). */
+  getTransaction: (
+    parameters: GetTransactionParameters,
+  ) => Promise<GetTransactionReturnType>
   /** Fetches a transaction's receipt / execution info. */
   getTransactionInfo: (
     parameters: GetTransactionInfoParameters,
@@ -149,6 +167,8 @@ export function publicActions(client: Client): PublicActions {
   return {
     getBalance: (parameters) =>
       getAction(client, getBalance, 'getBalance')(parameters),
+    getAccount: (parameters) =>
+      getAction(client, getAccount, 'getAccount')(parameters),
     getAccountResources: (parameters) =>
       getAction(client, getAccountResources, 'getAccountResources')(parameters),
     getBlock: (parameters) =>
@@ -181,6 +201,8 @@ export function publicActions(client: Client): PublicActions {
       )(parameters),
     getNowBlock: () =>
       getAction(client, getNowBlock, 'getNowBlock')(undefined as never),
+    getTransaction: (parameters) =>
+      getAction(client, getTransaction, 'getTransaction')(parameters),
     getTransactionInfo: (parameters) =>
       getAction(client, getTransactionInfo, 'getTransactionInfo')(parameters),
     getChainParameters: () =>

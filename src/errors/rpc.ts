@@ -192,17 +192,25 @@ export class TransactionTamperedError extends BaseError {
     localTxId,
     nodeTxId,
     path,
+    shortMessage,
   }: {
     localTxId?: string | undefined
     nodeTxId?: string | undefined
     path?: string | undefined
+    /**
+     * Context-appropriate message override. The default text describes the
+     * write-path echo checks (a locally built transaction, signing imminent);
+     * read-path throw sites (e.g. `getTransaction`) pass their own wording.
+     */
+    shortMessage?: string | undefined
   } = {}) {
     super(
-      [
-        'The node returned a transaction that does not match the locally built one.',
-        'This can indicate transaction tampering by a malicious or man-in-the-middled node.',
-        'No signature was produced over the node-supplied transaction.',
-      ].join('\n'),
+      shortMessage ??
+        [
+          'The node returned a transaction that does not match the locally built one.',
+          'This can indicate transaction tampering by a malicious or man-in-the-middled node.',
+          'No signature was produced over the node-supplied transaction.',
+        ].join('\n'),
       {
         name: 'TransactionTamperedError',
         metaMessages: [

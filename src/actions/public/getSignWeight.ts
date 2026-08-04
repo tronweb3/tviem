@@ -41,7 +41,8 @@ type RawKey = {
   address?: string | undefined
   weight?: number | string | undefined
 }
-type RawPermission = {
+/** The raw node-JSON permission shape (`getsignweight` / `getaccount`). */
+export type RawPermission = {
   type?: number | string | undefined
   id?: number | undefined
   permission_name?: string | undefined
@@ -63,13 +64,18 @@ type RawSignWeight = {
 
 function toPermissionType(type: unknown): number | undefined {
   if (typeof type === 'number') return type
+  // proto3 JSON omits default enum values: an absent type IS Owner (0).
+  if (type === undefined) return 0
   if (type === 'Owner') return 0
   if (type === 'Witness') return 1
   if (type === 'Active') return 2
   return undefined
 }
 
-function formatPermission(permission: RawPermission): SignWeightPermission {
+/** Formats a raw node-JSON permission (keys → Base58, threshold → bigint). */
+export function formatPermission(
+  permission: RawPermission,
+): SignWeightPermission {
   return {
     type: toPermissionType(permission.type),
     id: permission.id,
