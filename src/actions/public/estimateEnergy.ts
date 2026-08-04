@@ -1,29 +1,55 @@
-import type { Abi } from 'abitype'
+import type { Abi, AbiFunction, ExtractAbiFunction } from 'abitype'
 import type { TronAccount } from '../../accounts/types.js'
 import type { Client } from '../../clients/createClient.js'
 import { zeroAddress } from '../../constants/address.js'
 import { IntegerOutOfRangeError } from '../../errors/encoding.js'
 import { parseAccount } from '../../types/account.js'
 import type { Address } from '../../types/address.js'
+import type { ContractFunctionName } from '../../types/contract.js'
 import type { Hex } from '../../types/misc.js'
+import type { TronAbiParametersToPrimitiveTypes } from '../../utils/abi/encodeAbiParameters.js'
 import { encodeFunctionData } from '../../utils/abi/encodeFunctionData.js'
 import { toHex } from '../../utils/address/toHex.js'
 import { assertRpcSuccess } from '../utils/normalizeResponse.js'
 
-export type EstimateEnergyParameters = {
+export type EstimateEnergyParameters<
+  abi extends Abi | readonly unknown[] = Abi,
+  functionName extends ContractFunctionName<
+    abi,
+    'nonpayable' | 'payable'
+  > = ContractFunctionName<abi, 'nonpayable' | 'payable'>,
+  ///
+  allFunctionNames = ContractFunctionName<abi, 'nonpayable' | 'payable'>,
+  abiFunction extends AbiFunction = abi extends Abi
+    ? ExtractAbiFunction<abi, functionName, 'nonpayable' | 'payable'>
+    : AbiFunction,
+  // Falls back to `readonly unknown[]` when the function cannot be extracted
+  // (wide abi, empty abi, unknown name) so the wide call shape keeps working.
+  allArgs = [abiFunction] extends [never]
+    ? readonly unknown[]
+    : TronAbiParametersToPrimitiveTypes<abiFunction['inputs'], 'inputs'>,
+> = {
   /** The caller account (falls back to `client.account`, else the zero address). */
   account?: TronAccount | Hex | undefined
   /** The contract's Base58Check address. */
   address: Address
   /** The contract ABI. */
-  abi: Abi
+  abi: abi
   /** The function to call. */
-  functionName: string
-  /** The function arguments. */
-  args?: readonly unknown[] | undefined
+  functionName:
+    | allFunctionNames // show all options
+    | (functionName extends allFunctionNames ? functionName : never) // infer value
   /** TRX value (in SUN) attached to the call. */
   callValue?: bigint | undefined
-}
+} & (readonly [] extends allArgs
+  ? {
+      /** The function arguments. */
+      args?: allArgs | undefined
+    }
+  : {
+      /** The function arguments. */
+      args: allArgs
+    })
 export type EstimateEnergyReturnType = bigint
 
 /** Shape of the `triggerconstantcontract` response body we consume. */
@@ -46,11 +72,15 @@ type TriggerConstantContractResponse = {
  * @param parameters Contract address / ABI / function / args / caller.
  * @returns The estimated energy usage (`energy_used`), as a `bigint`.
  */
-export async function estimateEnergy(
+export async function estimateEnergy<
+  const abi extends Abi | readonly unknown[],
+  functionName extends ContractFunctionName<abi, 'nonpayable' | 'payable'>,
+>(
   client: Client,
-  parameters: EstimateEnergyParameters,
+  parameters: EstimateEnergyParameters<abi, functionName>,
 ): Promise<EstimateEnergyReturnType> {
-  const { abi, address, args, callValue, functionName } = parameters
+  const { abi, address, args, callValue, functionName } =
+    parameters as EstimateEnergyParameters
 
   // The request body is JSON, where an int64 becomes a JS number — so a
   // `call_value` past the safe-integer range would be silently rounded. Reject

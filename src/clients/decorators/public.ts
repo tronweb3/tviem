@@ -1,3 +1,4 @@
+import type { Abi } from 'abitype'
 import {
   type EstimateEnergyParameters,
   type EstimateEnergyReturnType,
@@ -76,6 +77,10 @@ import {
   type WaitForTransactionReceiptReturnType,
   waitForTransactionReceipt,
 } from '../../actions/public/waitForTransactionReceipt.js'
+import type {
+  ContractFunctionName,
+  TronContractFunctionArgs,
+} from '../../types/contract.js'
 import { getAction } from '../../utils/getAction.js'
 import type { Client } from '../createClient.js'
 
@@ -119,12 +124,23 @@ export type PublicActions = {
   /** Fetches the chain parameters. */
   getChainParameters: () => Promise<GetChainParametersReturnType>
   /** Reads (constant-calls) a contract function. */
-  readContract: (
-    parameters: ReadContractParameters,
-  ) => Promise<ReadContractReturnType>
+  readContract: <
+    const abi extends Abi | readonly unknown[],
+    functionName extends ContractFunctionName<abi, 'pure' | 'view'>,
+    const args extends TronContractFunctionArgs<
+      abi,
+      'pure' | 'view',
+      functionName
+    > = TronContractFunctionArgs<abi, 'pure' | 'view', functionName>,
+  >(
+    parameters: ReadContractParameters<abi, functionName, args>,
+  ) => Promise<ReadContractReturnType<abi, functionName, args>>
   /** Estimates the energy a contract call would consume. */
-  estimateEnergy: (
-    parameters: EstimateEnergyParameters,
+  estimateEnergy: <
+    const abi extends Abi | readonly unknown[],
+    functionName extends ContractFunctionName<abi, 'nonpayable' | 'payable'>,
+  >(
+    parameters: EstimateEnergyParameters<abi, functionName>,
   ) => Promise<EstimateEnergyReturnType>
   /** Polls for a transaction's receipt. */
   waitForTransactionReceipt: (
@@ -189,10 +205,38 @@ export function publicActions(client: Client): PublicActions {
         getChainParameters,
         'getChainParameters',
       )(undefined as never),
-    readContract: (parameters) =>
-      getAction(client, readContract, 'readContract')(parameters),
-    estimateEnergy: (parameters) =>
-      getAction(client, estimateEnergy, 'estimateEnergy')(parameters),
+    // The two generic contract actions: getAction erases the action's type
+    // parameters (it sees the wide instantiation), so the precise return type
+    // promised by the interface is re-asserted on the result.
+    readContract: <
+      const abi extends Abi | readonly unknown[],
+      functionName extends ContractFunctionName<abi, 'pure' | 'view'>,
+      const args extends TronContractFunctionArgs<
+        abi,
+        'pure' | 'view',
+        functionName
+      > = TronContractFunctionArgs<abi, 'pure' | 'view', functionName>,
+    >(
+      parameters: ReadContractParameters<abi, functionName, args>,
+    ) =>
+      getAction(
+        client,
+        readContract,
+        'readContract',
+      )(parameters as ReadContractParameters) as Promise<
+        ReadContractReturnType<abi, functionName, args>
+      >,
+    estimateEnergy: <
+      const abi extends Abi | readonly unknown[],
+      functionName extends ContractFunctionName<abi, 'nonpayable' | 'payable'>,
+    >(
+      parameters: EstimateEnergyParameters<abi, functionName>,
+    ) =>
+      getAction(
+        client,
+        estimateEnergy,
+        'estimateEnergy',
+      )(parameters as EstimateEnergyParameters),
     waitForTransactionReceipt: (parameters) =>
       getAction(
         client,

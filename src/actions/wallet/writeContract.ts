@@ -1,11 +1,13 @@
-import type { Abi } from 'abitype'
+import type { Abi, AbiFunction, ExtractAbiFunction } from 'abitype'
 import type { TronAccount } from '../../accounts/types.js'
 import type { Client } from '../../clients/createClient.js'
 import { defaultFeeLimit } from '../../constants/address.js'
 import { AccountNotFoundError } from '../../errors/rpc.js'
 import { parseAccount } from '../../types/account.js'
 import type { Address } from '../../types/address.js'
+import type { ContractFunctionName } from '../../types/contract.js'
 import type { Hex } from '../../types/misc.js'
+import type { TronAbiParametersToPrimitiveTypes } from '../../utils/abi/encodeAbiParameters.js'
 import { encodeFunctionData } from '../../utils/abi/encodeFunctionData.js'
 import { toHex } from '../../utils/address/toHex.js'
 import {
@@ -21,17 +23,33 @@ import {
   type TransactionHeader,
 } from './utils/buildTransaction.js'
 
-export type WriteContractParameters = {
+export type WriteContractParameters<
+  abi extends Abi | readonly unknown[] = Abi,
+  functionName extends ContractFunctionName<
+    abi,
+    'nonpayable' | 'payable'
+  > = ContractFunctionName<abi, 'nonpayable' | 'payable'>,
+  ///
+  allFunctionNames = ContractFunctionName<abi, 'nonpayable' | 'payable'>,
+  abiFunction extends AbiFunction = abi extends Abi
+    ? ExtractAbiFunction<abi, functionName, 'nonpayable' | 'payable'>
+    : AbiFunction,
+  // Falls back to `readonly unknown[]` when the function cannot be extracted
+  // (wide abi, empty abi, unknown name) so the wide call shape keeps working.
+  allArgs = [abiFunction] extends [never]
+    ? readonly unknown[]
+    : TronAbiParametersToPrimitiveTypes<abiFunction['inputs'], 'inputs'>,
+> = {
   /** The signing account (falls back to `client.account`). */
   account?: TronAccount | Hex | undefined
   /** The contract's Base58Check address. */
   address: Address
   /** The contract ABI. */
-  abi: Abi
+  abi: abi
   /** The function to call. */
-  functionName: string
-  /** The function arguments. */
-  args?: readonly unknown[] | undefined
+  functionName:
+    | allFunctionNames // show all options
+    | (functionName extends allFunctionNames ? functionName : never) // infer value
   /** Fee limit (in SUN) written into `raw_data` (defaults to `defaultFeeLimit`). */
   feeLimit?: bigint | undefined
   /** TRX value (in SUN) to attach to the call. */
@@ -41,10 +59,24 @@ export type WriteContractParameters = {
    * fully offline against it; otherwise it is derived from the latest block.
    */
   blockHeader?: TransactionHeader | undefined
-}
+} & (readonly [] extends allArgs
+  ? {
+      /** The function arguments. */
+      args?: allArgs | undefined
+    }
+  : {
+      /** The function arguments. */
+      args: allArgs
+    })
 export type WriteContractReturnType = { txID: string }
 
-export type BuildWriteContractParameters = WriteContractParameters & {
+export type BuildWriteContractParameters<
+  abi extends Abi | readonly unknown[] = Abi,
+  functionName extends ContractFunctionName<
+    abi,
+    'nonpayable' | 'payable'
+  > = ContractFunctionName<abi, 'nonpayable' | 'payable'>,
+> = WriteContractParameters<abi, functionName> & {
   /** Multi-sig permission id (`Contract.Permission_id`). */
   permissionId?: number | undefined
 }
@@ -101,16 +133,20 @@ function assemble(
  * callValue/account/permissionId/blockHeader.
  * @returns A TronWeb-shaped unsigned transaction ({@link BuildTransactionReturnType}).
  */
-export async function buildWriteContract(
+export async function buildWriteContract<
+  const abi extends Abi | readonly unknown[],
+  functionName extends ContractFunctionName<abi, 'nonpayable' | 'payable'>,
+>(
   client: Client,
-  parameters: BuildWriteContractParameters,
+  parameters: BuildWriteContractParameters<abi, functionName>,
 ): Promise<BuildWriteContractReturnType> {
-  const { contract, feeLimit } = assemble(client, parameters)
+  const parameters_ = parameters as BuildWriteContractParameters
+  const { contract, feeLimit } = assemble(client, parameters_)
   return buildTransaction(client, {
     contract,
     feeLimit,
-    permissionId: parameters.permissionId,
-    blockHeader: parameters.blockHeader,
+    permissionId: parameters_.permissionId,
+    blockHeader: parameters_.blockHeader,
   })
 }
 
@@ -131,15 +167,19 @@ export async function buildWriteContract(
  * @param parameters Contract address / ABI / function / args / fee / blockHeader.
  * @returns `{ txID }` — the locally computed transaction id.
  */
-export async function writeContract(
+export async function writeContract<
+  const abi extends Abi | readonly unknown[],
+  functionName extends ContractFunctionName<abi, 'nonpayable' | 'payable'>,
+>(
   client: Client,
-  parameters: WriteContractParameters,
+  parameters: WriteContractParameters<abi, functionName>,
 ): Promise<WriteContractReturnType> {
-  const { account, contract, feeLimit } = assemble(client, parameters)
+  const parameters_ = parameters as WriteContractParameters
+  const { account, contract, feeLimit } = assemble(client, parameters_)
   return buildAndBroadcast(client, {
     contract,
     account,
     feeLimit,
-    blockHeader: parameters.blockHeader,
+    blockHeader: parameters_.blockHeader,
   })
 }
