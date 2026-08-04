@@ -3,6 +3,9 @@
   "version": "1.0.0-beta.1",
   "description": "Lightweight, type-safe TypeScript SDK for the TRON blockchain",
   "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
   "type": "module",
   "sideEffects": false,
   "engines": {
