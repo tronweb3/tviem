@@ -5,6 +5,8 @@ import {
   type AbiDecodingDataSizeTooSmallErrorType,
   AbiDecodingZeroDataError,
   type AbiDecodingZeroDataErrorType,
+  AbiDecodingZeroSizeElementError,
+  type AbiDecodingZeroSizeElementErrorType,
   InvalidAbiDecodingTypeError,
   type InvalidAbiDecodingTypeErrorType,
 } from '../../errors/abi.js'
@@ -49,6 +51,7 @@ export type DecodeAbiParametersReturnType<
 export type DecodeAbiParametersErrorType =
   | AbiDecodingDataSizeTooSmallErrorType
   | AbiDecodingZeroDataErrorType
+  | AbiDecodingZeroSizeElementErrorType
   | CreateCursorErrorType
   | IntegerOutOfRangeErrorType
   | InvalidAbiDecodingTypeErrorType
@@ -203,6 +206,11 @@ function decodeArray(
       const [element, consumed_] = decodeParameter(cursor, param, {
         staticPosition: startOfData,
       })
+      // `arrayLength` is attacker-controlled and the loop's only backstop is
+      // the cursor running out of bounds, so a static element occupying zero
+      // bytes (degenerate `tuple` with no components, `X[0]`) would spin here.
+      if (!dynamicChild && consumed_ === 0)
+        throw new AbiDecodingZeroSizeElementError(param.type)
       consumed += consumed_
       value.push(element)
     }
@@ -235,6 +243,7 @@ function decodeArray(
     const [element, consumed_] = decodeParameter(cursor, param, {
       staticPosition,
     })
+    if (consumed_ === 0) throw new AbiDecodingZeroSizeElementError(param.type)
     consumed += consumed_
     value.push(element)
   }

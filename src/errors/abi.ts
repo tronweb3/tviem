@@ -113,6 +113,23 @@ export class AbiDecodingZeroDataError extends BaseError {
   }
 }
 
+export type AbiDecodingZeroSizeElementErrorType =
+  AbiDecodingZeroSizeElementError & {
+    name: 'AbiDecodingZeroSizeElementError'
+  }
+export class AbiDecodingZeroSizeElementError extends BaseError {
+  constructor(type: string) {
+    super(
+      [
+        `Array element type "${type}" consumes no bytes.`,
+        'A zero-size element never advances the decoder, so the array length cannot be trusted to terminate it.',
+        'Solidity cannot emit such a type — check where this ABI came from.',
+      ].join('\n'),
+      { name: 'AbiDecodingZeroSizeElementError' },
+    )
+  }
+}
+
 export type AbiEncodingArrayLengthMismatchErrorType =
   AbiEncodingArrayLengthMismatchError & {
     name: 'AbiEncodingArrayLengthMismatchError'

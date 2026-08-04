@@ -117,6 +117,7 @@ exports[`package exports surface (freeze guard) > root + subpath export names ar
     "AbiDecodingDataSizeInvalidError",
     "AbiDecodingDataSizeTooSmallError",
     "AbiDecodingZeroDataError",
+    "AbiDecodingZeroSizeElementError",
     "AbiEncodingArrayLengthMismatchError",
     "AbiEncodingBytesSizeMismatchError",
     "AbiEncodingLengthMismatchError",

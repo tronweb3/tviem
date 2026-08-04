@@ -487,6 +487,8 @@ export {
   type AbiDecodingDataSizeTooSmallErrorType,
   AbiDecodingZeroDataError,
   type AbiDecodingZeroDataErrorType,
+  AbiDecodingZeroSizeElementError,
+  type AbiDecodingZeroSizeElementErrorType,
   AbiEncodingArrayLengthMismatchError,
   type AbiEncodingArrayLengthMismatchErrorType,
   AbiEncodingBytesSizeMismatchError,
