@@ -16,6 +16,7 @@ import type {
   ResolvedRegister,
 } from 'abitype'
 
+import type { TronAbiParametersToPrimitiveTypes } from '../utils/abi/encodeAbiParameters.js'
 import type { Hex, LogTopic } from './misc.js'
 import type {
   Filter,
@@ -194,6 +195,115 @@ type CheckArgs<
 > = (readonly [] extends args ? readonly [] : args) extends targetArgs // fallback to `readonly []` if `args` has no value (e.g. `args` property not provided)
   ? abiFunction
   : never
+
+/**
+ * The TRON-flavored argument tuple of a contract function: `address` inputs
+ * accept any TRON form (`T…` Base58Check, `41…` hex, `0x…` EVM), integers
+ * accept `bigint | number`. Falls back to `readonly unknown[]` when the
+ * function cannot be extracted (wide abi, unknown name).
+ */
+export type TronContractFunctionArgs<
+  abi extends Abi | readonly unknown[] = Abi,
+  mutability extends AbiStateMutability = AbiStateMutability,
+  functionName extends ContractFunctionName<
+    abi,
+    mutability
+  > = ContractFunctionName<abi, mutability>,
+> =
+  TronAbiParametersToPrimitiveTypes<
+    ExtractAbiFunction<
+      abi extends Abi ? abi : Abi,
+      functionName,
+      mutability
+    >['inputs'],
+    'inputs'
+  > extends infer args
+    ? [args] extends [never]
+      ? readonly unknown[]
+      : args
+    : readonly unknown[]
+
+/**
+ * {@link ExtractAbiFunctionForArgs}, but matching overloads against the
+ * TRON-flavored argument tuples ({@link TronAbiParametersToPrimitiveTypes}),
+ * so a `T…` Base58Check address argument still narrows the overload set.
+ */
+export type ExtractTronAbiFunctionForArgs<
+  abi extends Abi,
+  mutability extends AbiStateMutability,
+  functionName extends ContractFunctionName<abi, mutability>,
+  args,
+> =
+  ExtractAbiFunction<
+    abi,
+    functionName,
+    mutability
+  > extends infer abiFunction extends AbiFunction
+    ? IsUnion<abiFunction> extends true // narrow overloads using `args` by converting to tuple and filtering out overloads that don't match
+      ? UnionToTuple<abiFunction> extends infer abiFunctions extends
+          readonly AbiFunction[]
+        ? // convert back to union (removes `never` tuple entries)
+          {
+            [k in keyof abiFunctions]: CheckTronArgs<abiFunctions[k], args>
+          }[number]
+        : never
+      : abiFunction
+    : never
+type CheckTronArgs<
+  abiFunction extends AbiFunction,
+  args,
+  ///
+  targetArgs = TronAbiParametersToPrimitiveTypes<
+    abiFunction['inputs'],
+    'inputs'
+  >,
+> = (readonly [] extends args ? readonly [] : args) extends targetArgs // fallback to `readonly []` if `args` has no value (e.g. `args` property not provided)
+  ? abiFunction
+  : never
+
+/**
+ * The TRON-flavored return type of a contract function: `address` outputs
+ * brand out to Base58Check `Address`, integers to `bigint`; `[]` → `void`,
+ * `[x]` → `x`, otherwise the positional tuple. Degrades to `unknown` (never
+ * `never`) when the abi is wide or no overload matches `args`.
+ */
+export type TronContractFunctionReturnType<
+  abi extends Abi | readonly unknown[] = Abi,
+  mutability extends AbiStateMutability = AbiStateMutability,
+  functionName extends ContractFunctionName<
+    abi,
+    mutability
+  > = ContractFunctionName<abi, mutability>,
+  args extends TronContractFunctionArgs<
+    abi,
+    mutability,
+    functionName
+  > = TronContractFunctionArgs<abi, mutability, functionName>,
+> = abi extends Abi
+  ? Abi extends abi
+    ? unknown
+    : ExtractTronAbiFunctionForArgs<
+          abi,
+          mutability,
+          functionName,
+          args
+        > extends infer abiFunction
+      ? [abiFunction] extends [never]
+        ? unknown
+        : abiFunction extends AbiFunction
+          ? TronAbiParametersToPrimitiveTypes<
+              abiFunction['outputs'],
+              'outputs'
+            > extends infer types
+            ? types extends readonly []
+              ? void
+              : types extends readonly [infer type]
+                ? type
+                : types
+            : never
+          : unknown
+      : never
+  : unknown
 
 export type ContractFunctionParameters<
   abi extends Abi | readonly unknown[] = Abi,

@@ -1,3 +1,4 @@
+import type { Abi } from 'abitype'
 import type { TronAccount } from '../../accounts/types.js'
 import {
   type AccountPermissionUpdateParameters,
@@ -282,6 +283,7 @@ import {
   writeContract,
 } from '../../actions/wallet/writeContract.js'
 import { AccountNotFoundError } from '../../errors/rpc.js'
+import type { ContractFunctionName } from '../../types/contract.js'
 import type { Hex } from '../../types/misc.js'
 import { getAction } from '../../utils/getAction.js'
 import type { Client } from '../createClient.js'
@@ -294,12 +296,18 @@ export type WalletActions = {
     parameters: BuildSendTrxParameters,
   ) => Promise<BuildSendTrxReturnType>
   /** Writes to (state-changing calls) a contract function. */
-  writeContract: (
-    parameters: WriteContractParameters,
+  writeContract: <
+    const abi extends Abi | readonly unknown[],
+    functionName extends ContractFunctionName<abi, 'nonpayable' | 'payable'>,
+  >(
+    parameters: WriteContractParameters<abi, functionName>,
   ) => Promise<WriteContractReturnType>
   /** Builds an unsigned contract write in TronWeb JSON shape (no sign/broadcast). */
-  buildWriteContract: (
-    parameters: BuildWriteContractParameters,
+  buildWriteContract: <
+    const abi extends Abi | readonly unknown[],
+    functionName extends ContractFunctionName<abi, 'nonpayable' | 'payable'>,
+  >(
+    parameters: BuildWriteContractParameters<abi, functionName>,
   ) => Promise<BuildWriteContractReturnType>
   /** Deploys a smart contract (local build → sign → broadcast). */
   deployContract: (
@@ -594,18 +602,31 @@ export function walletActions(client: Client): WalletActions {
         buildSendTrx,
         'buildSendTrx',
       )(requireAccount(client, parameters)),
-    writeContract: async (parameters) =>
+    // The two generic contract actions: getAction erases the action's type
+    // parameters (it sees the wide instantiation), so the parameters are
+    // widened explicitly; the return types are not generic.
+    writeContract: async <
+      const abi extends Abi | readonly unknown[],
+      functionName extends ContractFunctionName<abi, 'nonpayable' | 'payable'>,
+    >(
+      parameters: WriteContractParameters<abi, functionName>,
+    ) =>
       getAction(
         client,
         writeContract,
         'writeContract',
-      )(requireAccount(client, parameters)),
-    buildWriteContract: async (parameters) =>
+      )(requireAccount(client, parameters as WriteContractParameters)),
+    buildWriteContract: async <
+      const abi extends Abi | readonly unknown[],
+      functionName extends ContractFunctionName<abi, 'nonpayable' | 'payable'>,
+    >(
+      parameters: BuildWriteContractParameters<abi, functionName>,
+    ) =>
       getAction(
         client,
         buildWriteContract,
         'buildWriteContract',
-      )(requireAccount(client, parameters)),
+      )(requireAccount(client, parameters as BuildWriteContractParameters)),
     deployContract: async (parameters) =>
       getAction(
         client,

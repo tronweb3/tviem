@@ -1,13 +1,17 @@
-import type { Abi } from 'abitype'
+import type { Abi, AbiFunction, ExtractAbiFunction } from 'abitype'
 import type { Client } from '../../clients/createClient.js'
 import { zeroAddress } from '../../constants/address.js'
 import { ContractFunctionRevertedError } from '../../errors/rpc.js'
 import type { Address } from '../../types/address.js'
+import type {
+  ContractFunctionName,
+  TronContractFunctionArgs,
+  TronContractFunctionReturnType,
+} from '../../types/contract.js'
+import type { IsUnion } from '../../types/utils.js'
 import { decodeAbiParameters } from '../../utils/abi/decodeAbiParameters.js'
-import {
-  type DecodeFunctionResultReturnType,
-  decodeFunctionResult,
-} from '../../utils/abi/decodeFunctionResult.js'
+import { decodeFunctionResult } from '../../utils/abi/decodeFunctionResult.js'
+import type { TronAbiParametersToPrimitiveTypes } from '../../utils/abi/encodeAbiParameters.js'
 import { encodeFunctionData } from '../../utils/abi/encodeFunctionData.js'
 import { toHex } from '../../utils/address/toHex.js'
 import { hexToString } from '../../utils/encoding/fromHex.js'
@@ -17,22 +21,67 @@ const ERROR_STRING_SELECTOR = '08c379a0'
 /** 4-byte selector of the Solidity `Panic(uint256)` revert helper. */
 const PANIC_SELECTOR = '4e487b71'
 
-export type ReadContractParameters = {
+export type ReadContractParameters<
+  abi extends Abi | readonly unknown[] = Abi,
+  functionName extends ContractFunctionName<
+    abi,
+    'pure' | 'view'
+  > = ContractFunctionName<abi, 'pure' | 'view'>,
+  args extends TronContractFunctionArgs<
+    abi,
+    'pure' | 'view',
+    functionName
+  > = TronContractFunctionArgs<abi, 'pure' | 'view', functionName>,
+  ///
+  allFunctionNames = ContractFunctionName<abi, 'pure' | 'view'>,
+  abiFunction extends AbiFunction = abi extends Abi
+    ? ExtractAbiFunction<abi, functionName, 'pure' | 'view'>
+    : AbiFunction,
+  // Falls back to `readonly unknown[]` when the function cannot be extracted
+  // (wide abi, empty abi, unknown name) so the wide call shape keeps working.
+  allArgs = [abiFunction] extends [never]
+    ? readonly unknown[]
+    : TronAbiParametersToPrimitiveTypes<abiFunction['inputs'], 'inputs'>,
+> = {
   /** The contract's Base58Check address. */
   address: Address
   /** The contract ABI. */
-  abi: Abi
+  abi: abi
   /** The function to call. */
-  functionName: string
-  /** The function arguments. */
-  args?: readonly unknown[] | undefined
+  functionName:
+    | allFunctionNames // show all options
+    | (functionName extends allFunctionNames ? functionName : never) // infer value
   /**
    * The caller address. Defaults to the Client's account (on a Wallet Client)
    * or the zero address — neither triggers a balance check on the node.
    */
   from?: Address | undefined
-}
-export type ReadContractReturnType = DecodeFunctionResultReturnType
+} & (readonly [] extends allArgs
+  ? {
+      /** The function arguments. */
+      args?:
+        | allArgs
+        // capture the literal tuple so overloads narrow by their args
+        | (IsUnion<abiFunction> extends true ? args : never)
+        | undefined
+    }
+  : {
+      /** The function arguments. */
+      args: IsUnion<abiFunction> extends true ? args : allArgs
+    })
+
+export type ReadContractReturnType<
+  abi extends Abi | readonly unknown[] = Abi,
+  functionName extends ContractFunctionName<
+    abi,
+    'pure' | 'view'
+  > = ContractFunctionName<abi, 'pure' | 'view'>,
+  args extends TronContractFunctionArgs<
+    abi,
+    'pure' | 'view',
+    functionName
+  > = TronContractFunctionArgs<abi, 'pure' | 'view', functionName>,
+> = TronContractFunctionReturnType<abi, 'pure' | 'view', functionName, args>
 
 /** Shape of a `triggerconstantcontract` response body. */
 type TriggerConstantContractResponse = {
@@ -60,11 +109,20 @@ type TriggerConstantContractResponse = {
  *   args: ['TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC'],
  * })
  */
-export async function readContract(
+export async function readContract<
+  const abi extends Abi | readonly unknown[],
+  functionName extends ContractFunctionName<abi, 'pure' | 'view'>,
+  const args extends TronContractFunctionArgs<
+    abi,
+    'pure' | 'view',
+    functionName
+  > = TronContractFunctionArgs<abi, 'pure' | 'view', functionName>,
+>(
   client: Client,
-  parameters: ReadContractParameters,
-): Promise<ReadContractReturnType> {
-  const { abi, address, args, functionName, from } = parameters
+  parameters: ReadContractParameters<abi, functionName, args>,
+): Promise<ReadContractReturnType<abi, functionName, args>> {
+  const { abi, address, args, functionName, from } =
+    parameters as ReadContractParameters
 
   const data = encodeFunctionData({ abi, functionName, args })
   const owner = from ?? client.account?.address ?? zeroAddress
@@ -91,7 +149,7 @@ export async function readContract(
     functionName,
     args,
     data: `0x${constantResult}`,
-  }) as ReadContractReturnType
+  }) as ReadContractReturnType<abi, functionName, args>
 }
 
 /** Decodes a revert payload into a {@link ContractFunctionRevertedError}. */

@@ -65,7 +65,6 @@ test('InvalidAbiDecodingTypeError', () => {
     [InvalidAbiDecodingType: Type "lol" is not a valid decoding type.
     Please provide a valid ABI type.
 
-    Docs: https://github.com/tronweb3/tviem/lol
     Version: @tronweb3/tviem@1.0.0-beta.1]
   `)
 })
@@ -107,7 +106,6 @@ test('AbiEventSignatureEmptyTopicsError', () => {
   ).toMatchInlineSnapshot(`
     [AbiEventSignatureEmptyTopicsError: Cannot extract event signature from empty topics.
 
-    Docs: https://github.com/tronweb3/tviem/test
     Version: @tronweb3/tviem@1.0.0-beta.1]
   `)
 })
@@ -222,7 +220,6 @@ test('InvalidAbiEncodingTypeError', () => {
     [InvalidAbiEncodingType: Type "lol" is not a valid encoding type.
     Please provide a valid ABI type.
 
-    Docs: https://github.com/tronweb3/tviem/lol
     Version: @tronweb3/tviem@1.0.0-beta.1]
   `)
 })

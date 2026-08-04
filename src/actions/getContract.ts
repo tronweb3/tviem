@@ -89,7 +89,7 @@ type GetReadFunction<
   abi extends Abi | readonly unknown[],
   functionName extends ContractFunctionName<abi, 'pure' | 'view'>,
   abiFunction extends AbiFunction = abi extends Abi
-    ? ExtractAbiFunction<abi, functionName>
+    ? ExtractAbiFunction<abi, functionName, 'pure' | 'view'>
     : AbiFunction,
   _args = TronArgs<abiFunction>,
 > = (
@@ -102,7 +102,7 @@ type GetWriteFunction<
   abi extends Abi | readonly unknown[],
   functionName extends ContractFunctionName<abi, 'nonpayable' | 'payable'>,
   abiFunction extends AbiFunction = abi extends Abi
-    ? ExtractAbiFunction<abi, functionName>
+    ? ExtractAbiFunction<abi, functionName, 'nonpayable' | 'payable'>
     : AbiFunction,
   _args = TronArgs<abiFunction>,
 > = (
@@ -115,7 +115,7 @@ type GetEstimateFunction<
   abi extends Abi | readonly unknown[],
   functionName extends ContractFunctionName<abi, 'nonpayable' | 'payable'>,
   abiFunction extends AbiFunction = abi extends Abi
-    ? ExtractAbiFunction<abi, functionName>
+    ? ExtractAbiFunction<abi, functionName, 'nonpayable' | 'payable'>
     : AbiFunction,
   _args = TronArgs<abiFunction>,
 > = (
