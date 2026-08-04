@@ -395,6 +395,14 @@ export {
   updateWitness,
 } from './actions/wallet/updateWitness.js'
 export {
+  type BuildVoteProposalParameters,
+  type BuildVoteProposalReturnType,
+  buildVoteProposal,
+  type VoteProposalParameters,
+  type VoteProposalReturnType,
+  voteProposal,
+} from './actions/wallet/voteProposal.js'
+export {
   type BuildVoteWitnessParameters,
   type BuildVoteWitnessReturnType,
   buildVoteWitness,
