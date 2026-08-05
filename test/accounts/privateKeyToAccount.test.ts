@@ -46,8 +46,11 @@ describe('privateKeyToAccount', () => {
   })
 
   test('accepts a bare (non-0x) hex private key', () => {
-    expect(privateKeyToAccount('1').address).toBe(address)
     expect(privateKeyToAccount(pk1.slice(2)).address).toBe(address)
+  })
+
+  test('rejects a short (< 32 byte) key instead of zero-padding it', () => {
+    expect(() => privateKeyToAccount('1')).toThrow()
   })
 
   test('exposes NO raw-digest sign (blind signing unsupported)', () => {

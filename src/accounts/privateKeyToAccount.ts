@@ -42,8 +42,9 @@ export type PrivateKeyToAccountErrorType =
  * synchronous. There is deliberately no raw-digest `sign` — blind signing is
  * not supported (see {@link TronCustomSource}).
  *
- * Accepts a `0x`-prefixed or bare hex key; the key is left-padded to 32 bytes
- * (TronWeb parity).
+ * Accepts a 32-byte private key as `0x`-prefixed or bare hex. The key must be a
+ * full 32 bytes — a short or malformed key is rejected by the secp256k1 layer,
+ * never silently zero-padded (the caller guarantees the key).
  *
  * @param privateKey The secp256k1 private key, as `0x`-prefixed or bare hex.
  * @returns A {@link TronLocalAccount}.
@@ -57,9 +58,7 @@ export type PrivateKeyToAccountErrorType =
 export function privateKeyToAccount(
   privateKey: Hex | string,
 ): TronLocalAccount {
-  const keyHex = (
-    privateKey.startsWith('0x') ? privateKey.slice(2) : privateKey
-  ).padStart(64, '0')
+  const keyHex = privateKey.startsWith('0x') ? privateKey.slice(2) : privateKey
 
   const address = privateKeyToAddress(keyHex)
   const publicKey = bytesToHex(secp256k1.getPublicKey(keyHex, false))

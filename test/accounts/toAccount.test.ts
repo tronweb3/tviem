@@ -41,7 +41,6 @@ describe('toAccount', () => {
   })
 
   test('from a bare (non-0x) hex private key', () => {
-    expect(toAccount('1').address).toBe(pk1Address)
     expect(toAccount(pk1.slice(2)).address).toBe(pk1Address)
   })
 

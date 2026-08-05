@@ -89,9 +89,7 @@ export function sign({
       `Invalid hash length: ${hashBytes.length} bytes. Expected a 32-byte digest.`,
     )
 
-  const keyHex = (
-    privateKey.startsWith('0x') ? privateKey.slice(2) : privateKey
-  ).padStart(64, '0')
+  const keyHex = privateKey.startsWith('0x') ? privateKey.slice(2) : privateKey
 
   // The advertised hex form is decoded here — noble rejects 0x-prefixed hex.
   const entropy =

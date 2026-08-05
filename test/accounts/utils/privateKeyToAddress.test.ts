@@ -25,10 +25,13 @@ describe('privateKeyToAddress', () => {
     expect(privateKeyToAddress(v2.privateKey.slice(2))).toBe(v2.base58)
   })
 
-  test('left-pads short keys to 32 bytes (TronWeb pkToAddress parity)', () => {
-    expect(privateKeyToAddress('0x01')).toBe(v1.base58)
-    expect(privateKeyToAddress('0x1')).toBe(v1.base58)
-    expect(privateKeyToAddress('1')).toBe(v1.base58)
+  test('rejects a short (< 32 byte) key instead of zero-padding it', () => {
+    // A private key must be a full 32 bytes; a short form is a caller error,
+    // not silently left-padded — the secp256k1 layer rejects it (viem parity,
+    // the caller guarantees the key).
+    expect(() => privateKeyToAddress('0x01')).toThrow()
+    expect(() => privateKeyToAddress('0x1')).toThrow()
+    expect(() => privateKeyToAddress('1')).toThrow()
   })
 
   test('throws on invalid private keys', () => {

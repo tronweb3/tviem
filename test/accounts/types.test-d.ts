@@ -15,12 +15,16 @@ import type { Signature } from '../../src/utils/signature/sign.js'
 import type { RawData } from '../../src/utils/transaction/serializeRawData.js'
 
 test('privateKeyToAccount returns a TronLocalAccount', () => {
-  const account = privateKeyToAccount('0x01')
+  const account = privateKeyToAccount(
+    '0x0000000000000000000000000000000000000000000000000000000000000001',
+  )
   expectTypeOf(account).toEqualTypeOf<TronLocalAccount>()
 })
 
 test('account fields are branded/narrowed', () => {
-  const account = privateKeyToAccount('0x01')
+  const account = privateKeyToAccount(
+    '0x0000000000000000000000000000000000000000000000000000000000000001',
+  )
   expectTypeOf(account.address).toEqualTypeOf<Address>()
   expectTypeOf(account.publicKey).toEqualTypeOf<Hex>()
   expectTypeOf(account.source).toEqualTypeOf<'privateKey'>()
@@ -28,7 +32,9 @@ test('account fields are branded/narrowed', () => {
 })
 
 test('signing methods are synchronous and return a TRON-wire Signature', () => {
-  const account = privateKeyToAccount('0x01')
+  const account = privateKeyToAccount(
+    '0x0000000000000000000000000000000000000000000000000000000000000001',
+  )
   expectTypeOf(
     account.signMessage({ message: 'gm' }),
   ).toEqualTypeOf<Signature>()
@@ -43,7 +49,9 @@ test('signing methods are synchronous and return a TRON-wire Signature', () => {
 })
 
 test('SignableTransaction requires the full triple — partial forms are a type error', () => {
-  const account = privateKeyToAccount('0x01')
+  const account = privateKeyToAccount(
+    '0x0000000000000000000000000000000000000000000000000000000000000001',
+  )
   // @ts-expect-error a bare txID (blind signing) is no longer assignable
   account.signTransaction({ txID: 'ab' })
   // @ts-expect-error raw_data alone is not assignable
@@ -53,14 +61,18 @@ test('SignableTransaction requires the full triple — partial forms are a type 
 })
 
 test('signMessage accepts both string and { raw } messages', () => {
-  const account = privateKeyToAccount('0x01')
+  const account = privateKeyToAccount(
+    '0x0000000000000000000000000000000000000000000000000000000000000001',
+  )
   account.signMessage({ message: 'gm' })
   account.signMessage({ message: { raw: '0xdead' } })
   account.signMessage({ message: { raw: new Uint8Array([1]) } })
 })
 
 test('a local account is assignable to the account union', () => {
-  const account = privateKeyToAccount('0x01')
+  const account = privateKeyToAccount(
+    '0x0000000000000000000000000000000000000000000000000000000000000001',
+  )
   expectTypeOf(account).toMatchTypeOf<TronAccount>()
 })
 
