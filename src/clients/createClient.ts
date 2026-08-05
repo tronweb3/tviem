@@ -96,6 +96,15 @@ type Extended = Prettify<
 
 export type CreateClientErrorType = ParseAccountErrorType | ErrorType
 
+/**
+ * Creates a base Client with a given transport, optionally configured for a
+ * chain and a hoisted `account`. A base Client carries no actions on its own;
+ * `.extend(...)` grafts action sets onto it — this is what
+ * {@link createPublicClient} (read actions) and {@link createWalletClient}
+ * (write actions) do. Reach for `createClient` directly only to compose a
+ * custom action surface, e.g. `createClient({ chain, transport }).extend(
+ * publicActions).extend(walletActions)`.
+ */
 export function createClient<
   transport extends Transport,
   chain extends Chain | undefined = undefined,
