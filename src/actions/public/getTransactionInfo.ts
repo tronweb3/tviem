@@ -1,4 +1,6 @@
 import type { Client } from '../../clients/createClient.js'
+import type { RequestErrorType } from '../../clients/transports/http.js'
+import type { ErrorType } from '../../errors/utils.js'
 import type { TronHexAddress } from '../../types/address.js'
 import type { Hex } from '../../types/misc.js'
 import type {
@@ -6,7 +8,10 @@ import type {
   TransactionLog,
   TransactionStatus,
 } from '../../types/transaction.js'
-import { toBase58 } from '../../utils/address/toBase58.js'
+import {
+  type ToBase58ErrorType,
+  toBase58,
+} from '../../utils/address/toBase58.js'
 import { isEmptyResponse } from './getNowBlock.js'
 
 export type GetTransactionInfoParameters = {
@@ -14,6 +19,11 @@ export type GetTransactionInfoParameters = {
   hash: string
 }
 export type GetTransactionInfoReturnType = TransactionInfo | null
+
+export type GetTransactionInfoErrorType =
+  | RequestErrorType
+  | ToBase58ErrorType
+  | ErrorType
 
 type RawReceipt = {
   energy_usage?: number | undefined

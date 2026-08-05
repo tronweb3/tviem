@@ -1,9 +1,15 @@
 import type { SignableTransaction } from '../../accounts/types.js'
 import type { Client } from '../../clients/createClient.js'
-import { BaseError } from '../../errors/base.js'
+import type { RequestErrorType } from '../../clients/transports/http.js'
+import { BaseError, type BaseErrorType } from '../../errors/base.js'
+import type { TransactionTamperedErrorType } from '../../errors/rpc.js'
+import type { ErrorType } from '../../errors/utils.js'
 import type { Address, AddressInput } from '../../types/address.js'
 import type { Hex } from '../../types/misc.js'
-import { toBase58 } from '../../utils/address/toBase58.js'
+import {
+  type ToBase58ErrorType,
+  toBase58,
+} from '../../utils/address/toBase58.js'
 import { assertUnchangedTransaction } from '../utils/assertUnchangedTransaction.js'
 import { recoverEchoedResultBody } from '../utils/recoverMultisigResult.js'
 
@@ -36,6 +42,13 @@ export type GetSignWeightReturnType = {
   /** The **local** transaction, re-verified against the node's echoed copy. */
   transaction: SignableTransaction
 }
+
+export type GetSignWeightErrorType =
+  | BaseErrorType
+  | RequestErrorType
+  | ToBase58ErrorType
+  | TransactionTamperedErrorType
+  | ErrorType
 
 type RawKey = {
   address?: string | undefined

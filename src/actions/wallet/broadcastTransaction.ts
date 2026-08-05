@@ -1,15 +1,36 @@
 import type { SignableTransaction } from '../../accounts/types.js'
 import type { Client } from '../../clients/createClient.js'
+import type { RequestErrorType } from '../../clients/transports/http.js'
 import { TronNodeError } from '../../errors/node.js'
-import { TransactionExpiredError, TronRpcError } from '../../errors/rpc.js'
-import { toBroadcastHex } from '../../utils/transaction/serializeTransaction.js'
-import { assertRpcSuccess } from '../utils/normalizeResponse.js'
+import {
+  TransactionExpiredError,
+  type TransactionExpiredErrorType,
+  TronRpcError,
+  type TronRpcErrorType,
+} from '../../errors/rpc.js'
+import type { ErrorType } from '../../errors/utils.js'
+import {
+  type SerializeTransactionErrorType,
+  toBroadcastHex,
+} from '../../utils/transaction/serializeTransaction.js'
+import {
+  type AssertRpcSuccessErrorType,
+  assertRpcSuccess,
+} from '../utils/normalizeResponse.js'
 
 export type BroadcastTransactionParameters = {
   /** A signed transaction (must already carry at least one signature). */
   signedTransaction: SignableTransaction
 }
 export type BroadcastTransactionReturnType = { txid: string }
+
+export type BroadcastTransactionErrorType =
+  | AssertRpcSuccessErrorType
+  | RequestErrorType
+  | SerializeTransactionErrorType
+  | TransactionExpiredErrorType
+  | TronRpcErrorType
+  | ErrorType
 
 /** The `broadcasthex` request body: the full signed `Transaction` protobuf. */
 type BroadcastBody = { transaction: string }

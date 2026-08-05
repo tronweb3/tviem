@@ -1,9 +1,18 @@
 import type { TronAccount } from '../../../accounts/types.js'
+import type { SignTransactionErrorType } from '../../../accounts/utils/signTransaction.js'
 import type { Client } from '../../../clients/createClient.js'
+import type { ErrorType } from '../../../errors/utils.js'
 import { getAction } from '../../../utils/getAction.js'
 import type { RawContract } from '../../../utils/transaction/serializeRawData.js'
-import { broadcastTransaction } from '../broadcastTransaction.js'
-import { buildTransaction, type TransactionHeader } from './buildTransaction.js'
+import {
+  type BroadcastTransactionErrorType,
+  broadcastTransaction,
+} from '../broadcastTransaction.js'
+import {
+  type BuildTransactionErrorType,
+  buildTransaction,
+  type TransactionHeader,
+} from './buildTransaction.js'
 
 export type BuildAndBroadcastParameters = {
   /** The single `Transaction.Contract` to wrap in the transaction. */
@@ -22,6 +31,12 @@ export type BuildAndBroadcastParameters = {
   data?: string | undefined
 }
 export type BuildAndBroadcastReturnType = { txID: string }
+
+export type BuildAndBroadcastErrorType =
+  | BroadcastTransactionErrorType
+  | BuildTransactionErrorType
+  | SignTransactionErrorType
+  | ErrorType
 
 /**
  * The shared TRON write pipeline extracted from `sendTrx` / `writeContract`:

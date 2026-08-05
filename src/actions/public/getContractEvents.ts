@@ -1,10 +1,12 @@
 import type { Abi, ExtractAbiEventNames } from 'abitype'
 import type { Client } from '../../clients/createClient.js'
+import type { ErrorType } from '../../errors/utils.js'
 import type { AddressInput } from '../../types/address.js'
 import { getAction } from '../../utils/getAction.js'
 import type { EventPageMeta, TronEvent } from '../utils/formatEvent.js'
 import {
   type EventOrderBy,
+  type GetEventsByContractAddressErrorType,
   getEventsByContractAddress,
 } from './getEventsByContractAddress.js'
 
@@ -50,6 +52,10 @@ export type GetContractEventsReturnType = {
   events: TronEvent[]
   meta: EventPageMeta
 }
+
+export type GetContractEventsErrorType =
+  | GetEventsByContractAddressErrorType
+  | ErrorType
 
 /**
  * Reads a contract's events with ABI-driven `eventName` inference — the

@@ -1,6 +1,12 @@
 import type { Client } from '../../clients/createClient.js'
-import { BlockNotFoundError } from '../../errors/rpc.js'
+import type { RequestErrorType } from '../../clients/transports/http.js'
+import {
+  BlockNotFoundError,
+  type BlockNotFoundErrorType,
+} from '../../errors/rpc.js'
+import type { ErrorType } from '../../errors/utils.js'
 import type { Block } from '../../types/block.js'
+import type { ToBase58ErrorType } from '../../utils/address/toBase58.js'
 import { formatBlock, isEmptyResponse, type RawBlock } from './getNowBlock.js'
 
 export type GetBlockParameters = {
@@ -8,6 +14,12 @@ export type GetBlockParameters = {
   blockNumber: bigint | number
 }
 export type GetBlockReturnType = Block
+
+export type GetBlockErrorType =
+  | BlockNotFoundErrorType
+  | RequestErrorType
+  | ToBase58ErrorType
+  | ErrorType
 
 /**
  * Fetches a block by number from the FullNode via `getblockbynum`.

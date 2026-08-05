@@ -1,4 +1,7 @@
-import { privateKeyToAccount } from '../accounts/privateKeyToAccount.js'
+import {
+  type PrivateKeyToAccountErrorType,
+  privateKeyToAccount,
+} from '../accounts/privateKeyToAccount.js'
 import type { TronAccount, TronLocalAccount } from '../accounts/types.js'
 import type { ErrorType } from '../errors/utils.js'
 import type { Hex } from './misc.js'
@@ -14,7 +17,8 @@ export type ParseAccount<accountOrAddress> = accountOrAddress extends Hex
   ? TronLocalAccount
   : accountOrAddress
 
-export type ParseAccountErrorType = ErrorType
+// A Hex source is resolved through privateKeyToAccount — fold its surface.
+export type ParseAccountErrorType = PrivateKeyToAccountErrorType | ErrorType
 
 /**
  * Normalizes an `account` source into a {@link TronAccount}.

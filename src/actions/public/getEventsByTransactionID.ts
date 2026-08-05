@@ -1,7 +1,11 @@
 import type { Client } from '../../clients/createClient.js'
-import { BaseError } from '../../errors/base.js'
+import { BaseError, type BaseErrorType } from '../../errors/base.js'
+import type { ErrorType } from '../../errors/utils.js'
 import type { EventPageMeta, TronEvent } from '../utils/formatEvent.js'
-import { requestEvents } from '../utils/requestEvents.js'
+import {
+  type RequestEventsErrorType,
+  requestEvents,
+} from '../utils/requestEvents.js'
 
 export type GetEventsByTransactionIDParameters = {
   /** The transaction id (64 hex chars, no `0x`). */
@@ -20,6 +24,11 @@ export type GetEventsByTransactionIDReturnType = {
   events: TronEvent[]
   meta: EventPageMeta
 }
+
+export type GetEventsByTransactionIDErrorType =
+  | BaseErrorType
+  | RequestEventsErrorType
+  | ErrorType
 
 /**
  * Reads events a transaction emitted, from the TronGrid

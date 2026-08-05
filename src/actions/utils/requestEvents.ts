@@ -1,5 +1,8 @@
 import type { Client } from '../../clients/createClient.js'
-import { BaseError } from '../../errors/base.js'
+import type { RequestErrorType } from '../../clients/transports/http.js'
+import { BaseError, type BaseErrorType } from '../../errors/base.js'
+import type { ErrorType } from '../../errors/utils.js'
+import type { ToBase58ErrorType } from '../../utils/address/toBase58.js'
 import {
   type EventPageMeta,
   formatEvent,
@@ -22,6 +25,13 @@ export function toQueryString(query: EventQuery): string {
   const serialized = params.toString()
   return serialized ? `?${serialized}` : ''
 }
+
+export type RequestEventsErrorType =
+  | BaseErrorType
+  | RequestErrorType
+  // formatEvent renders contract/caller/parameter addresses via toBase58.
+  | ToBase58ErrorType
+  | ErrorType
 
 /**
  * Issues a TronGrid `/v1/*` event read over the `event` node, guards the

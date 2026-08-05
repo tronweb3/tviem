@@ -1,10 +1,17 @@
 import type { TronAccount } from '../../accounts/types.js'
 import type { Client } from '../../clients/createClient.js'
-import { AccountNotFoundError } from '../../errors/rpc.js'
-import { parseAccount } from '../../types/account.js'
+import {
+  AccountNotFoundError,
+  type AccountNotFoundErrorType,
+} from '../../errors/rpc.js'
+import type { ErrorType } from '../../errors/utils.js'
+import {
+  type ParseAccountErrorType,
+  parseAccount,
+} from '../../types/account.js'
 import type { Address } from '../../types/address.js'
 import type { Hex } from '../../types/misc.js'
-import { toHex } from '../../utils/address/toHex.js'
+import { type ToHexErrorType, toHex } from '../../utils/address/toHex.js'
 import {
   ContractType,
   contractTypeUrlPrefix,
@@ -12,10 +19,12 @@ import {
 import type { RawContract } from '../../utils/transaction/serializeRawData.js'
 import type { VoteWitnessContract } from '../../utils/transaction/types.js'
 import {
+  type BuildAndBroadcastErrorType,
   type BuildAndBroadcastReturnType,
   buildAndBroadcast,
 } from './utils/buildAndBroadcast.js'
 import {
+  type BuildTransactionErrorType,
   type BuildTransactionReturnType,
   buildTransaction,
   type TransactionHeader,
@@ -42,11 +51,25 @@ export type VoteWitnessParameters = {
 }
 export type VoteWitnessReturnType = BuildAndBroadcastReturnType
 
+export type VoteWitnessErrorType =
+  | AccountNotFoundErrorType
+  | BuildAndBroadcastErrorType
+  | ParseAccountErrorType
+  | ToHexErrorType
+  | ErrorType
+
 export type BuildVoteWitnessParameters = VoteWitnessParameters & {
   /** Multi-sig permission id (`Contract.Permission_id`). */
   permissionId?: number | undefined
 }
 export type BuildVoteWitnessReturnType = BuildTransactionReturnType
+
+export type BuildVoteWitnessErrorType =
+  | AccountNotFoundErrorType
+  | BuildTransactionErrorType
+  | ParseAccountErrorType
+  | ToHexErrorType
+  | ErrorType
 
 /** The signing account plus the assembled `VoteWitnessContract`. */
 function assemble(

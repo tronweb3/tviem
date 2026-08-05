@@ -1,4 +1,4 @@
-import { BaseError } from '../../errors/base.js'
+import { BaseError, type BaseErrorType } from '../../errors/base.js'
 import type { ErrorType } from '../../errors/utils.js'
 import type { ByteArray, Hex } from '../../types/misc.js'
 import { concatBytes } from '../data/concat.js'
@@ -9,6 +9,7 @@ import {
   type StringToBytesErrorType,
   stringToBytes,
 } from '../encoding/toBytes.js'
+import type { EncodeMessageErrorType } from './contracts/codec.js'
 import {
   type FBytesErrorType,
   type FIntErrorType,
@@ -137,6 +138,11 @@ function serializeContract(contract: RawContract): ByteArray {
 }
 
 export type SerializeRawDataErrorType =
+  // Direct BaseError throws: unknown contract type name, unknown raw_data /
+  // contract / parameter key, unregistered codec type_url.
+  | BaseErrorType
+  // The registered codec's `encode` surface (address normalization included).
+  | EncodeMessageErrorType
   | FBytesErrorType
   | FIntErrorType
   | FMessageErrorType

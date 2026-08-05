@@ -1,11 +1,17 @@
 import type { Client } from '../../clients/createClient.js'
 import {
   TronRpcError,
+  type TronRpcErrorType,
   WaitForTransactionReceiptTimeoutError,
+  type WaitForTransactionReceiptTimeoutErrorType,
 } from '../../errors/rpc.js'
+import type { ErrorType } from '../../errors/utils.js'
 import { getAction } from '../../utils/getAction.js'
-import { getNowBlock } from './getNowBlock.js'
-import { getTransactionInfo } from './getTransactionInfo.js'
+import { type GetNowBlockErrorType, getNowBlock } from './getNowBlock.js'
+import {
+  type GetTransactionInfoErrorType,
+  getTransactionInfo,
+} from './getTransactionInfo.js'
 
 export type WaitForTransactionReceiptParameters = {
   /** The transaction id to wait on. */
@@ -41,6 +47,13 @@ export type TransactionReceipt = {
   [key: string]: unknown
 }
 export type WaitForTransactionReceiptReturnType = TransactionReceipt
+
+export type WaitForTransactionReceiptErrorType =
+  | GetNowBlockErrorType
+  | GetTransactionInfoErrorType
+  | TronRpcErrorType
+  | WaitForTransactionReceiptTimeoutErrorType
+  | ErrorType
 
 /** Resolves after `ms` milliseconds (timer-based, so fake timers can drive it). */
 function sleep(ms: number): Promise<void> {

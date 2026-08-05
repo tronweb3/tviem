@@ -1,6 +1,10 @@
 import type { Client } from '../../clients/createClient.js'
+import type { ErrorType } from '../../errors/utils.js'
 import type { EventPageMeta, TronEvent } from '../utils/formatEvent.js'
-import { requestEvents } from '../utils/requestEvents.js'
+import {
+  type RequestEventsErrorType,
+  requestEvents,
+} from '../utils/requestEvents.js'
 
 export type GetEventsOfLatestBlockParameters = {
   /** Return only confirmed events. */
@@ -15,6 +19,8 @@ export type GetEventsOfLatestBlockReturnType = {
   events: TronEvent[]
   meta: EventPageMeta
 }
+
+export type GetEventsOfLatestBlockErrorType = RequestEventsErrorType | ErrorType
 
 /**
  * Reads events emitted in the latest block, from the TronGrid

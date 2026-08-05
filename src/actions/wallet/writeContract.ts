@@ -2,22 +2,36 @@ import type { Abi, AbiFunction, ExtractAbiFunction } from 'abitype'
 import type { TronAccount } from '../../accounts/types.js'
 import type { Client } from '../../clients/createClient.js'
 import { defaultFeeLimit } from '../../constants/address.js'
-import { AccountNotFoundError } from '../../errors/rpc.js'
-import { parseAccount } from '../../types/account.js'
+import {
+  AccountNotFoundError,
+  type AccountNotFoundErrorType,
+} from '../../errors/rpc.js'
+import type { ErrorType } from '../../errors/utils.js'
+import {
+  type ParseAccountErrorType,
+  parseAccount,
+} from '../../types/account.js'
 import type { Address } from '../../types/address.js'
 import type { ContractFunctionName } from '../../types/contract.js'
 import type { Hex } from '../../types/misc.js'
 import type { TronAbiParametersToPrimitiveTypes } from '../../utils/abi/encodeAbiParameters.js'
-import { encodeFunctionData } from '../../utils/abi/encodeFunctionData.js'
-import { toHex } from '../../utils/address/toHex.js'
+import {
+  type EncodeFunctionDataErrorType,
+  encodeFunctionData,
+} from '../../utils/abi/encodeFunctionData.js'
+import { type ToHexErrorType, toHex } from '../../utils/address/toHex.js'
 import {
   ContractType,
   contractTypeUrlPrefix,
 } from '../../utils/transaction/registry.js'
 import type { RawContract } from '../../utils/transaction/serializeRawData.js'
 import type { TriggerSmartContract } from '../../utils/transaction/types.js'
-import { buildAndBroadcast } from './utils/buildAndBroadcast.js'
 import {
+  type BuildAndBroadcastErrorType,
+  buildAndBroadcast,
+} from './utils/buildAndBroadcast.js'
+import {
+  type BuildTransactionErrorType,
   type BuildTransactionReturnType,
   buildTransaction,
   type TransactionHeader,
@@ -70,6 +84,14 @@ export type WriteContractParameters<
     })
 export type WriteContractReturnType = { txID: string }
 
+export type WriteContractErrorType =
+  | AccountNotFoundErrorType
+  | BuildAndBroadcastErrorType
+  | EncodeFunctionDataErrorType
+  | ParseAccountErrorType
+  | ToHexErrorType
+  | ErrorType
+
 export type BuildWriteContractParameters<
   abi extends Abi | readonly unknown[] = Abi,
   functionName extends ContractFunctionName<
@@ -81,6 +103,14 @@ export type BuildWriteContractParameters<
   permissionId?: number | undefined
 }
 export type BuildWriteContractReturnType = BuildTransactionReturnType
+
+export type BuildWriteContractErrorType =
+  | AccountNotFoundErrorType
+  | BuildTransactionErrorType
+  | EncodeFunctionDataErrorType
+  | ParseAccountErrorType
+  | ToHexErrorType
+  | ErrorType
 
 /** The signing account plus the assembled `TriggerSmartContract` and fee limit. */
 function assemble(

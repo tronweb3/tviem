@@ -1,8 +1,16 @@
 import type { Client } from '../../clients/createClient.js'
-import { BlockNotFoundError } from '../../errors/rpc.js'
+import type { RequestErrorType } from '../../clients/transports/http.js'
+import {
+  BlockNotFoundError,
+  type BlockNotFoundErrorType,
+} from '../../errors/rpc.js'
+import type { ErrorType } from '../../errors/utils.js'
 import type { TronHexAddress } from '../../types/address.js'
 import type { Block } from '../../types/block.js'
-import { toBase58 } from '../../utils/address/toBase58.js'
+import {
+  type ToBase58ErrorType,
+  toBase58,
+} from '../../utils/address/toBase58.js'
 
 /** The raw block shape returned by `getnowblock` / `getblockbynum`. */
 export type RawBlock = {
@@ -53,6 +61,12 @@ export function formatBlock(raw: RawBlock): Block {
 }
 
 export type GetNowBlockReturnType = Block
+
+export type GetNowBlockErrorType =
+  | BlockNotFoundErrorType
+  | RequestErrorType
+  | ToBase58ErrorType
+  | ErrorType
 
 /**
  * Fetches the latest (unconfirmed) block from the FullNode via `getnowblock`.

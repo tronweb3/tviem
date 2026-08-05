@@ -3,15 +3,31 @@ import type { Abi } from 'abitype'
 import type { TronAccount } from '../../accounts/types.js'
 import type { Client } from '../../clients/createClient.js'
 import { defaultFeeLimit } from '../../constants/address.js'
-import { AccountNotFoundError } from '../../errors/rpc.js'
-import { parseAccount } from '../../types/account.js'
+import {
+  AccountNotFoundError,
+  type AccountNotFoundErrorType,
+} from '../../errors/rpc.js'
+import type { ErrorType } from '../../errors/utils.js'
+import {
+  type ParseAccountErrorType,
+  parseAccount,
+} from '../../types/account.js'
 import type { Address, AddressInput } from '../../types/address.js'
 import type { ContractConstructorArgs } from '../../types/contract.js'
 import type { Hex } from '../../types/misc.js'
-import { encodeDeployData } from '../../utils/abi/encodeDeployData.js'
-import { toBase58 } from '../../utils/address/toBase58.js'
-import { toHex } from '../../utils/address/toHex.js'
-import { genContractAddress } from '../../utils/transaction/genContractAddress.js'
+import {
+  type EncodeDeployDataErrorType,
+  encodeDeployData,
+} from '../../utils/abi/encodeDeployData.js'
+import {
+  type ToBase58ErrorType,
+  toBase58,
+} from '../../utils/address/toBase58.js'
+import { type ToHexErrorType, toHex } from '../../utils/address/toHex.js'
+import {
+  type GenContractAddressErrorType,
+  genContractAddress,
+} from '../../utils/transaction/genContractAddress.js'
 import {
   ContractType,
   contractTypeUrlPrefix,
@@ -25,10 +41,12 @@ import {
   StateMutabilityType,
 } from '../../utils/transaction/types.js'
 import {
+  type BuildAndBroadcastErrorType,
   type BuildAndBroadcastReturnType,
   buildAndBroadcast,
 } from './utils/buildAndBroadcast.js'
 import {
+  type BuildTransactionErrorType,
   type BuildTransactionReturnType,
   buildTransaction,
   type TransactionHeader,
@@ -139,6 +157,16 @@ export type DeployContractReturnType = BuildAndBroadcastReturnType & {
   contractAddress: Address
 }
 
+export type DeployContractErrorType =
+  | AccountNotFoundErrorType
+  | BuildAndBroadcastErrorType
+  | EncodeDeployDataErrorType
+  | GenContractAddressErrorType
+  | ParseAccountErrorType
+  | ToBase58ErrorType
+  | ToHexErrorType
+  | ErrorType
+
 export type BuildDeployContractParameters<
   abi extends Abi | readonly unknown[] = Abi,
 > = DeployContractParameters<abi> & {
@@ -146,6 +174,14 @@ export type BuildDeployContractParameters<
   permissionId?: number | undefined
 }
 export type BuildDeployContractReturnType = BuildTransactionReturnType
+
+export type BuildDeployContractErrorType =
+  | AccountNotFoundErrorType
+  | BuildTransactionErrorType
+  | EncodeDeployDataErrorType
+  | ParseAccountErrorType
+  | ToHexErrorType
+  | ErrorType
 
 /** The signing account plus the assembled `CreateSmartContract` and fee limit. */
 function assemble(

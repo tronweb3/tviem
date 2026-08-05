@@ -1,10 +1,17 @@
 import type { TronAccount } from '../../accounts/types.js'
 import type { Client } from '../../clients/createClient.js'
-import { AccountNotFoundError } from '../../errors/rpc.js'
-import { parseAccount } from '../../types/account.js'
+import {
+  AccountNotFoundError,
+  type AccountNotFoundErrorType,
+} from '../../errors/rpc.js'
+import type { ErrorType } from '../../errors/utils.js'
+import {
+  type ParseAccountErrorType,
+  parseAccount,
+} from '../../types/account.js'
 import type { Address } from '../../types/address.js'
 import type { Hex } from '../../types/misc.js'
-import { toHex } from '../../utils/address/toHex.js'
+import { type ToHexErrorType, toHex } from '../../utils/address/toHex.js'
 import {
   ContractType,
   contractTypeUrlPrefix,
@@ -16,10 +23,12 @@ import {
 } from '../../utils/transaction/types.js'
 import type { StakeResource } from './freezeBalanceV2.js'
 import {
+  type BuildAndBroadcastErrorType,
   type BuildAndBroadcastReturnType,
   buildAndBroadcast,
 } from './utils/buildAndBroadcast.js'
 import {
+  type BuildTransactionErrorType,
   type BuildTransactionReturnType,
   buildTransaction,
   type TransactionHeader,
@@ -44,11 +53,25 @@ export type FreezeBalanceParameters = {
 }
 export type FreezeBalanceReturnType = BuildAndBroadcastReturnType
 
+export type FreezeBalanceErrorType =
+  | AccountNotFoundErrorType
+  | BuildAndBroadcastErrorType
+  | ParseAccountErrorType
+  | ToHexErrorType
+  | ErrorType
+
 export type BuildFreezeBalanceParameters = FreezeBalanceParameters & {
   /** Multi-sig permission id (`Contract.Permission_id`). */
   permissionId?: number | undefined
 }
 export type BuildFreezeBalanceReturnType = BuildTransactionReturnType
+
+export type BuildFreezeBalanceErrorType =
+  | AccountNotFoundErrorType
+  | BuildTransactionErrorType
+  | ParseAccountErrorType
+  | ToHexErrorType
+  | ErrorType
 
 /** The signing account plus the assembled `FreezeBalanceContract`. */
 function assemble(

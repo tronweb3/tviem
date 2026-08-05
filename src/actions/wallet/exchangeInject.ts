@@ -1,10 +1,20 @@
 import type { TronAccount } from '../../accounts/types.js'
 import type { Client } from '../../clients/createClient.js'
-import { AccountNotFoundError } from '../../errors/rpc.js'
-import { parseAccount } from '../../types/account.js'
+import {
+  AccountNotFoundError,
+  type AccountNotFoundErrorType,
+} from '../../errors/rpc.js'
+import type { ErrorType } from '../../errors/utils.js'
+import {
+  type ParseAccountErrorType,
+  parseAccount,
+} from '../../types/account.js'
 import type { Hex } from '../../types/misc.js'
-import { toHex } from '../../utils/address/toHex.js'
-import { flexToHex } from '../../utils/transaction/normalize.js'
+import { type ToHexErrorType, toHex } from '../../utils/address/toHex.js'
+import {
+  type FlexErrorType,
+  flexToHex,
+} from '../../utils/transaction/normalize.js'
 import {
   ContractType,
   contractTypeUrlPrefix,
@@ -12,10 +22,12 @@ import {
 import type { RawContract } from '../../utils/transaction/serializeRawData.js'
 import type { ExchangeInjectContract } from '../../utils/transaction/types.js'
 import {
+  type BuildAndBroadcastErrorType,
   type BuildAndBroadcastReturnType,
   buildAndBroadcast,
 } from './utils/buildAndBroadcast.js'
 import {
+  type BuildTransactionErrorType,
   type BuildTransactionReturnType,
   buildTransaction,
   type TransactionHeader,
@@ -38,11 +50,27 @@ export type ExchangeInjectParameters = {
 }
 export type ExchangeInjectReturnType = BuildAndBroadcastReturnType
 
+export type ExchangeInjectErrorType =
+  | AccountNotFoundErrorType
+  | BuildAndBroadcastErrorType
+  | FlexErrorType
+  | ParseAccountErrorType
+  | ToHexErrorType
+  | ErrorType
+
 export type BuildExchangeInjectParameters = ExchangeInjectParameters & {
   /** Multi-sig permission id (`Contract.Permission_id`). */
   permissionId?: number | undefined
 }
 export type BuildExchangeInjectReturnType = BuildTransactionReturnType
+
+export type BuildExchangeInjectErrorType =
+  | AccountNotFoundErrorType
+  | BuildTransactionErrorType
+  | FlexErrorType
+  | ParseAccountErrorType
+  | ToHexErrorType
+  | ErrorType
 
 /** The signing account plus the assembled `ExchangeInjectContract`. */
 function assemble(

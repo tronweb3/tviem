@@ -1,8 +1,15 @@
 import type { Client } from '../../clients/createClient.js'
+import type { ErrorType } from '../../errors/utils.js'
 import type { AddressInput } from '../../types/address.js'
-import { toBase58 } from '../../utils/address/toBase58.js'
+import {
+  type ToBase58ErrorType,
+  toBase58,
+} from '../../utils/address/toBase58.js'
 import type { EventPageMeta, TronEvent } from '../utils/formatEvent.js'
-import { requestEvents } from '../utils/requestEvents.js'
+import {
+  type RequestEventsErrorType,
+  requestEvents,
+} from '../utils/requestEvents.js'
 
 /** TronGrid event sort order (only `block_timestamp` is supported). */
 export type EventOrderBy = 'block_timestamp,asc' | 'block_timestamp,desc'
@@ -34,6 +41,11 @@ export type GetEventsByContractAddressReturnType = {
   events: TronEvent[]
   meta: EventPageMeta
 }
+
+export type GetEventsByContractAddressErrorType =
+  | RequestEventsErrorType
+  | ToBase58ErrorType
+  | ErrorType
 
 /**
  * Reads a contract's events from the TronGrid `/v1/contracts/{address}/events`

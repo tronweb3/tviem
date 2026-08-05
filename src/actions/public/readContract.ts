@@ -1,7 +1,12 @@
 import type { Abi, AbiFunction, ExtractAbiFunction } from 'abitype'
 import type { Client } from '../../clients/createClient.js'
+import type { RequestErrorType } from '../../clients/transports/http.js'
 import { zeroAddress } from '../../constants/address.js'
-import { ContractFunctionRevertedError } from '../../errors/rpc.js'
+import {
+  ContractFunctionRevertedError,
+  type ContractFunctionRevertedErrorType,
+} from '../../errors/rpc.js'
+import type { ErrorType } from '../../errors/utils.js'
 import type { Address } from '../../types/address.js'
 import type {
   ContractFunctionName,
@@ -9,12 +14,24 @@ import type {
   TronContractFunctionReturnType,
 } from '../../types/contract.js'
 import type { IsUnion } from '../../types/utils.js'
-import { decodeAbiParameters } from '../../utils/abi/decodeAbiParameters.js'
-import { decodeFunctionResult } from '../../utils/abi/decodeFunctionResult.js'
+import {
+  type DecodeAbiParametersErrorType,
+  decodeAbiParameters,
+} from '../../utils/abi/decodeAbiParameters.js'
+import {
+  type DecodeFunctionResultErrorType,
+  decodeFunctionResult,
+} from '../../utils/abi/decodeFunctionResult.js'
 import type { TronAbiParametersToPrimitiveTypes } from '../../utils/abi/encodeAbiParameters.js'
-import { encodeFunctionData } from '../../utils/abi/encodeFunctionData.js'
-import { toHex } from '../../utils/address/toHex.js'
-import { hexToString } from '../../utils/encoding/fromHex.js'
+import {
+  type EncodeFunctionDataErrorType,
+  encodeFunctionData,
+} from '../../utils/abi/encodeFunctionData.js'
+import { type ToHexErrorType, toHex } from '../../utils/address/toHex.js'
+import {
+  type HexToStringErrorType,
+  hexToString,
+} from '../../utils/encoding/fromHex.js'
 
 /** 4-byte selector of the Solidity `Error(string)` revert helper. */
 const ERROR_STRING_SELECTOR = '08c379a0'
@@ -82,6 +99,16 @@ export type ReadContractReturnType<
     functionName
   > = TronContractFunctionArgs<abi, 'pure' | 'view', functionName>,
 > = TronContractFunctionReturnType<abi, 'pure' | 'view', functionName, args>
+
+export type ReadContractErrorType =
+  | ContractFunctionRevertedErrorType
+  | DecodeAbiParametersErrorType
+  | DecodeFunctionResultErrorType
+  | EncodeFunctionDataErrorType
+  | HexToStringErrorType
+  | RequestErrorType
+  | ToHexErrorType
+  | ErrorType
 
 /** Shape of a `triggerconstantcontract` response body. */
 type TriggerConstantContractResponse = {

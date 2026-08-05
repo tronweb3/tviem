@@ -1,13 +1,24 @@
 import type { Client } from '../../clients/createClient.js'
-import { IntegerOutOfRangeError } from '../../errors/encoding.js'
+import type { RequestErrorType } from '../../clients/transports/http.js'
+import {
+  IntegerOutOfRangeError,
+  type IntegerOutOfRangeErrorType,
+} from '../../errors/encoding.js'
+import type { ErrorType } from '../../errors/utils.js'
 import type { Address } from '../../types/address.js'
-import { toHex } from '../../utils/address/toHex.js'
+import { type ToHexErrorType, toHex } from '../../utils/address/toHex.js'
 
 export type GetBalanceParameters = {
   /** The Base58Check address to read the TRX balance of. */
   address: Address
 }
 export type GetBalanceReturnType = bigint
+
+export type GetBalanceErrorType =
+  | IntegerOutOfRangeErrorType
+  | RequestErrorType
+  | ToHexErrorType
+  | ErrorType
 
 type GetAccountResponse = {
   /** Balance in SUN. Absent for a non-existent account (`{}`). */

@@ -1,16 +1,30 @@
 import type { Abi, AbiFunction, ExtractAbiFunction } from 'abitype'
 import type { TronAccount } from '../../accounts/types.js'
 import type { Client } from '../../clients/createClient.js'
+import type { RequestErrorType } from '../../clients/transports/http.js'
 import { zeroAddress } from '../../constants/address.js'
-import { IntegerOutOfRangeError } from '../../errors/encoding.js'
-import { parseAccount } from '../../types/account.js'
+import {
+  IntegerOutOfRangeError,
+  type IntegerOutOfRangeErrorType,
+} from '../../errors/encoding.js'
+import type { ErrorType } from '../../errors/utils.js'
+import {
+  type ParseAccountErrorType,
+  parseAccount,
+} from '../../types/account.js'
 import type { Address } from '../../types/address.js'
 import type { ContractFunctionName } from '../../types/contract.js'
 import type { Hex } from '../../types/misc.js'
 import type { TronAbiParametersToPrimitiveTypes } from '../../utils/abi/encodeAbiParameters.js'
-import { encodeFunctionData } from '../../utils/abi/encodeFunctionData.js'
-import { toHex } from '../../utils/address/toHex.js'
-import { assertRpcSuccess } from '../utils/normalizeResponse.js'
+import {
+  type EncodeFunctionDataErrorType,
+  encodeFunctionData,
+} from '../../utils/abi/encodeFunctionData.js'
+import { type ToHexErrorType, toHex } from '../../utils/address/toHex.js'
+import {
+  type AssertRpcSuccessErrorType,
+  assertRpcSuccess,
+} from '../utils/normalizeResponse.js'
 
 export type EstimateEnergyParameters<
   abi extends Abi | readonly unknown[] = Abi,
@@ -51,6 +65,15 @@ export type EstimateEnergyParameters<
       args: allArgs
     })
 export type EstimateEnergyReturnType = bigint
+
+export type EstimateEnergyErrorType =
+  | AssertRpcSuccessErrorType
+  | EncodeFunctionDataErrorType
+  | IntegerOutOfRangeErrorType
+  | ParseAccountErrorType
+  | RequestErrorType
+  | ToHexErrorType
+  | ErrorType
 
 /** Shape of the `triggerconstantcontract` response body we consume. */
 type TriggerConstantContractResponse = {

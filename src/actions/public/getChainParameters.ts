@@ -1,6 +1,10 @@
 import type { Client } from '../../clients/createClient.js'
+import type { RequestErrorType } from '../../clients/transports/http.js'
+import type { ErrorType } from '../../errors/utils.js'
 
 export type GetChainParametersReturnType = Record<string, bigint>
+
+export type GetChainParametersErrorType = RequestErrorType | ErrorType
 
 type ChainParameterEntry = {
   key: string

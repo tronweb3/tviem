@@ -1,6 +1,8 @@
 import type { Client } from '../../clients/createClient.js'
+import type { RequestErrorType } from '../../clients/transports/http.js'
+import type { ErrorType } from '../../errors/utils.js'
 import type { Address } from '../../types/address.js'
-import { toHex } from '../../utils/address/toHex.js'
+import { type ToHexErrorType, toHex } from '../../utils/address/toHex.js'
 
 export type GetAccountResourcesParameters = {
   /** The Base58Check address to read resource usage/limits of. */
@@ -38,6 +40,11 @@ export type GetAccountResourcesReturnType = {
   /** Network-wide staked energy weight (`TotalEnergyWeight`). */
   totalEnergyWeight: bigint
 }
+
+export type GetAccountResourcesErrorType =
+  | RequestErrorType
+  | ToHexErrorType
+  | ErrorType
 
 /** Raw `getaccountresource` body; TRON omits zero-valued fields entirely. */
 type GetAccountResourceResponse = {

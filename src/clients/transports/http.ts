@@ -1,12 +1,22 @@
 import {
   TronBroadcastError,
+  type TronBroadcastErrorType,
   TronContractValidateError,
+  type TronContractValidateErrorType,
   TronNodeError,
+  type TronNodeErrorType,
   TronValidationError,
+  type TronValidationErrorType,
+  type UnknownNodeErrorType,
 } from '../../errors/node.js'
-import { HttpRequestError, TimeoutError } from '../../errors/request.js'
+import {
+  HttpRequestError,
+  type HttpRequestErrorType,
+  TimeoutError,
+  type TimeoutErrorType,
+} from '../../errors/request.js'
 import { UrlRequiredError } from '../../errors/transport.js'
-import { isAbortError } from '../../errors/utils.js'
+import { type ErrorType, isAbortError } from '../../errors/utils.js'
 import type { Hex } from '../../types/misc.js'
 import type { TronNode, TronRequestArgs } from '../../types/transport.js'
 import { hexToString } from '../../utils/encoding/fromHex.js'
@@ -116,6 +126,24 @@ function decodeNodeMessage(message: unknown): string {
 function isSuccessCode(code: unknown): boolean {
   return code === 'SUCCESS' || code === 0 || code === '0' || code === 200
 }
+
+/**
+ * Everything a `client.request` round-trip can throw: the HTTP layer
+ * (network failure, timeout) plus the four documented TRON node error
+ * shapes surfaced by {@link normalizeTronError}. The building block for
+ * per-action `XxxErrorType` unions.
+ */
+export type RequestErrorType =
+  | HttpRequestErrorType
+  | TimeoutErrorType
+  | TronBroadcastErrorType
+  | TronContractValidateErrorType
+  | TronNodeErrorType
+  | TronValidationErrorType
+  // buildRequest wraps any non-BaseError thrown inside the transport
+  // (circular request body, a custom fetchFn throwing a non-Error, …).
+  | UnknownNodeErrorType
+  | ErrorType
 
 /**
  * Normalizes a TRON node response body (usually delivered over HTTP 200).

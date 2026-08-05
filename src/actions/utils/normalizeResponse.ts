@@ -1,4 +1,7 @@
-import { TronRpcError } from '../../errors/rpc.js'
+import { TronRpcError, type TronRpcErrorType } from '../../errors/rpc.js'
+import type { ErrorType } from '../../errors/utils.js'
+
+export type AssertRpcSuccessErrorType = TronRpcErrorType | ErrorType
 
 /**
  * Asserts that a node response does not carry a logical failure.

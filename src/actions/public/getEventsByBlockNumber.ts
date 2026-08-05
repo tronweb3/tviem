@@ -1,6 +1,10 @@
 import type { Client } from '../../clients/createClient.js'
+import type { ErrorType } from '../../errors/utils.js'
 import type { EventPageMeta, TronEvent } from '../utils/formatEvent.js'
-import { requestEvents } from '../utils/requestEvents.js'
+import {
+  type RequestEventsErrorType,
+  requestEvents,
+} from '../utils/requestEvents.js'
 
 export type GetEventsByBlockNumberParameters = {
   /** The block height to read events from. */
@@ -17,6 +21,8 @@ export type GetEventsByBlockNumberReturnType = {
   events: TronEvent[]
   meta: EventPageMeta
 }
+
+export type GetEventsByBlockNumberErrorType = RequestEventsErrorType | ErrorType
 
 /**
  * Reads every event emitted in a block, from the TronGrid

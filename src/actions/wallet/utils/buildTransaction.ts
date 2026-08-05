@@ -1,16 +1,30 @@
 import type { SignableTransaction } from '../../../accounts/types.js'
 import type { Client } from '../../../clients/createClient.js'
-import { bareHex } from '../../../utils/encoding/bareHex.js'
+import type { ErrorType } from '../../../errors/utils.js'
+import {
+  type BareHexErrorType,
+  bareHex,
+} from '../../../utils/encoding/bareHex.js'
 import { getAction } from '../../../utils/getAction.js'
-import { sha256 } from '../../../utils/hash/sha256.js'
-import { decodeRawData } from '../../../utils/transaction/decodeRawData.js'
-import { fillBlockHeader } from '../../../utils/transaction/prepareTransaction.js'
+import { type Sha256ErrorType, sha256 } from '../../../utils/hash/sha256.js'
+import {
+  type DecodeRawDataErrorType,
+  decodeRawData,
+} from '../../../utils/transaction/decodeRawData.js'
+import {
+  type DeriveRefBlockParamsErrorType,
+  fillBlockHeader,
+} from '../../../utils/transaction/prepareTransaction.js'
 import {
   type RawContract,
   type RawData,
+  type SerializeRawDataErrorType,
   serializeRawData,
 } from '../../../utils/transaction/serializeRawData.js'
-import { getNowBlock } from '../../public/getNowBlock.js'
+import {
+  type GetNowBlockErrorType,
+  getNowBlock,
+} from '../../public/getNowBlock.js'
 
 /**
  * A fully-specified TaPoS + timing header — a `raw_data` fragment, so its
@@ -62,6 +76,15 @@ export type BuildTransactionParameters = {
 export type BuildTransactionReturnType = SignableTransaction & {
   visible: false
 }
+
+export type BuildTransactionErrorType =
+  | BareHexErrorType
+  | DecodeRawDataErrorType
+  | DeriveRefBlockParamsErrorType
+  | GetNowBlockErrorType
+  | SerializeRawDataErrorType
+  | Sha256ErrorType
+  | ErrorType
 
 /**
  * The shared TRON build phase extracted from {@link buildAndBroadcast}: wrap a

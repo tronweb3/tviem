@@ -1,21 +1,30 @@
 import type { TronAccount } from '../../accounts/types.js'
 import type { Client } from '../../clients/createClient.js'
-import { AccountNotFoundError } from '../../errors/rpc.js'
-import { parseAccount } from '../../types/account.js'
+import {
+  AccountNotFoundError,
+  type AccountNotFoundErrorType,
+} from '../../errors/rpc.js'
+import type { ErrorType } from '../../errors/utils.js'
+import {
+  type ParseAccountErrorType,
+  parseAccount,
+} from '../../types/account.js'
 import type { Address } from '../../types/address.js'
 import type { ByteArray, Hex } from '../../types/misc.js'
-import { toHex } from '../../utils/address/toHex.js'
-import { bareHex } from '../../utils/encoding/bareHex.js'
+import { type ToHexErrorType, toHex } from '../../utils/address/toHex.js'
+import { type BareHexErrorType, bareHex } from '../../utils/encoding/bareHex.js'
 import {
   ContractType,
   contractTypeUrlPrefix,
 } from '../../utils/transaction/registry.js'
 import type { RawContract } from '../../utils/transaction/serializeRawData.js'
 import {
+  type BuildAndBroadcastErrorType,
   type BuildAndBroadcastReturnType,
   buildAndBroadcast,
 } from './utils/buildAndBroadcast.js'
 import {
+  type BuildTransactionErrorType,
   type BuildTransactionReturnType,
   buildTransaction,
   type TransactionHeader,
@@ -38,6 +47,14 @@ export type SendTrxParameters = {
 }
 export type SendTrxReturnType = BuildAndBroadcastReturnType
 
+export type SendTrxErrorType =
+  | AccountNotFoundErrorType
+  | BareHexErrorType
+  | BuildAndBroadcastErrorType
+  | ParseAccountErrorType
+  | ToHexErrorType
+  | ErrorType
+
 export type BuildSendTrxParameters = SendTrxParameters & {
   /**
    * Multi-sig permission id (`Contract.Permission_id`) to bind the transaction
@@ -46,6 +63,14 @@ export type BuildSendTrxParameters = SendTrxParameters & {
   permissionId?: number | undefined
 }
 export type BuildSendTrxReturnType = BuildTransactionReturnType
+
+export type BuildSendTrxErrorType =
+  | AccountNotFoundErrorType
+  | BareHexErrorType
+  | BuildTransactionErrorType
+  | ParseAccountErrorType
+  | ToHexErrorType
+  | ErrorType
 
 /** The signing account plus the assembled `TransferContract` and memo `data`. */
 function assemble(
