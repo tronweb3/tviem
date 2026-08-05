@@ -171,6 +171,21 @@ import {
   setAccountId,
 } from '../../actions/wallet/setAccountId.js'
 import {
+  type SignMessageParameters,
+  type SignMessageReturnType,
+  signMessage,
+} from '../../actions/wallet/signMessage.js'
+import {
+  type SignTransactionParameters,
+  type SignTransactionReturnType,
+  signTransaction,
+} from '../../actions/wallet/signTransaction.js'
+import {
+  type SignTypedDataParameters,
+  type SignTypedDataReturnType,
+  signTypedData,
+} from '../../actions/wallet/signTypedData.js'
+import {
   type BuildUndelegateResourceParameters,
   type BuildUndelegateResourceReturnType,
   buildUndelegateResource,
@@ -327,6 +342,18 @@ export type WalletActions = {
   ) => Promise<BuildAccountPermissionUpdateReturnType>
   /** Co-signs a multi-sig transaction under a permission id (signs locally). */
   multiSign: (parameters: MultiSignParameters) => Promise<MultiSignReturnType>
+  /** Signs a built transaction with the resolved account (guards included). */
+  signTransaction: (
+    parameters: SignTransactionParameters,
+  ) => Promise<SignTransactionReturnType>
+  /** Signs a message per TIP-191 with the resolved account. */
+  signMessage: (
+    parameters: SignMessageParameters,
+  ) => Promise<SignMessageReturnType>
+  /** Signs TIP-712 typed structured data with the resolved account. */
+  signTypedData: (
+    parameters: SignTypedDataParameters,
+  ) => Promise<SignTypedDataReturnType>
   /** Broadcasts a locally-signed transaction. */
   broadcastTransaction: (
     parameters: BroadcastTransactionParameters,
@@ -654,6 +681,24 @@ export function walletActions(client: Client): WalletActions {
     // Takes a raw `privateKey` (not an account), so it bypasses `requireAccount`.
     multiSign: (parameters) =>
       getAction(client, multiSign, 'multiSign')(parameters),
+    signTransaction: async (parameters) =>
+      getAction(
+        client,
+        signTransaction,
+        'signTransaction',
+      )(requireAccount(client, parameters)),
+    signMessage: async (parameters) =>
+      getAction(
+        client,
+        signMessage,
+        'signMessage',
+      )(requireAccount(client, parameters)),
+    signTypedData: async (parameters) =>
+      getAction(
+        client,
+        signTypedData,
+        'signTypedData',
+      )(requireAccount(client, parameters)),
     broadcastTransaction: (parameters) =>
       getAction(
         client,

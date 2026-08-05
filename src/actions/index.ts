@@ -344,6 +344,24 @@ export {
   setAccountId,
 } from './wallet/setAccountId.js'
 export {
+  type SignMessageErrorType,
+  type SignMessageParameters,
+  type SignMessageReturnType,
+  signMessage,
+} from './wallet/signMessage.js'
+export {
+  type SignTransactionErrorType,
+  type SignTransactionParameters,
+  type SignTransactionReturnType,
+  signTransaction,
+} from './wallet/signTransaction.js'
+export {
+  type SignTypedDataErrorType,
+  type SignTypedDataParameters,
+  type SignTypedDataReturnType,
+  signTypedData,
+} from './wallet/signTypedData.js'
+export {
   type BuildUndelegateResourceErrorType,
   type BuildUndelegateResourceParameters,
   type BuildUndelegateResourceReturnType,
