@@ -314,6 +314,18 @@ describe('signTransaction', () => {
     expect(signed.signature).toEqual([foreignCased])
   })
 
+  test('de-duplicates the same signature bytes across the 0x prefix', () => {
+    // A caller-injected `0x`-prefixed entry carries the identical 65 bytes as
+    // the SDK's bare-hex signature — comparing by bytes must recognize it and
+    // not append a duplicate (a duplicate signer fails broadcast).
+    const prefixed = `0x${canonicalSig}`
+    const signed = signTransaction({
+      transaction: { ...triple(canonicalRawData), signature: [prefixed] },
+      privateKey: pk1,
+    })
+    expect(signed.signature).toEqual([prefixed])
+  })
+
   test('appends to an existing foreign signature without dropping it', () => {
     const signed = signTransaction({
       transaction: { ...triple(canonicalRawData), signature: ['deadbeef'] },

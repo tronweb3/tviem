@@ -78,7 +78,8 @@ export type SignTransactionErrorType =
  *    which satisfies this guard via the `address` parameter after its own
  *    permission validations.
  * 3. If this key's signature is already present it is not appended twice
- *    (compared hex-case-insensitively — the wire value is bytes).
+ *    (compared by bytes — `0x`-prefix- and case-insensitive — since a
+ *    duplicate signer would fail broadcast).
  *
  * @param parameters Transaction, private key, optional expected address.
  * @returns A new {@link SignableTransaction} — the verified
@@ -102,7 +103,10 @@ export function signTransaction(
 
   const sig = sign({ hash: `0x${bareHex(txID)}`, privateKey }).hex
   const existing = transaction.signature ?? []
-  const signature = existing.some((s) => s.toLowerCase() === sig)
+  // Compare by bytes, not by string: `sig` is bare lowercase hex, so an
+  // existing entry in `0x`-prefixed or upper-case form is the SAME signature
+  // and must not be appended twice (a duplicate signer fails broadcast).
+  const signature = existing.some((s) => bareHex(s) === sig)
     ? [...existing]
     : [...existing, sig]
 
