@@ -71,6 +71,7 @@ export {
   type AccountPermission,
   type AccountState,
   type AccountUnfrozenV2,
+  type GetAccountErrorType,
   type GetAccountParameters,
   type GetAccountReturnType,
   getAccount,
@@ -149,6 +150,7 @@ export {
   getSignWeight,
 } from './actions/public/getSignWeight.js'
 export {
+  type GetTransactionErrorType,
   type GetTransactionParameters,
   type GetTransactionReturnType,
   getTransaction,

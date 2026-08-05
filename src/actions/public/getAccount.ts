@@ -1,8 +1,16 @@
 import type { Client } from '../../clients/createClient.js'
-import { IntegerOutOfRangeError } from '../../errors/encoding.js'
+import type { RequestErrorType } from '../../clients/transports/http.js'
+import {
+  IntegerOutOfRangeError,
+  type IntegerOutOfRangeErrorType,
+} from '../../errors/encoding.js'
+import type { ErrorType } from '../../errors/utils.js'
 import type { Address, AddressInput } from '../../types/address.js'
-import { toBase58 } from '../../utils/address/toBase58.js'
-import { toHex } from '../../utils/address/toHex.js'
+import {
+  type ToBase58ErrorType,
+  toBase58,
+} from '../../utils/address/toBase58.js'
+import { type ToHexErrorType, toHex } from '../../utils/address/toHex.js'
 import type { ResourceCodeName } from '../../utils/transaction/types.js'
 import { isEmptyResponse } from './getNowBlock.js'
 import {
@@ -129,6 +137,13 @@ export type AccountState = {
 }
 
 export type GetAccountReturnType = AccountState | null
+
+export type GetAccountErrorType =
+  | IntegerOutOfRangeErrorType
+  | RequestErrorType
+  | ToBase58ErrorType
+  | ToHexErrorType
+  | ErrorType
 
 type RawFrozenV1 = {
   frozen_balance?: number | string | undefined

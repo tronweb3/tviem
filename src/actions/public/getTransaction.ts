@@ -1,11 +1,24 @@
 import type { SignableTransaction } from '../../accounts/types.js'
 import type { Client } from '../../clients/createClient.js'
-import { TransactionTamperedError, TronRpcError } from '../../errors/rpc.js'
+import type { RequestErrorType } from '../../clients/transports/http.js'
+import {
+  TransactionTamperedError,
+  type TransactionTamperedErrorType,
+  TronRpcError,
+  type TronRpcErrorType,
+} from '../../errors/rpc.js'
+import type { ErrorType } from '../../errors/utils.js'
 import type { ByteArray, Hex } from '../../types/misc.js'
-import { bareHex } from '../../utils/encoding/bareHex.js'
-import { hexToBytes } from '../../utils/encoding/toBytes.js'
-import { sha256 } from '../../utils/hash/sha256.js'
-import { decodeRawData } from '../../utils/transaction/decodeRawData.js'
+import { type BareHexErrorType, bareHex } from '../../utils/encoding/bareHex.js'
+import {
+  type HexToBytesErrorType,
+  hexToBytes,
+} from '../../utils/encoding/toBytes.js'
+import { type Sha256ErrorType, sha256 } from '../../utils/hash/sha256.js'
+import {
+  type DecodeRawDataErrorType,
+  decodeRawData,
+} from '../../utils/transaction/decodeRawData.js'
 import { isEmptyResponse } from './getNowBlock.js'
 
 export type GetTransactionParameters = {
@@ -24,6 +37,16 @@ export type GetTransactionReturnType =
       ret?: readonly TransactionRet[] | undefined
     })
   | null
+
+export type GetTransactionErrorType =
+  | BareHexErrorType
+  | DecodeRawDataErrorType
+  | HexToBytesErrorType
+  | RequestErrorType
+  | Sha256ErrorType
+  | TransactionTamperedErrorType
+  | TronRpcErrorType
+  | ErrorType
 
 type RawTransactionResponse = {
   txID?: string | undefined
