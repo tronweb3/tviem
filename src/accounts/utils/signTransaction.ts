@@ -58,7 +58,7 @@ export type SignTransactionErrorType =
  *
  * `raw_data` is java-tron's HTTP JSON (`visible: false`) shape — the one and
  * only dialect, whether built by this SDK, returned by
- * `wallet/createtransaction`, or handed over by TronWeb. The bytes are the
+ * java-tron's HTTP node, or handed over by TronWeb. The bytes are the
  * source of truth: the JSON must serialize to exactly the `raw_data_hex`
  * bytes, and the signed digest is their SHA-256 (`txID`).
  *

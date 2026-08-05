@@ -19,9 +19,6 @@ export type PrivateKeyToAddressErrorType =
  * (TronWeb `pkToAddress` parity), then the uncompressed public key is
  * derived and hashed (`keccak256`, last 20 bytes, `0x41` prefix).
  *
- * @example
- * privateKeyToAddress('0x0000000000000000000000000000000000000000000000000000000000000002')
- * // 'TDvSsdrNM5eeXNL3czpa6AxLDHZA9nwe9K'
  */
 export function privateKeyToAddress(privateKey: Hex | string): Address {
   const hex = (
