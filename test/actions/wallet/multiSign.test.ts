@@ -216,3 +216,22 @@ test('refuses partial forms — a bare txID with no raw_data does not sign', asy
     }),
   ).rejects.toThrow('The transaction failed its integrity check (txCheck).')
 })
+
+test('a contract-less shell is refused with a clean integrity error', async () => {
+  // `contract: []` with a ref-block field serializes to non-empty bytes, so a
+  // correctly-derived txID/hex would slip past the zero-bytes guard — multiSign
+  // must reject it via txCheck before the owner_address read on contract[0].
+  const shell = { ref_block_bytes: '1234', contract: [] }
+  const { client } = silentClient()
+  await expect(
+    multiSign(client, {
+      transaction: {
+        raw_data: shell,
+        raw_data_hex: toRawDataHex(shell as never),
+        txID: getTransactionId(shell as never),
+      } as unknown as SignableTransaction,
+      privateKey: pk1,
+      permissionId: 2,
+    }),
+  ).rejects.toThrow('The transaction failed its integrity check (txCheck).')
+})

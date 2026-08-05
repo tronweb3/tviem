@@ -367,4 +367,23 @@ describe('signTransaction', () => {
     })
     expect(signed.txID).toBe(getTransactionId(canonicalRawData))
   })
+
+  test('a contract-less shell is refused with a clean integrity error', () => {
+    // `contract: []` plus a ref-block field serializes to non-empty bytes, so
+    // a correctly-derived txID/hex slips past the zero-bytes guard — the shell
+    // must still fail txCheck cleanly, never reaching the owner_address read
+    // (which would throw a raw TypeError on the empty contract list).
+    const shell = {
+      ref_block_bytes: '1234',
+      contract: [],
+    } as unknown as RawData
+    const transaction: SignableTransaction = {
+      raw_data: shell,
+      raw_data_hex: toRawDataHex(shell),
+      txID: getTransactionId(shell),
+    }
+    expect(() => signTransaction({ transaction, privateKey: pk1 })).toThrow(
+      integrityError,
+    )
+  })
 })

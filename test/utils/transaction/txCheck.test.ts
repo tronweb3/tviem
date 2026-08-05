@@ -106,6 +106,17 @@ test('txCheck fails a raw_data that serializes to zero bytes', () => {
   ).toBe(false)
 })
 
+test('txCheck fails contract:[] even when other fields serialize to bytes', () => {
+  // `contract: []` with a ref-block field serializes to NON-empty bytes, so
+  // the zero-bytes guard alone misses it — a contract-less shell must still
+  // be rejected (else downstream owner_address reads hit an empty list).
+  const shell = { ref_block_bytes: '1234', contract: [] } as unknown as RawData
+  const hex = '0a021234'
+  expect(txCheck({ txID: 'ab', raw_data: shell, raw_data_hex: hex })).toBe(
+    false,
+  )
+})
+
 test('txCheck ignores model content that never reaches the wire', () => {
   // The bytes are authoritative and are what a signature covers. Model
   // content the serializer never encodes cannot change the verdict:

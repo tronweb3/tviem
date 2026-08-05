@@ -43,6 +43,12 @@ export function txCheck(transaction: {
     )
   const { txID, raw_data, raw_data_hex } = transaction
   if (!txID || !raw_data || !raw_data_hex) return false
+  // A contract-less shell is not a transaction (see above). The zero-bytes
+  // check below misses `contract: []` when other fields (e.g. ref-block) still
+  // serialize to non-empty bytes; reject it here so downstream owner_address
+  // reads never hit an empty contract list.
+  if (!Array.isArray(raw_data.contract) || raw_data.contract.length === 0)
+    return false
   try {
     const hex = toRawDataHex(raw_data)
     if (hex === '') return false
