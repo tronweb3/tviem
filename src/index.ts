@@ -636,6 +636,8 @@ export {
   type InvalidAbiDecodingTypeErrorType,
   InvalidAbiEncodingTypeError,
   type InvalidAbiEncodingTypeErrorType,
+  InvalidAbiParameterValueError,
+  type InvalidAbiParameterValueErrorType,
   InvalidArrayError,
   type InvalidArrayErrorType,
   InvalidDefinitionTypeError,
@@ -677,6 +679,10 @@ export {
   type RlpDepthLimitExceededErrorType,
   SizeOverflowError,
   type SizeOverflowErrorType,
+  UnsupportedWireTypeError,
+  type UnsupportedWireTypeErrorType,
+  VarintOverflowError,
+  type VarintOverflowErrorType,
 } from './errors/encoding.js'
 export {
   FilterTypeNotSupportedError,
