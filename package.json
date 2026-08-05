@@ -138,7 +138,7 @@
     "clean": "rm -rf *.tsbuildinfo src/*.tsbuildinfo src/_esm src/_cjs src/_types",
     "build": "pnpm clean && pnpm build:cjs && pnpm build:esm && pnpm build:types && pnpm build:types:cjs",
     "build:esm": "tsc --project ./tsconfig.build.json --outDir ./src/_esm && printf '{\"type\":\"module\",\"sideEffects\":false}' > ./src/_esm/package.json",
-    "build:cjs": "node scripts/runTsc.js --project ./tsconfig.build.json --module commonjs --moduleResolution node --outDir ./src/_cjs --removeComments --verbatimModuleSyntax false && printf '{\"type\":\"commonjs\"}' > ./src/_cjs/package.json",
+    "build:cjs": "node scripts/runTsc.js --project ./tsconfig.build.json --module commonjs --moduleResolution node --outDir ./src/_cjs --removeComments --verbatimModuleSyntax false && printf '{\"type\":\"commonjs\",\"sideEffects\":false}' > ./src/_cjs/package.json",
     "build:types": "tsc --project ./tsconfig.build.json --declarationDir ./src/_types --emitDeclarationOnly --declaration --declarationMap",
     "build:types:cjs": "tsc --project ./tsconfig.build.json --declarationDir ./src/_cjs --emitDeclarationOnly --declaration",
     "preconstruct": "node scripts/preconstruct.mjs",
