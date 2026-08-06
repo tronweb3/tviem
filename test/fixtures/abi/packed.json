@@ -2,8 +2,8 @@
   {
     "name": "packed-address",
     "types": ["address"],
-    "values": ["TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t"],
-    "encoded": "0xa614f803b6fd780986a42c78ec9c7f77e6ded13c"
+    "values": ["TA5DvvvmYbS75o3DKtgy2ATAGVHhpFkRLe"],
+    "encoded": "0x0123456789abcdef0123456789abcdef01234567"
   },
   {
     "name": "packed-uint8",
@@ -111,16 +111,16 @@
     "values": [
       [
         "TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC",
-        "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t"
+        "TA5DvvvmYbS75o3DKtgy2ATAGVHhpFkRLe"
       ]
     ],
-    "encoded": "0x0000000000000000000000007e5f4552091a69125d5dfcb7b8c2659029395bdf000000000000000000000000a614f803b6fd780986a42c78ec9c7f77e6ded13c"
+    "encoded": "0x0000000000000000000000007e5f4552091a69125d5dfcb7b8c2659029395bdf0000000000000000000000000123456789abcdef0123456789abcdef01234567"
   },
   {
     "name": "packed-address-uint256",
     "types": ["address", "uint256"],
-    "values": ["TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t", "1000000"],
-    "encoded": "0xa614f803b6fd780986a42c78ec9c7f77e6ded13c00000000000000000000000000000000000000000000000000000000000f4240"
+    "values": ["TA5DvvvmYbS75o3DKtgy2ATAGVHhpFkRLe", "1000000"],
+    "encoded": "0x0123456789abcdef0123456789abcdef0123456700000000000000000000000000000000000000000000000000000000000f4240"
   },
   {
     "name": "packed-mixed",

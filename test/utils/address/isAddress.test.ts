@@ -6,12 +6,12 @@ describe('isAddress (strict, default)', () => {
   test('accepts canonical Base58Check addresses (§2.1 V1/V2/V3)', () => {
     expect(isAddress('TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC')).toBe(true)
     expect(isAddress('TDvSsdrNM5eeXNL3czpa6AxLDHZA9nwe9K')).toBe(true)
-    expect(isAddress('TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t')).toBe(true)
+    expect(isAddress('TA5DvvvmYbS75o3DKtgy2ATAGVHhpFkRLe')).toBe(true)
   })
 
   test('rejects the §2.1 negative examples', () => {
     // Tampered checksum (last character changed).
-    expect(isAddress('TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6X')).toBe(false)
+    expect(isAddress('TA5DvvvmYbS75o3DKtgy2ATAGVHhpFkRLX')).toBe(false)
     // EVM 0x form is non-canonical (aligned with TronWeb).
     expect(isAddress('0x2b5ad5c4795c026514f8317c7a215e218dccd6cf')).toBe(false)
     expect(isAddress('T123')).toBe(false)
@@ -63,7 +63,7 @@ describe('isAddress({ strict: false })', () => {
 
   test('still rejects invalid input, without throwing', () => {
     expect(
-      isAddress('TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6X', { strict: false }),
+      isAddress('TA5DvvvmYbS75o3DKtgy2ATAGVHhpFkRLX', { strict: false }),
     ).toBe(false)
     expect(isAddress('T123', { strict: false })).toBe(false)
     expect(isAddress('', { strict: false })).toBe(false)

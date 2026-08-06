@@ -18,14 +18,14 @@ import {
 
 // §2.1 V1, §2.1 V3 (USDT), §2.4 TRC20 transfer calldata.
 const v1 = '417e5f4552091a69125d5dfcb7b8c2659029395bdf' as const
-const usdt = '41a614f803b6fd780986a42c78ec9c7f77e6ded13c' as const
+const usdt = '410123456789abcdef0123456789abcdef01234567' as const
 const calldata =
-  '0xa9059cbb000000000000000000000000a614f803b6fd780986a42c78ec9c7f77e6ded13c00000000000000000000000000000000000000000000000000000000000f4240' as const
+  '0xa9059cbb0000000000000000000000000123456789abcdef0123456789abcdef0123456700000000000000000000000000000000000000000000000000000000000f4240' as const
 
 test('encodeTriggerSmartContract: §2.4 TRC20 transfer call', () => {
   const encoded = encodeTriggerSmartContract({
     owner_address: v1,
-    contract_address: 'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t',
+    contract_address: 'TA5DvvvmYbS75o3DKtgy2ATAGVHhpFkRLe',
     data: calldata,
   })
   expect(bytesToHex(encoded)).toBe(

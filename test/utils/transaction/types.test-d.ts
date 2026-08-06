@@ -54,7 +54,7 @@ test('ContractAddressInput is wide-in (AddressInput | ByteArray)', () => {
   expectTypeOf<TronHexAddress>().toExtend<ContractAddressInput>()
   expectTypeOf<EvmAddress>().toExtend<ContractAddressInput>()
   expectTypeOf<ByteArray>().toExtend<ContractAddressInput>()
-  expectTypeOf<'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t'>().toExtend<ContractAddressInput>()
+  expectTypeOf<'TA5DvvvmYbS75o3DKtgy2ATAGVHhpFkRLe'>().toExtend<ContractAddressInput>()
   expectTypeOf<'412b5ad5c4795c026514f8317c7a215e218dccd6cf'>().toExtend<ContractAddressInput>()
   expectTypeOf<'0x2b5ad5c4795c026514f8317c7a215e218dccd6cf'>().toExtend<ContractAddressInput>()
 
@@ -71,7 +71,7 @@ test('contract address fields accept every input form', () => {
   expectTypeOf<Address>().toExtend<TriggerSmartContract['owner_address']>()
   const a: TriggerSmartContract = {
     ...base,
-    owner_address: 'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t',
+    owner_address: 'TA5DvvvmYbS75o3DKtgy2ATAGVHhpFkRLe',
   }
   const b: TriggerSmartContract = {
     ...base,

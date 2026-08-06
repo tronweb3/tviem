@@ -67,12 +67,12 @@ test('event node routes a /v1 path to the event host root (no wallet prefix)', a
   const t = transport({ eventUrl: 'https://event.example' })
   await t.config.request({
     node: 'event',
-    path: '/v1/contracts/TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t/events',
+    path: '/v1/contracts/TA5DvvvmYbS75o3DKtgy2ATAGVHhpFkRLe/events',
     method: 'GET',
   })
   const [url] = fetchMock.mock.calls[0] as [string]
   expect(url).toBe(
-    'https://event.example/v1/contracts/TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t/events',
+    'https://event.example/v1/contracts/TA5DvvvmYbS75o3DKtgy2ATAGVHhpFkRLe/events',
   )
 })
 

@@ -25,7 +25,7 @@ const balanceOfAbi = [
   },
 ] as const
 
-const contract = 'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t' as Address
+const contract = 'TA5DvvvmYbS75o3DKtgy2ATAGVHhpFkRLe' as Address
 const holder = 'TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC' as Address
 
 /** An inline transport that replies with `response` and records every request. */

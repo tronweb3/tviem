@@ -29,13 +29,13 @@ test('resolves the function by 4-byte selector and decodes its args', () => {
   const data = encodeFunctionData({
     abi,
     functionName: 'transfer',
-    args: ['TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t', 1000000n],
+    args: ['TA5DvvvmYbS75o3DKtgy2ATAGVHhpFkRLe', 1000000n],
   })
   // `transfer(address,uint256)` selector is the canonical 0xa9059cbb.
   expect(data.startsWith('0xa9059cbb')).toBe(true)
   expect(decodeFunctionData({ abi, data })).toEqual({
     functionName: 'transfer',
-    args: ['TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t', 1000000n],
+    args: ['TA5DvvvmYbS75o3DKtgy2ATAGVHhpFkRLe', 1000000n],
   })
 })
 

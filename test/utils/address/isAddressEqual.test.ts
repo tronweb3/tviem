@@ -59,7 +59,7 @@ describe('isAddressEqual', () => {
     expect(() =>
       isAddressEqual(
         'TDvSsdrNM5eeXNL3czpa6AxLDHZA9nwe9K',
-        'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6X',
+        'TA5DvvvmYbS75o3DKtgy2ATAGVHhpFkRLX',
       ),
     ).toThrow(InvalidAddressError)
     expect(() =>

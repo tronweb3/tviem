@@ -3,7 +3,7 @@ import { getContractEvents } from '../../../src/actions/public/getContractEvents
 import { createPublicClient } from '../../../src/clients/createPublicClient.js'
 import { createMockTransport } from '../../mock/createMockTransport.js'
 
-const usdt = 'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t'
+const usdt = 'TA5DvvvmYbS75o3DKtgy2ATAGVHhpFkRLe'
 
 const abi = [
   {

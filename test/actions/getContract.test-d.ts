@@ -41,7 +41,7 @@ const trc20Abi = [
   },
 ] as const
 
-const address = 'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t'
+const address = 'TA5DvvvmYbS75o3DKtgy2ATAGVHhpFkRLe'
 
 test('read.<fn> parameter and return inference (Public Client)', () => {
   const publicClient = {} as PublicClient

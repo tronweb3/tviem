@@ -21,8 +21,8 @@ test('root barrel exposes public utils', () => {
   expect(mod.toFunctionSelector('function transfer(address,uint256)')).toBe(
     '0xa9059cbb',
   )
-  expect(mod.isAddress('TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t')).toBe(true)
-  expect(mod.isAddress('TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6X')).toBe(false)
+  expect(mod.isAddress('TA5DvvvmYbS75o3DKtgy2ATAGVHhpFkRLe')).toBe(true)
+  expect(mod.isAddress('TA5DvvvmYbS75o3DKtgy2ATAGVHhpFkRLX')).toBe(false)
   expect(mod.trxUnits.sun).toBe(6)
 })
 

@@ -23,7 +23,7 @@ const abiWithConstructor = [
   },
 ] as const satisfies Abi
 
-const args = [1000000n, 'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t'] as const
+const args = [1000000n, 'TA5DvvvmYbS75o3DKtgy2ATAGVHhpFkRLe'] as const
 
 test('encodeDeployData: no args returns the bytecode unchanged', () => {
   expect(encodeDeployData({ abi: [], bytecode })).toBe(bytecode)
@@ -60,7 +60,7 @@ test('decodeDeployData: round-trips encodeDeployData', () => {
   const data = encodeDeployData({ abi: abiWithConstructor, bytecode, args })
   expect(decodeDeployData({ abi: abiWithConstructor, bytecode, data })).toEqual(
     {
-      args: [1000000n, 'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t'],
+      args: [1000000n, 'TA5DvvvmYbS75o3DKtgy2ATAGVHhpFkRLe'],
       bytecode,
     },
   )

@@ -7,7 +7,7 @@ import { createMockTransport } from '../../mock/createMockTransport.js'
 import { makeTviemClient, tviemHeader } from './_buildTestHelpers.js'
 
 // A valid, distinct issuer (the USDT TRC20 contract address on mainnet).
-const issuer = 'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t'
+const issuer = 'TA5DvvvmYbS75o3DKtgy2ATAGVHhpFkRLe'
 const tokenId = '1000001'
 
 test('builds ParticipateAssetIssueContract offline', async () => {

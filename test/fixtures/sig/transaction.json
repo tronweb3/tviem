@@ -31,9 +31,9 @@
   },
   {
     "name": "vote for two witnesses",
-    "txID": "6a544ce118e09919d4c8a058b1dd9f4455dc74ec2426d57f8b6f30a1c62a8644",
+    "txID": "c60ce3286e32f4211e7013f042d01322a1069b115606365d5b273c6765f24d65",
     "privateKeyLabel": "pk1",
-    "signature": "9f5f38e5309fb0edb37af0d54706af8f7c643df5429b934eea9c9a3b41475d66139588cd4eef100661404c9ca99ee5999d7c8ad1f6e497c499c0f61ca988da941b"
+    "signature": "23b426fd5c7dc4e045a9958879852a33e0f95fe1a311ecdf46f93714da1dcc0830fb129a493c22a1d35b2359d0b587982a0ff7b5eae9d0764674834b38efa8fb1b"
   },
   {
     "name": "withdraw block rewards",
@@ -55,27 +55,27 @@
   },
   {
     "name": "trigger TRC20 transfer with fee_limit",
-    "txID": "ddd5febbb5ef788933fc151fc1cf89246a35d89cc6607141c4ebf54499a3a5e6",
+    "txID": "3efcd4d8554ed772ee4310511611b348a3a8f79fe3fab6b839a383b8525bff16",
     "privateKeyLabel": "pk1",
-    "signature": "a3d238b761eeca2cf73b7378a187bac8466141096bcae7b5a9f21eca35977ff626c39f79edadf8d25f55f3301cfd9f07f17becf5683bbe64fdebee2eef27a38c1c"
+    "signature": "896177051d2d91e1e2486cf62a42073a3afde0899a9b595eac1401c2d0e5a2e929c6940cf8d04e68301c04d8daf8d0c09f009d8917156d6627bce1627b0a3f271b"
   },
   {
     "name": "trigger TRC20 transfer without fee_limit",
-    "txID": "77026cfff6bc23ac3dd24587e93844abd0c2ee93b723e701e58d5bf289e7ff4a",
+    "txID": "ebd55ecb4b494d7ac929e8d341e539c0d4dc87001ea7c626105b43b64b4d853b",
     "privateKeyLabel": "pk1",
-    "signature": "1f3cc1909b244f283e63bf88ea31968a75ad7126be121d40e03b66e97cdd62223e4b996d389ba7f7ee6b85d0b2ede50d7a573b8c05ff6ee8ce5e8f35d67d4e431b"
+    "signature": "3b1937dc71d2d22f8ebdb6cbc33eb6abf45f06f5d273b0b7c225af39605ace7716d893def1af9b95bc69eb1dc9eca603a10cfffa25c2426b5ece0ae670dceea21c"
   },
   {
     "name": "trigger TRC20 transfer with call_value",
-    "txID": "6dfae8ce7bc8165531da925bfb159506f22a8df1b0d9f536e747b21e20943a7c",
+    "txID": "02291b032452a50f3be211053efeb26e02cfc14baf9dcad58bc201d5a2aab78f",
     "privateKeyLabel": "pk1",
-    "signature": "ef7213f81ace06f18e43ae1b0fbd3cbf433d58d507cc773144c14209f92682692e37df2ad9c19c65bfd883005605d8a2bcbfee8bbd83b1adc897b342e043f3481c"
+    "signature": "e4722832b4ea185f2f119ad08a1ec9a533c47d460d871cf8a3320de97fd3d17235195aa0e50b2bcb4713178a7f1479cc822f8ce0d183927525f36997774108611c"
   },
   {
     "name": "trigger TRC20 transfer with call_token_value + token_id",
-    "txID": "52e399998a3a6e1dfec698f6c895d46fc8c512331fc8f991a1326979a755ad9d",
+    "txID": "55e2d00be74b4fe3121fd231ec1f0f0d6500379382ea7ff93d3c187cf5653d04",
     "privateKeyLabel": "pk1",
-    "signature": "0b12d811de5d1b0952f8ceeb418295e06e84aacc91e48ceed9138ccba604488933d7c5353ddfec4b9938d7bf27919f7de4174d508c7897b695c406a8514a155b1b"
+    "signature": "8209221db0138836b05029463dc945dbe78de43621aadd4731d3ced1d18f6488362cca89a150dcc21df7390a843c9d34fe04a8dad3b8276eaff495ce786171f81b"
   },
   {
     "name": "update permissions: owner (2 keys) + active (operations bitmap)",

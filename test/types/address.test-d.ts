@@ -13,7 +13,7 @@ test('Address', () => {
   // §2.1 vectors (V1 / V2 / V3)
   expectTypeOf<'TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC'>().toExtend<Address>()
   expectTypeOf<'TDvSsdrNM5eeXNL3czpa6AxLDHZA9nwe9K'>().toExtend<Address>()
-  expectTypeOf<'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t'>().toExtend<Address>()
+  expectTypeOf<'TA5DvvvmYbS75o3DKtgy2ATAGVHhpFkRLe'>().toExtend<Address>()
 
   // plain string is not assignable (template-literal brand)
   expectTypeOf<string>().not.toExtend<Address>()

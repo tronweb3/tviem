@@ -48,7 +48,7 @@ const trc20Abi = [
   },
 ] as const
 
-const contractAddress = 'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t' as Address
+const contractAddress = 'TA5DvvvmYbS75o3DKtgy2ATAGVHhpFkRLe' as Address
 const holder = 'TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC' as Address
 // pk = 1 (permitted trivial key).
 const account = privateKeyToAccount(`0x${'0'.repeat(63)}1`)

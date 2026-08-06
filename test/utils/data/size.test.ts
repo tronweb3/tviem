@@ -18,5 +18,5 @@ test('bytes', () => {
 })
 
 test('@tronweb3/tviem: 20-byte (40 hex char) address has size 20', () => {
-  expect(size('0xa614f803b6fd780986a42c78ec9c7f77e6ded13c')).toBe(20)
+  expect(size('0x0123456789abcdef0123456789abcdef01234567')).toBe(20)
 })

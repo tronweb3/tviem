@@ -19,8 +19,8 @@ const v2 = {
   hex41: '0x412b5ad5c4795c026514f8317c7a215e218dccd6cf',
 } as const
 const v3 = {
-  base58: 'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t',
-  hex41: '0x41a614f803b6fd780986a42c78ec9c7f77e6ded13c',
+  base58: 'TA5DvvvmYbS75o3DKtgy2ATAGVHhpFkRLe',
+  hex41: '0x410123456789abcdef0123456789abcdef01234567',
 } as const
 
 // Deterministic PRNG (mulberry32) so property-test failures are reproducible.
@@ -65,11 +65,11 @@ describe('decodeBase58Check', () => {
   test('throws InvalidAddressError on tampered checksum', () => {
     // V3 with the last character changed (t → X).
     expect(() =>
-      decodeBase58Check('TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6X'),
+      decodeBase58Check('TA5DvvvmYbS75o3DKtgy2ATAGVHhpFkRLX'),
     ).toThrow(InvalidAddressError)
     expect(() =>
-      decodeBase58Check('TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6X'),
-    ).toThrow('Address "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6X" is invalid.')
+      decodeBase58Check('TA5DvvvmYbS75o3DKtgy2ATAGVHhpFkRLX'),
+    ).toThrow('Address "TA5DvvvmYbS75o3DKtgy2ATAGVHhpFkRLX" is invalid.')
   })
 
   test('throws on non-Base58 / too-short / empty input', () => {
@@ -87,7 +87,7 @@ describe('tryDecodeBase58Check', () => {
   })
 
   test('returns null (never throws) on malformed input', () => {
-    expect(tryDecodeBase58Check('TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6X')).toBe(
+    expect(tryDecodeBase58Check('TA5DvvvmYbS75o3DKtgy2ATAGVHhpFkRLX')).toBe(
       null,
     )
     expect(tryDecodeBase58Check('T0OIl')).toBe(null)

@@ -37,8 +37,8 @@ export type AddressToHexErrorType = ToEvmErrorType | ErrorType
  * Throws `InvalidAddressError` on invalid input.
  *
  * @example
- * addressToHex('TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t')
- * // '0xa614f803b6fd780986a42c78ec9c7f77e6ded13c'
+ * addressToHex('TA5DvvvmYbS75o3DKtgy2ATAGVHhpFkRLe')
+ * // '0x0123456789abcdef0123456789abcdef01234567'
  */
 export function addressToHex(address: AddressInput | ByteArray): Hex {
   return toEvm(address)

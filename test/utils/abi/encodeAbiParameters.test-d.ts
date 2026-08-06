@@ -67,7 +67,7 @@ test('values accepts the correct primitive forms', () => {
   // address is wide-in: all three TRON forms are accepted as string literals
   encodeAbiParameters(
     [{ type: 'address' }],
-    ['TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t'],
+    ['TA5DvvvmYbS75o3DKtgy2ATAGVHhpFkRLe'],
   )
   encodeAbiParameters(
     [{ type: 'address' }],

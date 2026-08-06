@@ -7,7 +7,7 @@ import { toBase58 } from '../../../src/utils/address/toBase58.js'
 
 const from = '0xafb6ccdb345bc36c69a618b66c1693f36213622b'
 const to = '0x2e5531459778bee382355ab73bc93ee763f5ed94'
-const usdt = 'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t'
+const usdt = 'TA5DvvvmYbS75o3DKtgy2ATAGVHhpFkRLe'
 
 test('normalizes a TronGrid Transfer event (named args only, typed)', () => {
   const e = formatEvent({

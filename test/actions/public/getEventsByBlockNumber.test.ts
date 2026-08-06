@@ -11,7 +11,7 @@ test('reads a block’s events with paging from /v1/blocks/{n}/events', async ()
         data: [
           {
             event_name: 'Transfer',
-            contract_address: 'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t',
+            contract_address: 'TA5DvvvmYbS75o3DKtgy2ATAGVHhpFkRLe',
           },
         ],
         success: true,

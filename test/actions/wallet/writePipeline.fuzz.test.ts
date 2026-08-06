@@ -50,9 +50,10 @@ const trc20Abi = [
 ] as const
 
 // Contract + recipient resolve to the same Base58 the gold data encodes
-// (41a614f803…ded13c → its 20-byte body a614f803…ded13c inside the calldata).
-const trc20Contract = 'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t' as Address
-const trc20Recipient = 'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t' as Address
+// (410123456789…01234567 → its 20-byte body 0123456789…01234567 inside the
+// calldata).
+const trc20Contract = 'TA5DvvvmYbS75o3DKtgy2ATAGVHhpFkRLe' as Address
+const trc20Recipient = 'TA5DvvvmYbS75o3DKtgy2ATAGVHhpFkRLe' as Address
 
 const transferCases = loadTxFixtureFile('transfer-contract.json')
 const triggerCases = loadTxFixtureFile('trigger-smart-contract.json')
@@ -182,7 +183,7 @@ test.each(
 // Non-owner addresses the gold vectors encode (41-hex bodies verified against
 // the fixtures): receiver 412b5ad5…d6cf, witness2 41a614f8…d13c.
 const receiver = 'TDvSsdrNM5eeXNL3czpa6AxLDHZA9nwe9K' as Address
-const witness2 = 'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t' as Address
+const witness2 = 'TA5DvvvmYbS75o3DKtgy2ATAGVHhpFkRLe' as Address
 
 const freezeCases = loadTxFixtureFile('freeze-balance-v2-contract.json')
 const unfreezeCases = loadTxFixtureFile('unfreeze-balance-v2-contract.json')

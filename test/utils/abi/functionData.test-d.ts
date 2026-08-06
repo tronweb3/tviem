@@ -69,7 +69,7 @@ test('encodeFunctionData: functionName is inferred from the abi', () => {
   encodeFunctionData({
     abi: trc20Abi,
     functionName: 'transfer',
-    args: ['TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t', 1000000n],
+    args: ['TA5DvvvmYbS75o3DKtgy2ATAGVHhpFkRLe', 1000000n],
   })
   encodeFunctionData({
     abi: trc20Abi,

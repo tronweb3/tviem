@@ -28,7 +28,7 @@ test('revives scalar bigints and passthrough values', () => {
   expect(reviveValues(int8Min.params, int8Min.values)).toEqual([-128n])
   const address = fixtures.find((f) => f.name === 'address-v3-usdt')!
   expect(reviveValues(address.params, address.values)).toEqual([
-    'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t',
+    'TA5DvvvmYbS75o3DKtgy2ATAGVHhpFkRLe',
   ])
   const trcToken = fixtures.find((f) => f.name === 'trcToken-scalar')!
   expect(reviveValues(trcToken.params, trcToken.values)).toEqual([1002000n])
@@ -58,7 +58,7 @@ test('gold vectors survive the JSON round trip', () => {
     (f) => f.name === 'trc20-transfer',
   )!
   expect(transfer.calldata).toBe(
-    '0xa9059cbb000000000000000000000000a614f803b6fd780986a42c78ec9c7f77e6ded13c00000000000000000000000000000000000000000000000000000000000f4240',
+    '0xa9059cbb0000000000000000000000000123456789abcdef0123456789abcdef0123456700000000000000000000000000000000000000000000000000000000000f4240',
   )
   const event = loadEventFixtures().find((f) => f.name === 'transfer')!
   expect(event.topics[0]).toBe(

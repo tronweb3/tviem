@@ -126,7 +126,7 @@ test('encodeErrorResult: address/string ambiguity among later overloads throws',
     encodeErrorResult({
       abi: ambiguous,
       errorName: 'E',
-      args: ['TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t'],
+      args: ['TA5DvvvmYbS75o3DKtgy2ATAGVHhpFkRLe'],
     }),
   ).toThrowError(AbiItemAmbiguityError)
 })

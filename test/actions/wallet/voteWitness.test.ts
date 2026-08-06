@@ -20,7 +20,7 @@ const votes = [
     voteCount: 5n,
   },
   {
-    voteAddress: 'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t' as Address,
+    voteAddress: 'TA5DvvvmYbS75o3DKtgy2ATAGVHhpFkRLe' as Address,
     voteCount: 10n,
   },
 ]

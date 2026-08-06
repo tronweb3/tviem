@@ -7,7 +7,7 @@ import { createMockTransport } from '../../mock/createMockTransport.js'
 import { makeTviemClient, tviemHeader } from './_buildTestHelpers.js'
 
 // A valid, distinct receiver (the USDT TRC20 contract address on mainnet).
-const receiver = 'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t'
+const receiver = 'TA5DvvvmYbS75o3DKtgy2ATAGVHhpFkRLe'
 
 test('builds FreezeBalanceContract offline', async () => {
   const client = makeTviemClient()

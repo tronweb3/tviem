@@ -39,8 +39,8 @@ export type HexToBase58ErrorType = ToBase58ErrorType | ErrorType
  * Throws `InvalidAddressError` on invalid input.
  *
  * @example
- * hexToBase58('0xa614f803b6fd780986a42c78ec9c7f77e6ded13c')
- * // 'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t'
+ * hexToBase58('0x0123456789abcdef0123456789abcdef01234567')
+ * // 'TA5DvvvmYbS75o3DKtgy2ATAGVHhpFkRLe'
  */
 export function hexToBase58(address: Hex): Address {
   return toBase58(address)

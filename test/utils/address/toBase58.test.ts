@@ -19,9 +19,9 @@ const vectors = [
     evm0x: '0x2b5ad5c4795c026514f8317c7a215e218dccd6cf',
   },
   {
-    base58: 'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t',
-    hex41: '41a614f803b6fd780986a42c78ec9c7f77e6ded13c',
-    evm0x: '0xa614f803b6fd780986a42c78ec9c7f77e6ded13c',
+    base58: 'TA5DvvvmYbS75o3DKtgy2ATAGVHhpFkRLe',
+    hex41: '410123456789abcdef0123456789abcdef01234567',
+    evm0x: '0x0123456789abcdef0123456789abcdef01234567',
   },
 ] as const
 
@@ -69,7 +69,7 @@ describe('toBase58', () => {
   })
 
   test('throws InvalidAddressError on invalid input', () => {
-    expect(() => toBase58('TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6X')).toThrow(
+    expect(() => toBase58('TA5DvvvmYbS75o3DKtgy2ATAGVHhpFkRLX')).toThrow(
       InvalidAddressError,
     )
     expect(() => toBase58('T123')).toThrow(InvalidAddressError)
@@ -83,8 +83,8 @@ describe('hexToBase58 (ABI adapter)', () => {
     expect(hexToBase58('0x2b5ad5c4795c026514f8317c7a215e218dccd6cf')).toBe(
       'TDvSsdrNM5eeXNL3czpa6AxLDHZA9nwe9K',
     )
-    expect(hexToBase58('0xa614f803b6fd780986a42c78ec9c7f77e6ded13c')).toBe(
-      'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t',
+    expect(hexToBase58('0x0123456789abcdef0123456789abcdef01234567')).toBe(
+      'TA5DvvvmYbS75o3DKtgy2ATAGVHhpFkRLe',
     )
   })
 

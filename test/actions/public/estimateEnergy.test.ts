@@ -10,7 +10,7 @@ import { createMockTransport } from '../../mock/createMockTransport.js'
 const pk1 = `0x${'0'.repeat(63)}1` as const
 const pk1Hex = '417e5f4552091a69125d5dfcb7b8c2659029395bdf'
 const zeroHex = '410000000000000000000000000000000000000000'
-const contract = 'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t' as Address
+const contract = 'TA5DvvvmYbS75o3DKtgy2ATAGVHhpFkRLe' as Address
 
 const trc20Abi = [
   {

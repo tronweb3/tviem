@@ -246,7 +246,7 @@ export type GetContractErrorType = ErrorType
  *
  * @example
  * const contract = getContract({
- *   address: 'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t',
+ *   address: 'TA5DvvvmYbS75o3DKtgy2ATAGVHhpFkRLe',
  *   abi: trc20Abi,
  *   client: publicClient,
  * })

@@ -77,9 +77,9 @@ export type EncodePackedErrorType =
  * @example
  * encodePacked(
  *   ['address', 'uint256'],
- *   ['TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t', 1000000n],
+ *   ['TA5DvvvmYbS75o3DKtgy2ATAGVHhpFkRLe', 1000000n],
  * )
- * // '0xa614f803b6fd780986a42c78ec9c7f77e6ded13c00000000000000000000000000000000000000000000000000000000000f4240'
+ * // '0x0123456789abcdef0123456789abcdef0123456700000000000000000000000000000000000000000000000000000000000f4240'
  */
 export function encodePacked<
   const packedAbiTypes extends readonly PackedAbiType[] | readonly unknown[],

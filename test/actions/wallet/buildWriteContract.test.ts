@@ -23,18 +23,18 @@ const trc20Abi = [
   },
 ] as const
 
-const contract = 'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t' as Address
-// The gold vectors encode transfer(41a614f803…, 1000000) which resolves to the
-// same Base58 address as the contract here.
-const recipient = 'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t' as Address
+const contract = 'TA5DvvvmYbS75o3DKtgy2ATAGVHhpFkRLe' as Address
+// The gold vectors encode transfer(410123456789…, 1000000) which resolves to
+// the same Base58 address as the contract here.
+const recipient = 'TA5DvvvmYbS75o3DKtgy2ATAGVHhpFkRLe' as Address
 
 // Same canonical "with fee_limit" gold vectors as writeContract — the build half
 // must produce the identical bytes / id (it is exactly what writeContract signs).
 const FEE_LIMIT = 100000000n
 const TX_ID_FEELIMIT =
-  'ddd5febbb5ef788933fc151fc1cf89246a35d89cc6607141c4ebf54499a3a5e6'
+  '3efcd4d8554ed772ee4310511611b348a3a8f79fe3fab6b839a383b8525bff16'
 const RAW_FEELIMIT =
-  '0a0212342208010203040506070840e0a499ffbc315aae01081f12a9010a31747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e54726967676572536d617274436f6e747261637412740a15417e5f4552091a69125d5dfcb7b8c2659029395bdf121541a614f803b6fd780986a42c78ec9c7f77e6ded13c2244a9059cbb000000000000000000000000a614f803b6fd780986a42c78ec9c7f77e6ded13c00000000000000000000000000000000000000000000000000000000000f42407080d095ffbc31900180c2d72f'
+  '0a0212342208010203040506070840e0a499ffbc315aae01081f12a9010a31747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e54726967676572536d617274436f6e747261637412740a15417e5f4552091a69125d5dfcb7b8c2659029395bdf1215410123456789abcdef0123456789abcdef012345672244a9059cbb0000000000000000000000000123456789abcdef0123456789abcdef0123456700000000000000000000000000000000000000000000000000000000000f42407080d095ffbc31900180c2d72f'
 
 function writeMock() {
   return createMockTransport({

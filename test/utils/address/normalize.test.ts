@@ -18,9 +18,9 @@ const vectors = [
     evm0x: '0x2b5ad5c4795c026514f8317c7a215e218dccd6cf',
   },
   {
-    base58: 'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t',
-    hex41: '41a614f803b6fd780986a42c78ec9c7f77e6ded13c',
-    evm0x: '0xa614f803b6fd780986a42c78ec9c7f77e6ded13c',
+    base58: 'TA5DvvvmYbS75o3DKtgy2ATAGVHhpFkRLe',
+    hex41: '410123456789abcdef0123456789abcdef01234567',
+    evm0x: '0x0123456789abcdef0123456789abcdef01234567',
   },
 ] as const
 
@@ -60,7 +60,7 @@ describe('normalizeAddress', () => {
   test('throws InvalidAddressError on invalid input', () => {
     // Tampered Base58Check checksum.
     expect(() =>
-      normalizeAddress('TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6X'),
+      normalizeAddress('TA5DvvvmYbS75o3DKtgy2ATAGVHhpFkRLX'),
     ).toThrow(InvalidAddressError)
     // Bad shapes.
     expect(() => normalizeAddress('T123')).toThrow(InvalidAddressError)
