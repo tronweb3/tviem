@@ -169,6 +169,12 @@ export {
   readContract,
 } from './actions/public/readContract.js'
 export {
+  type TriggerConstantContractErrorType,
+  type TriggerConstantContractParameters,
+  type TriggerConstantContractReturnType,
+  triggerConstantContract,
+} from './actions/public/triggerConstantContract.js'
+export {
   type TransactionReceipt,
   type WaitForTransactionReceiptErrorType,
   type WaitForTransactionReceiptParameters,

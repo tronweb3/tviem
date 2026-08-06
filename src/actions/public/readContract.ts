@@ -2,10 +2,7 @@ import type { Abi, AbiFunction, ExtractAbiFunction } from 'abitype'
 import type { Client } from '../../clients/createClient.js'
 import type { RequestErrorType } from '../../clients/transports/http.js'
 import { zeroAddress } from '../../constants/address.js'
-import {
-  ContractFunctionRevertedError,
-  type ContractFunctionRevertedErrorType,
-} from '../../errors/rpc.js'
+import type { ContractFunctionRevertedErrorType } from '../../errors/rpc.js'
 import type { ErrorType } from '../../errors/utils.js'
 import type { Address } from '../../types/address.js'
 import type {
@@ -14,10 +11,7 @@ import type {
   TronContractFunctionReturnType,
 } from '../../types/contract.js'
 import type { IsUnion } from '../../types/utils.js'
-import {
-  type DecodeAbiParametersErrorType,
-  decodeAbiParameters,
-} from '../../utils/abi/decodeAbiParameters.js'
+import type { DecodeAbiParametersErrorType } from '../../utils/abi/decodeAbiParameters.js'
 import {
   type DecodeFunctionResultErrorType,
   decodeFunctionResult,
@@ -28,15 +22,8 @@ import {
   encodeFunctionData,
 } from '../../utils/abi/encodeFunctionData.js'
 import { type ToHexErrorType, toHex } from '../../utils/address/toHex.js'
-import {
-  type HexToStringErrorType,
-  hexToString,
-} from '../../utils/encoding/fromHex.js'
-
-/** 4-byte selector of the Solidity `Error(string)` revert helper. */
-const ERROR_STRING_SELECTOR = '08c379a0'
-/** 4-byte selector of the Solidity `Panic(uint256)` revert helper. */
-const PANIC_SELECTOR = '4e487b71'
+import type { HexToStringErrorType } from '../../utils/encoding/fromHex.js'
+import { decodeRevert } from '../utils/decodeRevert.js'
 
 export type ReadContractParameters<
   abi extends Abi | readonly unknown[] = Abi,
@@ -177,60 +164,4 @@ export async function readContract<
     args,
     data: `0x${constantResult}`,
   }) as ReadContractReturnType<abi, functionName, args>
-}
-
-/** Decodes a revert payload into a {@link ContractFunctionRevertedError}. */
-function decodeRevert(
-  constantResult: string | undefined,
-  message: string | undefined,
-  { functionName }: { functionName: string },
-): ContractFunctionRevertedError {
-  const hex = (constantResult ?? '').toLowerCase()
-
-  if (hex.startsWith(ERROR_STRING_SELECTOR) && hex.length > 8) {
-    try {
-      const [reason] = decodeAbiParameters(
-        [{ type: 'string' }],
-        `0x${hex.slice(8)}`,
-      )
-      return new ContractFunctionRevertedError({
-        functionName,
-        reason: reason as string,
-        signature: 'Error(string)',
-        data: `0x${hex}`,
-      })
-    } catch {}
-  }
-
-  if (hex.startsWith(PANIC_SELECTOR) && hex.length > 8) {
-    try {
-      const [code] = decodeAbiParameters(
-        [{ type: 'uint256' }],
-        `0x${hex.slice(8)}`,
-      )
-      return new ContractFunctionRevertedError({
-        functionName,
-        code: code as bigint,
-        signature: 'Panic(uint256)',
-        data: `0x${hex}`,
-      })
-    } catch {}
-  }
-
-  return new ContractFunctionRevertedError({
-    functionName,
-    reason: decodeNodeMessage(message),
-    ...(hex ? { data: `0x${hex}` as const } : {}),
-  })
-}
-
-/** Best-effort decode of a node-provided (possibly hex-encoded) message. */
-function decodeNodeMessage(message: string | undefined): string | undefined {
-  if (!message) return undefined
-  if (/^[0-9a-fA-F]+$/.test(message) && message.length % 2 === 0) {
-    try {
-      return hexToString(`0x${message}`)
-    } catch {}
-  }
-  return message
 }

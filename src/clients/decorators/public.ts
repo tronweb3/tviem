@@ -83,6 +83,11 @@ import {
   readContract,
 } from '../../actions/public/readContract.js'
 import {
+  type TriggerConstantContractParameters,
+  type TriggerConstantContractReturnType,
+  triggerConstantContract,
+} from '../../actions/public/triggerConstantContract.js'
+import {
   type WaitForTransactionReceiptParameters,
   type WaitForTransactionReceiptReturnType,
   waitForTransactionReceipt,
@@ -160,6 +165,13 @@ export type PublicActions = {
   >(
     parameters: EstimateEnergyParameters<abi, functionName>,
   ) => Promise<EstimateEnergyReturnType>
+  /** Constant-calls (simulates) a contract function of any mutability. */
+  triggerConstantContract: <
+    const abi extends Abi | readonly unknown[],
+    functionName extends ContractFunctionName<abi>,
+  >(
+    parameters: TriggerConstantContractParameters<abi, functionName>,
+  ) => Promise<TriggerConstantContractReturnType<abi, functionName>>
   /** Polls for a transaction's receipt. */
   waitForTransactionReceipt: (
     parameters: WaitForTransactionReceiptParameters,
@@ -259,6 +271,19 @@ export function publicActions(client: Client): PublicActions {
         estimateEnergy,
         'estimateEnergy',
       )(parameters as EstimateEnergyParameters),
+    triggerConstantContract: <
+      const abi extends Abi | readonly unknown[],
+      functionName extends ContractFunctionName<abi>,
+    >(
+      parameters: TriggerConstantContractParameters<abi, functionName>,
+    ) =>
+      getAction(
+        client,
+        triggerConstantContract,
+        'triggerConstantContract',
+      )(parameters as TriggerConstantContractParameters) as unknown as Promise<
+        TriggerConstantContractReturnType<abi, functionName>
+      >,
     waitForTransactionReceipt: (parameters) =>
       getAction(
         client,

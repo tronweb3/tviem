@@ -1,0 +1,189 @@
+import type {
+  Abi,
+  AbiFunction,
+  AbiStateMutability,
+  ExtractAbiFunction,
+} from 'abitype'
+import type { Client } from '../../clients/createClient.js'
+import type { RequestErrorType } from '../../clients/transports/http.js'
+import { zeroAddress } from '../../constants/address.js'
+import {
+  IntegerOutOfRangeError,
+  type IntegerOutOfRangeErrorType,
+} from '../../errors/encoding.js'
+import type { ContractFunctionRevertedErrorType } from '../../errors/rpc.js'
+import type { ErrorType } from '../../errors/utils.js'
+import type { Address } from '../../types/address.js'
+import type {
+  ContractFunctionName,
+  TronContractFunctionArgs,
+  TronContractFunctionReturnType,
+} from '../../types/contract.js'
+import type { IsUnion } from '../../types/utils.js'
+import type { DecodeAbiParametersErrorType } from '../../utils/abi/decodeAbiParameters.js'
+import {
+  type DecodeFunctionResultErrorType,
+  decodeFunctionResult,
+} from '../../utils/abi/decodeFunctionResult.js'
+import type { TronAbiParametersToPrimitiveTypes } from '../../utils/abi/encodeAbiParameters.js'
+import {
+  type EncodeFunctionDataErrorType,
+  encodeFunctionData,
+} from '../../utils/abi/encodeFunctionData.js'
+import { type ToHexErrorType, toHex } from '../../utils/address/toHex.js'
+import type { HexToStringErrorType } from '../../utils/encoding/fromHex.js'
+import { decodeRevert } from '../utils/decodeRevert.js'
+
+export type TriggerConstantContractParameters<
+  abi extends Abi | readonly unknown[] = Abi,
+  functionName extends ContractFunctionName<abi> = ContractFunctionName<abi>,
+  args extends TronContractFunctionArgs<
+    abi,
+    AbiStateMutability,
+    functionName
+  > = TronContractFunctionArgs<abi, AbiStateMutability, functionName>,
+  ///
+  allFunctionNames = ContractFunctionName<abi>,
+  abiFunction extends AbiFunction = abi extends Abi
+    ? ExtractAbiFunction<abi, functionName>
+    : AbiFunction,
+  // Falls back to `readonly unknown[]` when the function cannot be extracted
+  // (wide abi, empty abi, unknown name) so the wide call shape keeps working.
+  allArgs = [abiFunction] extends [never]
+    ? readonly unknown[]
+    : TronAbiParametersToPrimitiveTypes<abiFunction['inputs'], 'inputs'>,
+> = {
+  /** The contract's Base58Check address. */
+  address: Address
+  /** The contract ABI. */
+  abi: abi
+  /** The function to call — any state mutability, writes included. */
+  functionName:
+    | allFunctionNames // show all options
+    | (functionName extends allFunctionNames ? functionName : never) // infer value
+  /**
+   * The caller address. Defaults to the Client's account (on a Wallet Client)
+   * or the zero address — neither triggers a balance check on the node.
+   */
+  from?: Address | undefined
+  /** TRX value (in SUN) attached to the simulated call. */
+  callValue?: bigint | undefined
+} & (readonly [] extends allArgs
+  ? {
+      /** The function arguments. */
+      args?:
+        | allArgs
+        // capture the literal tuple so overloads narrow by their args
+        | (IsUnion<abiFunction> extends true ? args : never)
+        | undefined
+    }
+  : {
+      /** The function arguments. */
+      args: IsUnion<abiFunction> extends true ? args : allArgs
+    })
+
+export type TriggerConstantContractReturnType<
+  abi extends Abi | readonly unknown[] = Abi,
+  functionName extends ContractFunctionName<abi> = ContractFunctionName<abi>,
+> = {
+  /** ABI-decoded return value (`undefined` when the function has no outputs). */
+  result: TronContractFunctionReturnType<abi, AbiStateMutability, functionName>
+  /** Energy the node reports the call would consume (`energy_used`). */
+  energyUsed: bigint
+}
+
+export type TriggerConstantContractErrorType =
+  | ContractFunctionRevertedErrorType
+  | DecodeAbiParametersErrorType
+  | DecodeFunctionResultErrorType
+  | EncodeFunctionDataErrorType
+  | HexToStringErrorType
+  | IntegerOutOfRangeErrorType
+  | RequestErrorType
+  | ToHexErrorType
+  | ErrorType
+
+/** Shape of a `triggerconstantcontract` response body. */
+type TriggerConstantContractResponse = {
+  result?: { result?: boolean; message?: string } | undefined
+  constant_result?: string[] | undefined
+  energy_used?: number | undefined
+}
+
+/**
+ * Constant-calls (simulates) a contract function via `triggerconstantcontract`
+ * without broadcasting a transaction. Unlike {@link readContract} it accepts
+ * functions of ANY state mutability — a `nonpayable`/`payable` write is
+ * executed against current chain state and rolled back, which surfaces its
+ * return value, revert reason and `energy_used` without spending anything.
+ *
+ * The calldata is built locally with {@link encodeFunctionData} and sent as the
+ * bare `data` field (no `0x`). If the node reports the call reverted
+ * (`result.result === false`), the revert payload in `constant_result[0]` is
+ * decoded (`Error(string)` / `Panic(uint256)`) and thrown as a
+ * `ContractFunctionRevertedError`; otherwise `constant_result[0]` is
+ * ABI-decoded against the function outputs.
+ *
+ * This never affects what is signed or broadcast — it is a read-only
+ * simulation aid (e.g. preflighting a `writeContract`).
+ *
+ * @example
+ * const { result, energyUsed } = await triggerConstantContract(client, {
+ *   address: 'TA5DvvvmYbS75o3DKtgy2ATAGVHhpFkRLe',
+ *   abi: trc20Abi,
+ *   functionName: 'transfer', // nonpayable — fine here
+ *   args: ['TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC', 1_000_000n],
+ * })
+ */
+export async function triggerConstantContract<
+  const abi extends Abi | readonly unknown[],
+  functionName extends ContractFunctionName<abi>,
+>(
+  client: Client,
+  parameters: TriggerConstantContractParameters<abi, functionName>,
+): Promise<TriggerConstantContractReturnType<abi, functionName>> {
+  const { abi, address, args, callValue, functionName, from } =
+    parameters as TriggerConstantContractParameters
+
+  // The request body is JSON, where an int64 becomes a JS number — so a
+  // `call_value` past the safe-integer range would be silently rounded.
+  // Reject it rather than simulate against a corrupted value.
+  if (
+    callValue !== undefined &&
+    (callValue < 0n || callValue > BigInt(Number.MAX_SAFE_INTEGER))
+  )
+    throw new IntegerOutOfRangeError({
+      max: String(Number.MAX_SAFE_INTEGER),
+      min: '0',
+      value: String(callValue),
+    })
+
+  const data = encodeFunctionData({ abi, functionName, args })
+  const owner = from ?? client.account?.address ?? zeroAddress
+
+  const response = await client.request<TriggerConstantContractResponse>({
+    node: 'full',
+    method: 'POST',
+    path: 'triggerconstantcontract',
+    body: {
+      owner_address: toHex(owner),
+      contract_address: toHex(address),
+      data: data.slice(2),
+      ...(callValue !== undefined ? { call_value: Number(callValue) } : {}),
+    },
+  })
+
+  if (response?.result?.result === false)
+    throw decodeRevert(response.constant_result?.[0], response.result.message, {
+      functionName,
+    })
+
+  const constantResult = response?.constant_result?.[0] ?? ''
+  const result = decodeFunctionResult({
+    abi,
+    functionName,
+    args,
+    data: `0x${constantResult}`,
+  }) as TriggerConstantContractReturnType<abi, functionName>['result']
+  return { result, energyUsed: BigInt(response?.energy_used ?? 0) }
+}
