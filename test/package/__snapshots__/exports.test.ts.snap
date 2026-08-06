@@ -185,6 +185,7 @@ exports[`package exports surface (freeze guard) > root + subpath export names ar
     "TronNodeError",
     "TronRpcError",
     "TronValidationError",
+    "UnknownContractTypeError",
     "UnknownNodeError",
     "UnsupportedPackedAbiType",
     "UnsupportedWireTypeError",

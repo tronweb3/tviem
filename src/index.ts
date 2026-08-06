@@ -732,6 +732,10 @@ export {
   type WaitForTransactionReceiptTimeoutErrorType,
 } from './errors/rpc.js'
 export {
+  UnknownContractTypeError,
+  type UnknownContractTypeErrorType,
+} from './errors/transaction.js'
+export {
   UrlRequiredError,
   type UrlRequiredErrorType,
 } from './errors/transport.js'
@@ -1180,6 +1184,7 @@ export {
   contractCodecs,
   contractTypeNameOf,
   contractTypeUrlPrefix,
+  type DecodeContractParameterErrorType,
   decodeContractParameter,
   getContractCodecByType,
   getContractCodecByTypeUrl,
@@ -1236,8 +1241,6 @@ export type {
   UnDelegateResourceContract,
   UnfreezeBalanceContract,
   UnfreezeBalanceV2Contract,
-  UnknownContractParameter,
-  UnknownField,
   UpdateAssetContract,
   UpdateBrokerageContract,
   UpdateEnergyLimitContract,
@@ -1246,7 +1249,6 @@ export type {
   VoteWitnessContract,
   WithdrawBalanceContract,
   WithdrawExpireUnfreezeContract,
-  WithUnknownFields,
   WitnessCreateContract,
   WitnessUpdateContract,
 } from './utils/transaction/types.js'

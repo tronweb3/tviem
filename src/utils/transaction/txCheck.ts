@@ -20,9 +20,8 @@ export type TxCheckErrorType = BaseErrorType | ErrorType
  * throws immediately.
  *
  * The bytes are what a signature covers, so the bytes are authoritative:
- * model content the serializer never encodes (a decode-produced `__unknown`
- * escape hatch, proto3-default field values like `Permission_id: 0`) does
- * not affect the verdict.
+ * model content the serializer never encodes (proto3-default field values
+ * like `Permission_id: 0`) does not affect the verdict.
  *
  * @param transaction The transaction to verify (a `SignableTransaction`);
  * hex fields accept bare or `0x`-prefixed hex (lowercase prefix), with hex

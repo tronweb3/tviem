@@ -73,8 +73,8 @@ export type SignTransactionErrorType =
  *    first (`buildTransaction` does).
  * 2. The first contract's `owner_address` must equal `address` — the
  *    signing account, unless the caller supplied one — otherwise it throws.
- *    A contract whose owner cannot be read (an `__unknown` parameter) is
- *    refused. Non-owner co-signing goes through the `multiSign` action,
+ *    A contract whose owner cannot be read is refused. Non-owner co-signing
+ *    goes through the `multiSign` action,
  *    which satisfies this guard via the `address` parameter after its own
  *    permission validations.
  * 3. If this key's signature is already present it is not appended twice

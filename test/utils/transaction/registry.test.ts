@@ -1,5 +1,6 @@
 import { expect, test } from 'vitest'
 
+import { UnknownContractTypeError } from '../../../src/errors/transaction.js'
 import { hexToBytes } from '../../../src/utils/encoding/toBytes.js'
 import { bytesToHex } from '../../../src/utils/encoding/toHex.js'
 import {
@@ -85,17 +86,25 @@ test('decodeContractParameter: registered type URL decodes the message', () => {
   ).toStrictEqual({ owner_address: v1, to_address: to, amount: 1_000_000 })
 })
 
-test('decodeContractParameter: unknown type URL falls back to __unknown (no throw)', () => {
+test('decodeContractParameter: unknown type URL throws (strict)', () => {
   const valueBytes = new Uint8Array([1, 2, 3])
-  const decoded = decodeContractParameter(
-    'type.googleapis.com/protocol.FooBarContract',
-    valueBytes,
+  let error: unknown
+  try {
+    decodeContractParameter(
+      'type.googleapis.com/protocol.FooBarContract',
+      valueBytes,
+    )
+  } catch (caught) {
+    error = caught
+  }
+  expect(error).toBeInstanceOf(UnknownContractTypeError)
+  const typed = error as UnknownContractTypeError
+  expect(typed.shortMessage).toBe(
+    'Contract type "type.googleapis.com/protocol.FooBarContract" is not supported.',
   )
-  expect(decoded).toStrictEqual({
-    __unknown: true,
-    type_url: 'type.googleapis.com/protocol.FooBarContract',
-    value: '010203',
-  })
+  expect(typed.type).toBe('type.googleapis.com/protocol.FooBarContract')
+  // The raw Any.value payload survives on the error (bare hex).
+  expect(typed.value).toBe('010203')
 })
 
 test('registry codec encode/decode round-trips (§2.3 Any-value bytes)', () => {

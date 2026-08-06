@@ -119,15 +119,8 @@ test('txCheck fails contract:[] even when other fields serialize to bytes', () =
 
 test('txCheck ignores model content that never reaches the wire', () => {
   // The bytes are authoritative and are what a signature covers. Model
-  // content the serializer never encodes cannot change the verdict:
-  // a `__unknown` escape-hatch entry (only ever produced by decode) and a
-  // proto3-default `Permission_id: 0` both leave the bytes untouched.
-  const tx = canonicalTx()
-  ;(
-    tx.raw_data.contract[0]!.parameter.value as { __unknown?: unknown }
-  ).__unknown = [{ fieldNo: 99, wireType: 0, value: 1n }]
-  expect(txCheck(tx)).toBe(true)
-
+  // content the serializer never encodes cannot change the verdict: a
+  // proto3-default `Permission_id: 0` leaves the bytes untouched.
   const withDefault = canonicalTx()
   withDefault.raw_data.contract[0]!.Permission_id = 0
   expect(txCheck(withDefault)).toBe(true)

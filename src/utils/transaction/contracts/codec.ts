@@ -17,7 +17,6 @@ import {
   normalizeAddress,
 } from '../normalize.js'
 import {
-  type ProtoField,
   type ReadFieldsErrorType,
   readMessageFields,
 } from '../protobuf/reader.js'
@@ -30,12 +29,7 @@ import {
   fInt,
   fMessage,
 } from '../protobuf/writer.js'
-import type {
-  BytesInput,
-  ContractAddressInput,
-  Int64,
-  UnknownField,
-} from '../types.js'
+import type { BytesInput, ContractAddressInput, Int64 } from '../types.js'
 
 /**
  * Declarative schema of a single protobuf field of a contract message. The
@@ -77,8 +71,7 @@ export type EncodeMessageErrorType =
 /**
  * Encodes a message object against its field schema, in canonical form:
  * fields in ascending field-number order, proto3 defaults (zero/empty/false)
- * omitted. `undefined`/`null` values are omitted. The `__unknown` property
- * (produced by `decodeMessage`) is ignored.
+ * omitted. `undefined`/`null` values are omitted.
  *
  * Strict by design: a property that is not in the schema throws. The sign
  * path verifies a supplied `raw_data` JSON by re-serializing it and
@@ -94,11 +87,7 @@ export function encodeMessage(
   message: Record<string, unknown>,
 ): ByteArray {
   for (const key of Object.keys(message))
-    if (
-      message[key] !== undefined &&
-      key !== '__unknown' &&
-      !spec.some((field) => field.name === key)
-    )
+    if (message[key] !== undefined && !spec.some((field) => field.name === key))
       throw new BaseError(`Unknown contract message field "${key}".`)
   const parts: ByteArray[] = []
   for (const field of [...spec].sort((a, b) => a.no - b.no)) {
@@ -158,7 +147,10 @@ function bytesInputToBytes(value: BytesInput): ByteArray {
   return hexToBytes((value.startsWith('0x') ? value : `0x${value}`) as Hex)
 }
 
-export type DecodeMessageErrorType = ReadFieldsErrorType | ErrorType
+export type DecodeMessageErrorType =
+  | ReadFieldsErrorType
+  | BaseErrorType
+  | ErrorType
 
 /**
  * Decodes a message body against its field schema into the canonical form —
@@ -171,8 +163,9 @@ export type DecodeMessageErrorType = ReadFieldsErrorType | ErrorType
  *   to the number for values outside the table).
  * - proto3 defaults are omitted: a field absent from the wire is absent
  *   from the result (JsonFormat prints only set fields).
- * - Wire fields outside the schema (or with an unexpected wire type) are
- *   collected into `__unknown` instead of throwing; duplicated
+ * - Strict by design: a wire field outside the schema (or with an
+ *   unexpected wire type) throws — bytes the schema cannot represent must
+ *   never decode to a model that misrepresents them. Duplicated
  *   non-repeated fields follow last-one-wins.
  *
  * @param spec Message field schema.
@@ -184,16 +177,15 @@ export function decodeMessage(
   bytes: ByteArray,
 ): Record<string, unknown> {
   const message: Record<string, unknown> = {}
-  const unknown: UnknownField[] = []
   const specByNo = new Map<number, FieldSpec>()
   for (const field of spec) specByNo.set(field.no, field)
 
   for (const wire of readMessageFields(bytes)) {
     const field = specByNo.get(wire.fieldNo)
-    if (!field || wireTypeOf(field.kind) !== wire.wireType) {
-      unknown.push(toUnknownField(wire))
-      continue
-    }
+    if (!field || wireTypeOf(field.kind) !== wire.wireType)
+      throw new BaseError(
+        `Unknown wire field ${wire.fieldNo} (wire type ${wire.wireType}) in contract message.`,
+      )
     switch (field.kind) {
       case 'i64':
         message[field.name] = int64ToJson(toInt64(wire.value as bigint))
@@ -232,7 +224,6 @@ export function decodeMessage(
     }
   }
 
-  if (unknown.length > 0) message.__unknown = unknown
   return message
 }
 
@@ -252,15 +243,4 @@ function wireTypeOf(kind: FieldSpec['kind']): 0 | 2 {
 /** Reinterprets a raw unsigned varint as a signed two's-complement `int64`. */
 function toInt64(value: bigint): bigint {
   return value > maxInt64 ? value - twoPow64 : value
-}
-
-/** Converts a raw wire field into its `__unknown` representation. */
-function toUnknownField(wire: ProtoField): UnknownField {
-  if (wire.wireType === 0)
-    return { fieldNo: wire.fieldNo, wireType: 0, value: wire.value }
-  return {
-    fieldNo: wire.fieldNo,
-    wireType: wire.wireType,
-    value: bytesToHex(wire.value),
-  }
 }

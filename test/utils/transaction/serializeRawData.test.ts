@@ -37,6 +37,75 @@ test('§2.3 canonical: forward-serialize a hand-built raw data', () => {
   expect(toRawDataHex(rawData)).toBe(canonical.rawDataHex)
 })
 
+test('an unregistered contract type name throws (strict)', () => {
+  const rawData: RawData = {
+    contract: [
+      {
+        // @ts-expect-error deliberately invalid contract type name
+        type: 'FooBarContract',
+        parameter: {
+          type_url: 'type.googleapis.com/protocol.TransferContract',
+          value: { owner_address: owner, to_address: to, amount: 1n },
+        },
+      },
+    ],
+  }
+  expect(() => toRawDataHex(rawData)).toThrow(
+    'Contract type "FooBarContract" is not supported.',
+  )
+})
+
+test('a contract type that does not match the parameter type URL throws', () => {
+  const rawData: RawData = {
+    contract: [
+      {
+        type: 'TriggerSmartContract',
+        parameter: {
+          type_url: 'type.googleapis.com/protocol.TransferContract',
+          value: { owner_address: owner, to_address: to, amount: 1n },
+        },
+      },
+    ],
+  }
+  expect(() => toRawDataHex(rawData)).toThrow(
+    'Contract type "TriggerSmartContract" does not match its parameter type URL "type.googleapis.com/protocol.TransferContract".',
+  )
+})
+
+test('a registered type with an unregistered type_url throws (strict)', () => {
+  const rawData: RawData = {
+    contract: [
+      {
+        type: ContractType.TransferContract,
+        parameter: {
+          type_url: 'type.googleapis.com/protocol.FooContract',
+          value: { owner_address: owner, to_address: to, amount: 1n },
+        },
+      },
+    ],
+  }
+  expect(() => toRawDataHex(rawData)).toThrow(
+    'No contract codec registered for "type.googleapis.com/protocol.FooContract".',
+  )
+})
+
+test('an unregistered contract type integer throws (strict)', () => {
+  const rawData: RawData = {
+    contract: [
+      {
+        type: 999,
+        parameter: {
+          type_url: 'type.googleapis.com/protocol.TransferContract',
+          value: { owner_address: owner, to_address: to, amount: 1n },
+        },
+      },
+    ],
+  }
+  expect(() => toRawDataHex(rawData)).toThrow(
+    'Contract type 999 is not supported.',
+  )
+})
+
 test('§2.3 canonical: Permission_id is contract field 5', () => {
   const withPermission = loadTxFixtures().find(
     (f) => f.name === 'transfer with Permission_id=2',
@@ -73,8 +142,9 @@ test.each(
 )('serialize round-trips gold raw_data_hex: $name', (fixture) => {
   const rawData = decodeRawData(fixture.rawDataHex)
   expect(toRawDataHex(rawData)).toBe(fixture.rawDataHex)
+  // Strict decode guarantees every fixture type is registered.
   expect(rawData.contract[0]!.type).toBe(
-    contractTypeNameOf(fixture.contractType) ?? fixture.contractType,
+    contractTypeNameOf(fixture.contractType)!,
   )
   expect(rawData.contract[0]!.parameter.type_url).toBe(fixture.typeUrl)
 })

@@ -1,3 +1,8 @@
+import {
+  UnknownContractTypeError,
+  type UnknownContractTypeErrorType,
+} from '../../errors/transaction.js'
+import type { ErrorType } from '../../errors/utils.js'
 import type { ByteArray } from '../../types/misc.js'
 import { bareHex } from '../encoding/bareHex.js'
 import {
@@ -28,6 +33,7 @@ import {
   encodeWithdrawBalanceContract,
   encodeWithdrawExpireUnfreezeContract,
 } from './contracts/balance.js'
+import type { DecodeMessageErrorType } from './contracts/codec.js'
 import {
   decodeClearABIContract,
   decodeUpdateEnergyLimitContract,
@@ -94,7 +100,7 @@ import {
   encodeWitnessCreateContract,
   encodeWitnessUpdateContract,
 } from './contracts/witness.js'
-import type { ContractMessage, UnknownContractParameter } from './types.js'
+import type { ContractMessage } from './types.js'
 
 /** `Transaction.Contract.ContractType` integers (v0.1 contract set). */
 export const ContractType = {
@@ -428,25 +434,31 @@ export function getContractCodecByType(
   return codecsByType.get(type)
 }
 
+export type DecodeContractParameterErrorType =
+  | UnknownContractTypeErrorType
+  // The registered codec's `decode` surface (strict wire-field checks).
+  | DecodeMessageErrorType
+  | ErrorType
+
 /**
- * Decodes an `Any`-wrapped contract parameter. Never throws on an
- * unregistered type URL: the raw payload is returned as
- * `{ __unknown: true, type_url, value }` (bare-hex value) instead.
+ * Decodes an `Any`-wrapped contract parameter. Strict by design: an
+ * unregistered type URL throws {@link UnknownContractTypeError} (carrying
+ * the URL and the raw value bytes as bare hex) — unsupported transactions
+ * are refused rather than partially decoded.
  *
  * @param typeUrl `Any.type_url` of the parameter.
  * @param valueBytes `Any.value` bytes of the parameter.
- * @returns The decoded contract message, or the unknown-parameter fallback.
+ * @returns The decoded contract message.
  */
 export function decodeContractParameter(
   typeUrl: string,
   valueBytes: ByteArray,
-): ContractMessage | UnknownContractParameter {
+): ContractMessage {
   const codec = codecsByTypeUrl.get(typeUrl)
   if (!codec)
-    return {
-      __unknown: true,
-      type_url: typeUrl,
+    throw new UnknownContractTypeError({
+      type: typeUrl,
       value: bareHex(valueBytes),
-    }
+    })
   return codec.decode(valueBytes) as ContractMessage
 }

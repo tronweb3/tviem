@@ -25,7 +25,7 @@ export function encodeTransferContract(message: TransferContract): ByteArray {
 
 export type DecodeTransferContractErrorType = DecodeMessageErrorType | ErrorType
 
-/** Decodes a `TransferContract` body (unknown fields land in `__unknown`). */
+/** Decodes a `TransferContract` body. */
 export function decodeTransferContract(bytes: ByteArray): TransferContract {
   return decodeMessage(transferContractSpec, bytes) as TransferContract
 }

@@ -25,29 +25,6 @@ export type BytesInput = string | ByteArray
  */
 export type Int64 = bigint | number | string
 
-/** A decoded wire field that is not part of the message schema. */
-export type UnknownField =
-  | { fieldNo: number; wireType: 0; value: bigint }
-  | { fieldNo: number; wireType: 1 | 2 | 5; value: `0x${string}` }
-
-/**
- * Decode-side mixin: wire fields outside the schema are preserved here
- * instead of throwing. Encoders ignore it.
- */
-export type WithUnknownFields = {
-  __unknown?: UnknownField[] | undefined
-}
-
-/**
- * Decode result for an unregistered `google.protobuf.Any` type URL: the
- * `__unknown` marker plus the URL and the raw value bytes (bare hex).
- */
-export type UnknownContractParameter = {
-  __unknown: true
-  type_url: string
-  value: string
-}
-
 /** Resource type staked/delegated on TRON (wire values). */
 export const ResourceCode = {
   BANDWIDTH: 0,
@@ -123,7 +100,7 @@ export const StateMutabilityTypeName = [
 export type StateMutabilityTypeName = (typeof StateMutabilityTypeName)[number]
 
 /** `TransferContract` (contract type 1) — TRX transfer. */
-export type TransferContract = WithUnknownFields & {
+export type TransferContract = {
   /** Sender address (field 1). */
   owner_address: ContractAddressInput
   /** Recipient address (field 2). */
@@ -133,7 +110,7 @@ export type TransferContract = WithUnknownFields & {
 }
 
 /** `TransferAssetContract` (contract type 2) — TRC10 transfer. */
-export type TransferAssetContract = WithUnknownFields & {
+export type TransferAssetContract = {
   /** TRC10 asset name/id (field 1, `bytes`, hex). */
   asset_name: BytesInput
   /** Sender address (field 2). */
@@ -145,7 +122,7 @@ export type TransferAssetContract = WithUnknownFields & {
 }
 
 /** A single vote inside `VoteWitnessContract` (`Vote` message). */
-export type Vote = WithUnknownFields & {
+export type Vote = {
   /** Witness address voted for (field 1). */
   vote_address: ContractAddressInput
   /** Number of votes (field 2, `int64`). */
@@ -153,7 +130,7 @@ export type Vote = WithUnknownFields & {
 }
 
 /** `VoteWitnessContract` (contract type 4). */
-export type VoteWitnessContract = WithUnknownFields & {
+export type VoteWitnessContract = {
   /** Voter address (field 1). */
   owner_address: ContractAddressInput
   /** Votes (field 2, repeated). */
@@ -163,13 +140,13 @@ export type VoteWitnessContract = WithUnknownFields & {
 }
 
 /** `WithdrawBalanceContract` (contract type 13) — withdraw block rewards. */
-export type WithdrawBalanceContract = WithUnknownFields & {
+export type WithdrawBalanceContract = {
   /** Account address (field 1). */
   owner_address: ContractAddressInput
 }
 
 /** `UpdateBrokerageContract` (type 49). */
-export type UpdateBrokerageContract = WithUnknownFields & {
+export type UpdateBrokerageContract = {
   /** Witness account address (field 1). */
   owner_address: ContractAddressInput
   /** New brokerage percentage, 0..100 (field 2, `int32`). */
@@ -177,7 +154,7 @@ export type UpdateBrokerageContract = WithUnknownFields & {
 }
 
 /** `SmartContract.ABI.Entry.Param`. */
-export type SmartContractAbiParam = WithUnknownFields & {
+export type SmartContractAbiParam = {
   /** Whether the parameter is indexed (field 1, `bool`). */
   indexed?: boolean | undefined
   /** Parameter name (field 2, `string`). */
@@ -187,7 +164,7 @@ export type SmartContractAbiParam = WithUnknownFields & {
 }
 
 /** `SmartContract.ABI.Entry`. */
-export type SmartContractAbiEntry = WithUnknownFields & {
+export type SmartContractAbiEntry = {
   /** Whether the event is anonymous (field 1, `bool`). */
   anonymous?: boolean | undefined
   /** Whether the entry is constant (field 2, `bool`). */
@@ -211,13 +188,13 @@ export type SmartContractAbiEntry = WithUnknownFields & {
 }
 
 /** `SmartContract.ABI`. `entrys` is java-tron's own spelling. */
-export type SmartContractAbi = WithUnknownFields & {
+export type SmartContractAbi = {
   /** ABI entries (field 1, repeated). */
   entrys?: SmartContractAbiEntry[] | undefined
 }
 
 /** `SmartContract` (nested in `CreateSmartContract`). */
-export type SmartContract = WithUnknownFields & {
+export type SmartContract = {
   /** Contract creator address (field 1). */
   origin_address?: ContractAddressInput | undefined
   /** Contract address (field 2). */
@@ -246,7 +223,7 @@ export type SmartContract = WithUnknownFields & {
 }
 
 /** `CreateSmartContract` (contract type 30). */
-export type CreateSmartContract = WithUnknownFields & {
+export type CreateSmartContract = {
   /** Deployer address (field 1). */
   owner_address: ContractAddressInput
   /** Contract to deploy (field 2). */
@@ -258,7 +235,7 @@ export type CreateSmartContract = WithUnknownFields & {
 }
 
 /** `TriggerSmartContract` (contract type 31). */
-export type TriggerSmartContract = WithUnknownFields & {
+export type TriggerSmartContract = {
   /** Caller address (field 1). */
   owner_address: ContractAddressInput
   /** Contract address (field 2). */
@@ -274,7 +251,7 @@ export type TriggerSmartContract = WithUnknownFields & {
 }
 
 /** `Permission.Key` — a signer address and its weight. */
-export type PermissionKey = WithUnknownFields & {
+export type PermissionKey = {
   /** Signer address (field 1). */
   address: ContractAddressInput
   /** Signature weight (field 2, `int64`). */
@@ -282,7 +259,7 @@ export type PermissionKey = WithUnknownFields & {
 }
 
 /** `Permission` (nested in `AccountPermissionUpdateContract`). */
-export type Permission = WithUnknownFields & {
+export type Permission = {
   /** Permission type (field 1, enum — see `PermissionTypeName`). */
   type?: PermissionTypeName | number | undefined
   /** Permission id (field 2, `int32`). */
@@ -300,7 +277,7 @@ export type Permission = WithUnknownFields & {
 }
 
 /** `AccountPermissionUpdateContract` (contract type 46). */
-export type AccountPermissionUpdateContract = WithUnknownFields & {
+export type AccountPermissionUpdateContract = {
   /** Account address (field 1). */
   owner_address: ContractAddressInput
   /** Owner permission (field 2). */
@@ -312,7 +289,7 @@ export type AccountPermissionUpdateContract = WithUnknownFields & {
 }
 
 /** `FreezeBalanceContract` (contract type 11) — Stake 1.0 freeze. */
-export type FreezeBalanceContract = WithUnknownFields & {
+export type FreezeBalanceContract = {
   /** Account address (field 1). */
   owner_address: ContractAddressInput
   /** Amount to freeze, in SUN (field 2, `int64`). */
@@ -326,7 +303,7 @@ export type FreezeBalanceContract = WithUnknownFields & {
 }
 
 /** `UnfreezeBalanceContract` (contract type 12) — Stake 1.0 unfreeze. */
-export type UnfreezeBalanceContract = WithUnknownFields & {
+export type UnfreezeBalanceContract = {
   /** Account address (field 1). */
   owner_address: ContractAddressInput
   /** Resource type (field 10, enum — see `ResourceCodeName`). */
@@ -336,7 +313,7 @@ export type UnfreezeBalanceContract = WithUnknownFields & {
 }
 
 /** `ParticipateAssetIssueContract` (contract type 9) — buy a TRC10 token. */
-export type ParticipateAssetIssueContract = WithUnknownFields & {
+export type ParticipateAssetIssueContract = {
   /** Buyer address (field 1). */
   owner_address: ContractAddressInput
   /** Token issuer address (field 2). */
@@ -348,7 +325,7 @@ export type ParticipateAssetIssueContract = WithUnknownFields & {
 }
 
 /** `AssetIssueContract.FrozenSupply` — a staked-supply tranche. */
-export type AssetIssueFrozenSupply = WithUnknownFields & {
+export type AssetIssueFrozenSupply = {
   /** Amount of the token supply frozen (field 1, `int64`). */
   frozen_amount: Int64
   /** Freeze duration, in days (field 2, `int64`). */
@@ -356,7 +333,7 @@ export type AssetIssueFrozenSupply = WithUnknownFields & {
 }
 
 /** `AssetIssueContract` (contract type 6) — create a TRC10 token. */
-export type AssetIssueContract = WithUnknownFields & {
+export type AssetIssueContract = {
   /** Issuer address (field 1). */
   owner_address: ContractAddressInput
   /** Token name (field 2, `bytes`, hex). */
@@ -390,7 +367,7 @@ export type AssetIssueContract = WithUnknownFields & {
 }
 
 /** `UpdateAssetContract` (contract type 15) — update a TRC10 token. */
-export type UpdateAssetContract = WithUnknownFields & {
+export type UpdateAssetContract = {
   /** Issuer address (field 1). */
   owner_address: ContractAddressInput
   /** New token description (field 2, `bytes`, hex). */
@@ -404,7 +381,7 @@ export type UpdateAssetContract = WithUnknownFields & {
 }
 
 /** `FreezeBalanceV2Contract` (contract type 54) — stake 2.0 freeze. */
-export type FreezeBalanceV2Contract = WithUnknownFields & {
+export type FreezeBalanceV2Contract = {
   /** Account address (field 1). */
   owner_address: ContractAddressInput
   /** Amount to freeze, in SUN (field 2, `int64`). */
@@ -414,7 +391,7 @@ export type FreezeBalanceV2Contract = WithUnknownFields & {
 }
 
 /** `UnfreezeBalanceV2Contract` (contract type 55) — stake 2.0 unfreeze. */
-export type UnfreezeBalanceV2Contract = WithUnknownFields & {
+export type UnfreezeBalanceV2Contract = {
   /** Account address (field 1). */
   owner_address: ContractAddressInput
   /** Amount to unfreeze, in SUN (field 2, `int64`). */
@@ -424,13 +401,13 @@ export type UnfreezeBalanceV2Contract = WithUnknownFields & {
 }
 
 /** `WithdrawExpireUnfreezeContract` (contract type 56). */
-export type WithdrawExpireUnfreezeContract = WithUnknownFields & {
+export type WithdrawExpireUnfreezeContract = {
   /** Account address (field 1). */
   owner_address: ContractAddressInput
 }
 
 /** `DelegateResourceContract` (contract type 57). */
-export type DelegateResourceContract = WithUnknownFields & {
+export type DelegateResourceContract = {
   /** Delegator address (field 1). */
   owner_address: ContractAddressInput
   /** Resource type (field 2, enum — see `ResourceCodeName`). */
@@ -446,7 +423,7 @@ export type DelegateResourceContract = WithUnknownFields & {
 }
 
 /** `UnDelegateResourceContract` (contract type 58). */
-export type UnDelegateResourceContract = WithUnknownFields & {
+export type UnDelegateResourceContract = {
   /** Delegator address (field 1). */
   owner_address: ContractAddressInput
   /** Resource type (field 2, enum — see `ResourceCodeName`). */
@@ -458,13 +435,13 @@ export type UnDelegateResourceContract = WithUnknownFields & {
 }
 
 /** `CancelAllUnfreezeV2Contract` (contract type 59). */
-export type CancelAllUnfreezeV2Contract = WithUnknownFields & {
+export type CancelAllUnfreezeV2Contract = {
   /** Account address (field 1). */
   owner_address: ContractAddressInput
 }
 
 /** `AccountCreateContract` (contract type 0) — create a new account. */
-export type AccountCreateContract = WithUnknownFields & {
+export type AccountCreateContract = {
   /** Creator (payer) address (field 1). */
   owner_address: ContractAddressInput
   /** Address of the account to create (field 2). */
@@ -474,7 +451,7 @@ export type AccountCreateContract = WithUnknownFields & {
 }
 
 /** `AccountUpdateContract` (contract type 10) — set an account name. */
-export type AccountUpdateContract = WithUnknownFields & {
+export type AccountUpdateContract = {
   /** Account name (field 1, `bytes`, hex). */
   account_name: BytesInput
   /** Account address (field 2). */
@@ -482,7 +459,7 @@ export type AccountUpdateContract = WithUnknownFields & {
 }
 
 /** `SetAccountIdContract` (contract type 19) — set an account id. */
-export type SetAccountIdContract = WithUnknownFields & {
+export type SetAccountIdContract = {
   /** Account id (field 1, `bytes`, hex). */
   account_id: BytesInput
   /** Account address (field 2). */
@@ -490,7 +467,7 @@ export type SetAccountIdContract = WithUnknownFields & {
 }
 
 /** `WitnessCreateContract` (contract type 5) — apply to become an SR. */
-export type WitnessCreateContract = WithUnknownFields & {
+export type WitnessCreateContract = {
   /** Applicant account address (field 1). */
   owner_address: ContractAddressInput
   /** Witness page URL (field 2, `bytes`, hex). */
@@ -498,7 +475,7 @@ export type WitnessCreateContract = WithUnknownFields & {
 }
 
 /** `WitnessUpdateContract` (contract type 8) — update an SR's URL. */
-export type WitnessUpdateContract = WithUnknownFields & {
+export type WitnessUpdateContract = {
   /** Witness account address (field 1). */
   owner_address: ContractAddressInput
   /** New witness page URL (field 12, `bytes`, hex). */
@@ -506,7 +483,7 @@ export type WitnessUpdateContract = WithUnknownFields & {
 }
 
 /** `ClearABIContract` (contract type 48) — clear a contract's ABI. */
-export type ClearABIContract = WithUnknownFields & {
+export type ClearABIContract = {
   /** Owner (deployer) address (field 1). */
   owner_address: ContractAddressInput
   /** Contract address (field 2). */
@@ -514,7 +491,7 @@ export type ClearABIContract = WithUnknownFields & {
 }
 
 /** `UpdateSettingContract` (contract type 33) — update the user resource share. */
-export type UpdateSettingContract = WithUnknownFields & {
+export type UpdateSettingContract = {
   /** Owner (deployer) address (field 1). */
   owner_address: ContractAddressInput
   /** Contract address (field 2). */
@@ -524,7 +501,7 @@ export type UpdateSettingContract = WithUnknownFields & {
 }
 
 /** `UpdateEnergyLimitContract` (contract type 45) — update a contract's energy limit. */
-export type UpdateEnergyLimitContract = WithUnknownFields & {
+export type UpdateEnergyLimitContract = {
   /** Owner (deployer) address (field 1). */
   owner_address: ContractAddressInput
   /** Contract address (field 2). */
@@ -534,7 +511,7 @@ export type UpdateEnergyLimitContract = WithUnknownFields & {
 }
 
 /** A single `map<int64,int64>` entry inside `ProposalCreateContract`. */
-export type ProposalParameter = WithUnknownFields & {
+export type ProposalParameter = {
   /** Chain-parameter id (map key, `int64`). */
   key: Int64
   /** New parameter value (map value, `int64`). */
@@ -542,7 +519,7 @@ export type ProposalParameter = WithUnknownFields & {
 }
 
 /** `ProposalCreateContract` (contract type 16) — create a governance proposal. */
-export type ProposalCreateContract = WithUnknownFields & {
+export type ProposalCreateContract = {
   /** Proposer address (field 1). */
   owner_address: ContractAddressInput
   /** Proposed chain-parameter changes (field 2, `map<int64,int64>`). */
@@ -550,7 +527,7 @@ export type ProposalCreateContract = WithUnknownFields & {
 }
 
 /** `ProposalApproveContract` (contract type 17) — approve/disapprove a proposal. */
-export type ProposalApproveContract = WithUnknownFields & {
+export type ProposalApproveContract = {
   /** Voter address (field 1). */
   owner_address: ContractAddressInput
   /** Proposal id (field 2, `int64`). */
@@ -560,7 +537,7 @@ export type ProposalApproveContract = WithUnknownFields & {
 }
 
 /** `ProposalDeleteContract` (contract type 18) — delete a proposal. */
-export type ProposalDeleteContract = WithUnknownFields & {
+export type ProposalDeleteContract = {
   /** Proposer address (field 1). */
   owner_address: ContractAddressInput
   /** Proposal id (field 2, `int64`). */
@@ -568,7 +545,7 @@ export type ProposalDeleteContract = WithUnknownFields & {
 }
 
 /** `ExchangeCreateContract` (contract type 41) — create a Bancor exchange pair. */
-export type ExchangeCreateContract = WithUnknownFields & {
+export type ExchangeCreateContract = {
   /** Creator address (field 1). */
   owner_address: ContractAddressInput
   /** First token id (field 2, `bytes`, hex). */
@@ -582,7 +559,7 @@ export type ExchangeCreateContract = WithUnknownFields & {
 }
 
 /** `ExchangeInjectContract` (contract type 42) — inject liquidity into an exchange. */
-export type ExchangeInjectContract = WithUnknownFields & {
+export type ExchangeInjectContract = {
   /** Owner address (field 1). */
   owner_address: ContractAddressInput
   /** Exchange id (field 2, `int64`). */
@@ -594,7 +571,7 @@ export type ExchangeInjectContract = WithUnknownFields & {
 }
 
 /** `ExchangeWithdrawContract` (contract type 43) — withdraw liquidity from an exchange. */
-export type ExchangeWithdrawContract = WithUnknownFields & {
+export type ExchangeWithdrawContract = {
   /** Owner address (field 1). */
   owner_address: ContractAddressInput
   /** Exchange id (field 2, `int64`). */
@@ -606,7 +583,7 @@ export type ExchangeWithdrawContract = WithUnknownFields & {
 }
 
 /** `ExchangeTransactionContract` (contract type 44) — trade against an exchange. */
-export type ExchangeTransactionContract = WithUnknownFields & {
+export type ExchangeTransactionContract = {
   /** Trader address (field 1). */
   owner_address: ContractAddressInput
   /** Exchange id (field 2, `int64`). */

@@ -43,8 +43,9 @@ test.each(cases)('differential vs TronWeb gold: $name', (fixture) => {
 
   // decode recovers the contract's type (as its enum NAME) and Any type URL.
   expect(model.contract).toHaveLength(1)
+  // Strict decode guarantees every fixture type is registered.
   expect(model.contract[0]!.type).toBe(
-    contractTypeNameOf(fixture.contractType) ?? fixture.contractType,
+    contractTypeNameOf(fixture.contractType)!,
   )
   expect(model.contract[0]!.parameter.type_url).toBe(fixture.typeUrl)
 

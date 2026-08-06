@@ -1,4 +1,8 @@
 import { BaseError, type BaseErrorType } from '../../errors/base.js'
+import {
+  UnknownContractTypeError,
+  type UnknownContractTypeErrorType,
+} from '../../errors/transaction.js'
 import type { ErrorType } from '../../errors/utils.js'
 import type { ByteArray, Hex } from '../../types/misc.js'
 import { concatBytes } from '../data/concat.js'
@@ -21,13 +25,10 @@ import {
 import {
   ContractType,
   type ContractTypeName,
+  contractTypeNameOf,
   getContractCodecByTypeUrl,
 } from './registry.js'
-import type {
-  ContractMessage,
-  Int64,
-  UnknownContractParameter,
-} from './types.js'
+import type { ContractMessage, Int64 } from './types.js'
 
 /**
  * One `Transaction.Contract` entry, in java-tron's JSON shape: the contract
@@ -36,14 +37,14 @@ import type {
  * spelling).
  */
 export type RawContract = {
-  /** Contract type name (or the integer for an unregistered type). */
+  /** Contract type name (or its registered wire integer). */
   type: ContractTypeName | number
   /** `Any`-wrapped contract parameter. */
   parameter: {
     /** `Any.type_url`. */
     type_url: string
-    /** Decoded contract message, or the unknown-parameter fallback. */
-    value: ContractMessage | UnknownContractParameter
+    /** Decoded contract message. */
+    value: ContractMessage
   }
   /** Multi-sig permission id (`Transaction.Contract.Permission_id`). */
   Permission_id?: number | undefined
@@ -77,19 +78,19 @@ function toHexInput(value: string): Hex {
   return (value.startsWith('0x') ? value : `0x${value}`) as Hex
 }
 
-/** Discriminates the unknown-parameter fallback from a decoded message. */
-function isUnknownParameter(
-  value: ContractMessage | UnknownContractParameter,
-): value is UnknownContractParameter {
-  return (value as UnknownContractParameter).__unknown === true
-}
-
-/** Resolves a contract `type` (name or integer) to its wire integer. */
+/**
+ * Resolves a contract `type` (name or integer) to its wire integer. Strict
+ * by design: an unregistered integer or name throws — tviem refuses
+ * transactions whose contract type it does not support.
+ */
 function contractTypeOf(type: ContractTypeName | number): number {
-  if (typeof type === 'number') return type
+  if (typeof type === 'number') {
+    if (contractTypeNameOf(type) === undefined)
+      throw new UnknownContractTypeError({ type })
+    return type
+  }
   const value = ContractType[type]
-  if (value === undefined)
-    throw new BaseError(`Unknown contract type name "${type}".`)
+  if (value === undefined) throw new UnknownContractTypeError({ type })
   return value
 }
 
@@ -116,31 +117,35 @@ function serializeContract(contract: RawContract): ByteArray {
     'contract.parameter',
   )
   const { type_url, value } = contract.parameter
-  let valueBytes: ByteArray
-  if (isUnknownParameter(value))
-    valueBytes = hexToBytes(toHexInput(value.value))
-  else {
-    const codec = getContractCodecByTypeUrl(type_url)
-    if (!codec)
-      throw new BaseError(`No contract codec registered for "${type_url}".`)
-    valueBytes = codec.encode(value)
-  }
+  const codec = getContractCodecByTypeUrl(type_url)
+  if (!codec)
+    throw new BaseError(`No contract codec registered for "${type_url}".`)
+  const typeInt = contractTypeOf(contract.type)
+  // The type (name or integer) and the Any type URL must denote the same
+  // contract — a model whose label misrepresents its payload must never
+  // serialize (the sign path byte-verifies whatever this emits).
+  if (codec.type !== typeInt)
+    throw new BaseError(
+      `Contract type ${
+        typeof contract.type === 'string' ? `"${contract.type}"` : contract.type
+      } does not match its parameter type URL "${type_url}".`,
+    )
+  const valueBytes = codec.encode(value)
   const any = concatBytes([
     fBytes(1, stringToBytes(type_url)),
     fBytes(2, valueBytes),
   ])
-  const parts = [
-    fInt(1, contractTypeOf(contract.type)),
-    fBytes(2, any, { emitDefault: true }),
-  ]
+  const parts = [fInt(1, typeInt), fBytes(2, any, { emitDefault: true })]
   if (contract.Permission_id) parts.push(fInt(5, contract.Permission_id))
   return concatBytes(parts)
 }
 
 export type SerializeRawDataErrorType =
-  // Direct BaseError throws: unknown contract type name, unknown raw_data /
-  // contract / parameter key, unregistered codec type_url.
+  // Direct BaseError throws: unknown raw_data / contract / parameter key,
+  // unregistered codec type_url, contract type / type-URL mismatch.
   | BaseErrorType
+  // Unregistered contract type integer or name.
+  | UnknownContractTypeErrorType
   // The registered codec's `encode` surface (address normalization included).
   | EncodeMessageErrorType
   | FBytesErrorType

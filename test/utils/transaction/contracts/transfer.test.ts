@@ -97,18 +97,15 @@ test('decode(encode(x)) canonicalizes to the node-JSON form', () => {
   })
 })
 
-test('decodeTransferContract: unknown fields land in __unknown', () => {
+test('decodeTransferContract: a wire field outside the schema throws (strict)', () => {
   const bytes = concatBytes([
     encodeTransferContract({ owner_address: v1, to_address: to, amount: 1n }),
     // Field 15, VARINT, value 7 — not part of the schema.
     new Uint8Array([0x78, 0x07]),
   ])
-  expect(decodeTransferContract(bytes)).toStrictEqual({
-    owner_address: v1,
-    to_address: to,
-    amount: 1,
-    __unknown: [{ fieldNo: 15, wireType: 0, value: 7n }],
-  })
+  expect(() => decodeTransferContract(bytes)).toThrow(
+    'Unknown wire field 15 (wire type 0) in contract message.',
+  )
 })
 
 test('encodeTransferAssetContract: asset_name is field 1 (bytes = hex)', () => {

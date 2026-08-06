@@ -1,8 +1,7 @@
 // Type-surface tests for the transaction contract-parameter models (Track D):
 // i64 fields are `Int64` (canonical JSON form: number | decimal string),
-// address fields are the wide-in `ContractAddressInput`, enum fields carry
-// their JsonFormat name union, and every model carries the
-// `WithUnknownFields` decode-side mixin.
+// address fields are the wide-in `ContractAddressInput`, and enum fields
+// carry their JsonFormat name union.
 import { expectTypeOf, test } from 'vitest'
 
 import type {
@@ -11,7 +10,7 @@ import type {
   EvmAddress,
   TronHexAddress,
 } from '../../../src/types/address.js'
-import type { ByteArray, Hex } from '../../../src/types/misc.js'
+import type { ByteArray } from '../../../src/types/misc.js'
 import type {
   ContractAddressInput,
   DelegateResourceContract,
@@ -22,10 +21,7 @@ import type {
   ResourceCodeName,
   TransferContract,
   TriggerSmartContract,
-  UnknownContractParameter,
-  UnknownField,
   Vote,
-  WithUnknownFields,
 } from '../../../src/utils/transaction/types.js'
 
 test('i64 fields are Int64 (bigint | number | string in; number|string canonical)', () => {
@@ -93,40 +89,6 @@ test('contract address fields accept every input form', () => {
   expectTypeOf(b).toEqualTypeOf<TriggerSmartContract>()
   expectTypeOf(c).toEqualTypeOf<TriggerSmartContract>()
   expectTypeOf(d).toEqualTypeOf<TriggerSmartContract>()
-})
-
-test('WithUnknownFields shape', () => {
-  expectTypeOf<WithUnknownFields['__unknown']>().toEqualTypeOf<
-    UnknownField[] | undefined
-  >()
-
-  // the mixin is spread onto every model
-  expectTypeOf<TransferContract['__unknown']>().toEqualTypeOf<
-    UnknownField[] | undefined
-  >()
-
-  // UnknownField is a discriminated union keyed by protobuf wire type:
-  // varint (0) carries a bigint, length/fixed (1|2|5) carry a Hex.
-  expectTypeOf<UnknownField>().toEqualTypeOf<
-    | { fieldNo: number; wireType: 0; value: bigint }
-    | { fieldNo: number; wireType: 1 | 2 | 5; value: Hex }
-  >()
-  // both variants are constructible (the annotations alone prove this)
-  const _varint: UnknownField = { fieldNo: 15, wireType: 0, value: 1n }
-  const _bytes: UnknownField = { fieldNo: 16, wireType: 2, value: '0xdead' }
-  void _varint
-  void _bytes
-  // across the union, `value` is `bigint | Hex`
-  expectTypeOf<UnknownField['value']>().toEqualTypeOf<bigint | Hex>()
-})
-
-test('UnknownContractParameter (unregistered google.protobuf.Any)', () => {
-  // JSON-safe: the value bytes are carried as bare hex.
-  expectTypeOf<UnknownContractParameter>().toEqualTypeOf<{
-    __unknown: true
-    type_url: string
-    value: string
-  }>()
 })
 
 test('enum value unions', () => {

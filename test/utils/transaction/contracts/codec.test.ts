@@ -8,6 +8,7 @@ import {
   encodeMessage,
   type MessageSpec,
 } from '../../../../src/utils/transaction/contracts/codec.js'
+import { fMessage } from '../../../../src/utils/transaction/protobuf/writer.js'
 
 // §2.1 V1.
 const v1 = '417e5f4552091a69125d5dfcb7b8c2659029395bdf' as const
@@ -79,10 +80,14 @@ test('encodeMessage: a field outside the schema throws (strict)', () => {
   expect(() => encodeMessage(spec, { amount: 1n, memo: 'claim' })).toThrow(
     'Unknown contract message field "memo".',
   )
-  // ...but undefined values and the decode-side __unknown mixin are ignored.
-  expect(
-    encodeMessage(spec, { amount: 0n, memo: undefined, __unknown: [] }),
-  ).toStrictEqual(new Uint8Array(0))
+  // `__unknown` gets no special treatment: it is an unknown key like any other.
+  expect(() => encodeMessage(spec, { amount: 1n, __unknown: [] })).toThrow(
+    'Unknown contract message field "__unknown".',
+  )
+  // ...but undefined values are ignored.
+  expect(encodeMessage(spec, { amount: 0n, memo: undefined })).toStrictEqual(
+    new Uint8Array(0),
+  )
 })
 
 test('decodeMessage: empty input decodes to an empty message (defaults omitted)', () => {
@@ -121,35 +126,37 @@ test('decodeMessage: an enum value outside the table stays numeric', () => {
   expect(decodeMessage(spec, encoded).mode).toBe(9)
 })
 
-test('decodeMessage: unknown fields land in __unknown (never throws)', () => {
+test('decodeMessage: a wire field outside the schema throws (strict)', () => {
   const bytes = concatBytes([
     encodeMessage(spec, { amount: 5n }),
     // Field 15, VARINT, value 7.
     new Uint8Array([0x78, 0x07]),
-    // Field 16, LEN, 2 bytes.
-    new Uint8Array([0x82, 0x01, 0x02, 0xbe, 0xef]),
-    // Field 20, I32 (fixed32).
-    new Uint8Array([0xa5, 0x01, 0x01, 0x02, 0x03, 0x04]),
-    // Field 21, I64 (fixed64).
-    new Uint8Array([0xa9, 0x01, 1, 2, 3, 4, 5, 6, 7, 8]),
   ])
-  const decoded = decodeMessage(spec, bytes)
-  expect(decoded.amount).toBe(5)
-  expect(decoded.__unknown).toStrictEqual([
-    { fieldNo: 15, wireType: 0, value: 7n },
-    { fieldNo: 16, wireType: 2, value: '0xbeef' },
-    { fieldNo: 20, wireType: 5, value: '0x01020304' },
-    { fieldNo: 21, wireType: 1, value: '0x0102030405060708' },
-  ])
+  expect(() => decodeMessage(spec, bytes)).toThrow(
+    'Unknown wire field 15 (wire type 0) in contract message.',
+  )
 })
 
-test('decodeMessage: wire-type mismatch on a known field goes to __unknown', () => {
+test('decodeMessage: wire-type mismatch on a known field throws', () => {
   // Field 3 is declared `i64` but arrives as LEN.
-  const decoded = decodeMessage(spec, hexToBytes('0x1a020102'))
-  expect('amount' in decoded).toBe(false)
-  expect(decoded.__unknown).toStrictEqual([
-    { fieldNo: 3, wireType: 2, value: '0x0102' },
+  expect(() => decodeMessage(spec, hexToBytes('0x1a020102'))).toThrow(
+    'Unknown wire field 3 (wire type 2) in contract message.',
+  )
+})
+
+test('decodeMessage: strictness propagates through nested messages', () => {
+  const nestedSpec: MessageSpec = [
+    { no: 1, name: 'votes', kind: 'repeated-message', spec },
+  ]
+  const inner = concatBytes([
+    encodeMessage(spec, { amount: 5n }),
+    // Field 15, VARINT — outside the nested schema.
+    new Uint8Array([0x78, 0x07]),
   ])
+  const outer = fMessage(1, inner, { emitDefault: true })
+  expect(() => decodeMessage(nestedSpec, outer)).toThrow(
+    'Unknown wire field 15 (wire type 0) in contract message.',
+  )
 })
 
 test('decodeMessage: duplicated non-repeated field follows last-one-wins', () => {
