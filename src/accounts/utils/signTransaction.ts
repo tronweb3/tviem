@@ -56,7 +56,7 @@ export type SignTransactionErrorType =
  * signature to its `signature` list — the input is never mutated. Signing is
  * synchronous and deterministic (RFC 6979, low-`s`, no extra entropy).
  *
- * `raw_data` is java-tron's HTTP JSON (`visible: false`) shape — the one and
+ * `raw_data` is java-tron's HTTP JSON shape — the one and
  * only dialect, whether built by this SDK, returned by
  * java-tron's HTTP node, or handed over by TronWeb. The bytes are the
  * source of truth: the JSON must serialize to exactly the `raw_data_hex`
