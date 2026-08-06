@@ -27,10 +27,7 @@ const trc20Abi = [
 
 const okResponse = {
   result: { result: true },
-  constant_result: [
-    '0000000000000000000000000000000000000000000000000000000000000001',
-  ],
-  energy_used: 31895,
+  energy_required: 31895,
 }
 
 const call = {
@@ -42,11 +39,11 @@ const call = {
 
 function energyMock() {
   return createMockTransport({
-    responses: { triggerconstantcontract: { response: okResponse } },
+    responses: { estimateenergy: { response: okResponse } },
   })
 }
 
-test('returns energy_used as a bigint with the per-call caller owner_address', async () => {
+test('returns energy_required as a bigint with the per-call caller owner_address', async () => {
   const { transport, calls } = energyMock()
   const client = createPublicClient({ transport })
 
@@ -55,7 +52,7 @@ test('returns energy_used as a bigint with the per-call caller owner_address', a
 
   expect(calls[0]?.node).toBe('full')
   expect(calls[0]?.method).toBe('POST')
-  expect(calls[0]?.path).toBe('triggerconstantcontract')
+  expect(calls[0]?.path).toBe('estimateenergy')
   const body = calls[0]?.body as { owner_address: string; data: string }
   expect(body.owner_address).toBe(pk1Hex)
   expect(body.data.startsWith('a9059cbb')).toBe(true)

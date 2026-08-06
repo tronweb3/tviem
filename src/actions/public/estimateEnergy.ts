@@ -75,17 +75,20 @@ export type EstimateEnergyErrorType =
   | ToHexErrorType
   | ErrorType
 
-/** Shape of the `triggerconstantcontract` response body we consume. */
-type TriggerConstantContractResponse = {
+/** Shape of the `estimateenergy` response body we consume. */
+type EstimateEnergyResponse = {
   result?: { result?: boolean; message?: string } | undefined
-  energy_used?: number | undefined
+  energy_required?: number | undefined
 }
 
 /**
  * Estimates the energy a contract call would consume via
- * `triggerconstantcontract`, using the real caller `owner_address` (so the
- * estimate reflects the caller's on-chain state). Returns `energy_used` as a
- * `bigint`.
+ * `wallet/estimateenergy`, using the real caller `owner_address` (so the
+ * estimate reflects the caller's on-chain state). Returns `energy_required`
+ * as a `bigint`.
+ *
+ * The node must have energy estimation enabled (`vm.estimateEnergy = true`);
+ * a node without it rejects the call and the RPC error is surfaced.
  *
  * This only helps a caller choose a `feeLimit` bound for `writeContract`; it
  * never affects what is signed or broadcast, so it does not weaken the
@@ -93,7 +96,7 @@ type TriggerConstantContractResponse = {
  *
  * @param client The Client to use.
  * @param parameters Contract address / ABI / function / args / caller.
- * @returns The estimated energy usage (`energy_used`), as a `bigint`.
+ * @returns The estimated energy usage (`energy_required`), as a `bigint`.
  */
 export async function estimateEnergy<
   const abi extends Abi | readonly unknown[],
@@ -124,10 +127,10 @@ export async function estimateEnergy<
 
   const data = encodeFunctionData({ abi, functionName, args })
 
-  const response = await client.request<TriggerConstantContractResponse>({
+  const response = await client.request<EstimateEnergyResponse>({
     node: 'full',
     method: 'POST',
-    path: 'triggerconstantcontract',
+    path: 'estimateenergy',
     body: {
       owner_address: toHex(owner),
       contract_address: toHex(address),
@@ -136,6 +139,6 @@ export async function estimateEnergy<
     },
   })
 
-  assertRpcSuccess(response, { path: 'triggerconstantcontract' })
-  return BigInt(response?.energy_used ?? 0)
+  assertRpcSuccess(response, { path: 'estimateenergy' })
+  return BigInt(response?.energy_required ?? 0)
 }
