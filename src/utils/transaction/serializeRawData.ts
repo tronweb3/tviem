@@ -117,10 +117,14 @@ function serializeContract(contract: RawContract): ByteArray {
     'contract.parameter',
   )
   const { type_url, value } = contract.parameter
+  // Resolve the type before looking up the codec: an unsupported contract
+  // carries an unregistered type *and* an unregistered type URL, and
+  // `UnknownContractTypeError` — which names the type and is what the decode
+  // path throws for the same condition — is the more useful of the two.
+  const typeInt = contractTypeOf(contract.type)
   const codec = getContractCodecByTypeUrl(type_url)
   if (!codec)
     throw new BaseError(`No contract codec registered for "${type_url}".`)
-  const typeInt = contractTypeOf(contract.type)
   // The type (name or integer) and the Any type URL must denote the same
   // contract — a model whose label misrepresents its payload must never
   // serialize (the sign path byte-verifies whatever this emits).

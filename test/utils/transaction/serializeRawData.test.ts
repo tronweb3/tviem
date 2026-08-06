@@ -1,4 +1,5 @@
 import { expect, test } from 'vitest'
+import { UnknownContractTypeError } from '../../../src/errors/transaction.js'
 import { decodeRawData } from '../../../src/utils/transaction/decodeRawData.js'
 import { getTransactionId } from '../../../src/utils/transaction/getTransactionId.js'
 import {
@@ -50,8 +51,39 @@ test('an unregistered contract type name throws (strict)', () => {
       },
     ],
   }
+  expect(() => toRawDataHex(rawData)).toThrow(UnknownContractTypeError)
   expect(() => toRawDataHex(rawData)).toThrow(
     'Contract type "FooBarContract" is not supported.',
+  )
+})
+
+test('an unsupported contract throws UnknownContractTypeError, not a bare BaseError', () => {
+  const rawData: RawData = {
+    contract: [
+      {
+        // @ts-expect-error a java-tron contract type tviem does not support
+        type: 'MarketSellAssetContract',
+        parameter: {
+          type_url: 'type.googleapis.com/protocol.MarketSellAssetContract',
+          value: { owner_address: owner },
+        },
+      },
+    ],
+  }
+  let error: unknown
+  try {
+    toRawDataHex(rawData)
+  } catch (caught) {
+    error = caught
+  }
+  // Type and type URL both name the same unregistered contract — the only
+  // shape the decode-side cross-check lets through, so encode must surface
+  // the same error class the decode path throws for it.
+  expect(error).toBeInstanceOf(UnknownContractTypeError)
+  const typed = error as UnknownContractTypeError
+  expect(typed.type).toBe('MarketSellAssetContract')
+  expect(typed.shortMessage).toBe(
+    'Contract type "MarketSellAssetContract" is not supported.',
   )
 })
 
@@ -101,6 +133,7 @@ test('an unregistered contract type integer throws (strict)', () => {
       },
     ],
   }
+  expect(() => toRawDataHex(rawData)).toThrow(UnknownContractTypeError)
   expect(() => toRawDataHex(rawData)).toThrow(
     'Contract type 999 is not supported.',
   )
