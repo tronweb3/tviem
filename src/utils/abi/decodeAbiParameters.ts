@@ -74,9 +74,9 @@ export type DecodeAbiParametersErrorType =
  * @example
  * decodeAbiParameters(
  *   [{ type: 'address' }, { type: 'uint256' }],
- *   '0x0000000000000000000000000123456789abcdef0123456789abcdef0123456700000000000000000000000000000000000000000000000000000000000f4240',
+ *   '0x...', // a 32-byte address word followed by a uint256 word
  * )
- * // ['TA5DvvvmYbS75o3DKtgy2ATAGVHhpFkRLe', 1000000n]
+ * // ['T...', 1000000n]
  */
 export function decodeAbiParameters<
   const params extends readonly AbiParameter[] | readonly unknown[],

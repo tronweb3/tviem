@@ -32,7 +32,7 @@ export type ToAccountErrorType =
  *
  * @example
  * // From a private key:
- * toAccount('0x00…01').address // 'TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC'
+ * toAccount('0x...').address // 'T...'
  *
  * @example
  * // From a custom source:

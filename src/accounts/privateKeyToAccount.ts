@@ -51,9 +51,9 @@ export type PrivateKeyToAccountErrorType =
  *
  * @example
  * const account = privateKeyToAccount(
- *   '0x0000000000000000000000000000000000000000000000000000000000000001',
+ *   '0x...',
  * )
- * account.address // 'TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC'
+ * account.address // 'T...'
  */
 export function privateKeyToAccount(
   privateKey: Hex | string,

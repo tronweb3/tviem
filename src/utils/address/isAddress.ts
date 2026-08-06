@@ -29,9 +29,9 @@ export type IsAddressErrorType = ErrorType
  * 4. double-SHA256 checksum matches.
  *
  * @example
- * isAddress('TDvSsdrNM5eeXNL3czpa6AxLDHZA9nwe9K') // true
- * isAddress('0x2b5ad5c4795c026514f8317c7a215e218dccd6cf') // false
- * isAddress('0x2b5ad5c4795c026514f8317c7a215e218dccd6cf', { strict: false }) // true
+ * isAddress('T...') // true
+ * isAddress('0x...') // false — EVM hex is not the canonical form
+ * isAddress('0x...', { strict: false }) // true — any accepted input form
  */
 export function isAddress(
   address: string,

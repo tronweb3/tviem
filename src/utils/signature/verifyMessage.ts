@@ -116,7 +116,7 @@ export type RecoverMessageAddressErrorType =
  *
  * @example
  * recoverMessageAddress({ message: 'hello @tronweb3/tviem', signature })
- * // 'TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC'
+ * // 'T...'
  */
 export function recoverMessageAddress({
   message,

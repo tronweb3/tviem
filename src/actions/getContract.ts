@@ -246,11 +246,11 @@ export type GetContractErrorType = ErrorType
  *
  * @example
  * const contract = getContract({
- *   address: 'TA5DvvvmYbS75o3DKtgy2ATAGVHhpFkRLe',
+ *   address: 'T...',
  *   abi: trc20Abi,
  *   client: publicClient,
  * })
- * const balance = await contract.read.balanceOf(['TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC'])
+ * const balance = await contract.read.balanceOf(['T...'])
  */
 export function getContract<
   const abi extends Abi | readonly unknown[],

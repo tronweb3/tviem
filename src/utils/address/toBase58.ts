@@ -22,8 +22,8 @@ export type ToBase58ErrorType =
  * Throws `InvalidAddressError` on invalid input.
  *
  * @example
- * toBase58('412b5ad5c4795c026514f8317c7a215e218dccd6cf')
- * // 'TDvSsdrNM5eeXNL3czpa6AxLDHZA9nwe9K'
+ * toBase58('41...')
+ * // 'T...' — the same address in canonical Base58Check form
  */
 export function toBase58(address: AddressInput | ByteArray): Address {
   return encodeBase58Check(normalizeAddress(address)) as Address
@@ -39,8 +39,8 @@ export type HexToBase58ErrorType = ToBase58ErrorType | ErrorType
  * Throws `InvalidAddressError` on invalid input.
  *
  * @example
- * hexToBase58('0x0123456789abcdef0123456789abcdef01234567')
- * // 'TA5DvvvmYbS75o3DKtgy2ATAGVHhpFkRLe'
+ * hexToBase58('0x...')
+ * // 'T...' — the same address in canonical Base58Check form
  */
 export function hexToBase58(address: Hex): Address {
   return toBase58(address)

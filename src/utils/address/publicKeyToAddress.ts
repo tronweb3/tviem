@@ -24,8 +24,8 @@ export type PublicKeyToAddressErrorType =
  * body, as `0x`-prefixed hex or bytes.
  *
  * @example
- * publicKeyToAddress('0x0479be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8')
- * // 'TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC'
+ * publicKeyToAddress('0x04...')
+ * // 'T...' — the address that public key controls
  */
 export function publicKeyToAddress(publicKey: Hex | ByteArray): Address {
   const bytes =

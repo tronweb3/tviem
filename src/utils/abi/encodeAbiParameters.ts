@@ -154,9 +154,9 @@ export type EncodeAbiParametersErrorType =
  * @example
  * encodeAbiParameters(
  *   [{ type: 'address' }, { type: 'uint256' }],
- *   ['TA5DvvvmYbS75o3DKtgy2ATAGVHhpFkRLe', 1000000n],
+ *   ['T...', 1000000n],
  * )
- * // '0x0000000000000000000000000123456789abcdef0123456789abcdef0123456700000000000000000000000000000000000000000000000000000000000f4240'
+ * // '0x...' — the 20-byte address body left-padded to 32 bytes, then the uint256
  */
 export function encodeAbiParameters<
   const params extends readonly AbiParameter[] | readonly unknown[],

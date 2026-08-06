@@ -71,7 +71,7 @@ export type EncodeEventTopicsErrorType =
  * encodeEventTopics({
  *   abi,
  *   eventName: 'Transfer',
- *   args: { from: 'TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC', to: 'TDvSsdrNM5eeXNL3czpa6AxLDHZA9nwe9K' },
+ *   args: { from: 'T...', to: 'T...' },
  * })
  */
 export function encodeEventTopics(

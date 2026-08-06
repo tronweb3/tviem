@@ -129,10 +129,10 @@ type TriggerConstantContractResponse = {
  *
  * @example
  * const { result, energyUsed } = await triggerConstantContract(client, {
- *   address: 'TA5DvvvmYbS75o3DKtgy2ATAGVHhpFkRLe',
+ *   address: 'T...',
  *   abi: trc20Abi,
  *   functionName: 'transfer', // nonpayable — fine here
- *   args: ['TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC', 1_000_000n],
+ *   args: ['T...', 1_000_000n],
  * })
  */
 export async function triggerConstantContract<

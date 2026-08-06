@@ -26,8 +26,8 @@ export type EncodeBase58CheckErrorType = ErrorType
  * (`0x41` prefix ++ 20-byte account id), producing a `T…` string.
  *
  * @example
- * encodeBase58Check(hexToBytes('0x412b5ad5c4795c026514f8317c7a215e218dccd6cf'))
- * // 'TDvSsdrNM5eeXNL3czpa6AxLDHZA9nwe9K'
+ * encodeBase58Check(hexToBytes('0x41...'))
+ * // 'T...' — the 21-byte pivot as a Base58Check string
  */
 export function encodeBase58Check(payload: ByteArray): string {
   const bytes = new Uint8Array(payload.length + 4)

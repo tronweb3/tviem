@@ -77,9 +77,9 @@ export type EncodePackedErrorType =
  * @example
  * encodePacked(
  *   ['address', 'uint256'],
- *   ['TA5DvvvmYbS75o3DKtgy2ATAGVHhpFkRLe', 1000000n],
+ *   ['T...', 1000000n],
  * )
- * // '0x0123456789abcdef0123456789abcdef0123456700000000000000000000000000000000000000000000000000000000000f4240'
+ * // '0x...' — the 20-byte address body unpadded, then the 32-byte uint256
  */
 export function encodePacked<
   const packedAbiTypes extends readonly PackedAbiType[] | readonly unknown[],

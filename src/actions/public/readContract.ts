@@ -117,10 +117,10 @@ type TriggerConstantContractResponse = {
  *
  * @example
  * const balance = await readContract(client, {
- *   address: 'TA5DvvvmYbS75o3DKtgy2ATAGVHhpFkRLe',
+ *   address: 'T...',
  *   abi: trc20Abi,
  *   functionName: 'balanceOf',
- *   args: ['TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC'],
+ *   args: ['T...'],
  * })
  */
 export async function readContract<

@@ -17,8 +17,8 @@ export type IsAddressEqualErrorType = NormalizeAddressErrorType | ErrorType
  *
  * @example
  * isAddressEqual(
- *   'TDvSsdrNM5eeXNL3czpa6AxLDHZA9nwe9K',
- *   '0x2b5ad5c4795c026514f8317c7a215e218dccd6cf',
+ *   'T...',
+ *   '0x...', // the same address in EVM hex form
  * ) // true
  */
 export function isAddressEqual(a: AddressInput, b: AddressInput): boolean {

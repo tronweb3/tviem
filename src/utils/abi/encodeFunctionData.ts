@@ -83,7 +83,7 @@ export type EncodeFunctionDataErrorType =
  * encodeFunctionData({
  *   abi: erc20Abi,
  *   functionName: 'transfer',
- *   args: ['TA5DvvvmYbS75o3DKtgy2ATAGVHhpFkRLe', 1000000n],
+ *   args: ['T...', 1000000n],
  * })
  * // '0xa9059cbb…'
  */

@@ -21,8 +21,8 @@ export type ToHexErrorType =
  * Throws `InvalidAddressError` on invalid input.
  *
  * @example
- * toHex('TDvSsdrNM5eeXNL3czpa6AxLDHZA9nwe9K')
- * // '412b5ad5c4795c026514f8317c7a215e218dccd6cf'
+ * toHex('T...')
+ * // '41...' — the same address in TRON hex form
  */
 export function toHex(address: AddressInput | ByteArray): TronHexAddress {
   return bytesToHex(normalizeAddress(address)).slice(2) as TronHexAddress
