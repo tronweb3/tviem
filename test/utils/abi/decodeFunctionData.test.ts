@@ -52,3 +52,20 @@ test('throws when the selector matches no function on the ABI', () => {
     AbiFunctionSignatureNotFoundError,
   )
 })
+
+// A TIP-2771/ERC-2771 trusted forwarder appends the original sender's raw
+// 20-byte address to the recipient calldata (`abi.encodePacked(data, from)`);
+// decoding the forwarded call must ignore that suffix.
+test('decodes forwarder calldata carrying a TIP-2771 20-byte sender suffix', () => {
+  const data = encodeFunctionData({
+    abi,
+    functionName: 'transfer',
+    args: ['TA5DvvvmYbS75o3DKtgy2ATAGVHhpFkRLe', 1000000n],
+  })
+  const suffixed =
+    `${data}2b5ad5c4795c026514f8317c7a215e218dccd6cf` as `0x${string}`
+  expect(decodeFunctionData({ abi, data: suffixed })).toEqual({
+    functionName: 'transfer',
+    args: ['TA5DvvvmYbS75o3DKtgy2ATAGVHhpFkRLe', 1000000n],
+  })
+})

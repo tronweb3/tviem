@@ -1,8 +1,6 @@
 import type { AbiParameter } from 'abitype'
 
 import {
-  AbiDecodingDataSizeInvalidError,
-  type AbiDecodingDataSizeInvalidErrorType,
   AbiDecodingDataSizeTooSmallError,
   type AbiDecodingDataSizeTooSmallErrorType,
   AbiDecodingZeroDataError,
@@ -54,7 +52,6 @@ export type DecodeAbiParametersReturnType<
   : readonly unknown[]
 
 export type DecodeAbiParametersErrorType =
-  | AbiDecodingDataSizeInvalidErrorType
   | AbiDecodingDataSizeTooSmallErrorType
   | AbiDecodingZeroDataErrorType
   | AbiDecodingZeroSizeElementErrorType
@@ -71,7 +68,9 @@ export type DecodeAbiParametersErrorType =
  * Decodes ABI-encoded data into primitive values, per the Solidity ABI
  * specification (the inverse of `encodeAbiParameters`). All reads go through
  * a bounds-checked cursor, so truncated data, out-of-bounds offsets, and
- * garbage length slots throw instead of decoding junk.
+ * garbage length slots throw instead of decoding junk. Whole trailing bytes
+ * past the encoding are tolerated — TIP-2771 forwarder calldata appends a
+ * raw 20-byte sender — since head-driven decoding never reads them.
  *
  * TRON behavior: `address` decodes the last 20 bytes of its slot to the
  * canonical Base58Check form (`T…`); `trcToken` decodes exactly like
@@ -99,14 +98,11 @@ export function decodeAbiParameters<
   const bytes = typeof data === 'string' ? hexToBytes(data) : data
   if (bytes.length === 0 && params.length > 0)
     throw new AbiDecodingZeroDataError()
-  // Canonical ABI data is a whole number of 32-byte words (every head slot is
-  // one word and every tail is word-padded); anything else is truncated or
-  // corrupt, not something to decode a partial word from.
-  if (bytes.length % 32 !== 0)
-    throw new AbiDecodingDataSizeInvalidError({
-      data: typeof data === 'string' ? (data as Hex) : bytesToHex(data),
-      size: bytes.length,
-    })
+  // No 32-byte-alignment check here: decoding is head-driven (offsets and
+  // length words, never the total size), every read is bounds-checked, and
+  // TIP-2771 forwarder calldata legitimately ends in a raw 20-byte sender.
+  // decodeFunctionResult enforces alignment at its boundary instead, where
+  // node return data can never carry a suffix.
   if (bytes.length > 0 && bytes.length < 32 * params.length)
     throw new AbiDecodingDataSizeTooSmallError({
       data: typeof data === 'string' ? data : bytesToHex(data),

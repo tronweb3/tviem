@@ -140,11 +140,24 @@ describe('zero-size array elements', () => {
 
 // The payload is bytes: a hex string with an odd nibble count is not a byte
 // string, and `hexToBytes` would left-pad it — shifting the whole payload by
-// four bits and decoding a wrong value with no error. Canonical ABI data is
-// also always a whole number of 32-byte words.
+// four bits and decoding a wrong value with no error. Whole trailing bytes
+// past the encoding are a different matter: decoding is head-driven and never
+// reads them, and TIP-2771 forwarder calldata legitimately carries a raw
+// 20-byte sender suffix — so the generic decoder tolerates them, while
+// decodeFunctionResult (whose node return data is always word-aligned)
+// enforces alignment at its own boundary.
 describe('payload shape validation', () => {
   const uint256 = [{ type: 'uint256' }] as const
   const full = `0x${word(255)}` as const
+  const balanceOfAbi = [
+    {
+      type: 'function',
+      name: 'balanceOf',
+      stateMutability: 'view',
+      inputs: [{ name: 'owner', type: 'address' }],
+      outputs: [{ name: '', type: 'uint256' }],
+    },
+  ] as const
 
   test('rejects an odd-length hex payload instead of decoding a shifted value', () => {
     const truncated = full.slice(0, -1) as `0x${string}`
@@ -155,15 +168,28 @@ describe('payload shape validation', () => {
     expect(error?.message).toContain('odd length')
   })
 
-  test('rejects a hex payload that is not a whole number of 32-byte words', () => {
-    const error = caught(() => decodeAbiParameters(uint256, `${full}abab`))
-    expect(error).toBeInstanceOf(AbiDecodingDataSizeInvalidError)
-    expect(error?.message).toContain('increments of 32 bytes')
+  test('tolerates whole trailing bytes past the encoding', () => {
+    expect(decodeAbiParameters(uint256, `${full}abab`)).toStrictEqual([255n])
+    expect(decodeAbiParameters(uint256, new Uint8Array(33))).toStrictEqual([
+      0n,
+    ])
   })
 
-  test('rejects a misaligned ByteArray payload too', () => {
-    const error = caught(() => decodeAbiParameters(uint256, new Uint8Array(33)))
-    expect(error).toBeInstanceOf(AbiDecodingDataSizeInvalidError)
+  test('decodes params carrying a TIP-2771 20-byte sender suffix', () => {
+    const sender = '2b5ad5c4795c026514f8317c7a215e218dccd6cf'
+    // Static param: the suffix sits past the head and is never read.
+    expect(decodeAbiParameters(uint256, `${full}${sender}`)).toStrictEqual([
+      255n,
+    ])
+    // Dynamic param: tails are located by offset + own length word, both
+    // before the suffix, so the value decodes unchanged.
+    const encoded = encodeAbiParameters([{ type: 'string' }], ['hello'])
+    expect(
+      decodeAbiParameters(
+        [{ type: 'string' }],
+        `${encoded}${sender}` as `0x${string}`,
+      ),
+    ).toStrictEqual(['hello'])
   })
 
   test('still decodes a well-formed payload', () => {
@@ -175,24 +201,42 @@ describe('payload shape validation', () => {
     expect(decodeAbiParameters([], '0x')).toStrictEqual([])
   })
 
-  test('the guard reaches callers that decode node data (decodeFunctionResult)', () => {
-    const abi = [
-      {
-        type: 'function',
-        name: 'balanceOf',
-        stateMutability: 'view',
-        inputs: [{ name: 'owner', type: 'address' }],
-        outputs: [{ name: '', type: 'uint256' }],
-      },
-    ] as const
-    const error = caught(() =>
-      decodeFunctionResult({
-        abi,
-        functionName: 'balanceOf',
-        data: full.slice(0, -1) as `0x${string}`,
-      }),
-    )
-    expect(error).toBeInstanceOf(InvalidHexValueError)
+  test('the odd-nibble guard reaches callers that decode node data (decodeFunctionResult)', () => {
+    // 63 nibbles round to a word-aligned 32 bytes and 61 to a misaligned 31,
+    // so together they pin that odd-length hex defers to the invalid-hex
+    // error instead of being size-counted (with any rounding) by
+    // decodeFunctionResult's alignment check.
+    for (const data of [full.slice(0, -1), full.slice(0, -3)]) {
+      const error = caught(() =>
+        decodeFunctionResult({
+          abi: balanceOfAbi,
+          functionName: 'balanceOf',
+          data: data as `0x${string}`,
+        }),
+      )
+      expect(error).toBeInstanceOf(InvalidHexValueError)
+    }
+  })
+
+  test('decodeFunctionResult still rejects misaligned return data', () => {
+    // Return data (`constant_result`) is always a whole number of 32-byte
+    // words — no calldata-style suffix can occur there — so misalignment
+    // means a lossy/corrupt node response and must keep failing loudly even
+    // though the generic decoder now tolerates trailing bytes.
+    for (const data of [
+      `${full}abab` as `0x${string}`,
+      new Uint8Array(33),
+    ]) {
+      const error = caught(() =>
+        decodeFunctionResult({
+          abi: balanceOfAbi,
+          functionName: 'balanceOf',
+          data,
+        }),
+      )
+      expect(error).toBeInstanceOf(AbiDecodingDataSizeInvalidError)
+      expect(error?.message).toContain('increments of 32 bytes')
+    }
   })
 })
 

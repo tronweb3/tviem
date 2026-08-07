@@ -1,6 +1,8 @@
 import type { Abi } from 'abitype'
 
 import {
+  AbiDecodingDataSizeInvalidError,
+  type AbiDecodingDataSizeInvalidErrorType,
   AbiFunctionNotFoundError,
   type AbiFunctionNotFoundErrorType,
   AbiFunctionOutputsNotFoundError,
@@ -13,6 +15,7 @@ import type {
   ExtractAbiFunctionForArgs,
 } from '../../types/contract.js'
 import type { ByteArray, Hex } from '../../types/misc.js'
+import { bytesToHex } from '../encoding/toHex.js'
 import {
   type DecodeAbiParametersErrorType,
   decodeAbiParameters,
@@ -88,6 +91,7 @@ export type DecodeFunctionResultReturnType<
   : unknown
 
 export type DecodeFunctionResultErrorType =
+  | AbiDecodingDataSizeInvalidErrorType
   | AbiFunctionNotFoundErrorType
   | AbiFunctionOutputsNotFoundErrorType
   | DecodeAbiParametersErrorType
@@ -146,6 +150,25 @@ export function decodeFunctionResult<
     throw new AbiFunctionNotFoundError(undefined, { docsPath })
   if (!abiItem.outputs)
     throw new AbiFunctionOutputsNotFoundError(abiItem.name, { docsPath })
+
+  // Return data (`constant_result` from a node) is always a whole number of
+  // 32-byte words — a calldata-style TIP-2771 suffix cannot occur here — so a
+  // misaligned payload is a lossy/corrupt node response, not something to
+  // decode a partial word from. The generic decoder tolerates trailing bytes
+  // for the calldata paths, so alignment is enforced at this boundary. An
+  // odd-nibble hex string is left for decodeAbiParameters to reject as
+  // invalid hex rather than being miscounted here.
+  const size =
+    typeof data === 'string'
+      ? data.length % 2 === 0
+        ? Math.max(0, (data.length - 2) / 2)
+        : undefined
+      : data.length
+  if (size !== undefined && size % 32 !== 0)
+    throw new AbiDecodingDataSizeInvalidError({
+      data: typeof data === 'string' ? data : bytesToHex(data),
+      size,
+    })
 
   const values = decodeAbiParameters(abiItem.outputs, data)
   if (values && values.length > 1)
