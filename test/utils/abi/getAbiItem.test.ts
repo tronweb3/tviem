@@ -471,6 +471,158 @@ test('an unambiguous tuple does not mask ambiguity in later parameters', () => {
   ).toThrowError(AbiItemAmbiguityError)
 })
 
+// getAmbiguousTypes compared array types as opaque strings: `['address[]',
+// 'string[]']` matches no pair rule, so foo(address[]) vs foo(string[]) with
+// address-like elements silently resolved instead of throwing — the rules
+// never saw the element types. Arrays must recurse element-wise, like tuples
+// recurse component-wise.
+const arrayAmbiguityAbi = [
+  {
+    type: 'function',
+    name: 'foo',
+    stateMutability: 'nonpayable',
+    outputs: [],
+    inputs: [{ name: 'xs', type: 'address[]' }],
+  },
+  {
+    type: 'function',
+    name: 'foo',
+    stateMutability: 'nonpayable',
+    outputs: [],
+    inputs: [{ name: 'xs', type: 'string[]' }],
+  },
+]
+
+test('throws on an ambiguous address[]/string[] overload for address-like elements', () => {
+  expect(() =>
+    getAbiItem({
+      abi: arrayAmbiguityAbi as unknown as Abi,
+      name: 'foo',
+      args: [['TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC']],
+    }),
+  ).toThrowError(AbiItemAmbiguityError)
+  // A non-address string only matches string[], so the set stays resolvable.
+  expect(() =>
+    getAbiItem({
+      abi: arrayAmbiguityAbi as unknown as Abi,
+      name: 'foo',
+      args: [['just a string']],
+    }),
+  ).not.toThrow()
+})
+
+test('getAmbiguousTypes recurses into array element types', () => {
+  const addr = 'TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC'
+  expect(
+    getAmbiguousTypes(
+      [{ name: 'xs', type: 'address[]' }],
+      [{ name: 'xs', type: 'string[]' }],
+      [[addr]],
+    ),
+  ).toEqual(['address', 'string'])
+  expect(
+    getAmbiguousTypes(
+      [{ name: 'xs', type: 'address[]' }],
+      [{ name: 'xs', type: 'string[]' }],
+      [['just a string']],
+    ),
+  ).toBeUndefined()
+  // TRON: trcToken[] elements encode identically to uint256[] ones.
+  expect(
+    getAmbiguousTypes(
+      [{ name: 'xs', type: 'uint256[]' }],
+      [{ name: 'xs', type: 'trcToken[]' }] as never,
+      [[5n]],
+    ),
+  ).toEqual(['uint256', 'trcToken'])
+  // Fixed-size arrays recurse the same way.
+  expect(
+    getAmbiguousTypes(
+      [{ name: 'xs', type: 'address[2]' }],
+      [{ name: 'xs', type: 'bytes20[2]' }] as never,
+      [[addr, addr]],
+    ),
+  ).toEqual(['address', 'bytes20'])
+  // Nested arrays strip one level per recursion, so T[][] reaches T — an
+  // implementation stripping a single level would stop at 'address[]' vs
+  // 'string[]' and miss this.
+  expect(
+    getAmbiguousTypes(
+      [{ name: 'xs', type: 'address[][]' }],
+      [{ name: 'xs', type: 'string[][]' }],
+      [[[addr]]],
+    ),
+  ).toEqual(['address', 'string'])
+  // An unambiguous array must not mask ambiguity in later parameters.
+  expect(
+    getAmbiguousTypes(
+      [
+        { name: 'xs', type: 'uint256[]' },
+        { name: 'to', type: 'address' },
+      ],
+      [
+        { name: 'xs', type: 'uint256[]' },
+        { name: 'to', type: 'bytes20' },
+      ] as never,
+      [[1n], addr],
+    ),
+  ).toEqual(['address', 'bytes20'])
+})
+
+test('an empty array still flags arg-independent element ambiguity', () => {
+  // address/bytes20 is ambiguous regardless of the argument, so an empty
+  // array (which matches both overloads and carries no signal) stays
+  // ambiguous too…
+  expect(
+    getAmbiguousTypes(
+      [{ name: 'xs', type: 'address[]' }],
+      [{ name: 'xs', type: 'bytes20[]' }] as never,
+      [[]],
+    ),
+  ).toEqual(['address', 'bytes20'])
+  // …while arg-dependent pairs have no element to justify ambiguity.
+  expect(
+    getAmbiguousTypes(
+      [{ name: 'xs', type: 'address[]' }],
+      [{ name: 'xs', type: 'string[]' }],
+      [[]],
+    ),
+  ).toBeUndefined()
+  expect(
+    getAmbiguousTypes(
+      [{ name: 'xs', type: 'uint256[]' }],
+      [{ name: 'xs', type: 'trcToken[]' }] as never,
+      [[]],
+    ),
+  ).toBeUndefined()
+})
+
+test('tuple arrays recurse into components per element', () => {
+  const sourceInputs = [
+    {
+      name: 'ts',
+      type: 'tuple[]',
+      components: [{ name: 'a', type: 'address' }],
+    },
+  ]
+  const targetInputs = [
+    {
+      name: 'ts',
+      type: 'tuple[]',
+      components: [{ name: 'a', type: 'string' }],
+    },
+  ]
+  expect(
+    getAmbiguousTypes(sourceInputs as never, targetInputs as never, [
+      [['TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC']],
+    ]),
+  ).toEqual(['address', 'string'])
+  // An empty tuple[] arg must not crash the component recursion.
+  expect(
+    getAmbiguousTypes(sourceInputs as never, targetInputs as never, [[]]),
+  ).toBeUndefined()
+})
+
 test('a tuple whose own components are ambiguous still reports the inner pair', () => {
   expect(
     getAmbiguousTypes(

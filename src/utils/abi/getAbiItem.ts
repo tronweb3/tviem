@@ -211,12 +211,17 @@ export function isArgOfType(arg: unknown, abiParameter: AbiParameter): boolean {
   }
 }
 
+/** Matches the trailing `[]` / `[M]` of an array type; stripping it yields the element type. */
+const ARRAY_SUFFIX = /\[[0-9]*\]$/
+
 /**
  * Returns the first pair of parameter types (source, target) that could both
  * encode the corresponding argument, or `undefined` when the two parameter
- * lists are unambiguous. Tuples recurse component-wise. On TRON, `address` is
- * ambiguous with `bytes20`, and with `string`/`bytes` when the argument is a
- * valid address.
+ * lists are unambiguous. Tuples recurse component-wise and arrays
+ * element-wise; an empty array still compares the element types once, so
+ * arg-independent pairs (`address`/`bytes20`) stay ambiguous. On TRON,
+ * `address` is ambiguous with `bytes20`, and with `string`/`bytes` when the
+ * argument is a valid address.
  */
 export function getAmbiguousTypes(
   sourceParameters: readonly AbiParameter[],
@@ -241,10 +246,41 @@ export function getAmbiguousTypes(
       const ambiguous = getAmbiguousTypes(
         sourceParameter.components as readonly AbiParameter[],
         targetParameter.components as readonly AbiParameter[],
-        (args as readonly unknown[][])[parameterIndex as unknown as number]!,
+        // The array branch below probes empty arrays with a placeholder
+        // element, so a tuple's arg can legitimately be absent here.
+        ((args as readonly unknown[][])[parameterIndex as unknown as number] ??
+          []) as readonly unknown[],
       )
       // An unambiguous tuple only settles this position — the remaining
       // parameters still have to be compared.
+      if (ambiguous) return ambiguous
+      continue
+    }
+
+    if (
+      ARRAY_SUFFIX.test(sourceParameter.type) &&
+      ARRAY_SUFFIX.test(targetParameter.type)
+    ) {
+      const sourceElement = {
+        ...sourceParameter,
+        type: sourceParameter.type.replace(ARRAY_SUFFIX, ''),
+      } as AbiParameter
+      const targetElement = {
+        ...targetParameter,
+        type: targetParameter.type.replace(ARRAY_SUFFIX, ''),
+      } as AbiParameter
+      const arg = args[parameterIndex as unknown as number]
+      // Compare the element types against every element of the argument.
+      // With no elements to inspect, probe once with no argument so
+      // arg-independent pairs (address/bytes20) are still detected, while
+      // arg-dependent ones (address/string) correctly stay unambiguous.
+      const elements =
+        Array.isArray(arg) && arg.length > 0 ? arg : [undefined]
+      const ambiguous = getAmbiguousTypes(
+        elements.map(() => sourceElement),
+        elements.map(() => targetElement),
+        elements,
+      )
       if (ambiguous) return ambiguous
       continue
     }
