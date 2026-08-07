@@ -12,10 +12,9 @@ export type EchoedTransaction =
 /**
  * Fails closed when a node's echoed transaction differs from the locally built
  * one. TRON's `getSignWeight` / `getApprovedList` endpoints echo the submitted
- * transaction back; a hardened client must never adopt that copy (TronWeb does,
- * and signs it), so this asserts the echoed `raw_data_hex` and `txID` match the
- * local values byte-for-byte and throws {@link TransactionTamperedError}
- * otherwise. `raw_data_hex` is the load-bearing field — it is the exact bytes
+ * transaction back; this client does not adopt that copy — it asserts the
+ * echoed `raw_data_hex` and `txID` match the local values byte-for-byte and
+ * throws {@link TransactionTamperedError} otherwise. `raw_data_hex` is the load-bearing field — it is the exact bytes
  * that get hashed and signed. When the node echoes no transaction there is
  * nothing to adopt (the caller keeps its local copy), so the check is a no-op.
  *
