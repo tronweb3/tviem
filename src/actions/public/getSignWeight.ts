@@ -109,12 +109,10 @@ export function formatPermission(
  * permission via `getsignweight` (full node): how much weight has signed so
  * far, the threshold + keys of the evaluated permission, and who has approved.
  *
- * Security: the node echoes the submitted transaction back; this asserts that
+ * Node echo: the node echoes the submitted transaction back; this asserts that
  * echoed transaction matches the local one byte-for-byte and throws
  * {@link TransactionTamperedError} on any mismatch — and always returns the
- * **local** transaction, never the node's copy. The signer therefore can never
- * be tricked into signing a node-substituted transaction (the flaw in
- * TronWeb's `multiSign`).
+ * **local** transaction, never the node's copy.
  *
  * @param client The Client to use.
  * @param parameters `transaction` — the built transaction to weigh.

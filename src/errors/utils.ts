@@ -24,9 +24,9 @@ export function isAbortError(error: unknown): error is AbortErrorType {
 }
 
 /**
- * Returns the URL with any embedded basic-auth credentials stripped, so
- * error messages and logs don't leak secrets when an RPC URL like
- * `https://user:pass@host` is used.
+ * Returns the URL with any embedded basic-auth credentials stripped, so a URL
+ * like `https://user:pass@host` renders into an error message without the
+ * `user:pass` part. Returns the input unchanged if it does not parse as a URL.
  */
 export const getUrl = (url: string) => {
   try {

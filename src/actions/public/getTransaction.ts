@@ -71,8 +71,10 @@ type RawTransactionResponse = {
  * `raw_data` is **decoded locally from those authenticated bytes** — the
  * node's `raw_data` JSON is never adopted, so what the caller inspects
  * (recipient, amount, contract) is exactly what the bytes say. The triple is
- * therefore self-consistent by construction and can be handed straight to
- * `multiSign` / `signTransaction`.
+ * therefore self-consistent by construction, which is the `SignableTransaction`
+ * shape `multiSign` / `signTransaction` take — no re-encoding or id recompute
+ * is needed. The id check constrains only which bytes the node returned; it
+ * does not check what the transaction does.
  *
  * @param client The Client to use.
  * @param parameters `hash` — the transaction id.
