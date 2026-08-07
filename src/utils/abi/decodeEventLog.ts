@@ -112,11 +112,15 @@ export function decodeEventLog(
   if (nonIndexedInputs.length > 0) {
     if (data && data !== '0x') {
       const decoded = decodeAbiParameters(nonIndexedInputs, data)
+      // Consume the decoded values in order, like `topicIndex` above. An
+      // identity lookup (`nonIndexedInputs.indexOf(input)`) would resolve every
+      // occurrence of a reused parameter object to its first slot.
+      let dataIndex = 0
       for (let i = 0; i < inputs.length; i++) {
         const input = inputs[i]!
         if ('indexed' in input && input.indexed) continue
-        const nonIndexedPosition = nonIndexedInputs.indexOf(input)
-        setArg(input, i, (decoded as readonly unknown[])[nonIndexedPosition])
+        setArg(input, i, (decoded as readonly unknown[])[dataIndex])
+        dataIndex++
       }
     } else {
       throw new DecodeLogDataMismatch({

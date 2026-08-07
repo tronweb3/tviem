@@ -5,6 +5,7 @@ import {
   DecodeLogDataMismatch,
 } from '../../../src/errors/abi.js'
 import { decodeEventLog } from '../../../src/utils/abi/decodeEventLog.js'
+import { toEventSelector } from '../../../src/utils/hash/toEventSelector.js'
 import {
   type FixtureParameter,
   loadEventFixtures,
@@ -157,5 +158,48 @@ describe('eventName is validated against topic0 (the log identity)', () => {
     })
     expect(decoded.eventName).toBe('Transfer')
     expect((decoded.args as { value: bigint }).value).toBe(123n)
+  })
+})
+
+// The non-indexed write-back must map by POSITION. `nonIndexedInputs` comes
+// from `inputs.filter(...)`, so when one AbiParameter object is reused at two
+// positions — legal, and natural when an ABI is built from shared parameter
+// constants — an identity lookup resolves both occurrences to the first slot.
+describe('non-indexed parameters map by position, not object identity', () => {
+  const amount = { type: 'uint256' } as const
+  const word = (n: number) => n.toString(16).padStart(64, '0')
+
+  test('a reused parameter object still decodes each slot', () => {
+    const abi = [
+      { type: 'event', name: 'Pair', inputs: [amount, amount] },
+    ] as unknown as Abi
+    const { args } = decodeEventLog({
+      abi,
+      topics: [toEventSelector('Pair(uint256,uint256)')],
+      data: `0x${word(11)}${word(22)}`,
+    })
+    // Identity mapping returned [11n, 11n]: the second slot was never read.
+    expect(args).toStrictEqual([11n, 22n])
+  })
+
+  test('a reused parameter object interleaved with an indexed one', () => {
+    const abi = [
+      {
+        type: 'event',
+        name: 'Mixed',
+        inputs: [amount, { type: 'address', indexed: true }, amount],
+      },
+    ] as unknown as Abi
+    const holder = '417e5f4552091a69125d5dfcb7b8c2659029395bdf'
+    const { args } = decodeEventLog({
+      abi,
+      topics: [
+        toEventSelector('Mixed(uint256,address,uint256)'),
+        `0x${'00'.repeat(12)}${holder.slice(2)}`,
+      ],
+      data: `0x${word(11)}${word(22)}`,
+    })
+    expect((args as unknown[])[0]).toBe(11n)
+    expect((args as unknown[])[2]).toBe(22n)
   })
 })
