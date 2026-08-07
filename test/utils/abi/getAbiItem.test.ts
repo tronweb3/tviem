@@ -417,3 +417,78 @@ test('getAmbiguousTypes treats component lists of different length as unambiguou
     ),
   ).toBeUndefined()
 })
+
+// An unambiguous tuple parameter must not mask ambiguity in the parameters
+// after it. The tuple branch in `getAmbiguousTypes` returned the recursion's
+// result unconditionally, so an identical tuple in first position made the
+// whole comparison "unambiguous" — foo((uint256),address) vs
+// foo((uint256),string) silently resolved instead of throwing.
+const tupleThenAmbiguousAbi = [
+  {
+    type: 'function',
+    name: 'foo',
+    stateMutability: 'nonpayable',
+    outputs: [],
+    inputs: [
+      {
+        name: 't',
+        type: 'tuple',
+        components: [{ name: 'x', type: 'uint256' }],
+      },
+      { name: 'to', type: 'address' },
+    ],
+  },
+  {
+    type: 'function',
+    name: 'foo',
+    stateMutability: 'nonpayable',
+    outputs: [],
+    inputs: [
+      {
+        name: 't',
+        type: 'tuple',
+        components: [{ name: 'x', type: 'uint256' }],
+      },
+      { name: 'to', type: 'string' },
+    ],
+  },
+]
+
+test('an unambiguous tuple does not mask ambiguity in later parameters', () => {
+  expect(
+    getAmbiguousTypes(
+      tupleThenAmbiguousAbi[0]!.inputs as never,
+      tupleThenAmbiguousAbi[1]!.inputs as never,
+      [[1n], 'TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC'],
+    ),
+  ).toEqual(['address', 'string'])
+  expect(() =>
+    getAbiItem({
+      abi: tupleThenAmbiguousAbi as unknown as Abi,
+      name: 'foo',
+      args: [[1n], 'TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC'],
+    }),
+  ).toThrowError(AbiItemAmbiguityError)
+})
+
+test('a tuple whose own components are ambiguous still reports the inner pair', () => {
+  expect(
+    getAmbiguousTypes(
+      [
+        {
+          name: 't',
+          type: 'tuple',
+          components: [{ name: 'a', type: 'address' }],
+        },
+      ] as never,
+      [
+        {
+          name: 't',
+          type: 'tuple',
+          components: [{ name: 'a', type: 'string' }],
+        },
+      ] as never,
+      [['TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC']],
+    ),
+  ).toEqual(['address', 'string'])
+})

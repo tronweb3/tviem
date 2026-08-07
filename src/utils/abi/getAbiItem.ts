@@ -237,12 +237,17 @@ export function getAmbiguousTypes(
       targetParameter.type === 'tuple' &&
       'components' in sourceParameter &&
       'components' in targetParameter
-    )
-      return getAmbiguousTypes(
+    ) {
+      const ambiguous = getAmbiguousTypes(
         sourceParameter.components as readonly AbiParameter[],
         targetParameter.components as readonly AbiParameter[],
         (args as readonly unknown[][])[parameterIndex as unknown as number]!,
       )
+      // An unambiguous tuple only settles this position — the remaining
+      // parameters still have to be compared.
+      if (ambiguous) return ambiguous
+      continue
+    }
 
     const types = [sourceParameter.type, targetParameter.type] as [
       string,
