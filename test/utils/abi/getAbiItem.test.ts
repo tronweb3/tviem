@@ -710,6 +710,79 @@ test('fixed-size array overloads resolve by length, in either ABI order', () => 
   }
 })
 
+// isArgOfType matched object tuple args positionally via Object.values (key
+// insertion order), but encodeTuple consumes them by component name — so a
+// swapped-key object failed to match its overload even though it encodes
+// fine, while an object with the right value order under wrong key names
+// "matched" and only blew up at encode time.
+const namedTupleParam = {
+  name: 't',
+  type: 'tuple',
+  components: [
+    { name: 'x', type: 'uint256' },
+    { name: 'to', type: 'address' },
+  ],
+}
+
+test('object tuple args match by component name, not key order', () => {
+  const addr = 'TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC'
+  expect(isArgOfType({ to: addr, x: 1n }, namedTupleParam as never)).toBe(true)
+  expect(isArgOfType({ x: 1n, to: addr }, namedTupleParam as never)).toBe(true)
+  // The right value order under wrong names is NOT a match — encoding would
+  // look the names up and fail.
+  expect(isArgOfType({ foo: 1n, bar: addr }, namedTupleParam as never)).toBe(
+    false,
+  )
+  // Arity applies to objects too: extra keys must not match, or encodeTuple
+  // throws AbiEncodingLengthMismatchError after resolution "succeeded".
+  expect(
+    isArgOfType({ x: 1n, to: addr, junk: 1 }, namedTupleParam as never),
+  ).toBe(false)
+  // Positional arrays keep working.
+  expect(isArgOfType([1n, addr], namedTupleParam as never)).toBe(true)
+})
+
+test('a swapped-key object still resolves the tuple overload', () => {
+  const abi = [
+    {
+      type: 'function',
+      name: 'foo',
+      stateMutability: 'nonpayable',
+      outputs: [],
+      inputs: [{ name: 's', type: 'string' }],
+    },
+    {
+      type: 'function',
+      name: 'foo',
+      stateMutability: 'nonpayable',
+      outputs: [],
+      inputs: [namedTupleParam],
+    },
+  ]
+  const addr = 'TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC'
+  const item = getAbiItem({
+    abi: abi as unknown as Abi,
+    name: 'foo',
+    args: [{ to: addr, x: 1n }],
+  })
+  expect(
+    (item as unknown as { inputs: readonly { type: string }[] }).inputs[0]!
+      .type,
+  ).toBe('tuple')
+  // Both key orders produce identical calldata end-to-end.
+  const swapped = encodeFunctionData({
+    abi: abi as unknown as Abi,
+    functionName: 'foo',
+    args: [{ to: addr, x: 1n }],
+  } as never)
+  const ordered = encodeFunctionData({
+    abi: abi as unknown as Abi,
+    functionName: 'foo',
+    args: [{ x: 1n, to: addr }],
+  } as never)
+  expect(swapped).toBe(ordered)
+})
+
 // With bytes20[] matchable, the address[]/bytes20[] pair is reachable
 // end-to-end — and like its scalar counterpart it must throw.
 test('throws on an ambiguous address[]/bytes20[] overload', () => {

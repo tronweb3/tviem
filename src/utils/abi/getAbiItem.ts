@@ -185,9 +185,20 @@ export function isArgOfType(arg: unknown, abiParameter: AbiParameter): boolean {
         // differ only in component count both "match" — and the shorter one
         // encodes, silently dropping the caller's trailing values.
         if (values.length !== abiParameter.components.length) return false
-        return abiParameter.components.every((component, index) =>
-          isArgOfType(values[index], component as AbiParameter),
-        )
+        return abiParameter.components.every((component, index) => {
+          if (Array.isArray(arg))
+            return isArgOfType(values[index], component as AbiParameter)
+          // Encoding reads an object tuple value by component name (see
+          // encodeTuple), so matching must too — key order is irrelevant,
+          // wrong key names never "match" positionally, and an object can
+          // never satisfy an unnamed component.
+          const name = (component as AbiParameter).name
+          if (name === undefined) return false
+          return isArgOfType(
+            (arg as Record<string, unknown>)[name],
+            component as AbiParameter,
+          )
+        })
       }
 
       // `(u)intN`
