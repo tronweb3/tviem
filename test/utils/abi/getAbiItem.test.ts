@@ -3,6 +3,7 @@ import { expect, test } from 'vitest'
 
 import { AbiItemAmbiguityError } from '../../../src/errors/abi.js'
 import { decodeFunctionResult } from '../../../src/utils/abi/decodeFunctionResult.js'
+import { encodeFunctionData } from '../../../src/utils/abi/encodeFunctionData.js'
 import {
   getAbiItem,
   getAmbiguousTypes,
@@ -339,6 +340,80 @@ test('throws on an ambiguous uint256/trcToken overload', () => {
       [{ name: 'x', type: 'uint256' }],
       [{ name: 'x', type: 'uint64' }],
       [5n],
+    ),
+  ).toBeUndefined()
+})
+
+// Two overloads whose tuples differ only in component count. `isArgOfType`'s
+// tuple branch checked that every declared component had a value but never
+// that the counts matched, so a 2-value arg "matched" the 1-component overload
+// too. Both then reached `getAmbiguousTypes`, whose tuple recursion compares
+// component lists of unequal length.
+const tupleArityAbi = [
+  {
+    type: 'function',
+    name: 'foo',
+    stateMutability: 'nonpayable',
+    outputs: [],
+    inputs: [
+      {
+        name: 't',
+        type: 'tuple',
+        components: [{ name: 'x', type: 'uint256' }],
+      },
+    ],
+  },
+  {
+    type: 'function',
+    name: 'foo',
+    stateMutability: 'nonpayable',
+    outputs: [],
+    inputs: [
+      {
+        name: 't',
+        type: 'tuple',
+        components: [
+          { name: 'x', type: 'uint256' },
+          { name: 'y', type: 'uint256' },
+        ],
+      },
+    ],
+  },
+]
+const [tupleArity1, tupleArity2] = tupleArityAbi
+
+/** `foo((uint256,uint256))` / `foo((uint256))` calldata for the args below. */
+const twoComponentCalldata = `0xe8f26a69${'0'.repeat(63)}1${'0'.repeat(63)}2`
+
+test('an arg with more values than a tuple has components does not match it', () => {
+  expect(isArgOfType([1n, 2n], tupleArity1!.inputs[0] as never)).toBe(false)
+  expect(isArgOfType([1n, 2n], tupleArity2!.inputs[0] as never)).toBe(true)
+  expect(isArgOfType([1n], tupleArity1!.inputs[0] as never)).toBe(true)
+})
+
+test('tuple overloads of different arity resolve by arity, in either ABI order', () => {
+  for (const abi of [
+    [tupleArity1, tupleArity2],
+    [tupleArity2, tupleArity1],
+  ]) {
+    // Previously: the first order threw a raw TypeError from getAmbiguousTypes,
+    // and the second silently encoded foo((uint256)), dropping `2n`.
+    expect(
+      encodeFunctionData({
+        abi: abi as unknown as Abi,
+        functionName: 'foo',
+        args: [[1n, 2n]],
+      } as never),
+    ).toBe(twoComponentCalldata)
+  }
+})
+
+test('getAmbiguousTypes treats component lists of different length as unambiguous', () => {
+  expect(
+    getAmbiguousTypes(
+      tupleArity2!.inputs as never,
+      tupleArity1!.inputs as never,
+      [[1n, 2n]],
     ),
   ).toBeUndefined()
 })

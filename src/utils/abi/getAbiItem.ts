@@ -166,21 +166,23 @@ export function isArgOfType(arg: unknown, abiParameter: AbiParameter): boolean {
         abiParameterType === 'tuple' &&
         'components' in abiParameter &&
         Array.isArray(abiParameter.components)
-      )
-        return Object.values(abiParameter.components).every(
-          (component, index) =>
-            // Only a non-null object/array can be a tuple value. Without the
-            // `object` guard a primitive string would "match" (Object.values(
-            // 'ab') is ['a','b']) and steal the overload from foo(string); the
-            // explicit null check keeps Object.values(null) from throwing,
-            // since typeof null === 'object' too.
-            arg !== null &&
-            argType === 'object' &&
-            isArgOfType(
-              Object.values(arg as Record<string, unknown>)[index],
-              component as AbiParameter,
-            ),
+      ) {
+        // Only a non-null object/array can be a tuple value. Without the
+        // `object` guard a primitive string would "match" (Object.values(
+        // 'ab') is ['a','b']) and steal the overload from foo(string); the
+        // explicit null check keeps Object.values(null) from throwing,
+        // since typeof null === 'object' too.
+        if (arg === null || argType !== 'object') return false
+        const values = Object.values(arg as Record<string, unknown>)
+        // Arity is part of the tuple's identity: without this, an arg with
+        // extra values also matches a shorter tuple, so two overloads that
+        // differ only in component count both "match" — and the shorter one
+        // encodes, silently dropping the caller's trailing values.
+        if (values.length !== abiParameter.components.length) return false
+        return abiParameter.components.every((component, index) =>
+          isArgOfType(values[index], component as AbiParameter),
         )
+      }
 
       // `(u)intN`
       if (INTEGER_TYPE.test(abiParameterType))
@@ -223,7 +225,12 @@ export function getAmbiguousTypes(
 ): [string, string] | undefined {
   for (const parameterIndex in sourceParameters) {
     const sourceParameter = sourceParameters[parameterIndex]!
-    const targetParameter = targetParameters[parameterIndex]!
+    const targetParameter = targetParameters[parameterIndex]
+    // The tuple recursion below passes the two overloads' component lists,
+    // which need not be the same length. Where they diverge there is nothing
+    // to compare against, and lists of different arity cannot encode
+    // identically — so they are not ambiguous.
+    if (!targetParameter) return undefined
 
     if (
       sourceParameter.type === 'tuple' &&
