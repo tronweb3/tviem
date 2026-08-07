@@ -220,4 +220,30 @@ describe('triggerConstantContract', () => {
     expect(err.reason).toBe('INSUFFICIENT_BALANCE')
     expect(err.signature).toBe('Error(string)')
   })
+
+  // The shape a real java-tron node emits: `result: true` with a `message`.
+  // proto3 omits the `result: false` default, so a check keyed on it alone
+  // never fires and the revert payload decodes as if it were the return value.
+  test('throws on a real-node revert (result: true + message)', async () => {
+    const revert = {
+      result: {
+        result: true,
+        message: '524556455254206f70636f6465206578656375746564',
+      },
+      constant_result: [
+        '08c379a000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000014494e53554646494349454e545f42414c414e4345000000000000000000000000',
+      ],
+      energy_used: 885,
+    }
+    const { client } = mockClient(revert)
+    const err = (await triggerConstantContract(client, {
+      address: contract,
+      abi: trc20Abi,
+      functionName: 'transfer',
+      args: [holder, 1n],
+    }).catch((e) => e)) as ContractFunctionRevertedError
+    expect(err).toBeInstanceOf(ContractFunctionRevertedError)
+    expect(err.reason).toBe('INSUFFICIENT_BALANCE')
+    expect(err.signature).toBe('Error(string)')
+  })
 })

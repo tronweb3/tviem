@@ -159,6 +159,48 @@ describe('readContract', () => {
     expect(err.shortMessage).toContain('INSUFFICIENT_BALANCE')
   })
 
+  // The shape a real java-tron node emits: `result: true` with a `message`.
+  // proto3 omits the `result: false` default, so a check keyed on it alone
+  // never fires and the revert payload decodes as if it were the return value.
+  const revertMessageHex = '524556455254206f70636f6465206578656375746564'
+
+  test('throws on a real-node revert (result: true + message)', async () => {
+    const revert = {
+      result: { result: true, message: revertMessageHex },
+      constant_result: [
+        '08c379a000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000014494e53554646494349454e545f42414c414e4345000000000000000000000000',
+      ],
+      energy_used: 885,
+    }
+    const { client } = mockClient(revert)
+    const err = (await readContract(client, {
+      address: contract,
+      abi: balanceOfAbi,
+      functionName: 'balanceOf',
+      args: [holder],
+    }).catch((e) => e)) as ContractFunctionRevertedError
+    expect(err).toBeInstanceOf(ContractFunctionRevertedError)
+    expect(err.reason).toBe('INSUFFICIENT_BALANCE')
+    expect(err.signature).toBe('Error(string)')
+  })
+
+  test('throws on a real-node revert carrying no payload', async () => {
+    const revert = {
+      result: { result: true, message: revertMessageHex },
+      constant_result: [''],
+    }
+    const { client } = mockClient(revert)
+    const err = (await readContract(client, {
+      address: contract,
+      abi: balanceOfAbi,
+      functionName: 'balanceOf',
+      args: [holder],
+    }).catch((e) => e)) as ContractFunctionRevertedError
+    expect(err).toBeInstanceOf(ContractFunctionRevertedError)
+    // Falls back to the node's own (hex-encoded) message.
+    expect(err.reason).toBe('REVERT opcode executed')
+  })
+
   test('throws a decoded Panic(uint256) revert', async () => {
     const revert = {
       result: { result: false },

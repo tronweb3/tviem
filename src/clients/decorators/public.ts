@@ -1,4 +1,4 @@
-import type { Abi } from 'abitype'
+import type { Abi, AbiStateMutability } from 'abitype'
 import {
   type EstimateEnergyParameters,
   type EstimateEnergyReturnType,
@@ -169,9 +169,14 @@ export type PublicActions = {
   triggerConstantContract: <
     const abi extends Abi | readonly unknown[],
     functionName extends ContractFunctionName<abi>,
+    const args extends TronContractFunctionArgs<
+      abi,
+      AbiStateMutability,
+      functionName
+    > = TronContractFunctionArgs<abi, AbiStateMutability, functionName>,
   >(
-    parameters: TriggerConstantContractParameters<abi, functionName>,
-  ) => Promise<TriggerConstantContractReturnType<abi, functionName>>
+    parameters: TriggerConstantContractParameters<abi, functionName, args>,
+  ) => Promise<TriggerConstantContractReturnType<abi, functionName, args>>
   /** Polls for a transaction's receipt. */
   waitForTransactionReceipt: (
     parameters: WaitForTransactionReceiptParameters,
@@ -274,15 +279,20 @@ export function publicActions(client: Client): PublicActions {
     triggerConstantContract: <
       const abi extends Abi | readonly unknown[],
       functionName extends ContractFunctionName<abi>,
+      const args extends TronContractFunctionArgs<
+        abi,
+        AbiStateMutability,
+        functionName
+      > = TronContractFunctionArgs<abi, AbiStateMutability, functionName>,
     >(
-      parameters: TriggerConstantContractParameters<abi, functionName>,
+      parameters: TriggerConstantContractParameters<abi, functionName, args>,
     ) =>
       getAction(
         client,
         triggerConstantContract,
         'triggerConstantContract',
       )(parameters as TriggerConstantContractParameters) as unknown as Promise<
-        TriggerConstantContractReturnType<abi, functionName>
+        TriggerConstantContractReturnType<abi, functionName, args>
       >,
     waitForTransactionReceipt: (parameters) =>
       getAction(

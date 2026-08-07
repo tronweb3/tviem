@@ -85,9 +85,19 @@ export type TriggerConstantContractParameters<
 export type TriggerConstantContractReturnType<
   abi extends Abi | readonly unknown[] = Abi,
   functionName extends ContractFunctionName<abi> = ContractFunctionName<abi>,
+  args extends TronContractFunctionArgs<
+    abi,
+    AbiStateMutability,
+    functionName
+  > = TronContractFunctionArgs<abi, AbiStateMutability, functionName>,
 > = {
   /** ABI-decoded return value (`undefined` when the function has no outputs). */
-  result: TronContractFunctionReturnType<abi, AbiStateMutability, functionName>
+  result: TronContractFunctionReturnType<
+    abi,
+    AbiStateMutability,
+    functionName,
+    args
+  >
   /** Energy the node reports the call would consume (`energy_used`). */
   energyUsed: bigint
 }
@@ -138,10 +148,15 @@ type TriggerConstantContractResponse = {
 export async function triggerConstantContract<
   const abi extends Abi | readonly unknown[],
   functionName extends ContractFunctionName<abi>,
+  const args extends TronContractFunctionArgs<
+    abi,
+    AbiStateMutability,
+    functionName
+  > = TronContractFunctionArgs<abi, AbiStateMutability, functionName>,
 >(
   client: Client,
-  parameters: TriggerConstantContractParameters<abi, functionName>,
-): Promise<TriggerConstantContractReturnType<abi, functionName>> {
+  parameters: TriggerConstantContractParameters<abi, functionName, args>,
+): Promise<TriggerConstantContractReturnType<abi, functionName, args>> {
   const { abi, address, args, callValue, functionName, from } =
     parameters as TriggerConstantContractParameters
 
@@ -173,7 +188,10 @@ export async function triggerConstantContract<
     },
   })
 
-  if (response?.result?.result === false)
+  // See `readContract`: java-tron reports a failed constant call via `message`,
+  // leaving `result: true` on a REVERT, so `result === false` alone never fires
+  // against a real node.
+  if (response?.result?.message || response?.result?.result === false)
     throw decodeRevert(response.constant_result?.[0], response.result.message, {
       functionName,
     })
@@ -184,6 +202,6 @@ export async function triggerConstantContract<
     functionName,
     args,
     data: `0x${constantResult}`,
-  }) as TriggerConstantContractReturnType<abi, functionName>['result']
+  }) as TriggerConstantContractReturnType<abi, functionName, args>['result']
   return { result, energyUsed: BigInt(response?.energy_used ?? 0) }
 }
