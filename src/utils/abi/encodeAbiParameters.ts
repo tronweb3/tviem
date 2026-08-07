@@ -411,9 +411,23 @@ function encodeTuple(
 ): PreparedParam {
   if (typeof value !== 'object' || value === null)
     throw new InvalidAbiParameterValueError({ type: param.type, value })
+  const components = param.components ?? []
+  // Arity is strict, like the top level and fixed-size arrays: the loop below
+  // reads one value per declared component, so anything extra is never looked
+  // at. A struct that gained or lost a field between ABI versions would
+  // otherwise encode to a well-formed but wrong payload. Reporting it here
+  // also names the arity, which the undefined-value error a short tuple used
+  // to raise did not.
+  const givenLength = Array.isArray(value)
+    ? value.length
+    : Object.keys(value).length
+  if (givenLength !== components.length)
+    throw new AbiEncodingLengthMismatchError({
+      expectedLength: components.length,
+      givenLength,
+    })
   let dynamic = false
   const preparedParams: PreparedParam[] = []
-  const components = param.components ?? []
   for (let i = 0; i < components.length; i++) {
     const component = components[i]!
     const index = Array.isArray(value) ? i : component.name

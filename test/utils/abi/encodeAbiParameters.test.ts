@@ -1,5 +1,8 @@
-import { expect, test } from 'vitest'
-import { AbiEncodingBytesSizeMismatchError } from '../../../src/errors/abi.js'
+import { describe, expect, test } from 'vitest'
+import {
+  AbiEncodingBytesSizeMismatchError,
+  AbiEncodingLengthMismatchError,
+} from '../../../src/errors/abi.js'
 import { InvalidHexValueError } from '../../../src/errors/encoding.js'
 import { decodeAbiParameters } from '../../../src/utils/abi/decodeAbiParameters.js'
 import { encodeAbiParameters } from '../../../src/utils/abi/encodeAbiParameters.js'
@@ -84,4 +87,80 @@ test('encodeBytes: the guard applies to a `bytesN` element inside a fixed-size a
     encodeAbiParameters([{ type: 'bytes2[2]' }], [['0x123', '0x1234']]),
   )
   expect(error).toBeInstanceOf(InvalidHexValueError)
+})
+
+// `encodeTuple` reads one value per declared component, so anything extra is
+// never looked at. Every sibling arity check in this file is strict — the top
+// level throws AbiEncodingLengthMismatchError and fixed-size arrays throw
+// AbiEncodingArrayLengthMismatchError — so a struct that gained or lost a
+// field between ABI versions must not encode to a well-formed wrong payload.
+describe('tuple arity is strict', () => {
+  const one = [
+    { type: 'tuple', components: [{ name: 'a', type: 'uint256' }] },
+  ] as const
+  const two = [
+    {
+      type: 'tuple',
+      components: [
+        { name: 'a', type: 'uint256' },
+        { name: 'b', type: 'uint256' },
+      ],
+    },
+  ] as const
+
+  test('extra positional values throw instead of being dropped', () => {
+    const error = caught(() =>
+      encodeAbiParameters(one as never, [[1n, 2n, 3n]] as never),
+    )
+    expect(error).toBeInstanceOf(AbiEncodingLengthMismatchError)
+    expect(error?.message).toContain('Expected length (params): 1')
+    expect(error?.message).toContain('Given length (values): 3')
+  })
+
+  test('extra named keys throw instead of being dropped', () => {
+    const error = caught(() =>
+      encodeAbiParameters(one as never, [{ a: 1n, extra: 2n }] as never),
+    )
+    expect(error).toBeInstanceOf(AbiEncodingLengthMismatchError)
+  })
+
+  test('too few values report the arity, not an undefined-value type error', () => {
+    const short = caught(() =>
+      encodeAbiParameters(two as never, [[1n]] as never),
+    )
+    expect(short).toBeInstanceOf(AbiEncodingLengthMismatchError)
+    const missing = caught(() =>
+      encodeAbiParameters(one as never, [{}] as never),
+    )
+    expect(missing).toBeInstanceOf(AbiEncodingLengthMismatchError)
+  })
+
+  test('an exact tuple still encodes the same, positionally or by name', () => {
+    const expected = `0x${'0'.repeat(63)}1`
+    expect(encodeAbiParameters(one as never, [[1n]] as never)).toBe(expected)
+    expect(encodeAbiParameters(one as never, [{ a: 1n }] as never)).toBe(
+      expected,
+    )
+  })
+
+  test('the check reaches a tuple nested inside another tuple', () => {
+    const nested = [
+      {
+        type: 'tuple',
+        components: [
+          {
+            name: 'inner',
+            type: 'tuple',
+            components: [{ name: 'a', type: 'uint256' }],
+          },
+        ],
+      },
+    ] as const
+    expect(
+      caught(() => encodeAbiParameters(nested as never, [[[1n, 2n]]] as never)),
+    ).toBeInstanceOf(AbiEncodingLengthMismatchError)
+    expect(() =>
+      encodeAbiParameters(nested as never, [[[1n]]] as never),
+    ).not.toThrow()
+  })
 })
