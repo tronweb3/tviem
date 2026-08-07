@@ -623,6 +623,121 @@ test('tuple arrays recurse into components per element', () => {
   ).toBeUndefined()
 })
 
+// isArgOfType's array detection regex ([a-z]+[1-9]{0,3}) rejected element
+// widths containing a 0 digit — uint160[], bytes20[] — so such args never
+// structurally matched and getAbiItem fell back to the first overload. And a
+// fixed-size array never checked its length, so two values "matched"
+// address[3].
+test('isArgOfType accepts widths containing 0 and enforces fixed array length', () => {
+  expect(isArgOfType([1n], { type: 'uint160[]' })).toBe(true)
+  expect(
+    isArgOfType(['0x2b5ad5c4795c026514f8317c7a215e218dccd6cf'], {
+      type: 'bytes20[]',
+    }),
+  ).toBe(true)
+  expect(isArgOfType([1n, 2n], { type: 'uint256[3]' })).toBe(false)
+  expect(isArgOfType([1n, 2n, 3n], { type: 'uint256[3]' })).toBe(true)
+  // Multi-dimensional: every level enforces its own length.
+  expect(
+    isArgOfType(
+      [
+        [1n, 2n],
+        [3n, 4n],
+        [5n, 6n],
+      ],
+      { type: 'uint256[2][3]' },
+    ),
+  ).toBe(true)
+  expect(
+    isArgOfType([[1n], [3n, 4n], [5n, 6n]], { type: 'uint256[2][3]' }),
+  ).toBe(false)
+})
+
+test('a uint160[] arg resolves its overload instead of falling back', () => {
+  const abi = [
+    {
+      type: 'function',
+      name: 'foo',
+      stateMutability: 'nonpayable',
+      outputs: [],
+      inputs: [{ name: 'x', type: 'bool' }],
+    },
+    {
+      type: 'function',
+      name: 'foo',
+      stateMutability: 'nonpayable',
+      outputs: [],
+      inputs: [{ name: 'xs', type: 'uint160[]' }],
+    },
+  ]
+  const item = getAbiItem({
+    abi: abi as unknown as Abi,
+    name: 'foo',
+    args: [[1n]],
+  })
+  expect(
+    (item as unknown as { inputs: readonly { type: string }[] }).inputs[0]!
+      .type,
+  ).toBe('uint160[]')
+})
+
+test('fixed-size array overloads resolve by length, in either ABI order', () => {
+  const two = {
+    type: 'function',
+    name: 'foo',
+    stateMutability: 'nonpayable',
+    outputs: [],
+    inputs: [{ name: 'xs', type: 'address[2]' }],
+  }
+  const three = {
+    ...two,
+    inputs: [{ name: 'xs', type: 'address[3]' }],
+  }
+  const addr = 'TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC'
+  for (const abi of [
+    [two, three],
+    [three, two],
+  ]) {
+    const item = getAbiItem({
+      abi: abi as unknown as Abi,
+      name: 'foo',
+      args: [[addr, addr, addr]],
+    })
+    expect(
+      (item as unknown as { inputs: readonly { type: string }[] }).inputs[0]!
+        .type,
+    ).toBe('address[3]')
+  }
+})
+
+// With bytes20[] matchable, the address[]/bytes20[] pair is reachable
+// end-to-end — and like its scalar counterpart it must throw.
+test('throws on an ambiguous address[]/bytes20[] overload', () => {
+  const abi = [
+    {
+      type: 'function',
+      name: 'foo',
+      stateMutability: 'nonpayable',
+      outputs: [],
+      inputs: [{ name: 'xs', type: 'address[]' }],
+    },
+    {
+      type: 'function',
+      name: 'foo',
+      stateMutability: 'nonpayable',
+      outputs: [],
+      inputs: [{ name: 'xs', type: 'bytes20[]' }],
+    },
+  ]
+  expect(() =>
+    getAbiItem({
+      abi: abi as unknown as Abi,
+      name: 'foo',
+      args: [['0x2b5ad5c4795c026514f8317c7a215e218dccd6cf']],
+    }),
+  ).toThrowError(AbiItemAmbiguityError)
+})
+
 test('a tuple whose own components are ambiguous still reports the inner pair', () => {
   expect(
     getAmbiguousTypes(

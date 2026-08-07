@@ -46,6 +46,12 @@ const INTEGER_TYPE =
   /^u?int(8|16|24|32|40|48|56|64|72|80|88|96|104|112|120|128|136|144|152|160|168|176|184|192|200|208|216|224|232|240|248|256)?$/
 
 /**
+ * Matches the trailing `[]` / `[M]` of an array type — stripping it yields
+ * the element type, and the capture holds `M` (empty for dynamic arrays).
+ */
+const ARRAY_SUFFIX = /\[([0-9]*)\]$/
+
+/**
  * Finds an ABI item by `name` or by 4-byte function / 32-byte event selector
  * (`0x…` hex). When several overloads share a name, `args` disambiguates them
  * by matching each argument against the candidate parameter types (`address`
@@ -192,17 +198,20 @@ export function isArgOfType(arg: unknown, abiParameter: AbiParameter): boolean {
       if (/^bytes([1-9]|1[0-9]|2[0-9]|3[0-2])?$/.test(abiParameterType))
         return argType === 'string' || arg instanceof Uint8Array
 
-      // arrays of any of the above
-      if (/[a-z]+[1-9]{0,3}(\[[0-9]{0,}\])+$/.test(abiParameterType)) {
-        return (
-          Array.isArray(arg) &&
-          arg.every((x: unknown) =>
-            isArgOfType(x, {
-              ...abiParameter,
-              // Pop off `[]` or `[M]`.
-              type: abiParameterType.replace(/(\[[0-9]{0,}\])$/, ''),
-            } as AbiParameter),
-          )
+      // arrays of any of the above; detected by the bare suffix so element
+      // widths containing a 0 digit (uint160[], bytes20[]) are not skipped
+      const arraySuffix = ARRAY_SUFFIX.exec(abiParameterType)
+      if (arraySuffix) {
+        if (!Array.isArray(arg)) return false
+        // A fixed-size array only accepts exactly M values.
+        if (arraySuffix[1] !== '' && arg.length !== Number(arraySuffix[1]))
+          return false
+        return arg.every((x: unknown) =>
+          isArgOfType(x, {
+            ...abiParameter,
+            // Pop off `[]` or `[M]`.
+            type: abiParameterType.replace(ARRAY_SUFFIX, ''),
+          } as AbiParameter),
         )
       }
 
@@ -210,9 +219,6 @@ export function isArgOfType(arg: unknown, abiParameter: AbiParameter): boolean {
     }
   }
 }
-
-/** Matches the trailing `[]` / `[M]` of an array type; stripping it yields the element type. */
-const ARRAY_SUFFIX = /\[[0-9]*\]$/
 
 /**
  * Returns the first pair of parameter types (source, target) that could both
