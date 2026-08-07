@@ -12,7 +12,18 @@ import {
 import type { TronHDAccount } from './types.js'
 
 export type MnemonicToAccountOptions = HDOptions & {
-  /** The BIP-39 passphrase (the optional "25th word"). @default '' */
+  /**
+   * The BIP-39 passphrase, mixed into the seed derivation as PBKDF2 salt.
+   * Often nicknamed the "25th word", but it is an arbitrary string — not a
+   * wordlist entry, and the phrase itself need not be 24 words.
+   *
+   * Every value is valid: unlike the mnemonic, which is checksummed and
+   * rejected when malformed, a mistyped passphrase silently derives a
+   * completely different wallet rather than throwing. Case, whitespace and
+   * Unicode form all matter.
+   *
+   * @default ''
+   */
   passphrase?: string | undefined
 }
 
