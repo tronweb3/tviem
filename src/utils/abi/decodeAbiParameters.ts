@@ -45,10 +45,6 @@ import {
 } from './encodeAbiParameters.js'
 import { formatAbiParams } from './formatAbiItem.js'
 
-// `isDynamicType` moved next to `getArrayComponents` so the encoder can use it
-// without importing back from here; re-exported to keep this module's surface.
-export { isDynamicType }
-
 export type DecodeAbiParametersReturnType<
   params extends
     | readonly AbiParameter[]
