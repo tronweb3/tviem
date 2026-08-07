@@ -196,6 +196,29 @@ export function getArrayComponents(
   return [matches[2] === '' ? null : Number(matches[2]), matches[1]!]
 }
 
+/**
+ * Whether an ABI type is dynamic per the Solidity ABI specification: `bytes`,
+ * `string`, `T[]` for any `T`, `T[k]` for any dynamic `T` and any `k >= 0`,
+ * and a tuple with any dynamic component.
+ *
+ * This is driven by the TYPE alone — never by a value — because both ends must
+ * reach the same answer for the same parameter, and a `T[0]` has no elements
+ * to inspect.
+ */
+export function isDynamicType(param: AbiParameter): boolean {
+  const { type } = param
+  if (type === 'string' || type === 'bytes') return true
+  const arrayComponents = getArrayComponents(type)
+  if (arrayComponents) {
+    const [length, innerType] = arrayComponents
+    if (length === null) return true
+    return isDynamicType({ ...param, type: innerType } as AbiParameter)
+  }
+  if (type === 'tuple')
+    return ((param as TupleAbiParameter).components ?? []).some(isDynamicType)
+  return false
+}
+
 /////////////////////////////////////////////////////////////////////////////
 // Internal
 
@@ -309,13 +332,14 @@ function encodeArray(
       type: `${param.type}[${length}]`,
     })
 
-  let dynamicChild = false
+  // Driven by the element TYPE, not by the prepared elements: a `T[0]` has no
+  // elements to inspect, so a value-driven answer called `string[0]` static
+  // and emitted no head slot — while the type-driven decoder consumed one,
+  // shifting every parameter after it.
+  const dynamicChild = isDynamicType(param)
   const preparedParams: PreparedParam[] = []
-  for (let i = 0; i < value.length; i++) {
-    const preparedParam = prepareParam({ param, value: value[i] })
-    if (preparedParam.dynamic) dynamicChild = true
-    preparedParams.push(preparedParam)
-  }
+  for (let i = 0; i < value.length; i++)
+    preparedParams.push(prepareParam({ param, value: value[i] }))
 
   if (dynamic || dynamicChild) {
     const data = encodeParams(preparedParams)

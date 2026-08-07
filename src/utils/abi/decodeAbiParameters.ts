@@ -40,9 +40,14 @@ import { bytesToHex } from '../encoding/toHex.js'
 import { bytesRegex, integerRegex } from '../regex.js'
 import {
   getArrayComponents,
+  isDynamicType,
   type TronAbiParametersToPrimitiveTypes,
 } from './encodeAbiParameters.js'
 import { formatAbiParams } from './formatAbiItem.js'
+
+// `isDynamicType` moved next to `getArrayComponents` so the encoder can use it
+// without importing back from here; re-exported to keep this module's surface.
+export { isDynamicType }
 
 export type DecodeAbiParametersReturnType<
   params extends
@@ -129,21 +134,6 @@ export function decodeAbiParameters<
     values.push(value)
   }
   return values as unknown as DecodeAbiParametersReturnType<params>
-}
-
-/** Whether an ABI type is dynamic per the Solidity ABI specification. */
-export function isDynamicType(param: AbiParameter): boolean {
-  const { type } = param
-  if (type === 'string' || type === 'bytes') return true
-  const arrayComponents = getArrayComponents(type)
-  if (arrayComponents) {
-    const [length, innerType] = arrayComponents
-    if (length === null) return true
-    return isDynamicType({ ...param, type: innerType } as AbiParameter)
-  }
-  if (type === 'tuple')
-    return ((param as TupleAbiParameter).components ?? []).some(isDynamicType)
-  return false
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -248,6 +238,10 @@ function decodeArray(
   // array; children offsets are relative to the start of the element block.
   if (dynamicChild) {
     const offset = bytesToNumber(cursor.readBytes(32))
+    // A zero-length array has no elements to read, and its empty tail sits at
+    // the very end of the data — a position the cursor rightly refuses to take.
+    // Consume the head slot and stop; there is nothing the offset points at.
+    if (length === 0) return [[], 32]
     const start = staticPosition + offset
     const restore = cursor.setPosition(start)
     const value: unknown[] = []

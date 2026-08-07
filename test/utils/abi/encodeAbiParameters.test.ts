@@ -164,3 +164,62 @@ describe('tuple arity is strict', () => {
     ).not.toThrow()
   })
 })
+
+// `encodeArray` decided dynamic-ness from the VALUES — and a zero-length array
+// has none to inspect, so `string[0]` was encoded as static (no head slot)
+// while the type-driven decoder consumed one, shifting every later parameter.
+// Per the ABI spec, `T[k]` is dynamic for any dynamic T and any k >= 0.
+describe('zero-length fixed arrays agree on both sides', () => {
+  test('a dynamic inner type round-trips without shifting later parameters', () => {
+    const params = [
+      { type: 'string' },
+      { type: 'string[0]' },
+      { type: 'uint256' },
+    ] as const
+    const encoded = encodeAbiParameters(
+      params as never,
+      ['hi', [], 7n] as never,
+    )
+    // Pre-fix: 4 words, no head slot for `string[0]`, and 7n decoded as 2n.
+    expect((encoded.length - 2) / 64).toBe(5)
+    expect(decodeAbiParameters(params as never, encoded)).toStrictEqual([
+      'hi',
+      [],
+      7n,
+    ])
+  })
+
+  test('a static inner type stays static (zero head bytes), as before', () => {
+    expect(
+      encodeAbiParameters([{ type: 'uint256[0]' }] as never, [[]] as never),
+    ).toBe('0x')
+  })
+
+  test('a dynamic inner type nested in a tuple round-trips too', () => {
+    const params = [
+      {
+        type: 'tuple',
+        components: [
+          { name: 'xs', type: 'string[0]' },
+          { name: 'n', type: 'uint256' },
+        ],
+      },
+    ] as const
+    const encoded = encodeAbiParameters(params as never, [[[], 7n]] as never)
+    expect(decodeAbiParameters(params as never, encoded)).toStrictEqual([
+      { xs: [], n: 7n },
+    ])
+  })
+
+  test('non-empty fixed arrays of a dynamic type are unaffected', () => {
+    const params = [{ type: 'string[2]' }, { type: 'uint256' }] as const
+    const encoded = encodeAbiParameters(
+      params as never,
+      [['a', 'b'], 7n] as never,
+    )
+    expect(decodeAbiParameters(params as never, encoded)).toStrictEqual([
+      ['a', 'b'],
+      7n,
+    ])
+  })
+})
