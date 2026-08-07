@@ -1,5 +1,9 @@
 import { describe, expect, test } from 'vitest'
-import { UnsupportedPackedAbiType } from '../../../src/errors/abi.js'
+import {
+  AbiEncodingArrayLengthMismatchError,
+  UnsupportedPackedAbiType,
+} from '../../../src/errors/abi.js'
+import { InvalidHexValueError } from '../../../src/errors/encoding.js'
 import { encodePacked } from '../../../src/utils/abi/encodePacked.js'
 import {
   type FixtureParameter,
@@ -108,5 +112,82 @@ describe('encodePacked (units)', () => {
 
   test('rejects a types/values length mismatch', () => {
     expect(() => encodePacked(['uint256', 'uint256'], [1n] as never)).toThrow()
+  })
+})
+
+function caught(fn: () => unknown): Error | undefined {
+  try {
+    fn()
+    return undefined
+  } catch (error) {
+    return error as Error
+  }
+}
+
+// `abi.encodePacked` output is fed to keccak256 to build signed digests, so a
+// byte string that is off by half a byte — or an array whose declared length is
+// ignored — yields a hash that can never match the on-chain one.
+describe('encodePacked (malformed input)', () => {
+  test('rejects an odd-length `bytesN` value instead of emitting half a byte', () => {
+    const error = caught(() =>
+      encodePacked(['bytes1', 'bytes1'], ['0x1', '0xff']),
+    )
+    expect(error).toBeInstanceOf(InvalidHexValueError)
+    // Before the guard this returned '0x1ff' — three nibbles, not a byte string,
+    // with every following field shifted by half a byte.
+  })
+
+  test('rejects an odd-length dynamic `bytes` value', () => {
+    const error = caught(() => encodePacked(['bytes', 'uint8'], ['0x1', 1n]))
+    expect(error).toBeInstanceOf(InvalidHexValueError)
+    expect(error?.message).toContain('"0x1"')
+  })
+
+  test('rejects a fixed-size array whose value length differs from the declared one', () => {
+    const short = caught(() => encodePacked(['uint256[3]'], [[1n]]))
+    expect(short).toBeInstanceOf(AbiEncodingArrayLengthMismatchError)
+    // Pin the operands: transposing them ships a message that reads
+    // "Expected length: 1 / Given length: 3" for this very call.
+    expect(short?.message).toContain('uint256[3]')
+    expect(short?.message).toContain('Expected length: 3')
+    expect(short?.message).toContain('Given length: 1')
+    const long = caught(() =>
+      encodePacked(['uint256[2]'], [[1n, 2n, 3n, 4n, 5n]]),
+    )
+    expect(long).toBeInstanceOf(AbiEncodingArrayLengthMismatchError)
+    expect(long?.message).toContain('Expected length: 2')
+    expect(long?.message).toContain('Given length: 5')
+  })
+
+  test('rejects an odd-length `bytesN` element inside a fixed-size array', () => {
+    // Array elements are right-padded to a 32-byte word, so a missing nibble
+    // is baked into the digest with no visible shift to give it away: before
+    // the guard this returned '0x1230…0000' + '0x1234…0000'.
+    const error = caught(() =>
+      encodePacked(['bytes2[2]'], [['0x123', '0x1234']]),
+    )
+    expect(error).toBeInstanceOf(InvalidHexValueError)
+  })
+
+  test('checks hex well-formedness before the `bytesN` width check', () => {
+    // `size('0x1')` rounds up to 1, so before the guard this reported a width
+    // mismatch (bytes1 vs bytes2) and masked the real problem.
+    const error = caught(() => encodePacked(['bytes2'], ['0x1']))
+    expect(error).toBeInstanceOf(InvalidHexValueError)
+  })
+
+  test('a matching fixed-size array still encodes one 32-byte word per element', () => {
+    const encoded = encodePacked(['uint256[3]'], [[1n, 2n, 3n]])
+    expect((encoded.length - 2) / 2).toBe(96)
+  })
+
+  test('dynamic arrays are unaffected by the fixed-length check', () => {
+    expect((encodePacked(['uint256[]'], [[1n, 2n]]).length - 2) / 2).toBe(64)
+    expect(encodePacked(['uint256[]'], [[]])).toBe('0x')
+  })
+
+  test('well-formed byte values still encode unpadded', () => {
+    expect(encodePacked(['bytes1', 'bytes1'], ['0x01', '0xff'])).toBe('0x01ff')
+    expect(encodePacked(['bytes', 'uint8'], ['0x01', 1n])).toBe('0x0101')
   })
 })

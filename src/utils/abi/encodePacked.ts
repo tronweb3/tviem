@@ -1,6 +1,8 @@
 import type { AbiType } from 'abitype'
 
 import {
+  AbiEncodingArrayLengthMismatchError,
+  type AbiEncodingArrayLengthMismatchErrorType,
   AbiEncodingBytesSizeMismatchError,
   type AbiEncodingBytesSizeMismatchErrorType,
   AbiEncodingLengthMismatchError,
@@ -16,7 +18,11 @@ import type { AddressInput } from '../../types/address.js'
 import type { Hex } from '../../types/misc.js'
 import { type AddressToHexErrorType, addressToHex } from '../address/toEvm.js'
 import { type ConcatHexErrorType, concatHex } from '../data/concat.js'
-import { isHex } from '../data/isHex.js'
+import {
+  type AssertHexBytesErrorType,
+  assertHexBytes,
+  isHex,
+} from '../data/isHex.js'
 import { type PadHexErrorType, padHex } from '../data/pad.js'
 import { type SizeErrorType, size } from '../data/size.js'
 import {
@@ -47,7 +53,9 @@ export type EncodePackedValues<types extends readonly unknown[]> = {
 }
 
 export type EncodePackedErrorType =
+  | AbiEncodingArrayLengthMismatchErrorType
   | AbiEncodingBytesSizeMismatchErrorType
+  | AssertHexBytesErrorType
   | AbiEncodingLengthMismatchErrorType
   | AddressToHexErrorType
   | BoolToHexErrorType
@@ -116,6 +124,9 @@ function encode(type: string, value: unknown, isArray = false): Hex {
   if (type === 'bytes') {
     if (isArray) throw new UnsupportedPackedAbiType(`${type}[]`)
     if (!isHex(value)) throw new UnsupportedPackedAbiType(type)
+    // Packed output is concatenated verbatim, so half a byte here shifts
+    // every following field by four bits.
+    assertHexBytes(value)
     return value
   }
   if (type === 'bool') {
@@ -150,6 +161,9 @@ function encode(type: string, value: unknown, isArray = false): Hex {
   if (bytesMatch) {
     const byteSize = Number(bytesMatch[1])
     if (!isHex(value)) throw new UnsupportedPackedAbiType(type)
+    // Before the width check: `size` rounds an odd nibble count up, so a
+    // one-nibble-short value would pass it.
+    assertHexBytes(value)
     if (size(value) !== byteSize)
       throw new AbiEncodingBytesSizeMismatchError({
         expectedSize: byteSize,
@@ -163,8 +177,16 @@ function encode(type: string, value: unknown, isArray = false): Hex {
     // Only arrays of static scalars are packable; a nested array while
     // already inside an array is not.
     if (isArray) throw new UnsupportedPackedAbiType(type)
-    const [, childType] = arrayComponents
+    const [length, childType] = arrayComponents
     if (!Array.isArray(value)) throw new InvalidArrayError(value)
+    // `T[k]` always emits k words: the declared length is part of the type,
+    // so ignoring it would make `uint256[3]` and `uint256[1]` collide.
+    if (length !== null && value.length !== length)
+      throw new AbiEncodingArrayLengthMismatchError({
+        expectedLength: length,
+        givenLength: value.length,
+        type,
+      })
     const data: Hex[] = []
     for (const element of value) data.push(encode(childType, element, true))
     return data.length > 0 ? concatHex(data) : '0x'

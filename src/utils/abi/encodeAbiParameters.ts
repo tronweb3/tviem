@@ -28,7 +28,11 @@ import type { Hex } from '../../types/misc.js'
 import type { Prettify } from '../../types/utils.js'
 import { type AddressToHexErrorType, addressToHex } from '../address/toEvm.js'
 import { type ConcatHexErrorType, concatHex } from '../data/concat.js'
-import { isHex } from '../data/isHex.js'
+import {
+  type AssertHexBytesErrorType,
+  assertHexBytes,
+  isHex,
+} from '../data/isHex.js'
 import { type PadHexErrorType, padHex } from '../data/pad.js'
 import { type SizeErrorType, size } from '../data/size.js'
 import {
@@ -125,6 +129,7 @@ export type EncodeAbiParametersReturnType = Hex
 
 export type EncodeAbiParametersErrorType =
   | AbiEncodingArrayLengthMismatchErrorType
+  | AssertHexBytesErrorType
   | AbiEncodingBytesSizeMismatchErrorType
   | AbiEncodingLengthMismatchErrorType
   | AddressToHexErrorType
@@ -336,6 +341,9 @@ function encodeBytes(
   { size: paramSize, type }: { size: number | null; type: string },
 ): PreparedParam {
   if (!isHex(value)) throw new InvalidAbiParameterValueError({ type, value })
+  // Before any width check: `size` rounds an odd nibble count up, so the
+  // check below would pass and `padHex` would invent the missing nibble.
+  assertHexBytes(value)
   const bytesSize = size(value)
   if (paramSize === null) return encodeDynamicBytes(value)
   if (bytesSize !== paramSize)
