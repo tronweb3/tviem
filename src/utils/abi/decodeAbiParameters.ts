@@ -1,6 +1,8 @@
 import type { AbiParameter } from 'abitype'
 
 import {
+  AbiDecodingDataSizeInvalidError,
+  type AbiDecodingDataSizeInvalidErrorType,
   AbiDecodingDataSizeTooSmallError,
   type AbiDecodingDataSizeTooSmallErrorType,
   AbiDecodingZeroDataError,
@@ -15,6 +17,8 @@ import {
   IntegerOutOfRangeError,
   type IntegerOutOfRangeErrorType,
   type InvalidBytesBooleanErrorType,
+  InvalidHexValueError,
+  type InvalidHexValueErrorType,
 } from '../../errors/encoding.js'
 import type { ErrorType } from '../../errors/utils.js'
 import type { Address } from '../../types/address.js'
@@ -49,6 +53,7 @@ export type DecodeAbiParametersReturnType<
   : readonly unknown[]
 
 export type DecodeAbiParametersErrorType =
+  | AbiDecodingDataSizeInvalidErrorType
   | AbiDecodingDataSizeTooSmallErrorType
   | AbiDecodingZeroDataErrorType
   | AbiDecodingZeroSizeElementErrorType
@@ -56,6 +61,7 @@ export type DecodeAbiParametersErrorType =
   | IntegerOutOfRangeErrorType
   | InvalidAbiDecodingTypeErrorType
   | InvalidBytesBooleanErrorType
+  | InvalidHexValueErrorType
   | PositionOutOfBoundsErrorType
   | ToBase58ErrorType
   | ErrorType
@@ -84,9 +90,22 @@ export function decodeAbiParameters<
   params: params,
   data: Hex | ByteArray,
 ): DecodeAbiParametersReturnType<params> {
+  // The payload is bytes, so an odd nibble count is not a byte string at all.
+  // `hexToBytes` would left-pad it, shifting every byte by four bits and
+  // decoding a plausible-looking wrong value, so reject it before converting.
+  if (typeof data === 'string' && data.length % 2 !== 0)
+    throw new InvalidHexValueError(data as Hex)
   const bytes = typeof data === 'string' ? hexToBytes(data) : data
   if (bytes.length === 0 && params.length > 0)
     throw new AbiDecodingZeroDataError()
+  // Canonical ABI data is a whole number of 32-byte words (every head slot is
+  // one word and every tail is word-padded); anything else is truncated or
+  // corrupt, not something to decode a partial word from.
+  if (bytes.length % 32 !== 0)
+    throw new AbiDecodingDataSizeInvalidError({
+      data: typeof data === 'string' ? (data as Hex) : bytesToHex(data),
+      size: bytes.length,
+    })
   if (bytes.length > 0 && bytes.length < 32 * params.length)
     throw new AbiDecodingDataSizeTooSmallError({
       data: typeof data === 'string' ? data : bytesToHex(data),

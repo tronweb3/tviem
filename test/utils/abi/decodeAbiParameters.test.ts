@@ -1,7 +1,12 @@
 import { describe, expect, test } from 'vitest'
-import { AbiDecodingZeroSizeElementError } from '../../../src/errors/abi.js'
+import {
+  AbiDecodingDataSizeInvalidError,
+  AbiDecodingZeroSizeElementError,
+} from '../../../src/errors/abi.js'
 import { BaseError } from '../../../src/errors/base.js'
+import { InvalidHexValueError } from '../../../src/errors/encoding.js'
 import { decodeAbiParameters } from '../../../src/utils/abi/decodeAbiParameters.js'
+import { decodeFunctionResult } from '../../../src/utils/abi/decodeFunctionResult.js'
 
 const word = (n: number) => n.toString(16).padStart(64, '0')
 
@@ -127,5 +132,63 @@ describe('zero-size array elements', () => {
     expect(decodeAbiParameters([{ type: 'uint256[]' }], data)).toEqual([
       [7n, 9n],
     ])
+  })
+})
+
+// The payload is bytes: a hex string with an odd nibble count is not a byte
+// string, and `hexToBytes` would left-pad it — shifting the whole payload by
+// four bits and decoding a wrong value with no error. Canonical ABI data is
+// also always a whole number of 32-byte words.
+describe('payload shape validation', () => {
+  const uint256 = [{ type: 'uint256' }] as const
+  const full = `0x${word(255)}` as const
+
+  test('rejects an odd-length hex payload instead of decoding a shifted value', () => {
+    const truncated = full.slice(0, -1) as `0x${string}`
+    const error = caught(() => decodeAbiParameters(uint256, truncated))
+    expect(error).toBeInstanceOf(InvalidHexValueError)
+    expect(error).toBeInstanceOf(BaseError)
+    // Before the guard this silently returned 15n (255 >> 4).
+    expect(error?.message).toContain('odd length')
+  })
+
+  test('rejects a hex payload that is not a whole number of 32-byte words', () => {
+    const error = caught(() => decodeAbiParameters(uint256, `${full}abab`))
+    expect(error).toBeInstanceOf(AbiDecodingDataSizeInvalidError)
+    expect(error?.message).toContain('increments of 32 bytes')
+  })
+
+  test('rejects a misaligned ByteArray payload too', () => {
+    const error = caught(() => decodeAbiParameters(uint256, new Uint8Array(33)))
+    expect(error).toBeInstanceOf(AbiDecodingDataSizeInvalidError)
+  })
+
+  test('still decodes a well-formed payload', () => {
+    expect(decodeAbiParameters(uint256, full)).toStrictEqual([255n])
+    expect(
+      decodeAbiParameters(uint256, new Uint8Array(32).fill(0, 0, 31)),
+    ).toStrictEqual([0n])
+    // No params + empty data stays legal.
+    expect(decodeAbiParameters([], '0x')).toStrictEqual([])
+  })
+
+  test('the guard reaches callers that decode node data (decodeFunctionResult)', () => {
+    const abi = [
+      {
+        type: 'function',
+        name: 'balanceOf',
+        stateMutability: 'view',
+        inputs: [{ name: 'owner', type: 'address' }],
+        outputs: [{ name: '', type: 'uint256' }],
+      },
+    ] as const
+    const error = caught(() =>
+      decodeFunctionResult({
+        abi,
+        functionName: 'balanceOf',
+        data: full.slice(0, -1) as `0x${string}`,
+      }),
+    )
+    expect(error).toBeInstanceOf(InvalidHexValueError)
   })
 })
