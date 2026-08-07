@@ -81,8 +81,6 @@ export function decodeDeployData<const abi extends Abi | readonly unknown[]>(
 
   const description = abi.find((x) => x.type === 'constructor')
   if (!description) throw new AbiConstructorNotFoundError({ docsPath })
-  if (!('inputs' in description))
-    throw new AbiConstructorParamsNotFoundError({ docsPath })
   if (!description.inputs || description.inputs.length === 0)
     throw new AbiConstructorParamsNotFoundError({ docsPath })
 
