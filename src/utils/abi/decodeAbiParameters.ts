@@ -164,6 +164,14 @@ function decodeParameter(
   param: AbiParameter,
   { staticPosition }: { staticPosition: number },
 ): [value: unknown, consumed: number] {
+  // Every other bad-input path here throws a BaseError, and
+  // `DecodeAbiParametersErrorType` promises exactly that set — so a descriptor
+  // that is null or carries no string `type` must not escape as a TypeError.
+  const type = (param as { type?: unknown } | null | undefined)?.type
+  if (typeof type !== 'string')
+    throw new InvalidAbiDecodingTypeError(String(type), {
+      docsPath: '/docs/abi/decodeAbiParameters',
+    })
   const arrayComponents = getArrayComponents(param.type)
   if (arrayComponents) {
     const [length, type] = arrayComponents

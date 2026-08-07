@@ -44,6 +44,10 @@ function formatAbiParam(
   param: AbiParameter,
   { includeName }: { includeName: boolean },
 ): string {
+  // This runs while building error messages, so a malformed descriptor must
+  // render as text rather than throw from inside the error path itself.
+  const type = (param as { type?: unknown } | null | undefined)?.type
+  if (typeof type !== 'string') return String(type)
   if (param.type.startsWith('tuple')) {
     return `(${formatAbiParams(
       (param as unknown as { components: AbiParameter[] }).components,

@@ -2,11 +2,14 @@ import { describe, expect, test } from 'vitest'
 import {
   AbiDecodingDataSizeInvalidError,
   AbiDecodingZeroSizeElementError,
+  InvalidAbiDecodingTypeError,
+  InvalidAbiEncodingTypeError,
 } from '../../../src/errors/abi.js'
 import { BaseError } from '../../../src/errors/base.js'
 import { InvalidHexValueError } from '../../../src/errors/encoding.js'
 import { decodeAbiParameters } from '../../../src/utils/abi/decodeAbiParameters.js'
 import { decodeFunctionResult } from '../../../src/utils/abi/decodeFunctionResult.js'
+import { encodeAbiParameters } from '../../../src/utils/abi/encodeAbiParameters.js'
 
 const word = (n: number) => n.toString(16).padStart(64, '0')
 
@@ -190,5 +193,52 @@ describe('payload shape validation', () => {
       }),
     )
     expect(error).toBeInstanceOf(InvalidHexValueError)
+  })
+})
+
+// Every other bad-input path in the codec produces a BaseError subclass, and
+// the *ErrorType unions promise exactly that set. A parameter descriptor that
+// is missing `type` — or is null — used to escape as a bare TypeError, which
+// fails `instanceof BaseError` and names neither the parameter nor a version.
+describe('malformed ABI parameters', () => {
+  const data = `0x${word(1)}` as const
+
+  test('a parameter without a `type` throws a typed error', () => {
+    const error = caught(() => decodeAbiParameters([{}] as never, data))
+    expect(error).toBeInstanceOf(InvalidAbiDecodingTypeError)
+    expect(error).toBeInstanceOf(BaseError)
+  })
+
+  test('a null parameter throws a typed error', () => {
+    const error = caught(() => decodeAbiParameters([null] as never, data))
+    expect(error).toBeInstanceOf(InvalidAbiDecodingTypeError)
+  })
+
+  test('a non-string `type` throws a typed error', () => {
+    const error = caught(() =>
+      decodeAbiParameters([{ type: 7 }] as never, data),
+    )
+    expect(error).toBeInstanceOf(InvalidAbiDecodingTypeError)
+  })
+
+  test('a well-formed but unknown type still reports the same error', () => {
+    const error = caught(() => decodeAbiParameters([{ type: 'wat' }], data))
+    expect(error).toBeInstanceOf(InvalidAbiDecodingTypeError)
+    expect(error?.message).toContain('"wat"')
+  })
+
+  test('the size guard formats malformed params instead of crashing', () => {
+    // Constructing AbiDecodingDataSizeTooSmallError formats the params, so a
+    // malformed one must not throw from inside the error path itself.
+    const error = caught(() => decodeAbiParameters([{}, {}] as never, data))
+    expect(error).toBeInstanceOf(BaseError)
+  })
+
+  test('the encode side reports a typed error too', () => {
+    const error = caught(() =>
+      encodeAbiParameters([{}] as never, [1n] as never),
+    )
+    expect(error).toBeInstanceOf(InvalidAbiEncodingTypeError)
+    expect(error).toBeInstanceOf(BaseError)
   })
 })

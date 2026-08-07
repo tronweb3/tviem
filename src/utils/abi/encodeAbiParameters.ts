@@ -223,6 +223,13 @@ function prepareParam({
   param: AbiParameter
   value: unknown
 }): PreparedParam {
+  // Mirrors `decodeParameter`: a malformed descriptor is a typed error, not a
+  // raw TypeError from reading `.type` off null/undefined.
+  const type = (param as { type?: unknown } | null | undefined)?.type
+  if (typeof type !== 'string')
+    throw new InvalidAbiEncodingTypeError(String(type), {
+      docsPath: '/docs/abi/encodeAbiParameters',
+    })
   const arrayComponents = getArrayComponents(param.type)
   if (arrayComponents) {
     const [length, type] = arrayComponents
