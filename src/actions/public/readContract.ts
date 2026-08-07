@@ -152,7 +152,13 @@ export async function readContract<
     },
   })
 
-  if (response?.result?.result === false)
+  // java-tron signals a failed constant call by setting `message` — on a REVERT
+  // it leaves `result: true`, and proto3 omits the `result: false` default
+  // anyway, so keying off `result === false` alone never fires against a real
+  // node and the revert payload would decode as if it were the return value.
+  // TronWeb keys off `message` for the same reason; `result === false` is kept
+  // for nodes and mocks that do emit it.
+  if (response?.result?.message || response?.result?.result === false)
     throw decodeRevert(response.constant_result?.[0], response.result.message, {
       functionName,
     })

@@ -173,7 +173,10 @@ export async function triggerConstantContract<
     },
   })
 
-  if (response?.result?.result === false)
+  // See `readContract`: java-tron reports a failed constant call via `message`,
+  // leaving `result: true` on a REVERT, so `result === false` alone never fires
+  // against a real node.
+  if (response?.result?.message || response?.result?.result === false)
     throw decodeRevert(response.constant_result?.[0], response.result.message, {
       functionName,
     })
