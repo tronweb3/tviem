@@ -170,9 +170,7 @@ describe('payload shape validation', () => {
 
   test('tolerates whole trailing bytes past the encoding', () => {
     expect(decodeAbiParameters(uint256, `${full}abab`)).toStrictEqual([255n])
-    expect(decodeAbiParameters(uint256, new Uint8Array(33))).toStrictEqual([
-      0n,
-    ])
+    expect(decodeAbiParameters(uint256, new Uint8Array(33))).toStrictEqual([0n])
   })
 
   test('decodes params carrying a TIP-2771 20-byte sender suffix', () => {
@@ -223,10 +221,7 @@ describe('payload shape validation', () => {
     // words — no calldata-style suffix can occur there — so misalignment
     // means a lossy/corrupt node response and must keep failing loudly even
     // though the generic decoder now tolerates trailing bytes.
-    for (const data of [
-      `${full}abab` as `0x${string}`,
-      new Uint8Array(33),
-    ]) {
+    for (const data of [`${full}abab` as `0x${string}`, new Uint8Array(33)]) {
       const error = caught(() =>
         decodeFunctionResult({
           abi: balanceOfAbi,
