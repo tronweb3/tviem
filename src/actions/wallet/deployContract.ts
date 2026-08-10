@@ -2,7 +2,7 @@ import type { Abi } from 'abitype'
 
 import type { TronAccount } from '../../accounts/types.js'
 import type { Client } from '../../clients/createClient.js'
-import { defaultFeeLimit } from '../../constants/address.js'
+import { defaultFeeLimit } from '../../constants/transaction.js'
 import {
   AccountNotFoundError,
   type AccountNotFoundErrorType,

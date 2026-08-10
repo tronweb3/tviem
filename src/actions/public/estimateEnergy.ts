@@ -2,19 +2,17 @@ import type { Abi, AbiFunction, ExtractAbiFunction } from 'abitype'
 import type { TronAccount } from '../../accounts/types.js'
 import type { Client } from '../../clients/createClient.js'
 import type { RequestErrorType } from '../../clients/transports/http.js'
-import { zeroAddress } from '../../constants/address.js'
 import {
   IntegerOutOfRangeError,
   type IntegerOutOfRangeErrorType,
 } from '../../errors/encoding.js'
-import type { ErrorType } from '../../errors/utils.js'
 import {
-  type ParseAccountErrorType,
-  parseAccount,
-} from '../../types/account.js'
-import type { Address } from '../../types/address.js'
+  AccountNotFoundError,
+  type AccountNotFoundErrorType,
+} from '../../errors/rpc.js'
+import type { ErrorType } from '../../errors/utils.js'
+import type { Address, AddressInput } from '../../types/address.js'
 import type { ContractFunctionName } from '../../types/contract.js'
-import type { Hex } from '../../types/misc.js'
 import type { TronAbiParametersToPrimitiveTypes } from '../../utils/abi/encodeAbiParameters.js'
 import {
   type EncodeFunctionDataErrorType,
@@ -43,8 +41,18 @@ export type EstimateEnergyParameters<
     ? readonly unknown[]
     : TronAbiParametersToPrimitiveTypes<abiFunction['inputs'], 'inputs'>,
 > = {
-  /** The caller account (falls back to `client.account`, else the zero address). */
-  account?: TronAccount | Hex | undefined
+  /**
+   * The caller the estimate is computed for — sent as `owner_address`. Accepts
+   * an account or any TRON address form; falls back to the Client's `account`.
+   * With neither, an {@link AccountNotFoundError} is thrown.
+   *
+   * The node executes the call against real chain state, so energy depends on
+   * the caller: storage slots keyed by `msg.sender` cost more to write when
+   * they are zero, and a call that would revert for this caller estimates
+   * nothing useful. There is no safe default — and java-tron requires
+   * `owner_address` on `estimateenergy`, so there is no anonymous form either.
+   */
+  account?: TronAccount | AddressInput | undefined
   /** The contract's Base58Check address. */
   address: Address
   /** The contract ABI. */
@@ -67,10 +75,10 @@ export type EstimateEnergyParameters<
 export type EstimateEnergyReturnType = bigint
 
 export type EstimateEnergyErrorType =
+  | AccountNotFoundErrorType
   | AssertRpcSuccessErrorType
   | EncodeFunctionDataErrorType
   | IntegerOutOfRangeErrorType
-  | ParseAccountErrorType
   | RequestErrorType
   | ToHexErrorType
   | ErrorType
@@ -105,8 +113,14 @@ export async function estimateEnergy<
   client: Client,
   parameters: EstimateEnergyParameters<abi, functionName>,
 ): Promise<EstimateEnergyReturnType> {
-  const { abi, address, args, callValue, functionName } =
-    parameters as EstimateEnergyParameters
+  const {
+    abi,
+    account: caller,
+    address,
+    args,
+    callValue,
+    functionName,
+  } = parameters as EstimateEnergyParameters
 
   // The request body is JSON, where an int64 becomes a JS number — so a
   // `call_value` past the safe-integer range would be silently rounded. Reject
@@ -122,8 +136,11 @@ export async function estimateEnergy<
       value: String(callValue),
     })
 
-  const source = parameters.account ?? client.account
-  const owner = source ? parseAccount(source).address : zeroAddress
+  // Resolve the caller (per-call, else hoisted on the Client). Never defaulted:
+  // the estimate is only meaningful for the account that will send the call.
+  const source = caller ?? client.account
+  if (!source) throw new AccountNotFoundError()
+  const owner = typeof source === 'string' ? source : source.address
 
   const data = encodeFunctionData({ abi, functionName, args })
 

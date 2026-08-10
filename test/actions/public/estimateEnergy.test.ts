@@ -3,13 +3,14 @@ import { estimateEnergy } from '../../../src/actions/public/estimateEnergy.js'
 import { createClient } from '../../../src/clients/createClient.js'
 import { createPublicClient } from '../../../src/clients/createPublicClient.js'
 import { IntegerOutOfRangeError } from '../../../src/errors/encoding.js'
+import { AccountNotFoundError } from '../../../src/errors/rpc.js'
 import type { Address } from '../../../src/types/address.js'
 import { createMockTransport } from '../../mock/createMockTransport.js'
 
 // pk = 1 (permitted trivial key) → address TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC.
 const pk1 = `0x${'0'.repeat(63)}1` as const
+const caller = 'TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC' as Address
 const pk1Hex = '417e5f4552091a69125d5dfcb7b8c2659029395bdf'
-const zeroHex = '410000000000000000000000000000000000000000'
 const contract = 'TA5DvvvmYbS75o3DKtgy2ATAGVHhpFkRLe' as Address
 
 const trc20Abi = [
@@ -47,7 +48,7 @@ test('returns energy_required as a bigint with the per-call caller owner_address
   const { transport, calls } = energyMock()
   const client = createPublicClient({ transport })
 
-  const energy = await client.estimateEnergy({ ...call, account: pk1 })
+  const energy = await client.estimateEnergy({ ...call, account: caller })
   expect(energy).toBe(31895n)
 
   expect(calls[0]?.node).toBe('full')
@@ -58,14 +59,17 @@ test('returns energy_required as a bigint with the per-call caller owner_address
   expect(body.data.startsWith('a9059cbb')).toBe(true)
 })
 
-test('falls back to the zero address without any account', async () => {
+// Energy depends on the caller's own storage slots, so an estimate for a
+// placeholder account is worse than no estimate at all.
+test('throws AccountNotFoundError without any account', async () => {
   const { transport, calls } = energyMock()
   const client = createPublicClient({ transport })
 
-  await client.estimateEnergy(call)
-  expect((calls[0]?.body as { owner_address: string }).owner_address).toBe(
-    zeroHex,
+  await expect(client.estimateEnergy(call)).rejects.toBeInstanceOf(
+    AccountNotFoundError,
   )
+  // It throws before touching the node.
+  expect(calls).toHaveLength(0)
 })
 
 test('falls back to the hoisted client account (bare action)', async () => {
@@ -82,7 +86,7 @@ test('forwards callValue as call_value', async () => {
   const { transport, calls } = energyMock()
   const client = createPublicClient({ transport })
 
-  await client.estimateEnergy({ ...call, account: pk1, callValue: 5n })
+  await client.estimateEnergy({ ...call, account: caller, callValue: 5n })
   expect((calls[0]?.body as { call_value?: number }).call_value).toBe(5)
 })
 
@@ -95,7 +99,7 @@ test('accepts callValue at the JSON-safe integer boundary (K2)', async () => {
 
   await client.estimateEnergy({
     ...call,
-    account: pk1,
+    account: caller,
     callValue: BigInt(Number.MAX_SAFE_INTEGER),
   })
   expect((calls[0]?.body as { call_value?: number }).call_value).toBe(
@@ -110,7 +114,7 @@ test('rejects a callValue beyond the JSON-safe integer range (K2)', async () => 
   await expect(
     client.estimateEnergy({
       ...call,
-      account: pk1,
+      account: caller,
       callValue: BigInt(Number.MAX_SAFE_INTEGER) + 1n,
     }),
   ).rejects.toBeInstanceOf(IntegerOutOfRangeError)

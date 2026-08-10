@@ -71,6 +71,11 @@ const balance = await client.getBalance({
 fully inferred argument and return types. Addresses come back in canonical
 Base58Check (`T…`) form.
 
+The caller is explicit: `account` is the address the node sees as `msg.sender`,
+and a contract may return different values for different callers. Pass it
+per-call, or hoist one on the Client — with neither, the read throws
+`AccountNotFoundError` instead of quietly picking a placeholder.
+
 ```ts
 import { createPublicClient, http } from '@tronweb3/tviem'
 import { nile } from '@tronweb3/tviem/chains'
@@ -92,6 +97,7 @@ const balance = await client.readContract({
   abi,
   functionName: 'balanceOf',
   args: ['T…'], // the account to query
+  account: 'T…', // the caller the node sees as msg.sender
 })
 ```
 

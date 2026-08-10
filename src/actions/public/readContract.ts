@@ -1,10 +1,14 @@
 import type { Abi, AbiFunction, ExtractAbiFunction } from 'abitype'
+import type { TronAccount } from '../../accounts/types.js'
 import type { Client } from '../../clients/createClient.js'
 import type { RequestErrorType } from '../../clients/transports/http.js'
-import { zeroAddress } from '../../constants/address.js'
-import type { ContractFunctionRevertedErrorType } from '../../errors/rpc.js'
+import {
+  AccountNotFoundError,
+  type AccountNotFoundErrorType,
+  type ContractFunctionRevertedErrorType,
+} from '../../errors/rpc.js'
 import type { ErrorType } from '../../errors/utils.js'
-import type { Address } from '../../types/address.js'
+import type { Address, AddressInput } from '../../types/address.js'
 import type {
   ContractFunctionName,
   TronContractFunctionArgs,
@@ -56,10 +60,18 @@ export type ReadContractParameters<
     | allFunctionNames // show all options
     | (functionName extends allFunctionNames ? functionName : never) // infer value
   /**
-   * The caller address. Defaults to the Client's account (on a Wallet Client)
-   * or the zero address — neither triggers a balance check on the node.
+   * The caller the call runs as — sent as `owner_address`. Accepts an account
+   * or any TRON address form; falls back to the Client's `account`. With
+   * neither, an {@link AccountNotFoundError} is thrown.
+   *
+   * A `view` function can branch on `msg.sender` (allowances, per-caller
+   * balances, permission-gated views), so the caller changes what the node
+   * returns. There is no safe default: the SDK requires the choice to be
+   * explicit rather than silently reading as some placeholder account.
+   * java-tron requires `owner_address` on `triggerconstantcontract`, so there
+   * is no anonymous form to fall back to either.
    */
-  from?: Address | undefined
+  account?: TronAccount | AddressInput | undefined
 } & (readonly [] extends allArgs
   ? {
       /** The function arguments. */
@@ -88,6 +100,7 @@ export type ReadContractReturnType<
 > = TronContractFunctionReturnType<abi, 'pure' | 'view', functionName, args>
 
 export type ReadContractErrorType =
+  | AccountNotFoundErrorType
   | ContractFunctionRevertedErrorType
   | DecodeAbiParametersErrorType
   | DecodeFunctionResultErrorType
@@ -115,12 +128,16 @@ type TriggerConstantContractResponse = {
  * panic code — both surfaced as a {@link ContractFunctionRevertedError}.
  * Otherwise `constant_result[0]` is ABI-decoded against the function outputs.
  *
+ * The caller (`account`, else the Client's hoisted account) is required — see
+ * {@link ReadContractParameters.account}.
+ *
  * @example
  * const balance = await readContract(client, {
  *   address: 'T...',
  *   abi: trc20Abi,
  *   functionName: 'balanceOf',
  *   args: ['T...'],
+ *   account: 'T...', // the caller the node sees as msg.sender
  * })
  */
 export async function readContract<
@@ -135,11 +152,21 @@ export async function readContract<
   client: Client,
   parameters: ReadContractParameters<abi, functionName, args>,
 ): Promise<ReadContractReturnType<abi, functionName, args>> {
-  const { abi, address, args, functionName, from } =
-    parameters as ReadContractParameters
+  const {
+    abi,
+    account: caller,
+    address,
+    args,
+    functionName,
+  } = parameters as ReadContractParameters
+
+  // Resolve the caller (per-call, else hoisted on the Client). Never defaulted:
+  // the result of a `view` can depend on who asks.
+  const source = caller ?? client.account
+  if (!source) throw new AccountNotFoundError()
+  const owner = typeof source === 'string' ? source : source.address
 
   const data = encodeFunctionData({ abi, functionName, args })
-  const owner = from ?? client.account?.address ?? zeroAddress
 
   const response = await client.request<TriggerConstantContractResponse>({
     node: 'full',

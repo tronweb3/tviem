@@ -1,12 +1,12 @@
 {
   "endpoint": "triggerconstantcontract",
-  "description": "Constant-call of TRC20 `balanceOf(address)` on contract TA5DvvvmYbS75o3DKtgy2ATAGVHhpFkRLe for holder TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC. owner_address is the zero address (41 + 20 zero bytes) so no balance check is triggered; data is the bare calldata (selector + padded holder) without 0x. constant_result[0] ABI-decodes to 123456789000000000000000000 (matches the abi/function.json trc20-balanceOf gold vector).",
+  "description": "Constant-call of TRC20 `balanceOf(address)` on contract TA5DvvvmYbS75o3DKtgy2ATAGVHhpFkRLe for holder TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC. owner_address is the holder itself — the caller is always explicit (there is no default), since a view can branch on msg.sender; data is the bare calldata (selector + padded holder) without 0x. constant_result[0] ABI-decodes to 123456789000000000000000000 (matches the abi/function.json trc20-balanceOf gold vector).",
   "request": {
     "node": "full",
     "path": "triggerconstantcontract",
     "method": "POST",
     "body": {
-      "owner_address": "410000000000000000000000000000000000000000",
+      "owner_address": "417e5f4552091a69125d5dfcb7b8c2659029395bdf",
       "contract_address": "410123456789abcdef0123456789abcdef01234567",
       "data": "70a082310000000000000000000000007e5f4552091a69125d5dfcb7b8c2659029395bdf"
     }

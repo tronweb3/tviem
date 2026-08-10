@@ -4,16 +4,20 @@ import type {
   AbiStateMutability,
   ExtractAbiFunction,
 } from 'abitype'
+import type { TronAccount } from '../../accounts/types.js'
 import type { Client } from '../../clients/createClient.js'
 import type { RequestErrorType } from '../../clients/transports/http.js'
-import { zeroAddress } from '../../constants/address.js'
 import {
   IntegerOutOfRangeError,
   type IntegerOutOfRangeErrorType,
 } from '../../errors/encoding.js'
-import type { ContractFunctionRevertedErrorType } from '../../errors/rpc.js'
+import {
+  AccountNotFoundError,
+  type AccountNotFoundErrorType,
+  type ContractFunctionRevertedErrorType,
+} from '../../errors/rpc.js'
 import type { ErrorType } from '../../errors/utils.js'
-import type { Address } from '../../types/address.js'
+import type { Address, AddressInput } from '../../types/address.js'
 import type {
   ContractFunctionName,
   TronContractFunctionArgs,
@@ -62,10 +66,18 @@ export type TriggerConstantContractParameters<
     | allFunctionNames // show all options
     | (functionName extends allFunctionNames ? functionName : never) // infer value
   /**
-   * The caller address. Defaults to the Client's account (on a Wallet Client)
-   * or the zero address — neither triggers a balance check on the node.
+   * The caller the simulated call runs as — sent as `owner_address`. Accepts an
+   * account or any TRON address form; falls back to the Client's `account`.
+   * With neither, an {@link AccountNotFoundError} is thrown.
+   *
+   * The simulation executes against real chain state, so the caller decides the
+   * outcome: `msg.sender`-dependent branches, the caller's own token balance
+   * and allowance, and (with `callValue`) its TRX balance. There is no safe
+   * default — a placeholder caller would silently simulate someone else's call.
+   * java-tron requires `owner_address` on `triggerconstantcontract`, so there
+   * is no anonymous form to fall back to either.
    */
-  from?: Address | undefined
+  account?: TronAccount | AddressInput | undefined
   /** TRX value (in SUN) attached to the simulated call. */
   callValue?: bigint | undefined
 } & (readonly [] extends allArgs
@@ -103,6 +115,7 @@ export type TriggerConstantContractReturnType<
 }
 
 export type TriggerConstantContractErrorType =
+  | AccountNotFoundErrorType
   | ContractFunctionRevertedErrorType
   | DecodeAbiParametersErrorType
   | DecodeFunctionResultErrorType
@@ -135,7 +148,10 @@ type TriggerConstantContractResponse = {
  * ABI-decoded against the function outputs.
  *
  * This never affects what is signed or broadcast — it is a read-only
- * simulation aid (e.g. preflighting a `writeContract`).
+ * simulation aid (e.g. preflighting a `writeContract`). Preflight with the same
+ * caller you will write with: the caller (`account`, else the Client's hoisted
+ * account) is required — see
+ * {@link TriggerConstantContractParameters.account}.
  *
  * @example
  * const { result, energyUsed } = await triggerConstantContract(client, {
@@ -143,6 +159,7 @@ type TriggerConstantContractResponse = {
  *   abi: trc20Abi,
  *   functionName: 'transfer', // nonpayable — fine here
  *   args: ['T...', 1_000_000n],
+ *   account: 'T...', // the caller the simulation runs as
  * })
  */
 export async function triggerConstantContract<
@@ -157,8 +174,14 @@ export async function triggerConstantContract<
   client: Client,
   parameters: TriggerConstantContractParameters<abi, functionName, args>,
 ): Promise<TriggerConstantContractReturnType<abi, functionName, args>> {
-  const { abi, address, args, callValue, functionName, from } =
-    parameters as TriggerConstantContractParameters
+  const {
+    abi,
+    account: caller,
+    address,
+    args,
+    callValue,
+    functionName,
+  } = parameters as TriggerConstantContractParameters
 
   // The request body is JSON, where an int64 becomes a JS number — so a
   // `call_value` past the safe-integer range would be silently rounded.
@@ -173,8 +196,13 @@ export async function triggerConstantContract<
       value: String(callValue),
     })
 
+  // Resolve the caller (per-call, else hoisted on the Client). Never defaulted:
+  // the simulation's outcome depends on who runs it.
+  const source = caller ?? client.account
+  if (!source) throw new AccountNotFoundError()
+  const owner = typeof source === 'string' ? source : source.address
+
   const data = encodeFunctionData({ abi, functionName, args })
-  const owner = from ?? client.account?.address ?? zeroAddress
 
   const response = await client.request<TriggerConstantContractResponse>({
     node: 'full',

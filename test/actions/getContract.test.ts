@@ -82,7 +82,9 @@ describe('getContract', () => {
         client,
       })
 
-      const balance = await contract.read.balanceOf([holder])
+      const balance = await contract.read.balanceOf([holder], {
+        account: holder,
+      })
       expect(balance).toBe(123456789000000000000000000n)
       expect(calls.map((c) => c.path)).toEqual(['triggerconstantcontract'])
     })
@@ -102,19 +104,21 @@ describe('getContract', () => {
         client,
       })
 
-      const result = await contract.read.balanceOf([holder], { from: holder })
+      const result = await contract.read.balanceOf([holder], {
+        account: holder,
+      })
       expect(result).toBe(7n)
       expect(captured).toMatchObject({
         abi: trc20Abi,
         address: contractAddress,
         functionName: 'balanceOf',
         args: [holder],
-        from: holder,
+        account: holder,
       })
     })
 
     test('read.<fn> with no args treats the first argument as options', async () => {
-      let captured: { args: readonly unknown[]; from?: Address } | undefined
+      let captured: { args: readonly unknown[]; account?: Address } | undefined
       const { transport } = createMockTransport({ responses: {} })
       const client = createPublicClient({ transport }).extend(() => ({
         readContract: async (parameters: typeof captured) => {
@@ -128,9 +132,9 @@ describe('getContract', () => {
         client,
       })
 
-      await contract.read.totalSupply({ from: holder })
+      await contract.read.totalSupply({ account: holder })
       expect(captured?.args).toEqual([])
-      expect(captured?.from).toBe(holder)
+      expect(captured?.account).toBe(holder)
     })
 
     test('does not mount write / estimateEnergy on a Public Client', () => {
@@ -333,15 +337,15 @@ describe('getContract', () => {
 
   describe('getFunctionParameters', () => {
     test('array first value is treated as args', () => {
-      expect(getFunctionParameters([[holder], { from: holder }])).toEqual({
+      expect(getFunctionParameters([[holder], { account: holder }])).toEqual({
         args: [holder],
-        options: { from: holder },
+        options: { account: holder },
       })
     })
     test('non-array first value is treated as options', () => {
-      expect(getFunctionParameters([{ from: holder }])).toEqual({
+      expect(getFunctionParameters([{ account: holder }])).toEqual({
         args: [],
-        options: { from: holder },
+        options: { account: holder },
       })
     })
     test('empty call yields empty args and options', () => {

@@ -8,7 +8,10 @@ import {
 } from '../../../src/clients/transports/createTransport.js'
 import { normalizeTronError } from '../../../src/clients/transports/http.js'
 import { IntegerOutOfRangeError } from '../../../src/errors/encoding.js'
-import { ContractFunctionRevertedError } from '../../../src/errors/rpc.js'
+import {
+  AccountNotFoundError,
+  ContractFunctionRevertedError,
+} from '../../../src/errors/rpc.js'
 import type { Address } from '../../../src/types/address.js'
 import type {
   TronRequestArgs,
@@ -92,6 +95,7 @@ describe('triggerConstantContract', () => {
       abi: trc20Abi,
       functionName: 'balanceOf',
       args: [holder],
+      account: holder,
     })
     const gold = rpcReq('triggerconstantcontract.trc20-balanceof')
     expect(calls).toHaveLength(1)
@@ -110,6 +114,7 @@ describe('triggerConstantContract', () => {
       abi: trc20Abi,
       functionName: 'balanceOf',
       args: [holder],
+      account: holder,
     })
     expect(result).toBe(123456789000000000000000000n)
     expect(energyUsed).toBe(933n)
@@ -122,6 +127,7 @@ describe('triggerConstantContract', () => {
       abi: trc20Abi,
       functionName: 'transfer',
       args: [holder, 1000000n],
+      account: holder,
     })
     expect(result).toBe(true)
     expect(energyUsed).toBe(13045n)
@@ -139,6 +145,7 @@ describe('triggerConstantContract', () => {
       abi: trc20Abi,
       functionName: 'deposit',
       callValue: 5n,
+      account: holder,
     })
     // `deposit` has no outputs — there is nothing to decode.
     expect(result).toBeUndefined()
@@ -154,38 +161,42 @@ describe('triggerConstantContract', () => {
         abi: trc20Abi,
         functionName: 'deposit',
         callValue: BigInt(Number.MAX_SAFE_INTEGER) + 1n,
+        account: holder,
       }),
     ).rejects.toBeInstanceOf(IntegerOutOfRangeError)
   })
 
-  test('defaults owner_address to the zero address without a from/account', async () => {
+  // The simulation runs against real chain state, so its outcome belongs to a
+  // specific caller — the SDK never picks one.
+  test('throws AccountNotFoundError without an account', async () => {
     const { client, calls } = mockClient(transferOk)
-    await triggerConstantContract(client, {
-      address: contract,
-      abi: trc20Abi,
-      functionName: 'transfer',
-      args: [holder, 1n],
-    })
-    expect((calls[0]?.body as { owner_address: string }).owner_address).toBe(
-      '410000000000000000000000000000000000000000',
-    )
+    await expect(
+      triggerConstantContract(client, {
+        address: contract,
+        abi: trc20Abi,
+        functionName: 'transfer',
+        args: [holder, 1n],
+      }),
+    ).rejects.toBeInstanceOf(AccountNotFoundError)
+    // It throws before touching the node.
+    expect(calls).toHaveLength(0)
   })
 
-  test('uses an explicit `from` as owner_address', async () => {
+  test('uses an explicit `account` as owner_address', async () => {
     const { client, calls } = mockClient(transferOk)
     await triggerConstantContract(client, {
       address: contract,
       abi: trc20Abi,
       functionName: 'transfer',
       args: [holder, 1n],
-      from: holder,
+      account: holder,
     })
     expect((calls[0]?.body as { owner_address: string }).owner_address).toBe(
       '417e5f4552091a69125d5dfcb7b8c2659029395bdf',
     )
   })
 
-  test('defaults owner_address to the client account on a wallet-style client', async () => {
+  test('falls back to the client account when no account is passed', async () => {
     // pk = 1 (permitted trivial key).
     const account = privateKeyToAccount(`0x${'0'.repeat(63)}1`)
     const { client, calls } = mockClient(transferOk, { account })
@@ -215,6 +226,7 @@ describe('triggerConstantContract', () => {
       abi: trc20Abi,
       functionName: 'transfer',
       args: [holder, 1n],
+      account: holder,
     }).catch((e) => e)) as ContractFunctionRevertedError
     expect(err).toBeInstanceOf(ContractFunctionRevertedError)
     expect(err.reason).toBe('INSUFFICIENT_BALANCE')
@@ -241,6 +253,7 @@ describe('triggerConstantContract', () => {
       abi: trc20Abi,
       functionName: 'transfer',
       args: [holder, 1n],
+      account: holder,
     }).catch((e) => e)) as ContractFunctionRevertedError
     expect(err).toBeInstanceOf(ContractFunctionRevertedError)
     expect(err.reason).toBe('INSUFFICIENT_BALANCE')

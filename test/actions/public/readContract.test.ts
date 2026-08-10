@@ -7,7 +7,10 @@ import {
   type Transport,
 } from '../../../src/clients/transports/createTransport.js'
 import { normalizeTronError } from '../../../src/clients/transports/http.js'
-import { ContractFunctionRevertedError } from '../../../src/errors/rpc.js'
+import {
+  AccountNotFoundError,
+  ContractFunctionRevertedError,
+} from '../../../src/errors/rpc.js'
 import type { Address } from '../../../src/types/address.js'
 import type {
   TronRequestArgs,
@@ -66,6 +69,7 @@ describe('readContract', () => {
       abi: balanceOfAbi,
       functionName: 'balanceOf',
       args: [holder],
+      account: holder,
     })
     const gold = rpcReq('triggerconstantcontract.trc20-balanceof')
     expect(calls).toHaveLength(1)
@@ -84,26 +88,30 @@ describe('readContract', () => {
       abi: balanceOfAbi,
       functionName: 'balanceOf',
       args: [holder],
+      account: holder,
     })
     expect(balance).toBe(123456789000000000000000000n)
   })
 
-  test('defaults owner_address to the zero address without a from/account', async () => {
+  // A `view` can branch on msg.sender, so there is no caller the SDK may pick
+  // on the user's behalf — no account means no call at all.
+  test('throws AccountNotFoundError without an account', async () => {
     const { client, calls } = mockClient(
       rpc('triggerconstantcontract.trc20-balanceof'),
     )
-    await readContract(client, {
-      address: contract,
-      abi: balanceOfAbi,
-      functionName: 'balanceOf',
-      args: [holder],
-    })
-    expect((calls[0]?.body as { owner_address: string }).owner_address).toBe(
-      '410000000000000000000000000000000000000000',
-    )
+    await expect(
+      readContract(client, {
+        address: contract,
+        abi: balanceOfAbi,
+        functionName: 'balanceOf',
+        args: [holder],
+      }),
+    ).rejects.toBeInstanceOf(AccountNotFoundError)
+    // It throws before touching the node.
+    expect(calls).toHaveLength(0)
   })
 
-  test('uses an explicit `from` as owner_address', async () => {
+  test('uses an explicit `account` as owner_address', async () => {
     const { client, calls } = mockClient(
       rpc('triggerconstantcontract.trc20-balanceof'),
     )
@@ -112,14 +120,33 @@ describe('readContract', () => {
       abi: balanceOfAbi,
       functionName: 'balanceOf',
       args: [holder],
-      from: holder,
+      account: holder,
     })
     expect((calls[0]?.body as { owner_address: string }).owner_address).toBe(
       '417e5f4552091a69125d5dfcb7b8c2659029395bdf',
     )
   })
 
-  test('defaults owner_address to the client account on a wallet-style client', async () => {
+  test('accepts an account object as the caller', async () => {
+    // pk = 1 (permitted trivial key).
+    const account = privateKeyToAccount(`0x${'0'.repeat(63)}1`)
+    const { client, calls } = mockClient(
+      rpc('triggerconstantcontract.trc20-balanceof'),
+    )
+    await readContract(client, {
+      address: contract,
+      abi: balanceOfAbi,
+      functionName: 'balanceOf',
+      args: [holder],
+      account,
+    })
+    const { toHex } = await import('../../../src/utils/address/toHex.js')
+    expect((calls[0]?.body as { owner_address: string }).owner_address).toBe(
+      toHex(account.address),
+    )
+  })
+
+  test('falls back to the client account when no account is passed', async () => {
     // pk = 1 (permitted trivial key).
     const account = privateKeyToAccount(`0x${'0'.repeat(63)}1`)
     const { client, calls } = mockClient(
@@ -152,6 +179,7 @@ describe('readContract', () => {
       abi: balanceOfAbi,
       functionName: 'balanceOf',
       args: [holder],
+      account: holder,
     }).catch((e) => e)) as ContractFunctionRevertedError
     expect(err).toBeInstanceOf(ContractFunctionRevertedError)
     expect(err.reason).toBe('INSUFFICIENT_BALANCE')
@@ -178,6 +206,7 @@ describe('readContract', () => {
       abi: balanceOfAbi,
       functionName: 'balanceOf',
       args: [holder],
+      account: holder,
     }).catch((e) => e)) as ContractFunctionRevertedError
     expect(err).toBeInstanceOf(ContractFunctionRevertedError)
     expect(err.reason).toBe('INSUFFICIENT_BALANCE')
@@ -195,6 +224,7 @@ describe('readContract', () => {
       abi: balanceOfAbi,
       functionName: 'balanceOf',
       args: [holder],
+      account: holder,
     }).catch((e) => e)) as ContractFunctionRevertedError
     expect(err).toBeInstanceOf(ContractFunctionRevertedError)
     // Falls back to the node's own (hex-encoded) message.
@@ -212,6 +242,7 @@ describe('readContract', () => {
       abi: balanceOfAbi,
       functionName: 'balanceOf',
       args: [holder],
+      account: holder,
     }).catch((e) => e)) as ContractFunctionRevertedError
     expect(err).toBeInstanceOf(ContractFunctionRevertedError)
     expect(err.code).toBe(17n)
