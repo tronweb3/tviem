@@ -832,3 +832,122 @@ test('a tuple whose own components are ambiguous still reports the inner pair', 
     ),
   ).toEqual(['address', 'string'])
 })
+
+// `isArgOfType` matches an object tuple arg by component name, but
+// `getAmbiguousTypes` indexed the same arg positionally — and an object has no
+// '0'/'1' keys, so every arg-dependent rule (address/string, address/bytes,
+// trcToken/intN) saw `undefined` and no object-form tuple was ever flagged.
+// The array form of the identical call already threw, so the two shapes
+// disagreed on whether the very same overload set was ambiguous.
+const objectTupleAbi = [
+  {
+    type: 'function',
+    name: 'foo',
+    stateMutability: 'nonpayable',
+    outputs: [],
+    inputs: [
+      {
+        name: 't',
+        type: 'tuple',
+        components: [
+          { name: 'x', type: 'uint256' },
+          { name: 'to', type: 'address' },
+        ],
+      },
+    ],
+  },
+  {
+    type: 'function',
+    name: 'foo',
+    stateMutability: 'nonpayable',
+    outputs: [],
+    inputs: [
+      {
+        name: 't',
+        type: 'tuple',
+        components: [
+          { name: 'x', type: 'uint256' },
+          { name: 'to', type: 'string' },
+        ],
+      },
+    ],
+  },
+]
+
+test('an object-form tuple arg is read by component name when detecting ambiguity', () => {
+  const addr = 'TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC'
+  const source = objectTupleAbi[0]!.inputs as never
+  const target = objectTupleAbi[1]!.inputs as never
+
+  // Array form — the pre-existing baseline this must agree with.
+  expect(getAmbiguousTypes(source, target, [[1n, addr]])).toEqual([
+    'address',
+    'string',
+  ])
+  // Object form, in declaration order and reversed: key order is irrelevant.
+  expect(getAmbiguousTypes(source, target, [{ x: 1n, to: addr }])).toEqual([
+    'address',
+    'string',
+  ])
+  expect(getAmbiguousTypes(source, target, [{ to: addr, x: 1n }])).toEqual([
+    'address',
+    'string',
+  ])
+  // A non-address string leaves nothing for the arg-dependent rule to fire on.
+  expect(
+    getAmbiguousTypes(source, target, [{ x: 1n, to: 'just a string' }]),
+  ).toBeUndefined()
+})
+
+test('getAbiItem throws on an ambiguous object-form tuple arg, like the array form', () => {
+  const addr = 'TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC'
+  for (const args of [
+    [[1n, addr]],
+    [{ x: 1n, to: addr }],
+    [{ to: addr, x: 1n }],
+  ]) {
+    expect(() =>
+      getAbiItem({ abi: objectTupleAbi as unknown as Abi, name: 'foo', args }),
+    ).toThrowError(AbiItemAmbiguityError)
+  }
+})
+
+test('object-form tuples are read by name when nested and inside arrays', () => {
+  const addr = 'TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC'
+  const nested = (inner: string) =>
+    [
+      {
+        name: 'outer',
+        type: 'tuple',
+        components: [
+          {
+            name: 'inner',
+            type: 'tuple',
+            components: [{ name: 'a', type: inner }],
+          },
+        ],
+      },
+    ] as never
+  // Nested object tuples recurse by name at every level.
+  expect(
+    getAmbiguousTypes(nested('address'), nested('string'), [
+      { inner: { a: addr } },
+    ]),
+  ).toEqual(['address', 'string'])
+
+  // tuple[] with object elements: the array branch hands each element to the
+  // tuple branch, which must read it by name too.
+  const tupleArray = (inner: string) =>
+    [
+      {
+        name: 'ts',
+        type: 'tuple[]',
+        components: [{ name: 'a', type: inner }],
+      },
+    ] as never
+  expect(
+    getAmbiguousTypes(tupleArray('address'), tupleArray('string'), [
+      [{ a: addr }],
+    ]),
+  ).toEqual(['address', 'string'])
+})

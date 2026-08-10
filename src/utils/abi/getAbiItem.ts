@@ -260,13 +260,29 @@ export function getAmbiguousTypes(
       'components' in sourceParameter &&
       'components' in targetParameter
     ) {
+      const components = sourceParameter.components as readonly AbiParameter[]
+      const arg = args[parameterIndex as unknown as number]
+      // An object tuple value is read by component name at encode time (see
+      // encodeTuple) and matched by name in `isArgOfType`, so it has to be
+      // laid out positionally here too: indexing the object directly yields
+      // `undefined` for every component, and the arg-dependent rules below
+      // then never fire — the array form of the same call would throw while
+      // the object form silently resolved. Both overloads had to match the
+      // same object to reach this point, so their component names are the
+      // same set and the source list is a faithful index. The array branch
+      // below probes empty arrays with a placeholder element, so a tuple's
+      // arg can legitimately be absent here.
+      const tupleArgs =
+        arg !== null && typeof arg === 'object' && !Array.isArray(arg)
+          ? components.map(
+              (component) =>
+                (arg as Record<string, unknown>)[component.name ?? ''],
+            )
+          : ((arg ?? []) as readonly unknown[])
       const ambiguous = getAmbiguousTypes(
-        sourceParameter.components as readonly AbiParameter[],
+        components,
         targetParameter.components as readonly AbiParameter[],
-        // The array branch below probes empty arrays with a placeholder
-        // element, so a tuple's arg can legitimately be absent here.
-        ((args as readonly unknown[][])[parameterIndex as unknown as number] ??
-          []) as readonly unknown[],
+        tupleArgs,
       )
       // An unambiguous tuple only settles this position — the remaining
       // parameters still have to be compared.
@@ -291,8 +307,7 @@ export function getAmbiguousTypes(
       // With no elements to inspect, probe once with no argument so
       // arg-independent pairs (address/bytes20) are still detected, while
       // arg-dependent ones (address/string) correctly stay unambiguous.
-      const elements =
-        Array.isArray(arg) && arg.length > 0 ? arg : [undefined]
+      const elements = Array.isArray(arg) && arg.length > 0 ? arg : [undefined]
       const ambiguous = getAmbiguousTypes(
         elements.map(() => sourceElement),
         elements.map(() => targetElement),
