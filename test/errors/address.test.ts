@@ -17,3 +17,24 @@ test('InvalidAddressError', () => {
 Version: @tronweb3/tviem@${version}`,
   })
 })
+
+// A `0x41`-prefixed hex address is 44 characters — the longest valid form, so
+// it must still be echoed in full to stay debuggable.
+test('InvalidAddressError echoes a value at the longest valid length', () => {
+  const address = `0x41${'0'.repeat(40)}`
+  expect(address).toHaveLength(44)
+  expect(new InvalidAddressError({ address }).message).toContain(
+    `Address "${address}" is invalid.`,
+  )
+})
+
+// A private key pasted where an address was expected must not end up in the
+// error message (and from there in logs / error reports).
+test('InvalidAddressError redacts a value too long to be an address', () => {
+  const privateKey = `0x${'ab'.repeat(32)}` // 66 chars
+  const error = new InvalidAddressError({ address: privateKey })
+  expect(error.message).toContain('Address "0xabab…" is invalid.')
+  expect(error.message).not.toContain(privateKey)
+  expect(error.message).not.toContain('ab'.repeat(4))
+  expect(error.message).toContain('66 characters long')
+})
