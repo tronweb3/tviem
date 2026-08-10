@@ -233,6 +233,25 @@ describe('payload shape validation', () => {
       expect(error?.message).toContain('increments of 32 bytes')
     }
   })
+
+  test('non-hex return data is reported as invalid hex, not as a byte count', () => {
+    // The alignment check counts characters, so it must not run before the
+    // payload is known to be hex at all: a stray `0x` (a node handing back an
+    // already-prefixed `constant_result`) or any garbled body would otherwise
+    // be reported as a byte size the string never had, naming the wrong fault.
+    for (const data of [`0x0x${word(255)}`, '0xzz'] as `0x${string}`[]) {
+      const error = caught(() =>
+        decodeFunctionResult({
+          abi: balanceOfAbi,
+          functionName: 'balanceOf',
+          data,
+        }),
+      )
+      expect(error).toBeInstanceOf(BaseError)
+      expect(error).not.toBeInstanceOf(AbiDecodingDataSizeInvalidError)
+      expect(error?.message).toContain('Invalid byte sequence')
+    }
+  })
 })
 
 // Every other bad-input path in the codec produces a BaseError subclass, and

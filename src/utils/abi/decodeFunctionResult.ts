@@ -8,6 +8,7 @@ import {
   AbiFunctionOutputsNotFoundError,
   type AbiFunctionOutputsNotFoundErrorType,
 } from '../../errors/abi.js'
+import { InvalidHexValueError } from '../../errors/encoding.js'
 import type { ErrorType } from '../../errors/utils.js'
 import type {
   ContractFunctionArgs,
@@ -15,6 +16,7 @@ import type {
   ExtractAbiFunctionForArgs,
 } from '../../types/contract.js'
 import type { ByteArray, Hex } from '../../types/misc.js'
+import { hexToBytes } from '../encoding/toBytes.js'
 import { bytesToHex } from '../encoding/toHex.js'
 import {
   type DecodeAbiParametersErrorType,
@@ -155,19 +157,22 @@ export function decodeFunctionResult<
   // 32-byte words — a calldata-style TIP-2771 suffix cannot occur here — so a
   // misaligned payload is a lossy/corrupt node response, not something to
   // decode a partial word from. The generic decoder tolerates trailing bytes
-  // for the calldata paths, so alignment is enforced at this boundary. An
-  // odd-nibble hex string is left for decodeAbiParameters to reject as
-  // invalid hex rather than being miscounted here.
-  const size =
-    typeof data === 'string'
-      ? data.length % 2 === 0
-        ? Math.max(0, (data.length - 2) / 2)
-        : undefined
-      : data.length
-  if (size !== undefined && size % 32 !== 0)
+  // for the calldata paths, so alignment is enforced at this boundary.
+  // Converting first lets `hexToBytes` reject a non-hex payload on its own
+  // terms: counting characters instead would report a byte size the string
+  // never had (a node echoing an already-prefixed `constant_result` gives
+  // `0x0x…`), naming the wrong fault for data that fails either way. The
+  // odd-nibble guard has to precede the conversion for the same reason it
+  // does in decodeAbiParameters — `hexToBytes` left-pads such a string
+  // instead of rejecting it, which would turn "not a byte string" into a
+  // plausible byte count.
+  if (typeof data === 'string' && data.length % 2 !== 0)
+    throw new InvalidHexValueError(data as Hex)
+  const bytes = typeof data === 'string' ? hexToBytes(data) : data
+  if (bytes.length % 32 !== 0)
     throw new AbiDecodingDataSizeInvalidError({
       data: typeof data === 'string' ? data : bytesToHex(data),
-      size,
+      size: bytes.length,
     })
 
   const values = decodeAbiParameters(abiItem.outputs, data)
