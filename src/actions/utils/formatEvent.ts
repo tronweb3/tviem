@@ -28,8 +28,8 @@ export type TronEvent = {
   blockNumber: number
   /** Block timestamp in milliseconds. */
   blockTimestamp: bigint
-  /** The emitting contract (Base58Check). */
-  contractAddress: Address
+  /** The emitting contract (Base58Check), if present. */
+  contractAddress?: Address | undefined
   /** The calling contract, when the emitter was called by another (Base58Check). */
   callerContractAddress?: Address | undefined
   /** The event name (e.g. `Transfer`). */
@@ -99,11 +99,9 @@ export function formatEvent(raw: RawTronEvent): TronEvent {
   return {
     blockNumber: Number(raw.block_number ?? 0),
     blockTimestamp: BigInt(raw.block_timestamp ?? 0),
-    // The null address — '' is not a valid address form.
-    contractAddress: toBase58(
-      (raw.contract_address ??
-        '410000000000000000000000000000000000000000') as AddressInput,
-    ),
+    ...(raw.contract_address
+      ? { contractAddress: toBase58(raw.contract_address as AddressInput) }
+      : {}),
     ...(raw.caller_contract_address
       ? {
           callerContractAddress: toBase58(

@@ -76,9 +76,10 @@ test('formatEventMeta maps snake_case, omits absent fields', () => {
   expect(formatEventMeta(undefined)).toEqual({})
 })
 
-// A row missing contract_address degrades to the null address
-// instead of failing the whole page ('' was never a valid address form).
-test('a missing contract_address degrades to the null address', () => {
+// A row missing contract_address omits the field instead of fabricating
+// the null address ('' was never a valid address form).
+test('a missing contract_address is omitted', () => {
   const event = formatEvent({ event_name: 'X' })
-  expect(event.contractAddress).toBe('T9yD14Nj9j7xAB4dbGeiX9h8unkKHxuWwb')
+  expect(event.contractAddress).toBeUndefined()
+  expect('contractAddress' in event).toBe(false)
 })

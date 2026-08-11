@@ -50,11 +50,9 @@ export function formatBlock(raw: RawBlock): Block {
     timestamp: BigInt(header.timestamp ?? 0),
     parentHash: header.parentHash ?? '',
     txTrieRoot: header.txTrieRoot ?? '',
-    witnessAddress: toBase58(
-      // The null address — '41' alone is not a valid address form.
-      (header.witness_address ??
-        '410000000000000000000000000000000000000000') as TronHexAddress,
-    ),
+    ...(header.witness_address
+      ? { witnessAddress: toBase58(header.witness_address as TronHexAddress) }
+      : {}),
     ...(header.version !== undefined ? { version: header.version } : {}),
     transactions: raw.transactions ?? [],
   }

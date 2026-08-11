@@ -73,11 +73,9 @@ function mapStatus(
 
 function formatLog(log: RawLog): TransactionLog {
   return {
-    // The null address — '41' alone is not a valid address form.
-    address: toBase58(
-      (log.address ??
-        '410000000000000000000000000000000000000000') as TronHexAddress,
-    ),
+    ...(log.address
+      ? { address: toBase58(log.address as TronHexAddress) }
+      : {}),
     topics: (log.topics ?? []).map((topic) => `0x${topic}` as Hex),
     data: `0x${log.data ?? ''}` as Hex,
   }

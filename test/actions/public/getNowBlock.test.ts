@@ -35,9 +35,9 @@ test('an empty {} body throws BlockNotFoundError', async () => {
   await expect(client.getNowBlock()).rejects.toBeInstanceOf(BlockNotFoundError)
 })
 
-// A block missing witness_address degrades to the null address instead of
-// crashing the formatter ('41' alone was never a valid address form).
-test('a missing witness_address degrades to the null address', async () => {
+// A block missing witness_address omits the field instead of fabricating
+// the null address ('41' alone was never a valid address form).
+test('a missing witness_address is omitted', async () => {
   const { transport } = createMockTransport({
     responses: {
       getnowblock: {
@@ -50,5 +50,6 @@ test('a missing witness_address degrades to the null address', async () => {
   })
   const client = createPublicClient({ transport })
   const block = await client.getNowBlock()
-  expect(block.witnessAddress).toBe('T9yD14Nj9j7xAB4dbGeiX9h8unkKHxuWwb')
+  expect(block.witnessAddress).toBeUndefined()
+  expect('witnessAddress' in block).toBe(false)
 })

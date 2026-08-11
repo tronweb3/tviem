@@ -17,8 +17,8 @@ export type Block = {
   parentHash: string
   /** Transaction trie root (`txTrieRoot`). */
   txTrieRoot: string
-  /** The producing witness (SR) address, Base58Check-encoded. */
-  witnessAddress: Address
+  /** The producing witness (SR) address, Base58Check-encoded, if present. */
+  witnessAddress?: Address | undefined
   /** Block header version, if present. */
   version?: number | undefined
   /** The block's transactions (raw node shapes; not decoded here). */

@@ -6,8 +6,8 @@ export type TransactionStatus = 'success' | 'reverted'
 
 /** A decoded event log entry from a transaction receipt. */
 export type TransactionLog = {
-  /** Emitting contract address, Base58Check-encoded. */
-  address: Address
+  /** Emitting contract address, Base58Check-encoded, if present. */
+  address?: Address | undefined
   /** Indexed topics, each `0x`-prefixed. */
   topics: readonly Hex[]
   /** Non-indexed data, `0x`-prefixed. */

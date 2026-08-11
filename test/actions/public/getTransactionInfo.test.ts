@@ -89,6 +89,32 @@ test('a plain transfer (no receipt.result, result != FAILED) is success', async 
   expect(info.logs).toHaveLength(0)
 })
 
+// A log missing its address omits the field instead of fabricating
+// the null address ('41' alone was never a valid address form).
+test('a log missing its address is omitted', async () => {
+  const { transport } = createMockTransport({
+    responses: {
+      gettransactioninfobyid: {
+        fn: () => ({
+          id: 'aa',
+          blockNumber: 5,
+          receipt: { result: 'SUCCESS' },
+          log: [{ topics: ['ff'.repeat(32)], data: '00' }],
+        }),
+      },
+    },
+  })
+  const client = createPublicClient({ transport })
+
+  const info = await client.getTransactionInfo({ hash: 'aa' })
+  if (!info) throw new Error('expected receipt')
+  const log = info.logs[0]
+  if (!log) throw new Error('expected log')
+  expect(log.address).toBeUndefined()
+  expect('address' in log).toBe(false)
+  expect(log.topics[0]).toBe(`0x${'ff'.repeat(32)}`)
+})
+
 test('an unpacked transaction ({}) returns null', async () => {
   const { transport } = createMockTransport({
     responses: { gettransactioninfobyid: { response: {} } },
