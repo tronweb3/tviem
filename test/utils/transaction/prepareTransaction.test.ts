@@ -47,8 +47,26 @@ test('fillBlockHeader: sets TaPoS, timestamp and expiration from the block', () 
 test('fillBlockHeader: never reads the wall clock (timing is chain-derived)', () => {
   const filled = fillBlockHeader(
     { contract: [] },
-    { number: 1, blockID, timestamp: 0 },
+    { number: 1, blockID, timestamp: 1 },
   )
-  expect(filled.timestamp).toBe(0n)
-  expect(filled.expiration).toBe(60000n)
+  expect(filled.timestamp).toBe(1n)
+  expect(filled.expiration).toBe(60001n)
+})
+
+// A degenerate block (what formatBlock yields for a malformed node body:
+// number/timestamp decoded as 0, blockID as '') must not silently become a
+// signable transaction with ref_block_bytes "0000" and a 1970 expiration —
+// the node would only reject it at broadcast, after the caller signed it.
+test.each([
+  ['zero number', { number: 0, blockID, timestamp: 1700000000000n }],
+  ['zero timestamp', { number: 1, blockID, timestamp: 0 }],
+  ['empty blockID', { number: 1, blockID: '', timestamp: 1700000000000n }],
+  [
+    'short blockID',
+    { number: 1, blockID: 'ab'.repeat(16), timestamp: 1700000000000n },
+  ],
+])('fillBlockHeader: rejects an incomplete block (%s)', (_, block) => {
+  expect(() => fillBlockHeader({ contract: [] }, block)).toThrow(
+    /incomplete block/,
+  )
 })

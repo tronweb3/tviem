@@ -1,3 +1,4 @@
+import { BaseError, type BaseErrorType } from '../../errors/base.js'
 import type { ErrorType } from '../../errors/utils.js'
 import type { RawData } from './serializeRawData.js'
 
@@ -47,7 +48,12 @@ export function deriveRefBlockParams(
   return { ref_block_bytes: refBlockBytes, ref_block_hash: id.slice(16, 32) }
 }
 
-export type FillBlockHeaderErrorType = DeriveRefBlockParamsErrorType | ErrorType
+export type FillBlockHeaderErrorType =
+  | BaseErrorType
+  | DeriveRefBlockParamsErrorType
+  | ErrorType
+
+const blockIdRegex = /^[0-9a-fA-F]{64}$/
 
 /**
  * Fills the TaPoS reference fields plus the `timestamp` and `expiration` of a
@@ -57,12 +63,28 @@ export type FillBlockHeaderErrorType = DeriveRefBlockParamsErrorType | ErrorType
  * never read — this mirrors TronWeb's `getCurrentRefBlockParams`, so a skewed
  * client clock cannot mint an already-expired transaction.
  *
+ * A block with a non-positive `number`/`timestamp` or a malformed `blockID`
+ * is rejected — see the guard below.
+ *
  * @param rawData Raw data model to fill.
  * @param block Reference block (supplies TaPoS fields and the base timestamp).
  * @returns A new raw data model with TaPoS, timestamp and expiration set.
  */
 export function fillBlockHeader(rawData: RawData, block: BlockRef): RawData {
+  // A usable TaPoS reference needs all three fields to be real. `formatBlock`
+  // decodes a proto3-omitted number/timestamp as 0 (legitimate only for the
+  // genesis block, which a new transaction never references) and a missing
+  // blockID as '' — deriving from those would build, and let the caller sign,
+  // a transaction with ref_block_bytes "0000" and a 1970 expiration that the
+  // node only rejects at broadcast. Fail here, before anything is signed.
   const timestamp = BigInt(block.timestamp)
+  const id = block.blockID.startsWith('0x')
+    ? block.blockID.slice(2)
+    : block.blockID
+  if (BigInt(block.number) <= 0n || timestamp <= 0n || !blockIdRegex.test(id))
+    throw new BaseError(
+      'Cannot derive TaPoS reference fields from an incomplete block: a positive number, a positive timestamp and a 32-byte blockID are required.',
+    )
   return {
     ...rawData,
     ...deriveRefBlockParams(block.number, block.blockID),
