@@ -1,6 +1,7 @@
 import type { SignableTransaction } from '../../accounts/types.js'
 import type { Client } from '../../clients/createClient.js'
 import type { RequestErrorType } from '../../clients/transports/http.js'
+import { BaseError } from '../../errors/base.js'
 import { TronNodeError } from '../../errors/node.js'
 import {
   TransactionExpiredError,
@@ -9,10 +10,15 @@ import {
   type TronRpcErrorType,
 } from '../../errors/rpc.js'
 import type { ErrorType } from '../../errors/utils.js'
+import { bareHex } from '../../utils/encoding/bareHex.js'
 import {
   type SerializeTransactionErrorType,
   toBroadcastHex,
 } from '../../utils/transaction/serializeTransaction.js'
+import {
+  type TxCheckErrorType,
+  txCheck,
+} from '../../utils/transaction/txCheck.js'
 import {
   type AssertRpcSuccessErrorType,
   assertRpcSuccess,
@@ -30,6 +36,7 @@ export type BroadcastTransactionErrorType =
   | SerializeTransactionErrorType
   | TransactionExpiredErrorType
   | TronRpcErrorType
+  | TxCheckErrorType
   | ErrorType
 
 /** The `broadcasthex` request body: the full signed `Transaction` protobuf. */
@@ -46,12 +53,18 @@ const expirationCodes = new Set(['TRANSACTION_EXPIRATION_ERROR', 'TAPOS_ERROR'])
  * Broadcasts an already-signed transaction via `broadcasthex` (full node): the
  * body is the full signed `Transaction` protobuf as hex, which the node relays
  * verbatim without re-parsing any JSON. `broadcasttransaction` would instead
- * rebuild the transaction from the `raw_data` JSON and ignore `raw_data_hex`;
- * relaying the exact signed bytes leaves no room for that re-parse to drift.
+ * rebuild the transaction from the `raw_data` JSON and ignore `raw_data_hex`.
  *
- * Trustless invariant: the returned `txid` is the transaction's **local**
- * `txID` (recomputed at signing time by the four sign guards), never the value
- * the node echoes back. The node's `txid` is not trusted.
+ * The transaction is integrity-checked before any request is sent (via
+ * {@link txCheck}): `raw_data` must serialize to exactly the `raw_data_hex`
+ * bytes, whose SHA-256 must equal `txID`. An inconsistent or incomplete
+ * triple is refused — the wire payload and the on-chain id both derive from
+ * the bytes, so broadcasting it would relay real bytes while reporting a
+ * `txid` under which the transaction could never be found. The returned
+ * `txid` is that checked local `txID` (bare lowercase hex); the node's echoed
+ * value is not read. This is the same gate every signing path runs, so bytes
+ * carrying wire fields the model layer does not represent are refused here
+ * the same way they would be at signing.
  *
  * The transport's error normalization already throws for the documented
  * rejection bodies (`{ result: false, code }` → `TronBroadcastError`, etc.); a
@@ -67,8 +80,12 @@ export async function broadcastTransaction(
   client: Client,
   parameters: BroadcastTransactionParameters,
 ): Promise<BroadcastTransactionReturnType> {
-  const { signedTransaction } = parameters
-  const { txID, signature } = signedTransaction
+  // Snapshot the fields once, so the values integrity-checked below are the
+  // same ones serialized into the wire body (a getter-backed object cannot
+  // hand txCheck one set of bytes and the request another).
+  const { txID, raw_data, raw_data_hex, signature } =
+    parameters.signedTransaction
+  const signedTransaction = { txID, raw_data, raw_data_hex, signature }
 
   // Pre-condition: never broadcast an unsigned transaction.
   if (!signature || signature.length === 0)
@@ -76,6 +93,13 @@ export async function broadcastTransaction(
       'Cannot broadcast a transaction without a signature.',
       { metaMessages: ['Path: broadcasthex'] },
     )
+
+  // Pre-condition: the triple must be self-consistent (see the JSDoc). The
+  // SDK's own sign paths have already passed this; it is the transaction
+  // handed over from elsewhere (TronWeb, another co-signer, disk) whose
+  // `txID` has never been checked against the bytes until here.
+  if (!txCheck(signedTransaction))
+    throw new BaseError('The transaction failed its integrity check (txCheck).')
 
   const body: BroadcastBody = { transaction: toBroadcastHex(signedTransaction) }
 
@@ -103,7 +127,7 @@ export async function broadcastTransaction(
       error.code !== undefined &&
       expirationCodes.has(error.code)
     )
-      throw new TransactionExpiredError({ hash: txID })
+      throw new TransactionExpiredError({ hash: bareHex(txID) })
     throw error
   }
 
@@ -111,6 +135,7 @@ export async function broadcastTransaction(
   // through the transport normalizer untouched.
   assertRpcSuccess(response, { path: 'broadcasthex' })
 
-  // Trustless invariant: the local txID is authoritative.
-  return { txid: txID ?? '' }
+  // Canonical spelling: txCheck compared via bareHex, so a caller's `0x` or
+  // upper-case spelling passes — return the form the check actually ran on.
+  return { txid: bareHex(txID) }
 }

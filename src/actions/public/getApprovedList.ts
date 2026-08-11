@@ -49,7 +49,7 @@ type RawApprovedList = {
  * Reads which addresses have already signed a multi-sig transaction via
  * `getapprovedlist` (full node).
  *
- * Security: like {@link getSignWeight}, the node's echoed transaction is
+ * Node echo: like {@link getSignWeight}, the node's echoed transaction is
  * asserted to match the local one byte-for-byte (throwing
  * {@link TransactionTamperedError} otherwise), and the returned `transaction`
  * is always the local copy — never the node's.

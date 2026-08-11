@@ -179,10 +179,8 @@ export class TransactionExpiredError extends BaseError {
 /**
  * Thrown when a node echoes back a transaction (e.g. from `getSignWeight` /
  * `getApprovedList`) whose `raw_data_hex` or `txID` does not byte-for-byte
- * match the locally built one. A malicious or man-in-the-middled node can
- * substitute a tampered `raw_data`; this SDK never signs or trusts the
- * node-supplied transaction, and surfaces the mismatch here so a multi-sig
- * flow fails closed instead of approving something other than what was built.
+ * match the locally built one. The echoed copy is discarded and the mismatch
+ * surfaced here; callers keep working against the local transaction.
  */
 export type TransactionTamperedErrorType = TransactionTamperedError & {
   name: 'TransactionTamperedError'

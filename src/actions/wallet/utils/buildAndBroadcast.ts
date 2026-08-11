@@ -76,5 +76,5 @@ export async function buildAndBroadcast(
     'broadcastTransaction',
   )({ signedTransaction: signed })
 
-  return { txID: signed.txID ?? '' }
+  return { txID: signed.txID }
 }

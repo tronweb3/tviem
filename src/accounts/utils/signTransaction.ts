@@ -68,9 +68,9 @@ export type SignTransactionErrorType =
  *    serializes to exactly the `raw_data_hex` bytes, whose SHA-256
  *    ({@link getTransactionId}) is `txID` — otherwise it throws. This
  *    refuses blind signing (a digest without its content) and any `txID` or
- *    JSON that lies about the bytes; a node-supplied `txID` is never
- *    trusted unverified. Partial forms do not sign — build the full triple
- *    first (`buildTransaction` does).
+ *    JSON that does not match the bytes; a node-supplied `txID` is
+ *    recomputed and compared, never adopted as-is. Partial forms do not
+ *    sign — build the full triple first (`buildTransaction` does).
  * 2. The first contract's `owner_address` must equal `address` — the
  *    signing account, unless the caller supplied one — otherwise it throws.
  *    A contract whose owner cannot be read is refused. Non-owner co-signing

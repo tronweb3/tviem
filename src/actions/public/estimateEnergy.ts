@@ -99,8 +99,7 @@ type EstimateEnergyResponse = {
  * a node without it rejects the call and the RPC error is surfaced.
  *
  * This only helps a caller choose a `feeLimit` bound for `writeContract`; it
- * never affects what is signed or broadcast, so it does not weaken the
- * trustless build path.
+ * never affects what is signed or broadcast.
  *
  * @param client The Client to use.
  * @param parameters Contract address / ABI / function / args / caller.
@@ -125,7 +124,7 @@ export async function estimateEnergy<
   // The request body is JSON, where an int64 becomes a JS number — so a
   // `call_value` past the safe-integer range would be silently rounded. Reject
   // it rather than send a corrupted estimate (energy estimation never affects
-  // what is signed, so a hard error here is safe).
+  // what is signed).
   if (
     callValue !== undefined &&
     (callValue < 0n || callValue > BigInt(Number.MAX_SAFE_INTEGER))

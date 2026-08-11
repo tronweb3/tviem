@@ -4,8 +4,7 @@ import { BaseError } from './base.js'
  * Thrown when a transaction carries a contract type tviem does not support:
  * an unregistered `google.protobuf.Any` type URL, or an unregistered
  * `Transaction.Contract.type` integer or name. Decoding is strict by design —
- * unsupported transactions are refused rather than partially decoded, so a
- * model can never silently misrepresent bytes the SDK does not understand.
+ * unsupported transactions are refused rather than partially decoded.
  * The raw `Any.value` payload (bare hex), when available, is preserved on
  * the error for inspection.
  */

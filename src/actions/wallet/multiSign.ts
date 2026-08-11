@@ -33,9 +33,9 @@ export type MultiSignErrorType =
 
 /**
  * Adds one party's signature to a multi-signature transaction under a
- * permission id and returns the co-signed transaction. Signing is **fully
- * local and deterministic** — no node is contacted, so co-signing runs
- * air-gapped, and the bytes signed are exactly the triple the caller passes in.
+ * permission id and returns the co-signed transaction. Signing is fully
+ * local and deterministic — no node is contacted, and the bytes signed are
+ * exactly the triple the caller passes in.
  *
  * The multi-sig guards AND the bind live here; the transaction must arrive
  * as a self-consistent `txID` + `raw_data` + `raw_data_hex` triple (it is

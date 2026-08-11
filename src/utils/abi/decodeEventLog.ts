@@ -172,8 +172,7 @@ function selectEvent(
     if (named.length === 0)
       throw new AbiEventNotFoundError(eventName, { docsPath })
     // A non-anonymous log's topic0 IS the event's identity — validate it (and
-    // disambiguate overloads) instead of trusting the name label, so a log of
-    // a different event can never silently mis-decode under this name.
+    // disambiguate overloads) instead of matching by the name label alone.
     if (topic0) {
       const matched = named.find(
         (event) =>

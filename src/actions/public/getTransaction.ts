@@ -63,13 +63,13 @@ type RawTransactionResponse = {
  * receipt ({@link getTransactionInfo} reads that). An id the node does not
  * know (never broadcast, or pruned) resolves to `null`.
  *
- * Trustless invariant: the returned `txID` is recomputed **locally** as the
- * SHA-256 of the returned `raw_data_hex` bytes and must equal the requested
- * `hash` — and the node's echoed `txID`, when present, must agree. A node that
- * returns different bytes than asked for, or mislabels them, throws
- * {@link TransactionTamperedError} instead of being believed. The returned
- * `raw_data` is **decoded locally from those authenticated bytes** — the
- * node's `raw_data` JSON is never adopted, so what the caller inspects
+ * The returned `txID` is recomputed locally as the SHA-256 of the returned
+ * `raw_data_hex` bytes and must equal the requested `hash` — and the node's
+ * echoed `txID`, when present, must agree. A node that returns different
+ * bytes than asked for, or mislabels them, throws
+ * {@link TransactionTamperedError}. The returned `raw_data` is decoded
+ * locally from those id-checked bytes — the node's `raw_data` JSON is not
+ * used, so what the caller inspects
  * (recipient, amount, contract) is exactly what the bytes say. The triple is
  * therefore self-consistent by construction, which is the `SignableTransaction`
  * shape `multiSign` / `signTransaction` take — no re-encoding or id recompute
@@ -133,7 +133,7 @@ export async function getTransaction(
 
   return {
     txID: localId,
-    // Trustless: decoded from the authenticated bytes, never the node's JSON.
+    // Decoded from the id-checked bytes, not the node's JSON.
     raw_data: decodeRawData(bytes),
     raw_data_hex: canonicalHex,
     ...(signature ? { signature } : {}),

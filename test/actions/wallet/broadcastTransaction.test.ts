@@ -1,6 +1,7 @@
 import { expect, test } from 'vitest'
 import { broadcastTransaction } from '../../../src/actions/wallet/broadcastTransaction.js'
 import { createClient } from '../../../src/clients/createClient.js'
+import { BaseError } from '../../../src/errors/base.js'
 import { TronBroadcastError } from '../../../src/errors/node.js'
 import {
   TransactionExpiredError,
@@ -55,6 +56,42 @@ test('throws TronRpcError when the transaction carries no signature', async () =
       signedTransaction: { ...signedTransaction, signature: [] },
     }),
   ).rejects.toBeInstanceOf(TronRpcError)
+})
+
+// The wire payload derives from raw_data_hex while the returned txid is the
+// caller-supplied txID — a mismatched triple would broadcast real bytes yet
+// report an id under which the transaction can never be found (and a caller
+// polling that id would rebuild and re-send). Refuse before any request.
+test('refuses a txID that does not hash from the raw_data bytes', async () => {
+  const { transport, calls } = createMockTransport({
+    responses: { broadcasthex: { response: { result: true } } },
+  })
+  const client = createClient({ transport })
+
+  const err = (await broadcastTransaction(client, {
+    signedTransaction: { ...signedTransaction, txID: 'ab'.repeat(32) },
+  }).catch((e) => e)) as BaseError
+  expect(err).toBeInstanceOf(BaseError)
+  expect(err.message).toContain('integrity check (txCheck)')
+  expect(calls).toHaveLength(0)
+})
+
+test('refuses a raw_data model that does not serialize to raw_data_hex', async () => {
+  const { transport, calls } = createMockTransport({
+    responses: { broadcasthex: { response: { result: true } } },
+  })
+  const client = createClient({ transport })
+
+  const err = (await broadcastTransaction(client, {
+    signedTransaction: {
+      ...signedTransaction,
+      // A drifted model: the bytes (and signature) say something else.
+      raw_data: { ...signedTransaction.raw_data, fee_limit: 1_000_000n },
+    },
+  }).catch((e) => e)) as BaseError
+  expect(err).toBeInstanceOf(BaseError)
+  expect(err.message).toContain('integrity check (txCheck)')
+  expect(calls).toHaveLength(0)
 })
 
 test('surfaces a broadcast rejection as TronBroadcastError with a decoded message', async () => {
