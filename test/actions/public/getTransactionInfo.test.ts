@@ -36,7 +36,7 @@ test('maps a successful TRC20 receipt (status, resources, log addresses)', async
   // contract_address 41-hex -> Base58.
   expect(info.contractAddress).toBe('TPL66VK2gCXNCD7EJg9pgJRfqcRazjhUZY')
 
-  // log[].address 41-hex -> Base58; topics/data get 0x-prefixed.
+  // log[].address EVM-form bare hex -> Base58; topics/data get 0x-prefixed.
   const log = info.logs[0]
   expect(log).toBeDefined()
   if (!log) throw new Error('expected log')
@@ -113,6 +113,34 @@ test('a log missing its address is omitted', async () => {
   expect(log.address).toBeUndefined()
   expect('address' in log).toBe(false)
   expect(log.topics[0]).toBe(`0x${'ff'.repeat(32)}`)
+})
+
+// The node emits log addresses in EVM form (bare 20-byte hex), but a
+// 41-prefixed 21-byte value must keep converting to the same Base58 address.
+test('a 41-prefixed log address also converts to Base58', async () => {
+  const { transport } = createMockTransport({
+    responses: {
+      gettransactioninfobyid: {
+        fn: () => ({
+          id: 'aa',
+          blockNumber: 5,
+          receipt: { result: 'SUCCESS' },
+          log: [
+            {
+              address: '41928c9af0651632157ef27a2cf17ca72c575a4d21',
+              topics: [],
+              data: '00',
+            },
+          ],
+        }),
+      },
+    },
+  })
+  const client = createPublicClient({ transport })
+
+  const info = await client.getTransactionInfo({ hash: 'aa' })
+  if (!info) throw new Error('expected receipt')
+  expect(info.logs[0]?.address).toBe('TPL66VK2gCXNCD7EJg9pgJRfqcRazjhUZY')
 })
 
 test('an unpacked transaction ({}) returns null', async () => {

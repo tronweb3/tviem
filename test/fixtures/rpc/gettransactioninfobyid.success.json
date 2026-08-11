@@ -1,6 +1,6 @@
 {
   "endpoint": "gettransactioninfobyid",
-  "description": "Hand-crafted successful TRC20 transfer receipt (SolidityNode). receipt.result SUCCESS -> status success. One Transfer(address,address,uint256) log: contract 41928c9af0651632157ef27a2cf17ca72c575a4d21 -> Base58 TPL66VK2gCXNCD7EJg9pgJRfqcRazjhUZY; topics/data are bare hex and must come out 0x-prefixed. contract_address maps 41-hex -> Base58.",
+  "description": "Hand-crafted successful TRC20 transfer receipt (SolidityNode). receipt.result SUCCESS -> status success. One Transfer(address,address,uint256) log: log[].address is EVM-form (bare 20-byte hex, no 41 prefix, as the node actually returns) 928c9af0651632157ef27a2cf17ca72c575a4d21 -> Base58 TPL66VK2gCXNCD7EJg9pgJRfqcRazjhUZY; topics/data are bare hex and must come out 0x-prefixed. contract_address maps 41-hex -> Base58.",
   "request": {
     "node": "solidity",
     "path": "gettransactioninfobyid",
@@ -25,7 +25,7 @@
     },
     "log": [
       {
-        "address": "41928c9af0651632157ef27a2cf17ca72c575a4d21",
+        "address": "928c9af0651632157ef27a2cf17ca72c575a4d21",
         "topics": [
           "ddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef",
           "0000000000000000000000007e5f4552091a69125d5dfcb7b8c2659029395bdf",

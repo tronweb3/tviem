@@ -35,6 +35,7 @@ type RawReceipt = {
 }
 
 type RawLog = {
+  /** EVM-form address: bare 20-byte hex, no `41` prefix, no `0x` prefix. */
   address?: string | undefined
   topics?: readonly string[] | undefined
   data?: string | undefined
@@ -73,8 +74,10 @@ function mapStatus(
 
 function formatLog(log: RawLog): TransactionLog {
   return {
+    // The node emits log addresses in EVM form (bare 20-byte hex, no `41`
+    // prefix); `0x`-prefixing also tolerates a 21-byte `41`-prefixed value.
     ...(log.address
-      ? { address: toBase58(log.address as TronHexAddress) }
+      ? { address: toBase58(`0x${log.address}`) }
       : {}),
     topics: (log.topics ?? []).map((topic) => `0x${topic}` as Hex),
     data: `0x${log.data ?? ''}` as Hex,
@@ -84,8 +87,9 @@ function formatLog(log: RawLog): TransactionLog {
 /**
  * Fetches a transaction's receipt / execution info from the SolidityNode via
  * `gettransactioninfobyid` (confirmed state). Addresses that come out of the
- * receipt (`contract_address`, `log[].address`) are converted back to
- * Base58Check; `topics`/`data` are `0x`-prefixed.
+ * receipt (`contract_address` as TRON 41-hex, `log[].address` as EVM-form
+ * bare hex) are converted back to Base58Check; `topics`/`data` are
+ * `0x`-prefixed.
  *
  * @param client The Client to use.
  * @param parameters `hash` — the transaction id.
