@@ -6,6 +6,7 @@ import { createWalletClient } from '../../../src/clients/createWalletClient.js'
 import { AccountNotFoundError } from '../../../src/errors/rpc.js'
 import type { Hex } from '../../../src/types/misc.js'
 import { toHex } from '../../../src/utils/address/toHex.js'
+import { decodeRawData } from '../../../src/utils/transaction/decodeRawData.js'
 import { rpc } from '../../fixtures/rpc/loader.js'
 import { loadTxFixtureFile, type TxFixture } from '../../fixtures/tx/loader.js'
 import { createMockTransport } from '../../mock/createMockTransport.js'
@@ -93,6 +94,35 @@ test('carries call_token_value + token_id byte-for-byte', async () => {
       .raw_data_hex,
   ).toBe(withToken?.rawDataHex)
   expect(toHex(contractAddress)).toBe(withToken?.contractAddress)
+})
+
+// A bare deployment defaults the two on-chain economics fields to the
+// ecosystem-standard values (TronWeb parity: userFeePercentage 100 /
+// originEnergyLimit 1e7). Proto3's implicit 0/0 would flip the energy payer
+// to the deployer and carry a non-positive origin_energy_limit the node
+// rejects outright.
+test('defaults consume_user_resource_percent to 100 and origin_energy_limit to 1e7', async () => {
+  const { transport, bodyOf } = writeMock()
+  const client = createWalletClient({ account: pk1, transport })
+  const value = deployValueOf(basic!)
+
+  await deployContract(client, {
+    abi: value.abi,
+    bytecode: `0x${value.bytecode}` as Hex,
+  })
+
+  const body = parseBroadcast(bodyOf('broadcasthex')) as {
+    raw_data_hex: string
+  }
+  const created = decodeRawData(body.raw_data_hex).contract[0]?.parameter
+    .value as {
+    new_contract?: {
+      consume_user_resource_percent?: number
+      origin_energy_limit?: number
+    }
+  }
+  expect(created.new_contract?.consume_user_resource_percent).toBe(100)
+  expect(created.new_contract?.origin_energy_limit).toBe(10_000_000)
 })
 
 test('resolves the per-call account when the client hoists none', async () => {

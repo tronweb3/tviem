@@ -2,7 +2,11 @@ import type { Abi } from 'abitype'
 
 import type { TronAccount } from '../../accounts/types.js'
 import type { Client } from '../../clients/createClient.js'
-import { defaultFeeLimit } from '../../constants/transaction.js'
+import {
+  defaultConsumeUserResourcePercent,
+  defaultFeeLimit,
+  defaultOriginEnergyLimit,
+} from '../../constants/transaction.js'
 import {
   AccountNotFoundError,
   type AccountNotFoundErrorType,
@@ -135,9 +139,19 @@ export type DeployContractParameters<
   name?: string | undefined
   /** TRX sent with the deployment, in SUN (`SmartContract.call_value`). */
   callValue?: bigint | undefined
-  /** Percent of energy paid by the caller (`consume_user_resource_percent`). */
+  /**
+   * Percent of each call's energy paid by the caller
+   * (`consume_user_resource_percent`); the deployer's account covers the
+   * rest. Enters the signed bytes and is fixed for the contract's lifetime.
+   * @default 100n — caller pays all (TronWeb's `userFeePercentage` default)
+   */
   consumeUserResourcePercent?: bigint | undefined
-  /** Deployer's energy limit (`SmartContract.origin_energy_limit`). */
+  /**
+   * Energy the deployer's account may spend per call
+   * (`SmartContract.origin_energy_limit`). Must be positive — java-tron
+   * rejects a deployment otherwise.
+   * @default 10_000_000n (TronWeb's default)
+   */
   originEnergyLimit?: bigint | undefined
   /** TRC10 amount sent with the deployment (`call_token_value`). */
   callTokenValue?: bigint | undefined
@@ -192,17 +206,8 @@ function assemble(
   contract: RawContract
   feeLimit: bigint
 } {
-  const {
-    abi,
-    bytecode,
-    args,
-    name,
-    callValue,
-    consumeUserResourcePercent,
-    originEnergyLimit,
-    callTokenValue,
-    tokenId,
-  } = parameters
+  const { abi, bytecode, args, name, callValue, callTokenValue, tokenId } =
+    parameters
 
   // Resolve the owner/signing account (per-call, else hoisted on the Client).
   const source = parameters.account ?? client.account
@@ -214,6 +219,16 @@ function assemble(
   // writeContract so the natural no-feeLimit call is not rejected on-chain for
   // fee_limit 0. An explicit `0n` is still honored (nullish-coalesced).
   const feeLimit = parameters.feeLimit ?? defaultFeeLimit
+
+  // The two on-chain economics fields default to the ecosystem-standard
+  // values (TronWeb parity). Left to proto3's implicit 0/0, a bare deployment
+  // would make the deployer pay every caller's energy AND carry a
+  // non-positive origin_energy_limit the node rejects. Both enter the signed
+  // bytes; explicit values (including 0n) are honored.
+  const consumeUserResourcePercent =
+    parameters.consumeUserResourcePercent ?? defaultConsumeUserResourcePercent
+  const originEnergyLimit =
+    parameters.originEnergyLimit ?? defaultOriginEnergyLimit
 
   // Build the CreateSmartContract (constructor args ABI-encoded onto bytecode).
   const contract: RawContract = {
@@ -227,13 +242,9 @@ function assemble(
           abi: toSmartContractAbi(abi),
           bytecode: encodeDeployData({ abi, bytecode, args }),
           ...(callValue !== undefined ? { call_value: callValue } : {}),
-          ...(consumeUserResourcePercent !== undefined
-            ? { consume_user_resource_percent: consumeUserResourcePercent }
-            : {}),
+          consume_user_resource_percent: consumeUserResourcePercent,
           ...(name !== undefined ? { name } : {}),
-          ...(originEnergyLimit !== undefined
-            ? { origin_energy_limit: originEnergyLimit }
-            : {}),
+          origin_energy_limit: originEnergyLimit,
         },
         ...(callTokenValue !== undefined
           ? { call_token_value: callTokenValue }
