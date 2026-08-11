@@ -41,6 +41,10 @@ test('throws AccountNotFoundError when no account is available', async () => {
   const { transport } = createMockTransport({ responses: {} })
   const client = createPublicClient({ transport })
   await expect(
-    buildVoteProposal(client, { proposalId: 1, blockHeader: tviemHeader }),
+    buildVoteProposal(client, {
+      proposalId: 1,
+      isApproval: true,
+      blockHeader: tviemHeader,
+    }),
   ).rejects.toBeInstanceOf(AccountNotFoundError)
 })

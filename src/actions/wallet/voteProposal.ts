@@ -34,8 +34,11 @@ export type VoteProposalParameters = {
   account?: TronAccount | Hex | undefined
   /** Id of the proposal to vote on. */
   proposalId: bigint | number
-  /** Whether to add (default) or remove approval. */
-  isApproval?: boolean | undefined
+  /**
+   * `true` adds approval, `false` removes it. Required: the two directions are
+   * opposite votes, so there is no default to fall back to.
+   */
+  isApproval: boolean
   /**
    * A pre-derived TaPoS + timing header. When supplied the transaction is built
    * fully offline against it; otherwise it is derived from the latest block.
@@ -83,7 +86,7 @@ function assemble(
   const value: ProposalApproveContract = {
     owner_address: toHex(account.address),
     proposal_id: BigInt(proposalId),
-    is_add_approval: isApproval ?? true,
+    is_add_approval: isApproval,
   }
 
   const contract: RawContract = {
