@@ -181,3 +181,15 @@ test('an unsafe plain-number balance fails closed with IntegerOutOfRangeError', 
     IntegerOutOfRangeError,
   )
 })
+
+// The account reads confirmed (SolidityNode) state by default; confirmed: false
+// reads the FullNode's latest (unconfirmed) state instead.
+test('confirmed: false reads the account from the FullNode', async () => {
+  const { transport, calls } = createMockTransport({
+    responses: { getaccount: { response: rpc('getaccount') } },
+  })
+  const client = createPublicClient({ transport })
+
+  await client.getAccount({ address: minimalAddress, confirmed: false })
+  expect(calls[0]?.node).toBe('full')
+})

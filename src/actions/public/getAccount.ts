@@ -22,6 +22,11 @@ import {
 export type GetAccountParameters = {
   /** The Base58Check address to read. */
   address: Address
+  /**
+   * Read confirmed (solidified) state from the SolidityNode; pass `false` to
+   * read the FullNode's latest (unconfirmed) state instead. @default true
+   */
+  confirmed?: boolean | undefined
 }
 
 /** An account permission (owner / active / witness) in formatted shape. */
@@ -255,8 +260,8 @@ function toFrozenV1(frozen: RawFrozenV1): AccountFrozenV1 {
  * positions still live on pre-migration accounts, votes, TRC10 balances and
  * permissions.
  *
- * Queries `getaccount` on the SolidityNode (confirmed state, same endpoint
- * `getBalance` reads). A non-existent account returns an empty `{}` and maps
+ * Queries `getaccount` (same endpoint `getBalance` reads) — SolidityNode
+ * (confirmed state) by default, FullNode with `confirmed: false`. A non-existent account returns an empty `{}` and maps
  * to `null`. TRON omits zero-valued fields, so every numeric field defaults
  * to `0n`; addresses come back Base58Check.
  *
@@ -266,10 +271,10 @@ function toFrozenV1(frozen: RawFrozenV1): AccountFrozenV1 {
  */
 export async function getAccount(
   client: Client,
-  { address }: GetAccountParameters,
+  { address, confirmed }: GetAccountParameters,
 ): Promise<GetAccountReturnType> {
   const response = await client.request<RawAccount>({
-    node: 'solidity',
+    node: (confirmed ?? true) ? 'solidity' : 'full',
     path: 'getaccount',
     method: 'POST',
     body: { address: toHex(address) },

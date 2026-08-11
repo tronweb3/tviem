@@ -72,6 +72,11 @@ export type ReadContractParameters<
    * is no anonymous form to fall back to either.
    */
   account?: TronAccount | AddressInput | undefined
+  /**
+   * Run the constant call against confirmed (solidified) state on the
+   * SolidityNode instead of the FullNode's latest state. @default false
+   */
+  confirmed?: boolean | undefined
 } & (readonly [] extends allArgs
   ? {
       /** The function arguments. */
@@ -157,6 +162,7 @@ export async function readContract<
     account: caller,
     address,
     args,
+    confirmed,
     functionName,
   } = parameters as ReadContractParameters
 
@@ -169,7 +175,7 @@ export async function readContract<
   const data = encodeFunctionData({ abi, functionName, args })
 
   const response = await client.request<TriggerConstantContractResponse>({
-    node: 'full',
+    node: confirmed ? 'solidity' : 'full',
     method: 'POST',
     path: 'triggerconstantcontract',
     body: {

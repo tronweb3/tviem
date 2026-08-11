@@ -67,6 +67,13 @@ export type EstimateEnergyParameters<
   callTokenValue?: bigint | undefined
   /** TRC10 token id (`token_id`). */
   tokenId?: bigint | undefined
+  /**
+   * Estimate against confirmed (solidified) state on the SolidityNode instead
+   * of the FullNode's latest state. `vm.estimateEnergy` is a per-node setting,
+   * so the solidity service must have it enabled too — a node without it
+   * rejects the call even when the full node accepts it. @default false
+   */
+  confirmed?: boolean | undefined
 } & (readonly [] extends allArgs
   ? {
       /** The function arguments. */
@@ -123,6 +130,7 @@ export async function estimateEnergy<
     args,
     callTokenValue,
     callValue,
+    confirmed,
     functionName,
     tokenId,
   } = parameters as EstimateEnergyParameters
@@ -151,7 +159,7 @@ export async function estimateEnergy<
   const data = encodeFunctionData({ abi, functionName, args })
 
   const response = await client.request<EstimateEnergyResponse>({
-    node: 'full',
+    node: confirmed ? 'solidity' : 'full',
     method: 'POST',
     path: 'estimateenergy',
     body: {

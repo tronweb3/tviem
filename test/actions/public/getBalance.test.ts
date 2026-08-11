@@ -76,3 +76,18 @@ test('an unsafe numeric balance is refused, not silently corrupted', async () =>
     client.getBalance({ address: 'TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC' }),
   ).rejects.toBeInstanceOf(IntegerOutOfRangeError)
 })
+
+// The balance reads confirmed (SolidityNode) state by default; confirmed: false
+// reads the FullNode's latest (unconfirmed) state instead.
+test('confirmed: false reads the balance from the FullNode', async () => {
+  const { transport, calls } = createMockTransport({
+    responses: { getaccount: { response: { balance: 42 } } },
+  })
+  const client = createPublicClient({ transport })
+
+  await client.getBalance({
+    address: 'TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC',
+    confirmed: false,
+  })
+  expect(calls[0]?.node).toBe('full')
+})

@@ -87,6 +87,7 @@ export {
 } from './public/getEventsOfLatestBlock.js'
 export {
   type GetNowBlockErrorType,
+  type GetNowBlockParameters,
   type GetNowBlockReturnType,
   getNowBlock,
 } from './public/getNowBlock.js'

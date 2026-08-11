@@ -215,6 +215,19 @@ describe('triggerConstantContract', () => {
     ).rejects.toBeInstanceOf(IntegerOutOfRangeError)
   })
 
+  test('confirmed: true simulates against the SolidityNode', async () => {
+    const { client, calls } = mockClient(transferOk)
+    await triggerConstantContract(client, {
+      address: contract,
+      abi: trc20Abi,
+      functionName: 'transfer',
+      args: [holder, 1n],
+      account: holder,
+      confirmed: true,
+    })
+    expect(calls[0]?.node).toBe('solidity')
+  })
+
   // The simulation runs against real chain state, so its outcome belongs to a
   // specific caller — the SDK never picks one.
   test('throws AccountNotFoundError without an account', async () => {

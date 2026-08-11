@@ -53,3 +53,21 @@ test('a missing witness_address is omitted', async () => {
   expect(block.witnessAddress).toBeUndefined()
   expect('witnessAddress' in block).toBe(false)
 })
+
+// Node routing: the chain head comes from the FullNode by default; confirmed
+// switches to the SolidityNode's solidified head.
+test('confirmed: true reads the solidified head from the SolidityNode', async () => {
+  const def = createMockTransport({
+    responses: { getnowblock: { response: rawBlock } },
+  })
+  await createPublicClient({ transport: def.transport }).getNowBlock()
+  expect(def.calls[0]?.node).toBe('full')
+
+  const sol = createMockTransport({
+    responses: { getnowblock: { response: rawBlock } },
+  })
+  await createPublicClient({ transport: sol.transport }).getNowBlock({
+    confirmed: true,
+  })
+  expect(sol.calls[0]?.node).toBe('solidity')
+})

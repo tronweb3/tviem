@@ -12,6 +12,11 @@ import { formatBlock, isEmptyResponse, type RawBlock } from './getNowBlock.js'
 export type GetBlockParameters = {
   /** The block number to fetch. */
   blockNumber: bigint | number
+  /**
+   * Read confirmed (solidified) state from the SolidityNode instead of the
+   * FullNode. @default false
+   */
+  confirmed?: boolean | undefined
 }
 export type GetBlockReturnType = Block
 
@@ -22,7 +27,8 @@ export type GetBlockErrorType =
   | ErrorType
 
 /**
- * Fetches a block by number from the FullNode via `getblockbynum`.
+ * Fetches a block by number via `getblockbynum` — FullNode by default,
+ * SolidityNode with `confirmed: true`.
  *
  * @param client The Client to use.
  * @param parameters `blockNumber` — the block number to fetch.
@@ -31,10 +37,10 @@ export type GetBlockErrorType =
  */
 export async function getBlock(
   client: Client,
-  { blockNumber }: GetBlockParameters,
+  { blockNumber, confirmed }: GetBlockParameters,
 ): Promise<GetBlockReturnType> {
   const response = await client.request<RawBlock>({
-    node: 'full',
+    node: confirmed ? 'solidity' : 'full',
     path: 'getblockbynum',
     method: 'POST',
     body: { num: Number(blockNumber) },

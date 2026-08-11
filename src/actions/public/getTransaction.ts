@@ -24,6 +24,12 @@ import { isEmptyResponse } from './getNowBlock.js'
 export type GetTransactionParameters = {
   /** The transaction id (64 hex chars; a `0x` prefix is tolerated). */
   hash: string
+  /**
+   * Read confirmed (solidified) state from the SolidityNode instead of the
+   * FullNode — the id then resolves only once the transaction is solidified.
+   * @default false
+   */
+  confirmed?: boolean | undefined
 }
 
 /** A packed contract's execution result echo (e.g. `{ contractRet: 'SUCCESS' }`). */
@@ -58,7 +64,8 @@ type RawTransactionResponse = {
 }
 
 /**
- * Fetches a transaction by id from the FullNode via `gettransactionbyid` — the
+ * Fetches a transaction by id via `gettransactionbyid` (FullNode by default,
+ * SolidityNode with `confirmed: true`) — the
  * original transaction (`raw_data` / `raw_data_hex` / signatures), not its
  * receipt ({@link getTransactionInfo} reads that). An id the node does not
  * know (never broadcast, or pruned) resolves to `null`.
@@ -83,11 +90,11 @@ type RawTransactionResponse = {
  */
 export async function getTransaction(
   client: Client,
-  { hash }: GetTransactionParameters,
+  { confirmed, hash }: GetTransactionParameters,
 ): Promise<GetTransactionReturnType> {
   const id = bareHex(hash)
   const response = await client.request<RawTransactionResponse>({
-    node: 'full',
+    node: confirmed ? 'solidity' : 'full',
     path: 'gettransactionbyid',
     method: 'POST',
     body: { value: id },

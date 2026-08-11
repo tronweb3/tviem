@@ -182,3 +182,19 @@ test('an unpacked transaction ({}) returns null', async () => {
 
   expect(await client.getTransactionInfo({ hash: 'deadbeef' })).toBeNull()
 })
+
+// The receipt reads confirmed (SolidityNode) state by default; confirmed: false
+// reads the FullNode's latest (unconfirmed) state instead.
+test('confirmed: false reads the receipt from the FullNode', async () => {
+  const { transport, calls } = createMockTransport({
+    responses: {
+      gettransactioninfobyid: {
+        response: rpc('gettransactioninfobyid.success'),
+      },
+    },
+  })
+  const client = createPublicClient({ transport })
+
+  await client.getTransactionInfo({ hash: successHash, confirmed: false })
+  expect(calls[0]?.node).toBe('full')
+})

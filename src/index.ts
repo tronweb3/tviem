@@ -140,6 +140,7 @@ export {
 } from './actions/public/getEventsOfLatestBlock.js'
 export {
   type GetNowBlockErrorType,
+  type GetNowBlockParameters,
   type GetNowBlockReturnType,
   getNowBlock,
 } from './actions/public/getNowBlock.js'

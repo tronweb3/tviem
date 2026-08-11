@@ -177,3 +177,13 @@ test('a malformed response (missing raw_data_hex) fails closed with TronRpcError
     TronRpcError,
   )
 })
+
+test('confirmed: true reads the transaction from the SolidityNode', async () => {
+  const { transport, calls } = createMockTransport({
+    responses: { gettransactionbyid: { response: rpc('gettransactionbyid') } },
+  })
+  const client = createPublicClient({ transport })
+
+  await client.getTransaction({ hash: txID, confirmed: true })
+  expect(calls[0]?.node).toBe('solidity')
+})

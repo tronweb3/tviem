@@ -85,3 +85,13 @@ test('getBlock throws BlockNotFoundError on an empty ({}) body', async () => {
     client.getBlock({ blockNumber: 999999n }),
   ).rejects.toBeInstanceOf(BlockNotFoundError)
 })
+
+test('confirmed: true reads the block from the SolidityNode', async () => {
+  const { transport, calls } = createMockTransport({
+    responses: { getblockbynum: { response: rpc('getblockbynum') } },
+  })
+  const client = createPublicClient({ transport })
+
+  await client.getBlock({ blockNumber: 4660n, confirmed: true })
+  expect(calls[0]?.node).toBe('solidity')
+})

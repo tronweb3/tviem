@@ -18,6 +18,11 @@ import { isEmptyResponse } from './getNowBlock.js'
 export type GetTransactionInfoParameters = {
   /** The transaction id (64 hex chars, no `0x` prefix). */
   hash: string
+  /**
+   * Read confirmed (solidified) state from the SolidityNode; pass `false` to
+   * read the FullNode's latest (unconfirmed) state instead. @default true
+   */
+  confirmed?: boolean | undefined
 }
 export type GetTransactionInfoReturnType = TransactionInfo | null
 
@@ -78,17 +83,16 @@ function formatLog(log: RawLog): TransactionLog {
   return {
     // The node emits log addresses in EVM form (bare 20-byte hex, no `41`
     // prefix); `0x`-prefixing also tolerates a 21-byte `41`-prefixed value.
-    ...(log.address
-      ? { address: toBase58(`0x${log.address}`) }
-      : {}),
+    ...(log.address ? { address: toBase58(`0x${log.address}`) } : {}),
     topics: (log.topics ?? []).map((topic) => `0x${topic}` as Hex),
     data: `0x${log.data ?? ''}` as Hex,
   }
 }
 
 /**
- * Fetches a transaction's receipt / execution info from the SolidityNode via
- * `gettransactioninfobyid` (confirmed state). Addresses that come out of the
+ * Fetches a transaction's receipt / execution info via
+ * `gettransactioninfobyid` — SolidityNode (confirmed state) by default,
+ * FullNode with `confirmed: false`. Addresses that come out of the
  * receipt (`contract_address` as TRON 41-hex, `log[].address` as EVM-form
  * bare hex) are converted back to Base58Check; `topics`/`data` are
  * `0x`-prefixed.
@@ -100,10 +104,10 @@ function formatLog(log: RawLog): TransactionLog {
  */
 export async function getTransactionInfo(
   client: Client,
-  { hash }: GetTransactionInfoParameters,
+  { confirmed, hash }: GetTransactionInfoParameters,
 ): Promise<GetTransactionInfoReturnType> {
   const response = await client.request<RawTransactionInfo>({
-    node: 'solidity',
+    node: (confirmed ?? true) ? 'solidity' : 'full',
     path: 'gettransactioninfobyid',
     method: 'POST',
     body: { value: hash },

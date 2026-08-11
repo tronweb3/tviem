@@ -11,6 +11,11 @@ import { type ToHexErrorType, toHex } from '../../utils/address/toHex.js'
 export type GetBalanceParameters = {
   /** The Base58Check address to read the TRX balance of. */
   address: Address
+  /**
+   * Read confirmed (solidified) state from the SolidityNode; pass `false` to
+   * read the FullNode's latest (unconfirmed) state instead. @default true
+   */
+  confirmed?: boolean | undefined
 }
 export type GetBalanceReturnType = bigint
 
@@ -28,7 +33,8 @@ type GetAccountResponse = {
 /**
  * Reads the TRX balance (in SUN) of an account.
  *
- * Queries `getaccount` on the SolidityNode (confirmed state). A non-existent
+ * Queries `getaccount` — SolidityNode (confirmed state) by default, FullNode
+ * with `confirmed: false`. A non-existent
  * account returns an empty `{}`, which maps to `0n` — no success assertion is
  * made (an empty body is a valid "zero balance" answer, not an error).
  *
@@ -38,10 +44,10 @@ type GetAccountResponse = {
  */
 export async function getBalance(
   client: Client,
-  { address }: GetBalanceParameters,
+  { address, confirmed }: GetBalanceParameters,
 ): Promise<GetBalanceReturnType> {
   const response = await client.request<GetAccountResponse>({
-    node: 'solidity',
+    node: (confirmed ?? true) ? 'solidity' : 'full',
     path: 'getaccount',
     method: 'POST',
     body: { address: toHex(address) },

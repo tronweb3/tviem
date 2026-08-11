@@ -178,3 +178,11 @@ test('rejects a tokenId beyond the JSON-safe integer range (K2)', async () => {
     }),
   ).rejects.toBeInstanceOf(IntegerOutOfRangeError)
 })
+
+test('confirmed: true estimates against the SolidityNode', async () => {
+  const { transport, calls } = energyMock()
+  const client = createPublicClient({ transport })
+
+  await client.estimateEnergy({ ...call, account: caller, confirmed: true })
+  expect(calls[0]?.node).toBe('solidity')
+})

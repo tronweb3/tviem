@@ -59,6 +59,7 @@ import {
   getEventsOfLatestBlock,
 } from '../../actions/public/getEventsOfLatestBlock.js'
 import {
+  type GetNowBlockParameters,
   type GetNowBlockReturnType,
   getNowBlock,
 } from '../../actions/public/getNowBlock.js'
@@ -134,8 +135,10 @@ export type PublicActions = {
   getEventsOfLatestBlock: (
     parameters?: GetEventsOfLatestBlockParameters,
   ) => Promise<GetEventsOfLatestBlockReturnType>
-  /** Fetches the latest (unconfirmed) block. */
-  getNowBlock: () => Promise<GetNowBlockReturnType>
+  /** Fetches the latest block (chain head, or solidified with `confirmed`). */
+  getNowBlock: (
+    parameters?: GetNowBlockParameters,
+  ) => Promise<GetNowBlockReturnType>
   /** Fetches a transaction by id (the original transaction, not its receipt). */
   getTransaction: (
     parameters: GetTransactionParameters,
@@ -232,8 +235,8 @@ export function publicActions(client: Client): PublicActions {
         getEventsOfLatestBlock,
         'getEventsOfLatestBlock',
       )(parameters),
-    getNowBlock: () =>
-      getAction(client, getNowBlock, 'getNowBlock')(undefined as never),
+    getNowBlock: (parameters) =>
+      getAction(client, getNowBlock, 'getNowBlock')(parameters as never),
     getTransaction: (parameters) =>
       getAction(client, getTransaction, 'getTransaction')(parameters),
     getTransactionInfo: (parameters) =>

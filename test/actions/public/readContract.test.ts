@@ -127,6 +127,21 @@ describe('readContract', () => {
     )
   })
 
+  test('confirmed: true reads against the SolidityNode', async () => {
+    const { client, calls } = mockClient(
+      rpc('triggerconstantcontract.trc20-balanceof'),
+    )
+    await readContract(client, {
+      address: contract,
+      abi: balanceOfAbi,
+      functionName: 'balanceOf',
+      args: [holder],
+      account: holder,
+      confirmed: true,
+    })
+    expect(calls[0]?.node).toBe('solidity')
+  })
+
   test('accepts an account object as the caller', async () => {
     // pk = 1 (permitted trivial key).
     const account = privateKeyToAccount(`0x${'0'.repeat(63)}1`)

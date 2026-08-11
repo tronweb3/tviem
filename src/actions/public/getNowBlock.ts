@@ -58,6 +58,13 @@ export function formatBlock(raw: RawBlock): Block {
   }
 }
 
+export type GetNowBlockParameters = {
+  /**
+   * Read the latest solidified block from the SolidityNode instead of the
+   * FullNode's chain head. @default false
+   */
+  confirmed?: boolean | undefined
+}
 export type GetNowBlockReturnType = Block
 
 export type GetNowBlockErrorType =
@@ -67,19 +74,23 @@ export type GetNowBlockErrorType =
   | ErrorType
 
 /**
- * Fetches the latest (unconfirmed) block from the FullNode via `getnowblock`.
+ * Fetches the latest block via `getnowblock` — the FullNode's (unconfirmed)
+ * chain head by default, or the latest solidified block with
+ * `confirmed: true`.
  *
  * The result satisfies `BlockRef`, so it can be passed straight to
  * `fillBlockHeader` when building a transaction's TaPoS reference fields.
  *
  * @param client The Client to use.
+ * @param parameters Optional `confirmed` node selector.
  * @returns The latest block.
  */
 export async function getNowBlock(
   client: Client,
+  parameters?: GetNowBlockParameters,
 ): Promise<GetNowBlockReturnType> {
   const response = await client.request<RawBlock>({
-    node: 'full',
+    node: parameters?.confirmed ? 'solidity' : 'full',
     path: 'getnowblock',
     method: 'GET',
   })

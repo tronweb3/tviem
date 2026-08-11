@@ -84,6 +84,11 @@ export type TriggerConstantContractParameters<
   callTokenValue?: bigint | undefined
   /** TRC10 token id (`token_id`). */
   tokenId?: bigint | undefined
+  /**
+   * Run the simulation against confirmed (solidified) state on the
+   * SolidityNode instead of the FullNode's latest state. @default false
+   */
+  confirmed?: boolean | undefined
 } & (readonly [] extends allArgs
   ? {
       /** The function arguments. */
@@ -185,6 +190,7 @@ export async function triggerConstantContract<
     args,
     callTokenValue,
     callValue,
+    confirmed,
     functionName,
     tokenId,
   } = parameters as TriggerConstantContractParameters
@@ -213,7 +219,7 @@ export async function triggerConstantContract<
   const data = encodeFunctionData({ abi, functionName, args })
 
   const response = await client.request<TriggerConstantContractResponse>({
-    node: 'full',
+    node: confirmed ? 'solidity' : 'full',
     method: 'POST',
     path: 'triggerconstantcontract',
     body: {
