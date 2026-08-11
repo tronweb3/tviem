@@ -17,8 +17,8 @@ export type WaitForTransactionReceiptParameters = {
   /** The transaction id to wait on. */
   hash: string
   /**
-   * Block depth to wait for on top of the receipt's block, using the node
-   * formula `nowBlock.number - receipt.blockNumber >= confirmations`. A value of
+   * Block depth to wait for, where the mining block itself counts as the first
+   * confirmation: `head - receipt.blockNumber + 1 >= confirmations`. A value of
    * `1` (default) returns as soon as the receipt is available.
    */
   confirmations?: number | undefined
@@ -69,6 +69,23 @@ function isPending(receipt: unknown): boolean {
 }
 
 /**
+ * Coerces a block number to a positive safe integer, or `NaN` when it is not
+ * one. A packed transaction lives in a positive block, so absent, `null`, 0,
+ * negative and non-numeric values are all rejected alike — any of them,
+ * coerced, would corrupt the depth formula (`Number(null)` is 0; a `-1`
+ * sentinel would count as `head + 2` confirmations deep).
+ */
+function toBlockNumber(value: unknown): number {
+  const n =
+    typeof value === 'bigint'
+      ? Number(value)
+      : typeof value === 'number'
+        ? value
+        : Number.NaN
+  return Number.isSafeInteger(n) && n > 0 ? n : Number.NaN
+}
+
+/**
  * Polls `getTransactionInfo` until the transaction is packed into a block, then
  * (optionally) polls `getNowBlock` until the requested block depth is reached.
  *
@@ -107,14 +124,27 @@ export async function waitForTransactionReceipt(
 
   const packed = receipt as TransactionReceipt
 
-  // Phase 2 — wait for the requested block depth.
+  // Phase 2 — wait for the requested block depth. Both block numbers must be
+  // positive integers (see toBlockNumber): the receipt may come from a Client
+  // override rather than getTransactionInfo, and any coerced junk value
+  // corrupts the depth formula in the fail-open direction — a 0 (or `null`,
+  // or `-1`) receipt block makes every receipt look at least `head` blocks
+  // deep, silently passing any requested confirmation count.
   if (confirmations > 1) {
-    const receiptBlock = Number(packed.blockNumber ?? 0)
+    const receiptBlock = toBlockNumber(packed.blockNumber)
+    if (Number.isNaN(receiptBlock))
+      throw new TronRpcError(
+        `The receipt for "${hash}" does not carry a usable blockNumber; confirmations cannot be counted.`,
+      )
     while (true) {
       const now = (await getBlock(undefined as never)) as {
         number?: number | bigint
       } | null
-      const head = Number(now?.number ?? 0)
+      const head = toBlockNumber(now?.number)
+      if (Number.isNaN(head))
+        throw new TronRpcError(
+          'getNowBlock returned a block without a usable number; confirmations cannot be counted.',
+        )
       // The mining block counts as the first confirmation, so `confirmations`
       // is reached at depth `confirmations - 1` on top of it (N=1 resolves at
       // the receipt block itself, handled by the `> 1` fast-path above).

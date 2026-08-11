@@ -1,5 +1,6 @@
 import type { Client } from '../../clients/createClient.js'
 import type { RequestErrorType } from '../../clients/transports/http.js'
+import { TronRpcError, type TronRpcErrorType } from '../../errors/rpc.js'
 import type { ErrorType } from '../../errors/utils.js'
 import type { TronHexAddress } from '../../types/address.js'
 import type { Hex } from '../../types/misc.js'
@@ -23,6 +24,7 @@ export type GetTransactionInfoReturnType = TransactionInfo | null
 export type GetTransactionInfoErrorType =
   | RequestErrorType
   | ToBase58ErrorType
+  | TronRpcErrorType
   | ErrorType
 
 type RawReceipt = {
@@ -108,10 +110,30 @@ export async function getTransactionInfo(
   })
   if (isEmptyResponse(response)) return null
 
+  // The resource fields below legitimately arrive omitted — java-tron's JSON
+  // drops proto3-default (zero) values — so `?? 0` reconstructs them.
+  // `blockNumber` is held to more: a packed transaction lives in a positive
+  // block, so anything else — absent, `null`, 0, negative, or a non-number
+  // (e.g. the string "0" a spec-conformant proto3-JSON re-serializer emits
+  // for an int64 default) — is a malformed response, and coercing it would
+  // hand a confirmation counter a receipt that looks `head` blocks deep.
+  // (`blockTimeStamp` stays defaulted: nothing branches on it, so a malformed
+  // value corrupts display, not control flow.)
+  const { blockNumber } = response
+  if (
+    typeof blockNumber !== 'number' ||
+    !Number.isSafeInteger(blockNumber) ||
+    blockNumber <= 0
+  )
+    throw new TronRpcError(
+      'The node returned a transaction receipt without a valid blockNumber.',
+      { metaMessages: ['Path: gettransactioninfobyid'] },
+    )
+
   const receipt = response.receipt ?? {}
   return {
     id: response.id ?? hash,
-    blockNumber: BigInt(response.blockNumber ?? 0),
+    blockNumber: BigInt(blockNumber),
     blockTimeStamp: BigInt(response.blockTimeStamp ?? 0),
     status: mapStatus(receipt.result, response.result),
     fee: BigInt(response.fee ?? 0),

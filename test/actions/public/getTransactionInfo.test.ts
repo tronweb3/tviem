@@ -1,5 +1,6 @@
 import { expect, test } from 'vitest'
 import { createPublicClient } from '../../../src/clients/createPublicClient.js'
+import { TronRpcError } from '../../../src/errors/rpc.js'
 import { rpc } from '../../fixtures/rpc/loader.js'
 import { createMockTransport } from '../../mock/createMockTransport.js'
 
@@ -141,6 +142,36 @@ test('a 41-prefixed log address also converts to Base58', async () => {
   const info = await client.getTransactionInfo({ hash: 'aa' })
   if (!info) throw new Error('expected receipt')
   expect(info.logs[0]?.address).toBe('TPL66VK2gCXNCD7EJg9pgJRfqcRazjhUZY')
+})
+
+// A non-empty receipt without a usable blockNumber is malformed — reporting
+// block 0 instead would let a confirmation counter see the receipt as `head`
+// blocks deep and pass any requested depth. The guard requires an actual
+// positive safe-integer number: `null`, explicit `0`, a `-1` sentinel, the
+// string "0" (a spec-conformant proto3-JSON re-serializer's int64 default)
+// and a fractional value all count as absence, and none may escape as a raw
+// BigInt() engine error.
+test('throws on a non-empty receipt without a valid blockNumber', async () => {
+  const bodies = [
+    { id: 'aa', receipt: { net_usage: 268 } },
+    { id: 'aa', blockNumber: null },
+    { id: 'aa', blockNumber: 0 },
+    { id: 'aa', blockNumber: -1 },
+    { id: 'aa', blockNumber: '4660' },
+    { id: 'aa', blockNumber: 1.5 },
+  ]
+  for (const body of bodies) {
+    const { transport } = createMockTransport({
+      responses: { gettransactioninfobyid: { fn: () => body } },
+    })
+    const client = createPublicClient({ transport })
+
+    const err = (await client
+      .getTransactionInfo({ hash: 'aa' })
+      .catch((e) => e)) as TronRpcError
+    expect(err).toBeInstanceOf(TronRpcError)
+    expect(err.message).toContain('without a valid blockNumber')
+  }
 })
 
 test('an unpacked transaction ({}) returns null', async () => {

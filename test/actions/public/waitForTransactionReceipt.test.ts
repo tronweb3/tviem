@@ -112,6 +112,72 @@ describe('waitForTransactionReceipt', () => {
     expect(blocks.count()).toBe(2)
   })
 
+  // The old `?? 0` fallback made a blockNumber-less receipt look `head` blocks
+  // deep, so any confirmation count passed instantly — the failure direction
+  // must be a loud error, not a pass. Every row is a distinct bypass of a
+  // weaker guard: `null === undefined` is false but `Number(null)` is 0; a
+  // `-1` not-found sentinel is truthy yet counts as `head + 2` deep; `true`
+  // coerces to block 1; the string "0" is what a spec-conformant proto3-JSON
+  // re-serializer emits for an int64 default.
+  test.each([
+    ['missing', { id: 'nb', status: 'success' as const }],
+    ['null', { id: 'nb', blockNumber: null, status: 'success' as const }],
+    ['zero', { id: 'nb', blockNumber: 0, status: 'success' as const }],
+    ['negative', { id: 'nb', blockNumber: -1, status: 'success' as const }],
+    ['boolean', { id: 'nb', blockNumber: true, status: 'success' as const }],
+    ['string', { id: 'nb', blockNumber: '0', status: 'success' as const }],
+  ])('rejects a %s receipt blockNumber (confirmations > 1)', async (_, receipt) => {
+    const blocks = queued([{ number: 62_000_000 }])
+    const client = makeClient({
+      getTransactionInfo: queued([receipt]).fn,
+      getNowBlock: blocks.fn,
+    })
+
+    const err = (await waitForTransactionReceipt(client, {
+      hash: 'nb',
+      confirmations: 20,
+    }).catch((e) => e)) as TronRpcError
+    expect(err).toBeInstanceOf(TronRpcError)
+    expect(err.message).toContain('does not carry a usable blockNumber')
+    // It must throw before consulting the chain head at all.
+    expect(blocks.count()).toBe(0)
+  })
+
+  test('rejects when the head block carries no number', async () => {
+    const receipt = { id: 'hb', blockNumber: 100, status: 'success' as const }
+    const client = makeClient({
+      getTransactionInfo: queued([receipt]).fn,
+      getNowBlock: queued([{}]).fn,
+    })
+
+    // The short timeout is a regression tripwire: pre-guard code treated a
+    // number-less head as 0 and polled to the wait deadline, so a regression
+    // surfaces here in ~0.5s as a WaitForTransactionReceiptTimeoutError
+    // failing the instanceof assertion (instead of stalling toward vitest's
+    // own test timeout).
+    const err = (await waitForTransactionReceipt(client, {
+      hash: 'hb',
+      confirmations: 2,
+      pollingInterval: 50,
+      timeout: 500,
+    }).catch((e) => e)) as TronRpcError
+    expect(err).toBeInstanceOf(TronRpcError)
+    expect(err.message).toContain('block without a usable number')
+  })
+
+  // The guard is scoped to confirmations > 1 on purpose: at the default depth
+  // of 1 the receipt's mere existence is the answer and blockNumber is never
+  // read (the built-in getTransactionInfo validates its own responses; this
+  // boundary only matters for Client overrides).
+  test('confirmations: 1 resolves without reading blockNumber', async () => {
+    const receipt = { id: 'c1', status: 'success' as const }
+    const client = makeClient({ getTransactionInfo: queued([receipt]).fn })
+
+    expect(await waitForTransactionReceipt(client, { hash: 'c1' })).toBe(
+      receipt,
+    )
+  })
+
   test('does not throw on a reverted receipt by default', async () => {
     const receipt = { id: 'r', blockNumber: 5, status: 'reverted' as const }
     const client = makeClient({ getTransactionInfo: queued([receipt]).fn })
