@@ -119,3 +119,62 @@ test('rejects a callValue beyond the JSON-safe integer range (K2)', async () => 
     }),
   ).rejects.toBeInstanceOf(IntegerOutOfRangeError)
 })
+
+// Absence is contractual (cf. omitting absent addresses instead of defaulting):
+// an unset param must leave its key out of the body, not send a zero.
+test('omits call_value + call_token_value + token_id when not passed', async () => {
+  const { transport, calls } = energyMock()
+  const client = createPublicClient({ transport })
+
+  await client.estimateEnergy({ ...call, account: caller })
+  const body = calls[0]?.body as Record<string, unknown>
+  expect('call_value' in body).toBe(false)
+  expect('call_token_value' in body).toBe(false)
+  expect('token_id' in body).toBe(false)
+})
+
+test('forwards callTokenValue + tokenId as call_token_value + token_id', async () => {
+  const { transport, calls } = energyMock()
+  const client = createPublicClient({ transport })
+
+  await client.estimateEnergy({
+    ...call,
+    account: caller,
+    callTokenValue: 5n,
+    tokenId: 1002000n,
+  })
+  const body = calls[0]?.body as {
+    call_token_value?: number
+    token_id?: number
+  }
+  expect(body.call_token_value).toBe(5)
+  expect(body.token_id).toBe(1002000)
+})
+
+test('rejects a callTokenValue beyond the JSON-safe integer range (K2)', async () => {
+  const { transport } = energyMock()
+  const client = createPublicClient({ transport })
+
+  await expect(
+    client.estimateEnergy({
+      ...call,
+      account: caller,
+      callTokenValue: BigInt(Number.MAX_SAFE_INTEGER) + 1n,
+      tokenId: 1002000n,
+    }),
+  ).rejects.toBeInstanceOf(IntegerOutOfRangeError)
+})
+
+test('rejects a tokenId beyond the JSON-safe integer range (K2)', async () => {
+  const { transport } = energyMock()
+  const client = createPublicClient({ transport })
+
+  await expect(
+    client.estimateEnergy({
+      ...call,
+      account: caller,
+      callTokenValue: 5n,
+      tokenId: BigInt(Number.MAX_SAFE_INTEGER) + 1n,
+    }),
+  ).rejects.toBeInstanceOf(IntegerOutOfRangeError)
+})

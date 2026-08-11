@@ -113,21 +113,31 @@ test('sendTrx reproduces the canonical TransferContract gold vector byte-for-byt
   expect(body.signature).toEqual([goldSig])
 })
 
-// Every trigger gold vector the local writeContract can reproduce: those whose
-// only extra fields are feeLimit / call_value (writeContract does not model
-// token_id / call_token_value, and always writes a feeLimit so the
-// "without fee_limit" vector is not reproducible). Params are declared per
-// case; the OUTPUT is asserted against the loaded fixture.
+// Every trigger gold vector the local writeContract can reproduce: writeContract
+// always writes a feeLimit, so only the "without fee_limit" vector is not
+// reproducible. Params are declared per case; the OUTPUT is asserted against
+// the loaded fixture.
 const writeContractCases = [
   {
     fixtureName: 'trigger TRC20 transfer with fee_limit',
     feeLimit: 100000000n,
     callValue: undefined as bigint | undefined,
+    callTokenValue: undefined as bigint | undefined,
+    tokenId: undefined as bigint | undefined,
   },
   {
     fixtureName: 'trigger TRC20 transfer with call_value',
     feeLimit: 100000000n,
     callValue: 1000000n,
+    callTokenValue: undefined as bigint | undefined,
+    tokenId: undefined as bigint | undefined,
+  },
+  {
+    fixtureName: 'trigger TRC20 transfer with call_token_value + token_id',
+    feeLimit: 100000000n,
+    callValue: undefined as bigint | undefined,
+    callTokenValue: 5n as bigint | undefined,
+    tokenId: 1002000n as bigint | undefined,
   },
 ] as const
 
@@ -137,6 +147,8 @@ test.each(
   fixtureName,
   feeLimit,
   callValue,
+  callTokenValue,
+  tokenId,
 }) => {
   const gold = triggerCases.find((c) => c.name === fixtureName)
   if (!gold) throw new Error(`missing trigger fixture: ${fixtureName}`)
@@ -153,6 +165,8 @@ test.each(
     args: [trc20Recipient, 1000000n],
     feeLimit,
     ...(callValue !== undefined ? { callValue } : {}),
+    ...(callTokenValue !== undefined ? { callTokenValue } : {}),
+    ...(tokenId !== undefined ? { tokenId } : {}),
   })
 
   expect(txID).toBe(gold.txID)

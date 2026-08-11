@@ -47,6 +47,15 @@ const RAW_CALLVALUE =
 const SIG_CALLVALUE =
   'e4722832b4ea185f2f119ad08a1ec9a533c47d460d871cf8a3320de97fd3d17235195aa0e50b2bcb4713178a7f1479cc822f8ce0d183927525f36997774108611c'
 
+// trigger-smart-contract[3] "with call_token_value + token_id" + sig/transaction
+// "…with call_token_value + token_id".
+const TX_ID_TOKEN =
+  '55e2d00be74b4fe3121fd231ec1f0f0d6500379382ea7ff93d3c187cf5653d04'
+const RAW_TOKEN =
+  '0a0212342208010203040506070840e0a499ffbc315ab401081f12af010a31747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e54726967676572536d617274436f6e7472616374127a0a15417e5f4552091a69125d5dfcb7b8c2659029395bdf1215410123456789abcdef0123456789abcdef012345672244a9059cbb0000000000000000000000000123456789abcdef0123456789abcdef0123456700000000000000000000000000000000000000000000000000000000000f424028053090943d7080d095ffbc31900180c2d72f'
+const SIG_TOKEN =
+  '8209221db0138836b05029463dc945dbe78de43621aadd4731d3ced1d18f6488362cca89a150dcc21df7390a843c9d34fe04a8dad3b8276eaff495ce786171f81b'
+
 function writeMock() {
   return createMockTransport({
     responses: {
@@ -103,6 +112,29 @@ test('attaches callValue to the TriggerSmartContract byte-for-byte', async () =>
   }
   expect(body.raw_data_hex).toBe(RAW_CALLVALUE)
   expect(body.signature).toEqual([SIG_CALLVALUE])
+})
+
+test('attaches callTokenValue + tokenId to the TriggerSmartContract byte-for-byte', async () => {
+  const { transport, bodyOf } = writeMock()
+  const client = createWalletClient({ account: pk1, transport })
+
+  const { txID } = await client.writeContract({
+    address: contract,
+    abi: trc20Abi,
+    functionName: 'transfer',
+    args: [recipient, 1000000n],
+    feeLimit: FEE_LIMIT,
+    callTokenValue: 5n,
+    tokenId: 1002000n,
+  })
+
+  expect(txID).toBe(TX_ID_TOKEN)
+  const body = parseBroadcast(bodyOf('broadcasthex')) as {
+    raw_data_hex: string
+    signature: string[]
+  }
+  expect(body.raw_data_hex).toBe(RAW_TOKEN)
+  expect(body.signature).toEqual([SIG_TOKEN])
 })
 
 test('defaults feeLimit to defaultFeeLimit when omitted', async () => {

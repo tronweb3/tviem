@@ -68,6 +68,10 @@ export type WriteContractParameters<
   feeLimit?: bigint | undefined
   /** TRX value (in SUN) to attach to the call. */
   callValue?: bigint | undefined
+  /** TRC10 amount sent with the call (`call_token_value`). */
+  callTokenValue?: bigint | undefined
+  /** TRC10 token id (`TriggerSmartContract.token_id`). */
+  tokenId?: bigint | undefined
   /**
    * A pre-derived TaPoS + timing header. When supplied the transaction is built
    * fully offline against it; otherwise it is derived from the latest block.
@@ -117,7 +121,15 @@ function assemble(
   client: Client,
   parameters: WriteContractParameters,
 ): { account: TronAccount; contract: RawContract; feeLimit: bigint } {
-  const { abi, address, args, callValue, functionName } = parameters
+  const {
+    abi,
+    address,
+    args,
+    callTokenValue,
+    callValue,
+    functionName,
+    tokenId,
+  } = parameters
 
   // Resolve the signing account (per-call, else hoisted on the Client).
   const source = parameters.account ?? client.account
@@ -137,6 +149,8 @@ function assemble(
     data,
   }
   if (callValue !== undefined) value.call_value = callValue
+  if (callTokenValue !== undefined) value.call_token_value = callTokenValue
+  if (tokenId !== undefined) value.token_id = tokenId
 
   const contract: RawContract = {
     type: ContractType.TriggerSmartContract,
@@ -160,7 +174,7 @@ function assemble(
  *
  * @param client The Client to use.
  * @param parameters Contract address / ABI / function / args / fee, optional
- * callValue/account/permissionId/blockHeader.
+ * callValue/callTokenValue/tokenId/account/permissionId/blockHeader.
  * @returns A TronWeb-shaped unsigned transaction ({@link BuildTransactionReturnType}).
  */
 export async function buildWriteContract<

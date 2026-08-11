@@ -166,6 +166,55 @@ describe('triggerConstantContract', () => {
     ).rejects.toBeInstanceOf(IntegerOutOfRangeError)
   })
 
+  test('forwards callTokenValue + tokenId as call_token_value + token_id', async () => {
+    const { client, calls } = mockClient(transferOk)
+    await triggerConstantContract(client, {
+      address: contract,
+      abi: trc20Abi,
+      functionName: 'transfer',
+      args: [holder, 1000000n],
+      account: holder,
+      callTokenValue: 5n,
+      tokenId: 1002000n,
+    })
+    const body = calls[0]?.body as {
+      call_token_value?: number
+      token_id?: number
+    }
+    expect(body.call_token_value).toBe(5)
+    expect(body.token_id).toBe(1002000)
+  })
+
+  test('rejects a callTokenValue beyond the JSON-safe integer range', async () => {
+    const { client } = mockClient(transferOk)
+    await expect(
+      triggerConstantContract(client, {
+        address: contract,
+        abi: trc20Abi,
+        functionName: 'transfer',
+        args: [holder, 1n],
+        account: holder,
+        callTokenValue: BigInt(Number.MAX_SAFE_INTEGER) + 1n,
+        tokenId: 1002000n,
+      }),
+    ).rejects.toBeInstanceOf(IntegerOutOfRangeError)
+  })
+
+  test('rejects a tokenId beyond the JSON-safe integer range', async () => {
+    const { client } = mockClient(transferOk)
+    await expect(
+      triggerConstantContract(client, {
+        address: contract,
+        abi: trc20Abi,
+        functionName: 'transfer',
+        args: [holder, 1n],
+        account: holder,
+        callTokenValue: 5n,
+        tokenId: BigInt(Number.MAX_SAFE_INTEGER) + 1n,
+      }),
+    ).rejects.toBeInstanceOf(IntegerOutOfRangeError)
+  })
+
   // The simulation runs against real chain state, so its outcome belongs to a
   // specific caller — the SDK never picks one.
   test('throws AccountNotFoundError without an account', async () => {

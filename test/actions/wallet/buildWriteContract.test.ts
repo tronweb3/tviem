@@ -114,6 +114,32 @@ test('raw_data.contract[0] is a node-JSON TriggerSmartContract', async () => {
   )
 })
 
+test('carries callTokenValue + tokenId into raw_data byte-for-byte', async () => {
+  const { transport } = writeMock()
+  const client = createWalletClient({ account: pk1, transport })
+
+  const tx = await buildWriteContract(client, {
+    address: contract,
+    abi: trc20Abi,
+    functionName: 'transfer',
+    args: [recipient, 1000000n],
+    feeLimit: FEE_LIMIT,
+    callTokenValue: 5n,
+    tokenId: 1002000n,
+  })
+
+  // Same gold vector writeContract signs (trigger-smart-contract[3]).
+  expect(tx.txID).toBe(
+    '55e2d00be74b4fe3121fd231ec1f0f0d6500379382ea7ff93d3c187cf5653d04',
+  )
+  const entry = (tx.raw_data.contract as Record<string, unknown>[])[0] as {
+    parameter: { value: { call_token_value?: number; token_id?: number } }
+  }
+  // Canonical node-JSON shape after the encode∘decode roundtrip.
+  expect(entry.parameter.value.call_token_value).toBe(5)
+  expect(entry.parameter.value.token_id).toBe(1002000)
+})
+
 test('permissionId is baked in as Permission_id and changes the id', async () => {
   const { transport } = writeMock()
   const client = createWalletClient({ account: pk1, transport })

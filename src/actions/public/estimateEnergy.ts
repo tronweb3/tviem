@@ -63,6 +63,10 @@ export type EstimateEnergyParameters<
     | (functionName extends allFunctionNames ? functionName : never) // infer value
   /** TRX value (in SUN) attached to the call. */
   callValue?: bigint | undefined
+  /** TRC10 amount attached to the call (`call_token_value`). */
+  callTokenValue?: bigint | undefined
+  /** TRC10 token id (`token_id`). */
+  tokenId?: bigint | undefined
 } & (readonly [] extends allArgs
   ? {
       /** The function arguments. */
@@ -117,23 +121,26 @@ export async function estimateEnergy<
     account: caller,
     address,
     args,
+    callTokenValue,
     callValue,
     functionName,
+    tokenId,
   } = parameters as EstimateEnergyParameters
 
   // The request body is JSON, where an int64 becomes a JS number — so a
-  // `call_value` past the safe-integer range would be silently rounded. Reject
-  // it rather than send a corrupted estimate (energy estimation never affects
-  // what is signed).
-  if (
-    callValue !== undefined &&
-    (callValue < 0n || callValue > BigInt(Number.MAX_SAFE_INTEGER))
-  )
-    throw new IntegerOutOfRangeError({
-      max: String(Number.MAX_SAFE_INTEGER),
-      min: '0',
-      value: String(callValue),
-    })
+  // `call_value` / `call_token_value` / `token_id` past the safe-integer range
+  // would be silently rounded. Reject it rather than send a corrupted estimate
+  // (energy estimation never affects what is signed).
+  for (const value of [callValue, callTokenValue, tokenId])
+    if (
+      value !== undefined &&
+      (value < 0n || value > BigInt(Number.MAX_SAFE_INTEGER))
+    )
+      throw new IntegerOutOfRangeError({
+        max: String(Number.MAX_SAFE_INTEGER),
+        min: '0',
+        value: String(value),
+      })
 
   // Resolve the caller (per-call, else hoisted on the Client). Never defaulted:
   // the estimate is only meaningful for the account that will send the call.
@@ -152,6 +159,10 @@ export async function estimateEnergy<
       contract_address: toHex(address),
       data: data.slice(2),
       ...(callValue !== undefined ? { call_value: Number(callValue) } : {}),
+      ...(callTokenValue !== undefined
+        ? { call_token_value: Number(callTokenValue) }
+        : {}),
+      ...(tokenId !== undefined ? { token_id: Number(tokenId) } : {}),
     },
   })
 
