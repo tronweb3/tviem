@@ -158,6 +158,57 @@ test('maps a fully populated account (stake 2.0, votes, assets, permissions)', a
   ])
 })
 
+// Verified against a live TRE devnet account populated via setAccountId /
+// createToken: the node emits these six keys; they must map, not drop.
+test('maps account_id, asset_issued_* and the window/asset optimized flags', async () => {
+  const { transport } = createMockTransport({
+    responses: {
+      getaccount: {
+        fn: () => ({
+          address: '41c3b754325913154c3ec8e2126c1c5545dbf7c19e',
+          account_id: '70726f62652d69642d303031',
+          // The node emits the issued id as plain digits, the name as hex.
+          asset_issued_ID: '1000001',
+          asset_issued_name: '46756c6c486f757365',
+          asset_optimized: true,
+          net_window_optimized: true,
+          account_resource: { energy_window_optimized: true },
+        }),
+      },
+    },
+  })
+  const client = createPublicClient({ transport })
+
+  const account = await client.getAccount({ address: minimalAddress })
+  if (!account) throw new Error('expected account')
+  expect(account.accountId).toBe('70726f62652d69642d303031')
+  expect(account.assetIssuedId).toBe('1000001')
+  expect(account.assetIssuedName).toBe('46756c6c486f757365')
+  expect(account.assetOptimized).toBe(true)
+  expect(account.netWindowOptimized).toBe(true)
+  expect(account.energyWindowOptimized).toBe(true)
+})
+
+// The optional trio stays absent (not fabricated) when the node omits it; the
+// boolean flags default to false like `isWitness`.
+test('omits accountId/assetIssued* and defaults the optimized flags', async () => {
+  const { transport } = createMockTransport({
+    responses: {
+      getaccount: { fn: () => ({ balance: 1 }) },
+    },
+  })
+  const client = createPublicClient({ transport })
+
+  const account = await client.getAccount({ address: minimalAddress })
+  if (!account) throw new Error('expected account')
+  expect('accountId' in account).toBe(false)
+  expect('assetIssuedId' in account).toBe(false)
+  expect('assetIssuedName' in account).toBe(false)
+  expect(account.assetOptimized).toBe(false)
+  expect(account.netWindowOptimized).toBe(false)
+  expect(account.energyWindowOptimized).toBe(false)
+})
+
 test('a non-existent account (empty body) resolves to null', async () => {
   const { transport } = createMockTransport({
     responses: { getaccount: { fn: () => ({}) } },

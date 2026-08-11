@@ -69,6 +69,8 @@ export type AccountState = {
   address: Address
   /** Account name as the node reports it (hex-encoded bytes), if set. */
   accountName?: string | undefined
+  /** Account id (hex-encoded bytes), if set via `setAccountId`. */
+  accountId?: string | undefined
   /** Account type (`'Normal'` unless the node says otherwise). */
   type: 'Normal' | 'AssetIssue' | 'Contract'
   /** TRX balance in SUN. */
@@ -93,12 +95,16 @@ export type AccountState = {
   latestConsumeFreeTime: bigint
   /** Bandwidth usage sliding-window size. */
   netWindowSize: bigint
+  /** Whether the bandwidth window uses the optimized accounting format. */
+  netWindowOptimized: boolean
   /** Energy consumed (from `account_resource`). */
   energyUsage: bigint
   /** Last energy consumption timestamp (ms). */
   latestConsumeTimeForEnergy: bigint
   /** Energy usage sliding-window size. */
   energyWindowSize: bigint
+  /** Whether the energy window uses the optimized accounting format. */
+  energyWindowOptimized: boolean
   /** Stake 2.0 frozen tranches (bandwidth / energy / TRON power). */
   frozenV2: AccountFrozenV2[]
   /** Stake 2.0 unstaking entries awaiting withdrawal. */
@@ -131,6 +137,16 @@ export type AccountState = {
   votes: { voteAddress: Address; voteCount: bigint }[]
   /** TRC10 balances (`assetV2`), keyed by token id. */
   assetV2: { key: string; value: bigint }[]
+  /**
+   * Id of the TRC10 token this account issued, if any. Unlike the
+   * hex-encoded name, the node emits this as the plain digit string
+   * (e.g. `'1000001'`).
+   */
+  assetIssuedId?: string | undefined
+  /** Name of the TRC10 token this account issued (hex-encoded bytes), if any. */
+  assetIssuedName?: string | undefined
+  /** Whether TRC10 balances use the optimized storage format. */
+  assetOptimized: boolean
   /** TRC10 free-bandwidth usage (`free_asset_net_usageV2`), keyed by token id. */
   freeAssetNetUsageV2: { key: string; value: bigint }[]
   /** The owner permission, when the account exists on-chain. */
@@ -171,6 +187,7 @@ type RawAccountResource = {
   energy_usage?: number | string | undefined
   latest_consume_time_for_energy?: number | string | undefined
   energy_window_size?: number | string | undefined
+  energy_window_optimized?: boolean | undefined
   delegated_frozenV2_balance_for_energy?: number | string | undefined
   acquired_delegated_frozenV2_balance_for_energy?: number | string | undefined
   frozen_balance_for_energy?: RawFrozenV1 | undefined
@@ -180,6 +197,7 @@ type RawAccountResource = {
 type RawAccount = {
   address?: string | undefined
   account_name?: string | undefined
+  account_id?: string | undefined
   type?: string | number | undefined
   balance?: number | string | bigint | undefined
   create_time?: number | string | undefined
@@ -193,6 +211,7 @@ type RawAccount = {
   latest_consume_time?: number | string | undefined
   latest_consume_free_time?: number | string | undefined
   net_window_size?: number | string | undefined
+  net_window_optimized?: boolean | undefined
   frozenV2?: RawFrozenV2[] | undefined
   unfrozenV2?: RawUnfrozenV2[] | undefined
   delegated_frozenV2_balance_for_bandwidth?: number | string | undefined
@@ -208,6 +227,9 @@ type RawAccount = {
   account_resource?: RawAccountResource | undefined
   votes?: RawVote[] | undefined
   assetV2?: { key?: string | undefined; value?: number | string | undefined }[]
+  asset_issued_ID?: string | undefined
+  asset_issued_name?: string | undefined
+  asset_optimized?: boolean | undefined
   free_asset_net_usageV2?: {
     key?: string | undefined
     value?: number | string | undefined
@@ -289,6 +311,9 @@ export async function getAccount(
     ...(response.account_name !== undefined
       ? { accountName: response.account_name }
       : {}),
+    ...(response.account_id !== undefined
+      ? { accountId: response.account_id }
+      : {}),
     type: toAccountType(response.type),
     balance: toSafeBigInt(response.balance),
     createTime: toSafeBigInt(response.create_time),
@@ -301,11 +326,13 @@ export async function getAccount(
     latestConsumeTime: toSafeBigInt(response.latest_consume_time),
     latestConsumeFreeTime: toSafeBigInt(response.latest_consume_free_time),
     netWindowSize: toSafeBigInt(response.net_window_size),
+    netWindowOptimized: response.net_window_optimized ?? false,
     energyUsage: toSafeBigInt(resource.energy_usage),
     latestConsumeTimeForEnergy: toSafeBigInt(
       resource.latest_consume_time_for_energy,
     ),
     energyWindowSize: toSafeBigInt(resource.energy_window_size),
+    energyWindowOptimized: resource.energy_window_optimized ?? false,
     frozenV2: (response.frozenV2 ?? []).map((frozen) => ({
       type: toResourceCode(frozen.type),
       amount: toSafeBigInt(frozen.amount),
@@ -355,6 +382,13 @@ export async function getAccount(
       key: asset.key ?? '',
       value: toSafeBigInt(asset.value),
     })),
+    ...(response.asset_issued_ID !== undefined
+      ? { assetIssuedId: response.asset_issued_ID }
+      : {}),
+    ...(response.asset_issued_name !== undefined
+      ? { assetIssuedName: response.asset_issued_name }
+      : {}),
+    assetOptimized: response.asset_optimized ?? false,
     freeAssetNetUsageV2: (response.free_asset_net_usageV2 ?? []).map(
       (usage) => ({
         key: usage.key ?? '',
