@@ -159,8 +159,10 @@ export type DecodeMessageErrorType =
  * - Addresses decode to `41…` bare lowercase hex; `bytes` fields to bare
  *   lowercase hex (no `0x`).
  * - `int64` decodes via `int64ToJson` (a JSON number within `±(2^53 − 1)`,
- *   else a decimal string); `enum` decodes to its name string (falling back
- *   to the number for values outside the table).
+ *   else a decimal string); `enum` decodes to its name string, falling back
+ *   to the number for values outside the table — the one divergence from
+ *   JsonFormat, which still knows names our narrowed tables dropped (e.g.
+ *   `ResourceCode` 2 decodes here as `2`, not `'TRON_POWER'`).
  * - proto3 defaults are omitted: a field absent from the wire is absent
  *   from the result (JsonFormat prints only set fields).
  * - Strict by design: a wire field outside the schema (or with an

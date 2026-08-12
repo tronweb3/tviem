@@ -63,6 +63,23 @@ test('unfreezes for ENERGY byte-for-byte against the gold vector', async () => {
   expect(body.raw_data_hex).toBe(energy?.rawDataHex)
 })
 
+// The narrowed enum makes `ResourceCode['TRON_POWER']` undefined, and the
+// protobuf writer drops undefined fields — an unchecked lookup would silently
+// build a BANDWIDTH (proto3-default) unstake for a different resource. The
+// action must refuse the name before any request instead.
+test('rejects an invalid resource name from untyped JS before any request', async () => {
+  const { transport, calls } = writeMock()
+  const client = createWalletClient({ account: pk1, transport })
+
+  await expect(
+    unfreezeBalanceV2(client, {
+      unfreezeBalance: 1n,
+      resource: 'TRON_POWER' as never,
+    }),
+  ).rejects.toThrow(/Invalid staking resource "TRON_POWER"/)
+  expect(calls).toHaveLength(0)
+})
+
 test('throws AccountNotFoundError when no account is available', async () => {
   const { transport } = writeMock()
   const client = createPublicClient({ transport })

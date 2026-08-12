@@ -1,5 +1,6 @@
 import { expect, test } from 'vitest'
 
+import { hexToBytes } from '../../../../src/utils/encoding/toBytes.js'
 import { bytesToHex } from '../../../../src/utils/encoding/toHex.js'
 import {
   decodeCancelAllUnfreezeV2Contract,
@@ -106,4 +107,29 @@ test('freeze/unfreeze decode to the canonical form (name enums, number int64)', 
     owner_address: v1,
     unfreeze_balance: 1_000_000,
   })
+})
+
+// TRON_POWER (wire value 2) is out of the narrowed enum table: the name no
+// longer encodes, and the wire value decodes to the NUMBER 2 (not a name) —
+// which must re-encode byte-identical, so legacy on-chain stake transactions
+// keep round-tripping through decode → txCheck → re-serialize.
+test('TRON_POWER: name refuses to encode, wire value 2 round-trips as 2', () => {
+  expect(() =>
+    encodeUnfreezeBalanceV2Contract({
+      owner_address: v1,
+      unfreeze_balance: 1_000_000n,
+      resource: 'TRON_POWER' as never,
+    }),
+  ).toThrow(/enum/i)
+
+  const legacyWire = hexToBytes(`0x0a15${v1}10c0843d1802`)
+  const decoded = decodeUnfreezeBalanceV2Contract(legacyWire)
+  expect(decoded).toStrictEqual({
+    owner_address: v1,
+    unfreeze_balance: 1_000_000,
+    resource: 2,
+  })
+  expect(bytesToHex(encodeUnfreezeBalanceV2Contract(decoded))).toBe(
+    `0x0a15${v1}10c0843d1802`,
+  )
 })

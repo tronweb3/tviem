@@ -56,6 +56,8 @@ test('confirmed (no _unconfirmed) + bool and array conversion', () => {
   expect(e.unconfirmed).toBe(false)
   expect(e.args.flag).toBe(true)
   expect(e.args.ids).toEqual([1n, 2n])
+  // No `event` in the raw payload -> the field is omitted, not fabricated.
+  expect('event' in e).toBe(false)
 })
 
 test('falls back to named result values when result_type is absent', () => {

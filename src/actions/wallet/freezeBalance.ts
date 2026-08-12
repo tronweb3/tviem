@@ -19,7 +19,8 @@ import {
 import type { RawContract } from '../../utils/transaction/serializeRawData.js'
 import {
   type FreezeBalanceContract,
-  ResourceCode,
+  type ResourceCodeOfErrorType,
+  resourceCodeOf,
 } from '../../utils/transaction/types.js'
 import type { StakeResource } from './freezeBalanceV2.js'
 import {
@@ -57,6 +58,7 @@ export type FreezeBalanceErrorType =
   | AccountNotFoundErrorType
   | BuildAndBroadcastErrorType
   | ParseAccountErrorType
+  | ResourceCodeOfErrorType
   | ToHexErrorType
   | ErrorType
 
@@ -70,6 +72,7 @@ export type BuildFreezeBalanceErrorType =
   | AccountNotFoundErrorType
   | BuildTransactionErrorType
   | ParseAccountErrorType
+  | ResourceCodeOfErrorType
   | ToHexErrorType
   | ErrorType
 
@@ -90,7 +93,7 @@ function assemble(
     owner_address: toHex(account.address),
     frozen_balance: frozenBalance,
     frozen_duration: frozenDuration,
-    resource: ResourceCode[resource],
+    resource: resourceCodeOf(resource),
   }
   if (receiverAddress !== undefined)
     value.receiver_address = toHex(receiverAddress)

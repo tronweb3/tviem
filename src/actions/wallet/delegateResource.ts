@@ -19,7 +19,8 @@ import {
 import type { RawContract } from '../../utils/transaction/serializeRawData.js'
 import {
   type DelegateResourceContract,
-  ResourceCode,
+  type ResourceCodeOfErrorType,
+  resourceCodeOf,
 } from '../../utils/transaction/types.js'
 import {
   type BuildAndBroadcastErrorType,
@@ -61,6 +62,7 @@ export type DelegateResourceErrorType =
   | AccountNotFoundErrorType
   | BuildAndBroadcastErrorType
   | ParseAccountErrorType
+  | ResourceCodeOfErrorType
   | ToHexErrorType
   | ErrorType
 
@@ -77,6 +79,7 @@ export type BuildDelegateResourceErrorType =
   | AccountNotFoundErrorType
   | BuildTransactionErrorType
   | ParseAccountErrorType
+  | ResourceCodeOfErrorType
   | ToHexErrorType
   | ErrorType
 
@@ -94,7 +97,7 @@ function assemble(
 
   const value: DelegateResourceContract = {
     owner_address: toHex(account.address),
-    resource: ResourceCode[resource],
+    resource: resourceCodeOf(resource),
     balance,
     receiver_address: toHex(receiverAddress),
   }

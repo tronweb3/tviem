@@ -1,3 +1,5 @@
+import { BaseError, type BaseErrorType } from '../../errors/base.js'
+import type { ErrorType } from '../../errors/utils.js'
 import type { AddressInput } from '../../types/address.js'
 import type { ByteArray } from '../../types/misc.js'
 
@@ -35,6 +37,24 @@ export type ResourceCode = (typeof ResourceCode)[keyof typeof ResourceCode]
 /** `ResourceType` enum names as java-tron's JSON renders them (index = wire value). */
 export const ResourceCodeName = ['BANDWIDTH', 'ENERGY'] as const
 export type ResourceCodeName = (typeof ResourceCodeName)[number]
+
+export type ResourceCodeOfErrorType = BaseErrorType | ErrorType
+
+/**
+ * Resolves a staking resource name to its wire value, throwing on anything
+ * else. Guards the untyped-JS path: indexing `ResourceCode` with a name the
+ * enum does not carry ('TRON_POWER', a typo, wrong case) yields `undefined`,
+ * which the protobuf writer drops — silently building a transaction for the
+ * proto3-default resource (BANDWIDTH) instead of the one the caller named.
+ */
+export function resourceCodeOf(name: ResourceCodeName): ResourceCode {
+  const code = ResourceCode[name]
+  if (code === undefined)
+    throw new BaseError(
+      `Invalid staking resource "${name}". Expected one of: ${ResourceCodeName.join(', ')}.`,
+    )
+  return code
+}
 
 /** `Permission.PermissionType` (wire values). */
 export const PermissionType = {

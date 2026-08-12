@@ -69,6 +69,7 @@ export {
   type AccountFrozenV1,
   type AccountFrozenV2,
   type AccountPermission,
+  type AccountResourceName,
   type AccountState,
   type AccountUnfrozenV2,
   type GetAccountErrorType,

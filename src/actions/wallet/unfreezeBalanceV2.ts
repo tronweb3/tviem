@@ -16,7 +16,10 @@ import {
   contractTypeUrlPrefix,
 } from '../../utils/transaction/registry.js'
 import type { RawContract } from '../../utils/transaction/serializeRawData.js'
-import { ResourceCode } from '../../utils/transaction/types.js'
+import {
+  type ResourceCodeOfErrorType,
+  resourceCodeOf,
+} from '../../utils/transaction/types.js'
 import type { StakeResource } from './freezeBalanceV2.js'
 import {
   type BuildAndBroadcastErrorType,
@@ -49,6 +52,7 @@ export type UnfreezeBalanceV2ErrorType =
   | AccountNotFoundErrorType
   | BuildAndBroadcastErrorType
   | ParseAccountErrorType
+  | ResourceCodeOfErrorType
   | ToHexErrorType
   | ErrorType
 
@@ -62,6 +66,7 @@ export type BuildUnfreezeBalanceV2ErrorType =
   | AccountNotFoundErrorType
   | BuildTransactionErrorType
   | ParseAccountErrorType
+  | ResourceCodeOfErrorType
   | ToHexErrorType
   | ErrorType
 
@@ -84,7 +89,7 @@ function assemble(
       value: {
         owner_address: toHex(account.address),
         unfreeze_balance: unfreezeBalance,
-        resource: ResourceCode[resource],
+        resource: resourceCodeOf(resource),
       },
     },
   }
