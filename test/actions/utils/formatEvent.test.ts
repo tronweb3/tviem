@@ -42,7 +42,7 @@ test('normalizes a TronGrid Transfer event (named args only, typed)', () => {
   expect(e.args.value).toBe(1_500_450_000n)
   // Positional keys are dropped; only named args survive.
   expect(e.args['0']).toBeUndefined()
-  expect(e.signature).toContain('Transfer(')
+  expect(e.event).toContain('Transfer(')
   expect(e.unconfirmed).toBe(true)
 })
 

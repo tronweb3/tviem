@@ -45,7 +45,7 @@ export type TronEvent = {
    */
   args: Record<string, unknown>
   /** The full event signature string, when provided (e.g. `Transfer(address,...)`). */
-  signature?: string | undefined
+  event?: string | undefined
   /** `true` when the event comes from an unconfirmed (non-solidified) block. */
   unconfirmed: boolean
 }
@@ -113,7 +113,7 @@ export function formatEvent(raw: RawTronEvent): TronEvent {
     eventIndex: Number(raw.event_index ?? 0),
     transactionId: raw.transaction_id ?? '',
     args,
-    ...(raw.event ? { signature: raw.event } : {}),
+    ...(raw.event ? { event: raw.event } : {}),
     unconfirmed: raw._unconfirmed === true,
   }
 }
