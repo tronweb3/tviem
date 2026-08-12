@@ -92,10 +92,8 @@ test('contract address fields accept every input form', () => {
 })
 
 test('enum value unions', () => {
-  expectTypeOf<ResourceCode>().toEqualTypeOf<0 | 1 | 2>()
-  expectTypeOf<ResourceCodeName>().toEqualTypeOf<
-    'BANDWIDTH' | 'ENERGY' | 'TRON_POWER'
-  >()
+  expectTypeOf<ResourceCode>().toEqualTypeOf<0 | 1>()
+  expectTypeOf<ResourceCodeName>().toEqualTypeOf<'BANDWIDTH' | 'ENERGY'>()
   // enum fields accept the JsonFormat name (canonical) or the wire integer
   expectTypeOf<FreezeBalanceV2Contract['resource']>().toEqualTypeOf<
     ResourceCodeName | number | undefined

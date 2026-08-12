@@ -75,9 +75,9 @@ test('encodeUnfreezeBalanceV2Contract', () => {
   const encoded = encodeUnfreezeBalanceV2Contract({
     owner_address: v1,
     unfreeze_balance: 1_000_000n,
-    resource: ResourceCode.TRON_POWER,
+    resource: ResourceCode.ENERGY,
   })
-  expect(bytesToHex(encoded)).toBe(`0x0a15${v1}10c0843d1802`)
+  expect(bytesToHex(encoded)).toBe(`0x0a15${v1}10c0843d1801`)
 })
 
 test('freeze/unfreeze decode to the canonical form (name enums, number int64)', () => {

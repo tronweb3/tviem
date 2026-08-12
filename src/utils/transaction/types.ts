@@ -29,12 +29,11 @@ export type Int64 = bigint | number | string
 export const ResourceCode = {
   BANDWIDTH: 0,
   ENERGY: 1,
-  TRON_POWER: 2,
 } as const
 export type ResourceCode = (typeof ResourceCode)[keyof typeof ResourceCode]
 
 /** `ResourceType` enum names as java-tron's JSON renders them (index = wire value). */
-export const ResourceCodeName = ['BANDWIDTH', 'ENERGY', 'TRON_POWER'] as const
+export const ResourceCodeName = ['BANDWIDTH', 'ENERGY'] as const
 export type ResourceCodeName = (typeof ResourceCodeName)[number]
 
 /** `Permission.PermissionType` (wire values). */

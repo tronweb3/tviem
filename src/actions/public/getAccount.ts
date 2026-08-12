@@ -32,10 +32,16 @@ export type GetAccountParameters = {
 /** An account permission (owner / active / witness) in formatted shape. */
 export type AccountPermission = SignWeightPermission
 
+/**
+ * Resource name on an account's `frozenV2`/`unfrozenV2` entries. Wider than
+ * `ResourceCodeName`: the node also emits the legacy `TRON_POWER` slot here.
+ */
+export type AccountResourceName = ResourceCodeName | 'TRON_POWER'
+
 /** One Stake 2.0 frozen tranche. */
 export type AccountFrozenV2 = {
   /** Resource the stake backs (absent on the node = `'BANDWIDTH'`). */
-  type: ResourceCodeName
+  type: AccountResourceName
   /** Staked amount in SUN (absent on the node = `0n`). */
   amount: bigint
 }
@@ -43,7 +49,7 @@ export type AccountFrozenV2 = {
 /** One Stake 2.0 unstaking (pending withdrawal) entry. */
 export type AccountUnfrozenV2 = {
   /** Resource the stake backed (absent on the node = `'BANDWIDTH'`). */
-  type: ResourceCodeName
+  type: AccountResourceName
   /** Unstaked amount in SUN. */
   unfreezeAmount: bigint
   /** Timestamp (ms) the amount becomes withdrawable. */
@@ -265,8 +271,8 @@ function toAccountType(
 }
 
 /** Absent resource enum on the wire is the proto3 default: `BANDWIDTH`. */
-function toResourceCode(type: string | undefined): ResourceCodeName {
-  return (type ?? 'BANDWIDTH') as ResourceCodeName
+function toResourceCode(type: string | undefined): AccountResourceName {
+  return (type ?? 'BANDWIDTH') as AccountResourceName
 }
 
 function toFrozenV1(frozen: RawFrozenV1): AccountFrozenV1 {
