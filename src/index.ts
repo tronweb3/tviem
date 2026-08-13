@@ -109,36 +109,13 @@ export {
   getTransactionFee,
 } from './actions/public/getChainParameters.js'
 export {
-  type GetContractEventsErrorType,
-  type GetContractEventsParameters,
-  type GetContractEventsReturnType,
-  getContractEvents,
-} from './actions/public/getContractEvents.js'
-export {
-  type GetEventsByBlockNumberErrorType,
-  type GetEventsByBlockNumberParameters,
-  type GetEventsByBlockNumberReturnType,
-  getEventsByBlockNumber,
-} from './actions/public/getEventsByBlockNumber.js'
-export {
-  type EventOrderBy,
-  type GetEventsByContractAddressErrorType,
-  type GetEventsByContractAddressParameters,
-  type GetEventsByContractAddressReturnType,
-  getEventsByContractAddress,
-} from './actions/public/getEventsByContractAddress.js'
-export {
-  type GetEventsByTransactionIDErrorType,
-  type GetEventsByTransactionIDParameters,
-  type GetEventsByTransactionIDReturnType,
-  getEventsByTransactionID,
-} from './actions/public/getEventsByTransactionID.js'
-export {
-  type GetEventsOfLatestBlockErrorType,
-  type GetEventsOfLatestBlockParameters,
-  type GetEventsOfLatestBlockReturnType,
-  getEventsOfLatestBlock,
-} from './actions/public/getEventsOfLatestBlock.js'
+  type BlockTag,
+  type GetLogsErrorType,
+  type GetLogsParameters,
+  type GetLogsReturnType,
+  getLogs,
+  type Log,
+} from './actions/public/getLogs.js'
 export {
   type GetNowBlockErrorType,
   type GetNowBlockParameters,
@@ -183,10 +160,6 @@ export {
   type WaitForTransactionReceiptReturnType,
   waitForTransactionReceipt,
 } from './actions/public/waitForTransactionReceipt.js'
-export type {
-  EventPageMeta,
-  TronEvent,
-} from './actions/utils/formatEvent.js'
 // Write (wallet) actions — local build → sign → broadcast pipeline.
 export {
   type AccountPermissionUpdateErrorType,

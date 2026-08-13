@@ -1,5 +1,6 @@
 import type {
   Abi,
+  AbiEvent,
   AbiFunction,
   ExtractAbiEventNames,
   ExtractAbiFunction,
@@ -7,9 +8,11 @@ import type {
 } from 'abitype'
 
 import type { Client } from '../clients/createClient.js'
+import { AbiEventNotFoundError } from '../errors/abi.js'
 import type { ErrorType } from '../errors/utils.js'
 import type { Address } from '../types/address.js'
 import type { ContractFunctionName } from '../types/contract.js'
+import type { Hex } from '../types/misc.js'
 import type { IsNever, Prettify } from '../types/utils.js'
 import type { TronAbiParametersToPrimitiveTypes } from '../utils/abi/encodeAbiParameters.js'
 import { getAction } from '../utils/getAction.js'
@@ -18,10 +21,11 @@ import {
   estimateEnergy,
 } from './public/estimateEnergy.js'
 import {
-  type GetContractEventsParameters,
-  type GetContractEventsReturnType,
-  getContractEvents,
-} from './public/getContractEvents.js'
+  type BlockTag,
+  type GetLogsParameters,
+  type GetLogsReturnType,
+  getLogs,
+} from './public/getLogs.js'
 import {
   type ReadContractParameters,
   readContract,
@@ -124,25 +128,36 @@ type GetEstimateFunction<
     : [args: _args, options?: EstimateOptions]
 ) => Promise<bigint>
 
-/** Facade `getEvents.<Event>(options?)` filters — everything `getContractEvents`
- * takes except `abi` / `address` / `eventName` (which the facade binds). */
-export type GetEventsOptions = Omit<
-  GetContractEventsParameters,
-  'abi' | 'address' | 'eventName'
->
+/** Facade `getEvents.<Event>(options?)` filters — everything `getLogs` takes
+ * except `address` / `event` / `events` / `topics` (which the facade binds). */
+export type GetEventsOptions = {
+  /**
+   * Indexed argument filter, positional over the indexed inputs or keyed by
+   * name. An array entry is an OR-list; `null` / `undefined` is a wildcard.
+   */
+  args?: readonly unknown[] | Record<string, unknown> | undefined
+  /** Drop logs that do not decode against the event ABI. @default false */
+  strict?: boolean | undefined
+  /** Inclusive lower block bound. @default 'latest' (node default) */
+  fromBlock?: bigint | number | BlockTag | undefined
+  /** Inclusive upper block bound. @default 'latest' (node default) */
+  toBlock?: bigint | number | BlockTag | undefined
+  /** Restrict to the single block with this hash (excludes `fromBlock`/`toBlock`). */
+  blockHash?: Hex | undefined
+}
 
-/** `getEvents.<Event>(options?)` → the events matching that event name. */
+/** `getEvents.<Event>(options?)` → the decoded logs matching that event. */
 type GetEventsGroup<_eventNames extends string> =
   IsNever<_eventNames> extends true
     ? {
         [eventName: string]: (
           options?: GetEventsOptions,
-        ) => Promise<GetContractEventsReturnType>
+        ) => Promise<GetLogsReturnType>
       }
     : {
         [eventName in _eventNames]: (
           options?: GetEventsOptions,
-        ) => Promise<GetContractEventsReturnType>
+        ) => Promise<GetLogsReturnType>
       }
 
 export type GetContractReturnType<
@@ -242,7 +257,7 @@ export type GetContractErrorType = ErrorType
  * `writeContract`) and `estimateEnergy`. Groups are mounted by capability
  * probing the Client — `read` only when it exposes `readContract`, `write` /
  * `estimateEnergy` only when it exposes `writeContract`. `getEvents.<Event>` is
- * always mounted and reads that event's logs via `getContractEvents`.
+ * always mounted and reads that event's logs via `getLogs` (`eth_getLogs`).
  *
  * @example
  * const contract = getContract({
@@ -370,17 +385,22 @@ export function getContract<
     {},
     {
       get(_, eventName: string) {
-        return (options?: GetEventsOptions) =>
-          getAction(
+        return async (options?: GetEventsOptions) => {
+          const event = abi.find(
+            (item): item is AbiEvent =>
+              item.type === 'event' && item.name === eventName,
+          )
+          if (!event) throw new AbiEventNotFoundError(eventName)
+          return getAction(
             client,
-            getContractEvents,
-            'getContractEvents',
+            getLogs,
+            'getLogs',
           )({
-            abi,
             address,
-            eventName,
+            event,
             ...options,
-          } as GetContractEventsParameters)
+          } as GetLogsParameters)
+        }
       },
     },
   )

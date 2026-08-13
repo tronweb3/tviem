@@ -34,30 +34,10 @@ import {
   getChainParameters,
 } from '../../actions/public/getChainParameters.js'
 import {
-  type GetContractEventsParameters,
-  type GetContractEventsReturnType,
-  getContractEvents,
-} from '../../actions/public/getContractEvents.js'
-import {
-  type GetEventsByBlockNumberParameters,
-  type GetEventsByBlockNumberReturnType,
-  getEventsByBlockNumber,
-} from '../../actions/public/getEventsByBlockNumber.js'
-import {
-  type GetEventsByContractAddressParameters,
-  type GetEventsByContractAddressReturnType,
-  getEventsByContractAddress,
-} from '../../actions/public/getEventsByContractAddress.js'
-import {
-  type GetEventsByTransactionIDParameters,
-  type GetEventsByTransactionIDReturnType,
-  getEventsByTransactionID,
-} from '../../actions/public/getEventsByTransactionID.js'
-import {
-  type GetEventsOfLatestBlockParameters,
-  type GetEventsOfLatestBlockReturnType,
-  getEventsOfLatestBlock,
-} from '../../actions/public/getEventsOfLatestBlock.js'
+  type GetLogsParameters,
+  type GetLogsReturnType,
+  getLogs,
+} from '../../actions/public/getLogs.js'
 import {
   type GetNowBlockParameters,
   type GetNowBlockReturnType,
@@ -115,26 +95,8 @@ export type PublicActions = {
   ) => Promise<GetAccountResourcesReturnType>
   /** Fetches a block by number. */
   getBlock: (parameters: GetBlockParameters) => Promise<GetBlockReturnType>
-  /** Reads a contract's events (ABI-typed `eventName`) via the TronGrid `/v1` index. */
-  getContractEvents: (
-    parameters: GetContractEventsParameters,
-  ) => Promise<GetContractEventsReturnType>
-  /** Reads a contract's events from the TronGrid `/v1` index. */
-  getEventsByContractAddress: (
-    parameters: GetEventsByContractAddressParameters,
-  ) => Promise<GetEventsByContractAddressReturnType>
-  /** Reads every event a transaction emitted. */
-  getEventsByTransactionID: (
-    parameters: GetEventsByTransactionIDParameters,
-  ) => Promise<GetEventsByTransactionIDReturnType>
-  /** Reads every event emitted in a block. */
-  getEventsByBlockNumber: (
-    parameters: GetEventsByBlockNumberParameters,
-  ) => Promise<GetEventsByBlockNumberReturnType>
-  /** Reads every event emitted in the latest block. */
-  getEventsOfLatestBlock: (
-    parameters?: GetEventsOfLatestBlockParameters,
-  ) => Promise<GetEventsOfLatestBlockReturnType>
+  /** Reads event logs matching a filter, via the JSON-RPC `eth_getLogs` method. */
+  getLogs: (parameters?: GetLogsParameters) => Promise<GetLogsReturnType>
   /** Fetches the latest block (chain head, or solidified with `confirmed`). */
   getNowBlock: (
     parameters?: GetNowBlockParameters,
@@ -209,32 +171,8 @@ export function publicActions(client: Client): PublicActions {
       getAction(client, getAccountResources, 'getAccountResources')(parameters),
     getBlock: (parameters) =>
       getAction(client, getBlock, 'getBlock')(parameters),
-    getContractEvents: (parameters) =>
-      getAction(client, getContractEvents, 'getContractEvents')(parameters),
-    getEventsByContractAddress: (parameters) =>
-      getAction(
-        client,
-        getEventsByContractAddress,
-        'getEventsByContractAddress',
-      )(parameters),
-    getEventsByTransactionID: (parameters) =>
-      getAction(
-        client,
-        getEventsByTransactionID,
-        'getEventsByTransactionID',
-      )(parameters),
-    getEventsByBlockNumber: (parameters) =>
-      getAction(
-        client,
-        getEventsByBlockNumber,
-        'getEventsByBlockNumber',
-      )(parameters),
-    getEventsOfLatestBlock: (parameters = {}) =>
-      getAction(
-        client,
-        getEventsOfLatestBlock,
-        'getEventsOfLatestBlock',
-      )(parameters),
+    getLogs: (parameters = {}) =>
+      getAction(client, getLogs, 'getLogs')(parameters),
     getNowBlock: (parameters) =>
       getAction(client, getNowBlock, 'getNowBlock')(parameters as never),
     getTransaction: (parameters) =>

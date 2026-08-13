@@ -289,25 +289,28 @@ describe('getContract', () => {
   })
 
   describe('getEvents', () => {
-    test('dispatches to getContractEvents against the /v1 event index', async () => {
-      const rawEvent = {
-        block_number: 1,
-        block_timestamp: 1_700_000_000_000,
-        contract_address: contractAddress,
-        event_index: 0,
-        event_name: 'Transfer',
-        result: {
-          from: '0xafb6ccdb345bc36c69a618b66c1693f36213622b',
-          to: '0x2e5531459778bee382355ab73bc93ee763f5ed94',
-          value: '5',
-        },
-        result_type: { from: 'address', to: 'address', value: 'uint256' },
-        transaction_id: 'ab'.repeat(32),
-      }
+    const transferTopic =
+      '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef'
+    const rawLog = {
+      address: '0x0123456789abcdef0123456789abcdef01234567',
+      blockHash: `0x${'0'.repeat(54)}3e8a947c68`,
+      blockNumber: '0x3e8a947',
+      data: '0x0000000000000000000000000000000000000000000000000000000000736201',
+      logIndex: '0x0',
+      removed: false,
+      topics: [
+        transferTopic,
+        '0x0000000000000000000000001975fbea3496424a88de2a147d76baa34a3d1b93',
+        '0x000000000000000000000000c3abfbceb364febe625662a9af6add366df58f81',
+      ],
+      transactionHash: `0x${'ab'.repeat(32)}`,
+      transactionIndex: '0x1',
+    }
+
+    test('dispatches to getLogs against the JSON-RPC bridge', async () => {
       const { transport, calls } = createMockTransport({
-        responses: {},
-        onUnmatched: {
-          response: { data: [rawEvent], success: true, meta: { page_size: 1 } },
+        responses: {
+          '/jsonrpc': { response: { jsonrpc: '2.0', id: 1, result: [rawLog] } },
         },
       })
       const client = createPublicClient({ transport })
@@ -318,20 +321,43 @@ describe('getContract', () => {
       })
       expect('getEvents' in contract).toBe(true)
 
-      const { events } = await contract.getEvents.Transfer({
-        onlyConfirmed: true,
-        limit: 50,
+      const logs = await contract.getEvents.Transfer({
+        fromBlock: 1n,
+        toBlock: 'latest',
       })
-      expect(events).toHaveLength(1)
-      expect(events[0]?.eventName).toBe('Transfer')
-      expect(events[0]?.args.value).toBe(5n)
+      expect(logs).toHaveLength(1)
+      expect(logs[0]?.eventName).toBe('Transfer')
+      expect(logs[0]?.args).toEqual({
+        from: 'TCHqEXgJzVv4X5mv4PNsFzD666wswQ2YkQ',
+        to: 'TTopo6cMBAReiVe11nYcbPj6HqsJrtpmFg',
+        value: 7_561_729n,
+      })
 
       const call = calls[0]
-      expect(call?.node).toBe('event')
-      expect(call?.method).toBe('GET')
-      expect(call?.path).toContain(`/v1/contracts/${contractAddress}/events`)
-      expect(call?.path).toContain('event_name=Transfer')
-      expect(call?.path).toContain('only_confirmed=true')
+      expect(call?.node).toBe('full')
+      expect(call?.method).toBe('POST')
+      expect(call?.path).toBe('/jsonrpc')
+      const [filter] = (call?.body as { params: unknown[] }).params
+      expect(filter).toEqual({
+        address: '0x0123456789abcdef0123456789abcdef01234567',
+        topics: [transferTopic],
+        fromBlock: '0x1',
+        toBlock: 'latest',
+      })
+    })
+
+    test('rejects for an event name missing from the ABI', async () => {
+      const { transport } = createMockTransport({ responses: {} })
+      const client = createPublicClient({ transport })
+      const contract = getContract({
+        abi: trc20Abi,
+        address: contractAddress,
+        client,
+      })
+      await expect(
+        (contract.getEvents as Record<string, () => Promise<unknown>>)
+          .Missing!(),
+      ).rejects.toThrow('Event "Missing" not found on ABI.')
     })
   })
 
