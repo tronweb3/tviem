@@ -10,9 +10,8 @@ import {
   parseAccount,
 } from '../../types/account.js'
 import type { Address } from '../../types/address.js'
-import type { ByteArray, Hex } from '../../types/misc.js'
+import type { Hex } from '../../types/misc.js'
 import { type ToHexErrorType, toHex } from '../../utils/address/toHex.js'
-import { type BareHexErrorType, bareHex } from '../../utils/encoding/bareHex.js'
 import {
   ContractType,
   contractTypeUrlPrefix,
@@ -27,6 +26,7 @@ import {
   type BuildTransactionErrorType,
   type BuildTransactionReturnType,
   buildTransaction,
+  type MemoInput,
   type TransactionHeader,
 } from './utils/buildTransaction.js'
 
@@ -37,8 +37,12 @@ export type SendTrxParameters = {
   to: Address
   /** Amount to send, in SUN. */
   amount: bigint
-  /** Optional memo, written to `raw_data.data` (hex or raw bytes). */
-  memo?: Hex | ByteArray | undefined
+  /**
+   * Optional memo written to `raw_data.data` (hex or raw bytes). Enters the
+   * signed bytes; the chain charges a memo fee (`getMemoFee`, 1 TRX on
+   * mainnet and Nile) on top of the transfer's normal costs.
+   */
+  memo?: MemoInput | undefined
   /**
    * A pre-derived TaPoS + timing header. When supplied the transaction is built
    * fully offline against it; otherwise it is derived from the latest block.
@@ -56,7 +60,6 @@ export type SendTrxReturnType = BuildAndBroadcastReturnType
 
 export type SendTrxErrorType =
   | AccountNotFoundErrorType
-  | BareHexErrorType
   | BuildAndBroadcastErrorType
   | ParseAccountErrorType
   | ToHexErrorType
@@ -73,18 +76,17 @@ export type BuildSendTrxReturnType = BuildTransactionReturnType
 
 export type BuildSendTrxErrorType =
   | AccountNotFoundErrorType
-  | BareHexErrorType
   | BuildTransactionErrorType
   | ParseAccountErrorType
   | ToHexErrorType
   | ErrorType
 
-/** The signing account plus the assembled `TransferContract` and memo `data`. */
+/** The signing account plus the assembled `TransferContract`. */
 function assemble(
   client: Client,
   parameters: SendTrxParameters,
-): { account: TronAccount; contract: RawContract; data: string | undefined } {
-  const { to, amount, memo } = parameters
+): { account: TronAccount; contract: RawContract } {
+  const { to, amount } = parameters
 
   // Resolve the owner/signing account (per-call, else hoisted on the Client).
   const source = parameters.account ?? client.account
@@ -104,11 +106,7 @@ function assemble(
     },
   }
 
-  return {
-    account,
-    contract,
-    data: memo !== undefined ? bareHex(memo) : undefined,
-  }
+  return { account, contract }
 }
 
 /**
@@ -126,10 +124,10 @@ export async function buildSendTrx(
   client: Client,
   parameters: BuildSendTrxParameters,
 ): Promise<BuildSendTrxReturnType> {
-  const { contract, data } = assemble(client, parameters)
+  const { contract } = assemble(client, parameters)
   return buildTransaction(client, {
     contract,
-    data,
+    memo: parameters.memo,
     permissionId: parameters.permissionId,
     blockHeader: parameters.blockHeader,
     expirationMs: parameters.expirationMs,
@@ -151,11 +149,11 @@ export async function sendTrx(
   client: Client,
   parameters: SendTrxParameters,
 ): Promise<SendTrxReturnType> {
-  const { account, contract, data } = assemble(client, parameters)
+  const { account, contract } = assemble(client, parameters)
   return buildAndBroadcast(client, {
     contract,
     account,
-    data,
+    memo: parameters.memo,
     blockHeader: parameters.blockHeader,
     expirationMs: parameters.expirationMs,
   })

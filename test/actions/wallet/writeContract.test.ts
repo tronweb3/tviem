@@ -154,6 +154,35 @@ test('defaults feeLimit to defaultFeeLimit when omitted', async () => {
   expect(body.raw_data.fee_limit).toBe(Number(defaultFeeLimit))
 })
 
+// The memo (raw_data.data, field 10) and the calldata
+// (TriggerSmartContract.data, a contract-message field) are different wire
+// fields that merely share a name — a memo on a contract call must land in
+// raw_data.data and leave the calldata untouched.
+test('memo lands in raw_data.data without touching the calldata', async () => {
+  const { transport, bodyOf } = writeMock()
+  const client = createWalletClient({ account: pk1, transport })
+
+  await client.writeContract({
+    address: contract,
+    abi: trc20Abi,
+    functionName: 'transfer',
+    args: [recipient, 1000000n],
+    memo: '0x6f726465722d31323334', // "order-1234"
+  })
+
+  const body = parseBroadcast(bodyOf('broadcasthex')) as unknown as {
+    raw_data: {
+      data?: string
+      contract: { parameter: { value: { data?: string } } }[]
+    }
+  }
+  expect(body.raw_data.data).toBe('6f726465722d31323334')
+  // Calldata is intact: selector + both ABI words.
+  const calldata = body.raw_data.contract[0]?.parameter.value.data
+  expect(calldata?.startsWith('a9059cbb')).toBe(true)
+  expect(calldata).toHaveLength(8 + 64 + 64)
+})
+
 test('throws AccountNotFoundError when no account is available (bare action)', async () => {
   const { transport } = writeMock()
   const client = createPublicClient({ transport })

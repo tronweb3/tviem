@@ -91,6 +91,48 @@ test('writes a memo into raw_data.data', async () => {
   expect(body.raw_data.data).toBe('6f6d6e69')
 })
 
+test('accepts a memo as raw bytes (Uint8Array)', async () => {
+  const { transport, bodyOf } = writeMock()
+  const client = createWalletClient({ account: pk1, transport })
+  await client.sendTrx({
+    to,
+    amount: 1000000n,
+    memo: new Uint8Array([0x6f, 0x6d, 0x6e, 0x69]),
+  })
+  const body = parseBroadcast(bodyOf('broadcasthex')) as {
+    raw_data: { data?: string }
+  }
+  expect(body.raw_data.data).toBe('6f6d6e69')
+})
+
+// Zero memo bytes serialize to no field at all (proto3 default) — the model
+// would claim a memo the signed bytes do not carry. Refuse before building.
+test('rejects an empty memo before any request', async () => {
+  const { transport, calls } = writeMock()
+  const client = createWalletClient({ account: pk1, transport })
+  await expect(
+    client.sendTrx({ to, amount: 1000000n, memo: '0x' }),
+  ).rejects.toThrow(/Empty memo/)
+  expect(calls).toHaveLength(0)
+})
+
+// Malformed memos must fail loud, typed and BEFORE any node call — the
+// serializer would otherwise left-pad an odd nibble (silently rewriting the
+// memo's bytes) or explode much later with a cryptic byte-sequence error.
+test.each([
+  ['odd-nibble hex', '0x6f6'],
+  ['non-hex text', 'hello'],
+  ['empty bytes', new Uint8Array(0)],
+  ['null', null],
+])('rejects a malformed memo (%s) before any request', async (_, memo) => {
+  const { transport, calls } = writeMock()
+  const client = createWalletClient({ account: pk1, transport })
+  await expect(
+    client.sendTrx({ to, amount: 1000000n, memo: memo as never }),
+  ).rejects.toThrow(/memo/)
+  expect(calls).toHaveLength(0)
+})
+
 // expiration derives from the pinned reference block's own timestamp
 // (1700000000000), so a custom lifetime lands deterministically.
 test('expirationMs sets the lifetime from the chain-derived timestamp', async () => {

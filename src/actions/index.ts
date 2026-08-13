@@ -432,6 +432,10 @@ export {
   type UpdateWitnessReturnType,
   updateWitness,
 } from './wallet/updateWitness.js'
+export type {
+  MemoInput,
+  TransactionHeader,
+} from './wallet/utils/buildTransaction.js'
 export {
   type BuildVoteProposalErrorType,
   type BuildVoteProposalParameters,

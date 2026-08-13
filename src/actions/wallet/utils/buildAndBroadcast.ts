@@ -11,6 +11,7 @@ import {
 import {
   type BuildTransactionErrorType,
   buildTransaction,
+  type MemoInput,
   type TransactionHeader,
 } from './buildTransaction.js'
 
@@ -27,8 +28,12 @@ export type BuildAndBroadcastParameters = {
   blockHeader?: TransactionHeader | undefined
   /** Energy/bandwidth fee ceiling in SUN (`raw_data.fee_limit`). */
   feeLimit?: bigint | undefined
-  /** Bare-hex `raw_data.data` payload (e.g. a transfer memo). */
-  data?: string | undefined
+  /**
+   * Optional memo written to `raw_data.data` (hex or raw bytes). Enters the
+   * signed bytes; the chain charges a memo fee (`getMemoFee`, 1 TRX). Empty
+   * memos are rejected in `buildTransaction`.
+   */
+  memo?: MemoInput | undefined
   /**
    * Transaction lifetime in ms (see `BuildTransactionParameters.expirationMs`).
    * Ignored when a complete `blockHeader` is supplied. @default 60_000
@@ -61,14 +66,14 @@ export async function buildAndBroadcast(
   client: Client,
   parameters: BuildAndBroadcastParameters,
 ): Promise<BuildAndBroadcastReturnType> {
-  const { contract, account, feeLimit, data, blockHeader, expirationMs } =
+  const { contract, account, feeLimit, memo, blockHeader, expirationMs } =
     parameters
 
   // Build the unsigned transaction (block header filled, txID computed locally).
   const unsigned = await buildTransaction(client, {
     contract,
     feeLimit,
-    data,
+    memo,
     blockHeader,
     expirationMs,
   })

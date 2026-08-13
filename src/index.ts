@@ -468,6 +468,10 @@ export {
   type UpdateWitnessReturnType,
   updateWitness,
 } from './actions/wallet/updateWitness.js'
+export type {
+  MemoInput,
+  TransactionHeader,
+} from './actions/wallet/utils/buildTransaction.js'
 export {
   type BuildVoteProposalErrorType,
   type BuildVoteProposalParameters,

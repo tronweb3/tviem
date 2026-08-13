@@ -26,6 +26,7 @@ import {
   type BuildTransactionErrorType,
   type BuildTransactionReturnType,
   buildTransaction,
+  type MemoInput,
   type TransactionHeader,
 } from './utils/buildTransaction.js'
 
@@ -44,6 +45,12 @@ export type WithdrawBalanceParameters = {
    * supplied. @default 60_000
    */
   expirationMs?: bigint | number | undefined
+  /**
+   * Optional memo written to `raw_data.data` (hex or raw bytes). Enters the
+   * signed bytes; the chain charges a memo fee (`getMemoFee`, 1 TRX on
+   * mainnet and Nile) on top of the transaction's normal costs.
+   */
+  memo?: MemoInput | undefined
 }
 export type WithdrawBalanceReturnType = BuildAndBroadcastReturnType
 
@@ -114,6 +121,7 @@ export async function buildWithdrawBalance(
     permissionId: parameters.permissionId,
     blockHeader: parameters.blockHeader,
     expirationMs: parameters.expirationMs,
+    memo: parameters.memo,
   })
 }
 
@@ -136,5 +144,6 @@ export async function withdrawBalance(
     account,
     blockHeader: parameters.blockHeader,
     expirationMs: parameters.expirationMs,
+    memo: parameters.memo,
   })
 }

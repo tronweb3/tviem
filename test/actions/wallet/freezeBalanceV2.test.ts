@@ -63,6 +63,24 @@ test('freezes for ENERGY byte-for-byte against the gold vector', async () => {
   expect(body.raw_data_hex).toBe(energy?.rawDataHex)
 })
 
+// Spread check: the memo option must work uniformly on non-transfer actions
+// (raw_data.data is a Transaction-level field, valid for every contract type).
+test('memo lands in raw_data.data on a staking action', async () => {
+  const { transport, bodyOf } = writeMock()
+  const client = createWalletClient({ account: pk1, transport })
+
+  await client.freezeBalanceV2({
+    frozenBalance: 500000n,
+    resource: 'BANDWIDTH',
+    memo: '0x6d656d6f',
+  })
+
+  const body = parseBroadcast(bodyOf('broadcasthex')) as {
+    raw_data: { data?: string }
+  }
+  expect(body.raw_data.data).toBe('6d656d6f')
+})
+
 test('resolves the per-call account when the client hoists none', async () => {
   const { transport, bodyOf } = writeMock()
   const client = createWalletClient({ transport })

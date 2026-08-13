@@ -1,6 +1,8 @@
 import type { SignableTransaction } from '../../../accounts/types.js'
 import type { Client } from '../../../clients/createClient.js'
+import { BaseError, type BaseErrorType } from '../../../errors/base.js'
 import type { ErrorType } from '../../../errors/utils.js'
+import type { ByteArray, Hex } from '../../../types/misc.js'
 import {
   type BareHexErrorType,
   bareHex,
@@ -46,13 +48,26 @@ export type TransactionHeader = {
   timestamp: bigint | number
 }
 
+/**
+ * Memo input: `0x`-prefixed hex or raw bytes. Written to `raw_data.data`
+ * verbatim — a UTF-8 text memo is the caller's bytes to produce (e.g.
+ * `stringToBytes`/`toHex`), never guessed from a plain string.
+ */
+export type MemoInput = Hex | ByteArray
+
 export type BuildTransactionParameters = {
   /** The single `Transaction.Contract` to wrap in the transaction. */
   contract: RawContract
   /** Energy/bandwidth fee ceiling in SUN (`raw_data.fee_limit`). */
   feeLimit?: bigint | undefined
-  /** Bare-hex `raw_data.data` payload (e.g. a transfer memo). */
-  data?: string | undefined
+  /**
+   * Optional memo, written to `raw_data.data` (hex or raw bytes). Enters the
+   * signed bytes. The chain charges a memo fee on top of the transaction's
+   * normal costs (`getMemoFee` chain parameter — 1 TRX on mainnet and Nile).
+   * An empty memo is rejected: zero bytes serialize to no field at all, which
+   * would silently build a memo-less transaction.
+   */
+  memo?: MemoInput | undefined
   /**
    * Multi-sig permission id (`Contract.Permission_id`). When set it is written
    * into the contract before the `txID` is derived, so the built transaction is
@@ -87,6 +102,7 @@ export type BuildTransactionReturnType = SignableTransaction & {
 
 export type BuildTransactionErrorType =
   | BareHexErrorType
+  | BaseErrorType
   | DecodeRawDataErrorType
   | DeriveRefBlockParamsErrorType
   | GetNowBlockErrorType
@@ -97,7 +113,8 @@ export type BuildTransactionErrorType =
 /**
  * The shared TRON build phase extracted from {@link buildAndBroadcast}: wrap a
  * single already-built `RawContract` into a `raw_data` model, attach `fee_limit`
- * / `data` when supplied, fill its TaPoS reference fields + `timestamp` +
+ * / the `memo` bytes (`raw_data.data`) when supplied, fill its TaPoS reference
+ * fields + `timestamp` +
  * `expiration`, then locally compute the `txID` and `raw_data_hex`. Nothing is
  * signed or broadcast.
  *
@@ -115,8 +132,31 @@ export async function buildTransaction(
   client: Client,
   parameters: BuildTransactionParameters,
 ): Promise<BuildTransactionReturnType> {
-  const { contract, feeLimit, data, permissionId, blockHeader, expirationMs } =
+  const { contract, feeLimit, memo, permissionId, blockHeader, expirationMs } =
     parameters
+
+  // Normalize and validate the memo once, here (single choke point for every
+  // action) and BEFORE any node call. Zero bytes are refused: proto3 drops an
+  // empty `data` from the wire, so an "empty memo" would silently build a
+  // transaction carrying no memo at all. Non-hex or odd-nibble strings are
+  // refused too — the serializer would otherwise left-pad a stray nibble and
+  // quietly rewrite the memo's bytes.
+  let data: string | undefined
+  if (memo !== undefined) {
+    if (typeof memo !== 'string' && !(memo instanceof Uint8Array))
+      throw new BaseError(
+        'Invalid memo: expected `0x`-prefixed hex or raw bytes (Uint8Array).',
+      )
+    data = bareHex(memo)
+    if (data === '')
+      throw new BaseError(
+        'Empty memo: `memo` must carry at least one byte (omit it for no memo).',
+      )
+    if (!/^(?:[0-9a-f]{2})+$/.test(data))
+      throw new BaseError(
+        'Invalid memo: not whole-byte hex (odd length or non-hex characters). Encode text memos to hex first (e.g. via `toHex`).',
+      )
+  }
 
   // Bake the permission id into the contract before the id is derived, so the
   // built transaction is bound to that permission (matches signTransaction).
