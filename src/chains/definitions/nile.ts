@@ -15,7 +15,7 @@ export const nile = defineChain({
     default: {
       full: { http: ['https://nile.trongrid.io'] },
       solidity: { http: ['https://nile.trongrid.io'] },
-      event: { http: ['https://event.nileex.io'] },
+      event: { http: ['https://nile.trongrid.io'] },
     },
   },
   blockTime: 3000,

@@ -53,9 +53,7 @@ export type Log = {
   /** Number of the block containing the log. */
   blockNumber: bigint
   /**
-   * Block timestamp in milliseconds (the node reports seconds; converted for
-   * consistency with the rest of the library). Absent on nodes older than
-   * GreatVoyage v4.8.2.
+   * Block timestamp in SECONDS. Absent on nodes older than GreatVoyage v4.8.2.
    */
   blockTimestamp?: bigint | undefined
   /** ABI-encoded non-indexed parameters. */
@@ -189,7 +187,7 @@ function formatLog(
     blockHash: log.blockHash,
     blockNumber: log.blockNumber ? hexToBigInt(log.blockNumber) : 0n,
     ...(log.blockTimestamp
-      ? { blockTimestamp: hexToBigInt(log.blockTimestamp) * 1000n }
+      ? { blockTimestamp: hexToBigInt(log.blockTimestamp) }
       : {}),
     data: log.data ?? '0x',
     logIndex: log.logIndex ? hexToNumber(log.logIndex) : 0,
@@ -238,7 +236,7 @@ let requestId = 0
  *
  * @example
  * const logs = await getLogs(client, {
- *   address: 'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t',
+ *   address: 'T...',
  *   event: {
  *     type: 'event',
  *     name: 'Transfer',

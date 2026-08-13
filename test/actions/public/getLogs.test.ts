@@ -98,7 +98,9 @@ test('sends an eth_getLogs request and formats the returned logs', async () => {
       address: emitter,
       blockHash: rawLog.blockHash,
       blockNumber: 65_579_335n,
-      blockTimestamp: 1_780_912_191_000n,
+      // Seconds, exactly as the bridge sent it (viem's log shape) — the one
+      // deliberate exception to the library's milliseconds convention.
+      blockTimestamp: 1_780_912_191n,
       data: rawLog.data,
       logIndex: 0,
       removed: false,
