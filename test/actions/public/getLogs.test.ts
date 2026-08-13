@@ -1,6 +1,7 @@
 import { expect, test } from 'vitest'
 import { getLogs } from '../../../src/actions/public/getLogs.js'
 import { createPublicClient } from '../../../src/clients/createPublicClient.js'
+import { TronRpcError } from '../../../src/errors/rpc.js'
 import { createMockTransport } from '../../mock/createMockTransport.js'
 
 const usdt = 'TA5DvvvmYbS75o3DKtgy2ATAGVHhpFkRLe'
@@ -147,6 +148,43 @@ test('event + args: encodes the topic filter and decodes the logs', async () => 
   expect(logs[0]?.args).toEqual({ from, to, value: 7_561_729n })
 })
 
+// An array arg entry is an OR-list of alternatives; an explicit null keeps
+// that indexed position a wildcard (same contract as viem's args filter).
+test('args: OR-list alternatives and explicit null wildcards', async () => {
+  const { client, calls } = mock([rawLog])
+  await getLogs(client, {
+    event: transferEvent,
+    args: { from: [from, to], to: null },
+  })
+  const [filter] = (calls[0]?.body as { params: unknown[] }).params
+  expect(filter).toEqual({
+    topics: [
+      transferTopic,
+      [
+        '0x0000000000000000000000001975fbea3496424a88de2a147d76baa34a3d1b93',
+        '0x000000000000000000000000c3abfbceb364febe625662a9af6add366df58f81',
+      ],
+      null,
+    ],
+  })
+})
+
+test('args: positional form with a null hole', async () => {
+  const { client, calls } = mock([])
+  await getLogs(client, {
+    event: transferEvent,
+    args: [null, to],
+  })
+  const [filter] = (calls[0]?.body as { params: unknown[] }).params
+  expect(filter).toEqual({
+    topics: [
+      transferTopic,
+      null,
+      '0x000000000000000000000000c3abfbceb364febe625662a9af6add366df58f81',
+    ],
+  })
+})
+
 test('events: filters on a topic0 OR-list and decodes per log', async () => {
   const { client, calls } = mock([rawLog])
 
@@ -198,6 +236,13 @@ test('blockHash restricts to one block and rejects a block range', async () => {
       fromBlock: 1n,
     } as never),
   ).rejects.toThrow('`blockHash` cannot be used together')
+  // Both range bounds are guarded, not just fromBlock.
+  await expect(
+    getLogs(client, {
+      blockHash,
+      toBlock: 'latest',
+    } as never),
+  ).rejects.toThrow('`blockHash` cannot be used together')
 })
 
 test('throws a TronRpcError on a JSON-RPC error response', async () => {
@@ -213,9 +258,19 @@ test('throws a TronRpcError on a JSON-RPC error response', async () => {
     },
   })
   const client = createPublicClient({ transport })
-  await expect(getLogs(client, {})).rejects.toThrow(
-    'exceed max block range: 5000',
-  )
+  const err = (await getLogs(client, {}).catch((e) => e)) as TronRpcError
+  expect(err).toBeInstanceOf(TronRpcError)
+  expect(err.message).toContain('exceed max block range: 5000')
+  expect(err.metaMessages).toContain('Code: -32602')
+})
+
+// The bridge always populates blockTimestamp for mined logs; when a proxy
+// drops it the key is omitted rather than fabricated as 0n.
+test('a log without blockTimestamp omits the field', async () => {
+  const { blockTimestamp: _dropped, ...withoutTimestamp } = rawLog
+  const { client } = mock([withoutTimestamp])
+  const [log] = await getLogs(client, {})
+  expect(log && 'blockTimestamp' in log).toBe(false)
 })
 
 test('an absent result formats to an empty log list', async () => {

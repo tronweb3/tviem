@@ -7,6 +7,7 @@ import {
 import { createPublicClient } from '../../src/clients/createPublicClient.js'
 import { createWalletClient } from '../../src/clients/createWalletClient.js'
 import { walletActions } from '../../src/clients/decorators/wallet.js'
+import { AbiEventNotFoundError } from '../../src/errors/abi.js'
 import type { Address } from '../../src/types/address.js'
 import { rpc } from '../fixtures/rpc/loader.js'
 import { createMockTransport } from '../mock/createMockTransport.js'
@@ -354,10 +355,44 @@ describe('getContract', () => {
         address: contractAddress,
         client,
       })
-      await expect(
-        (contract.getEvents as Record<string, () => Promise<unknown>>)
-          .Missing!(),
-      ).rejects.toThrow('Event "Missing" not found on ABI.')
+      const err = (await (
+        contract.getEvents as Record<string, () => Promise<unknown>>
+      ).Missing!().catch((e) => e)) as Error
+      expect(err).toBeInstanceOf(AbiEventNotFoundError)
+      expect(err.message).toContain('Event "Missing" not found on ABI.')
+    })
+
+    test('getEvents.<Event> forwards args / strict / blockHash to getLogs', async () => {
+      let captured: unknown
+      const { transport } = createMockTransport({ responses: {} })
+      const client = createPublicClient({ transport }).extend(() => ({
+        getLogs: async (parameters: unknown) => {
+          captured = parameters
+          return []
+        },
+      }))
+      const contract = getContract({
+        abi: trc20Abi,
+        address: contractAddress,
+        client,
+      })
+
+      const blockHash = `0x${'ab'.repeat(32)}` as const
+      await contract.getEvents.Transfer({
+        args: { from: holder },
+        strict: true,
+        blockHash,
+      })
+      expect(captured).toMatchObject({
+        address: contractAddress,
+        args: { from: holder },
+        strict: true,
+        blockHash,
+      })
+      // The facade resolves the concrete event from the ABI before dispatch.
+      expect((captured as { event: { name: string } }).event.name).toBe(
+        'Transfer',
+      )
     })
   })
 

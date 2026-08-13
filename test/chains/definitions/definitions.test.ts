@@ -24,8 +24,11 @@ test('nile', () => {
   expect(nile.id).toBe(3448148188)
   expect(nile.name).toBe('Tron Nile Testnet')
   expect(nile.nativeCurrency.decimals).toBe(6)
-  expect(nile.rpcUrls.default.full.http).toEqual(['https://api.nileex.io'])
-  expect(nile.rpcUrls.default.solidity.http).toEqual(['https://api.nileex.io'])
+  // nile.trongrid.io serves the /jsonrpc bridge (getLogs); api.nileex.io 404s it.
+  expect(nile.rpcUrls.default.full.http).toEqual(['https://nile.trongrid.io'])
+  expect(nile.rpcUrls.default.solidity.http).toEqual([
+    'https://nile.trongrid.io',
+  ])
   expect(nile.blockTime).toBe(3000)
   expect(nile.testnet).toBe(true)
 })

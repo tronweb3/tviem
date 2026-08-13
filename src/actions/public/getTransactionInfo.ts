@@ -92,7 +92,10 @@ function formatLog(log: RawLog): TransactionLog {
 /**
  * Fetches a transaction's receipt / execution info via
  * `gettransactioninfobyid` — SolidityNode (confirmed state) by default,
- * FullNode with `confirmed: false`. Addresses that come out of the
+ * FullNode with `confirmed: false`. The returned `logs` are the receipt's raw
+ * event entries — the per-transaction counterpart to `getLogs` (whose
+ * `eth_getLogs` filter has no transaction-hash dimension); decode them with
+ * `decodeEventLog` when an ABI is at hand. Addresses that come out of the
  * receipt (`contract_address` as TRON 41-hex, `log[].address` as EVM-form
  * bare hex) are converted back to Base58Check; `topics`/`data` are
  * `0x`-prefixed.

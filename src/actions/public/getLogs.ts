@@ -225,6 +225,10 @@ let requestId = 0
  * `node.jsonrpc.maxBlockRange`) and the `address` / topic OR-list sizes
  * (1000 each) — an exceeded limit rejects with a {@link TronRpcError}.
  *
+ * `eth_getLogs` has no transaction-hash filter dimension: to read the events
+ * of one known transaction, use {@link getTransactionInfo} — its `logs` carry
+ * the receipt's raw entries, decodable via `decodeEventLog`.
+ *
  * @see https://developers.tron.network/reference/eth_getlogs
  *
  * @param client The Client to use.

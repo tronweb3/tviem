@@ -161,7 +161,6 @@ exports[`package exports surface (freeze guard) > root + subpath export names ar
     "InvalidHexBooleanError",
     "InvalidHexValueError",
     "NegativeOffsetError",
-    "NotImplementedError",
     "PermissionType",
     "PermissionTypeName",
     "PositionOutOfBoundsError",

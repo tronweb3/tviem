@@ -4,7 +4,8 @@ import { defineChain } from '../defineChain.js'
  * TRON Nile Testnet.
  *
  * - Chain ID `3448148188` (genesis hash suffix `0xcd8690dc`).
- * - Public FullNode + SolidityNode served by nileex.io on the same host.
+ * - Hosted on nile.trongrid.io: unlike api.nileex.io, that host serves the
+ *   `/jsonrpc` bridge (`getLogs`) alongside `/wallet` and `/walletsolidity`.
  */
 export const nile = defineChain({
   id: 3448148188,
@@ -12,8 +13,8 @@ export const nile = defineChain({
   nativeCurrency: { name: 'TRON', symbol: 'TRX', decimals: 6 },
   rpcUrls: {
     default: {
-      full: { http: ['https://api.nileex.io'] },
-      solidity: { http: ['https://api.nileex.io'] },
+      full: { http: ['https://nile.trongrid.io'] },
+      solidity: { http: ['https://nile.trongrid.io'] },
       event: { http: ['https://event.nileex.io'] },
     },
   },

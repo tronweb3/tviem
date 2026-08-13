@@ -688,10 +688,6 @@ export {
   type UnknownNodeErrorType,
 } from './errors/node.js'
 export {
-  NotImplementedError,
-  type NotImplementedErrorType,
-} from './errors/notImplemented.js'
-export {
   HttpRequestError,
   type HttpRequestErrorType,
   TimeoutError,
