@@ -51,6 +51,13 @@ export type SendTrc10Parameters = {
    * fully offline against it; otherwise it is derived from the latest block.
    */
   blockHeader?: TransactionHeader | undefined
+  /**
+   * Transaction lifetime in ms, applied to the chain-derived timestamp
+   * (`expiration = refBlock.timestamp + expirationMs`). Positive integer,
+   * at most 86_400_000 (24h). Ignored when a complete `blockHeader` is
+   * supplied. @default 60_000
+   */
+  expirationMs?: bigint | number | undefined
 }
 export type SendTrc10ReturnType = BuildAndBroadcastReturnType
 
@@ -127,6 +134,7 @@ export async function buildSendTrc10(
     contract,
     permissionId: parameters.permissionId,
     blockHeader: parameters.blockHeader,
+    expirationMs: parameters.expirationMs,
   })
 }
 
@@ -151,5 +159,6 @@ export async function sendTrc10(
     contract,
     account,
     blockHeader: parameters.blockHeader,
+    expirationMs: parameters.expirationMs,
   })
 }

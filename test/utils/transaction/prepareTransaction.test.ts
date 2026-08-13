@@ -53,6 +53,43 @@ test('fillBlockHeader: never reads the wall clock (timing is chain-derived)', ()
   expect(filled.expiration).toBe(60001n)
 })
 
+test('fillBlockHeader: expirationMs overrides the one-minute lifetime', () => {
+  const filled = fillBlockHeader(
+    { contract: [] },
+    { number: 1, blockID, timestamp: 1700000000000n },
+    { expirationMs: 3_600_000 },
+  )
+  expect(filled.expiration).toBe(1700000000000n + 3_600_000n)
+})
+
+test('fillBlockHeader: the 24h java-tron maximum is accepted inclusively', () => {
+  const filled = fillBlockHeader(
+    { contract: [] },
+    { number: 1, blockID, timestamp: 1700000000000n },
+    { expirationMs: 86_400_000n },
+  )
+  expect(filled.expiration).toBe(1700000000000n + 86_400_000n)
+})
+
+// java-tron rejects an expiration further than 24h past the reference block,
+// and a non-positive or fractional lifetime is meaningless — all fail before
+// anything is built or signed, as a typed error (BigInt(1.5) would otherwise
+// escape as a raw RangeError).
+test.each([
+  ['zero', 0],
+  ['negative', -60_000],
+  ['beyond 24h', 86_400_001],
+  ['fractional', 1.5],
+])('fillBlockHeader: rejects an invalid expirationMs (%s)', (_, expirationMs) => {
+  expect(() =>
+    fillBlockHeader(
+      { contract: [] },
+      { number: 1, blockID, timestamp: 1700000000000n },
+      { expirationMs },
+    ),
+  ).toThrow(/expirationMs/)
+})
+
 // A degenerate block (what formatBlock yields for a malformed node body:
 // number/timestamp decoded as 0, blockID as '') must not silently become a
 // signable transaction with ref_block_bytes "0000" and a 1970 expiration —

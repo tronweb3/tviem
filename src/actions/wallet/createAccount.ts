@@ -40,6 +40,13 @@ export type CreateAccountParameters = {
    * fully offline against it; otherwise it is derived from the latest block.
    */
   blockHeader?: TransactionHeader | undefined
+  /**
+   * Transaction lifetime in ms, applied to the chain-derived timestamp
+   * (`expiration = refBlock.timestamp + expirationMs`). Positive integer,
+   * at most 86_400_000 (24h). Ignored when a complete `blockHeader` is
+   * supplied. @default 60_000
+   */
+  expirationMs?: bigint | number | undefined
 }
 export type CreateAccountReturnType = BuildAndBroadcastReturnType
 
@@ -112,6 +119,7 @@ export async function buildCreateAccount(
     contract,
     permissionId: parameters.permissionId,
     blockHeader: parameters.blockHeader,
+    expirationMs: parameters.expirationMs,
   })
 }
 
@@ -132,5 +140,6 @@ export async function createAccount(
     contract,
     account,
     blockHeader: parameters.blockHeader,
+    expirationMs: parameters.expirationMs,
   })
 }

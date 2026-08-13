@@ -66,6 +66,14 @@ export type BuildTransactionParameters = {
    * block's own timestamp. Mirrors TronWeb's `blockHeader` override.
    */
   blockHeader?: TransactionHeader | undefined
+  /**
+   * Transaction lifetime in ms, applied to the chain-derived timestamp
+   * (`expiration = refBlock.timestamp + expirationMs`). Must be a positive
+   * integer of at most 86_400_000 (24h, the longest java-tron accepts).
+   * Ignored when a complete `blockHeader` is supplied — the header's absolute
+   * `expiration` is used verbatim. @default 60_000
+   */
+  expirationMs?: bigint | number | undefined
 }
 
 /**
@@ -107,7 +115,8 @@ export async function buildTransaction(
   client: Client,
   parameters: BuildTransactionParameters,
 ): Promise<BuildTransactionReturnType> {
-  const { contract, feeLimit, data, permissionId, blockHeader } = parameters
+  const { contract, feeLimit, data, permissionId, blockHeader, expirationMs } =
+    parameters
 
   // Bake the permission id into the contract before the id is derived, so the
   // built transaction is bound to that permission (matches signTransaction).
@@ -131,7 +140,7 @@ export async function buildTransaction(
       getNowBlock,
       'getNowBlock',
     )(undefined as never)
-    rawData = fillBlockHeader(rawData, block)
+    rawData = fillBlockHeader(rawData, block, { expirationMs })
   }
 
   // Canonicalize once through the encode∘decode roundtrip so the built

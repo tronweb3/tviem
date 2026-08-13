@@ -5,6 +5,15 @@ import type { RawData } from './serializeRawData.js'
 /** Default transaction lifetime, in milliseconds (one minute). */
 export const defaultExpirationMs = 60000n
 
+/**
+ * Longest transaction lifetime java-tron accepts, in milliseconds (24 hours,
+ * `MAXIMUM_TIME_UNTIL_EXPIRATION`): a node rejects any `expiration` further
+ * than this past its head block's time. The head is never older than the
+ * reference block this client derives from, so capping the lifetime at
+ * reference time + 24h can never trip the node's bound.
+ */
+export const maxExpirationMs = 86_400_000n
+
 /** A reference block, used to derive TaPoS parameters and transaction timing. */
 export type BlockRef = {
   /** Block number (`block_header.raw_data.number`). */
@@ -66,11 +75,38 @@ const blockIdRegex = /^[0-9a-fA-F]{64}$/
  * A block with a non-positive `number`/`timestamp` or a malformed `blockID`
  * is rejected — see the guard below.
  *
+ * `options.expirationMs` overrides the default one-minute lifetime; it is a
+ * duration added to the block's timestamp (still chain time, never the wall
+ * clock) and must be a positive integer no greater than
+ * {@link maxExpirationMs} — java-tron rejects anything longer.
+ *
  * @param rawData Raw data model to fill.
  * @param block Reference block (supplies TaPoS fields and the base timestamp).
+ * @param options `expirationMs` — lifetime in ms. @default 60_000
  * @returns A new raw data model with TaPoS, timestamp and expiration set.
  */
-export function fillBlockHeader(rawData: RawData, block: BlockRef): RawData {
+export function fillBlockHeader(
+  rawData: RawData,
+  block: BlockRef,
+  options: { expirationMs?: bigint | number | undefined } = {},
+): RawData {
+  let lifetimeMs = defaultExpirationMs
+  if (options.expirationMs !== undefined) {
+    // Integer-check numbers first: BigInt(1.5) would escape as a raw
+    // RangeError instead of the typed error below.
+    if (
+      typeof options.expirationMs === 'number' &&
+      !Number.isInteger(options.expirationMs)
+    )
+      throw new BaseError(
+        `Invalid expirationMs: ${options.expirationMs}. Expected an integer number of milliseconds.`,
+      )
+    lifetimeMs = BigInt(options.expirationMs)
+    if (lifetimeMs <= 0n || lifetimeMs > maxExpirationMs)
+      throw new BaseError(
+        `Invalid expirationMs: ${lifetimeMs}. Expected a lifetime in (0, ${maxExpirationMs}] ms — java-tron caps expiration at 24 hours past the reference block.`,
+      )
+  }
   // A usable TaPoS reference needs all three fields to be real. `formatBlock`
   // decodes a proto3-omitted number/timestamp as 0 (legitimate only for the
   // genesis block, which a new transaction never references) and a missing
@@ -89,6 +125,6 @@ export function fillBlockHeader(rawData: RawData, block: BlockRef): RawData {
     ...rawData,
     ...deriveRefBlockParams(block.number, block.blockID),
     timestamp,
-    expiration: timestamp + defaultExpirationMs,
+    expiration: timestamp + lifetimeMs,
   }
 }

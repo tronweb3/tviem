@@ -29,6 +29,11 @@ export type BuildAndBroadcastParameters = {
   feeLimit?: bigint | undefined
   /** Bare-hex `raw_data.data` payload (e.g. a transfer memo). */
   data?: string | undefined
+  /**
+   * Transaction lifetime in ms (see `BuildTransactionParameters.expirationMs`).
+   * Ignored when a complete `blockHeader` is supplied. @default 60_000
+   */
+  expirationMs?: bigint | number | undefined
 }
 export type BuildAndBroadcastReturnType = { txID: string }
 
@@ -56,7 +61,8 @@ export async function buildAndBroadcast(
   client: Client,
   parameters: BuildAndBroadcastParameters,
 ): Promise<BuildAndBroadcastReturnType> {
-  const { contract, account, feeLimit, data, blockHeader } = parameters
+  const { contract, account, feeLimit, data, blockHeader, expirationMs } =
+    parameters
 
   // Build the unsigned transaction (block header filled, txID computed locally).
   const unsigned = await buildTransaction(client, {
@@ -64,6 +70,7 @@ export async function buildAndBroadcast(
     feeLimit,
     data,
     blockHeader,
+    expirationMs,
   })
 
   // Sign locally (recomputes txID, owner guard, txCheck, appends sig).

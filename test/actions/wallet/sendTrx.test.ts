@@ -91,6 +91,43 @@ test('writes a memo into raw_data.data', async () => {
   expect(body.raw_data.data).toBe('6f6d6e69')
 })
 
+// expiration derives from the pinned reference block's own timestamp
+// (1700000000000), so a custom lifetime lands deterministically.
+test('expirationMs sets the lifetime from the chain-derived timestamp', async () => {
+  const { transport, bodyOf } = writeMock()
+  const client = createWalletClient({ account: pk1, transport })
+  await client.sendTrx({ to, amount: 1000000n, expirationMs: 3_600_000 })
+  const body = parseBroadcast(bodyOf('broadcasthex')) as {
+    raw_data: { timestamp: number; expiration: number }
+  }
+  expect(body.raw_data.timestamp).toBe(1700000000000)
+  expect(body.raw_data.expiration).toBe(1700000000000 + 3_600_000)
+})
+
+// A complete blockHeader is verbatim by contract — its absolute expiration
+// wins and expirationMs is ignored.
+test('a complete blockHeader takes precedence over expirationMs', async () => {
+  const { transport, bodyOf } = writeMock()
+  const client = createWalletClient({ account: pk1, transport })
+  await client.sendTrx({
+    to,
+    amount: 1000000n,
+    expirationMs: 3_600_000,
+    blockHeader: {
+      ref_block_bytes: '1234',
+      ref_block_hash: '0102030405060708',
+      timestamp: 1700000000000n,
+      // Distinctive on purpose: neither timestamp + expirationMs nor
+      // timestamp + the 60s default can produce it by coincidence.
+      expiration: 1700000123456n,
+    },
+  })
+  const body = parseBroadcast(bodyOf('broadcasthex')) as {
+    raw_data: { expiration: number }
+  }
+  expect(body.raw_data.expiration).toBe(1700000123456)
+})
+
 test('throws AccountNotFoundError when no account is available (bare action)', async () => {
   const { transport } = writeMock()
   const client = createPublicClient({ transport })

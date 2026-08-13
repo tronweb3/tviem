@@ -164,6 +164,13 @@ export type DeployContractParameters<
    * fully offline against it; otherwise it is derived from the latest block.
    */
   blockHeader?: TransactionHeader | undefined
+  /**
+   * Transaction lifetime in ms, applied to the chain-derived timestamp
+   * (`expiration = refBlock.timestamp + expirationMs`). Positive integer,
+   * at most 86_400_000 (24h). Ignored when a complete `blockHeader` is
+   * supplied. @default 60_000
+   */
+  expirationMs?: bigint | number | undefined
 }
 
 export type DeployContractReturnType = BuildAndBroadcastReturnType & {
@@ -289,6 +296,7 @@ export async function buildDeployContract<
     feeLimit,
     permissionId: parameters.permissionId,
     blockHeader: parameters.blockHeader,
+    expirationMs: parameters.expirationMs,
   })
 }
 
@@ -319,6 +327,7 @@ export async function deployContract<
     account,
     feeLimit,
     blockHeader: parameters.blockHeader,
+    expirationMs: parameters.expirationMs,
   })
 
   const contractAddress = toBase58(
