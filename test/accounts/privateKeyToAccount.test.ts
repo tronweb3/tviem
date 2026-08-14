@@ -87,13 +87,35 @@ describe('privateKeyToAccount', () => {
     expect(signed.raw_data_hex).toBe(transaction.raw_data_hex)
   })
 
-  test('signTransaction appends to existing signatures', () => {
+  test('signTransaction refuses an already-signed transaction', () => {
+    // Single-signature flow: an existing signature (own or foreign) means the
+    // caller double-signed by mistake — co-signing goes through multiSign.
+    const account = privateKeyToAccount(pk1)
+    expect(() =>
+      account.signTransaction({
+        ...canonicalTransaction(),
+        signature: ['deadbeef'],
+      }),
+    ).toThrow(
+      'The transaction is already signed (1 signature(s)) — co-signing a multi-signature transaction goes through multiSign.',
+    )
+  })
+
+  test('signTransaction refuses to re-sign its own signed output', () => {
+    const account = privateKeyToAccount(pk1)
+    const signed = account.signTransaction(canonicalTransaction())
+    expect(() => account.signTransaction(signed)).toThrow(
+      'The transaction is already signed (1 signature(s)) — co-signing a multi-signature transaction goes through multiSign.',
+    )
+  })
+
+  test('signTransaction treats an empty signature list as unsigned', () => {
     const account = privateKeyToAccount(pk1)
     const signed = account.signTransaction({
       ...canonicalTransaction(),
-      signature: ['deadbeef'],
+      signature: [],
     })
-    expect(signed.signature).toEqual(['deadbeef', txSignature])
+    expect(signed.signature).toEqual([txSignature])
   })
 
   test('signTransaction refuses a bare txID (blind signing)', () => {

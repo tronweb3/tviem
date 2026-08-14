@@ -33,8 +33,9 @@ export type SignTransactionErrorType =
  * Signs a transaction with the resolved account (per-call `account`, else the
  * Client's hoisted one) — a thin delegate to the account's own
  * `signTransaction`, which recomputes the `txID` and runs the sign guards
- * (integrity triple, owner check, signature de-dup). The input is never
- * mutated; the returned transaction carries the appended signature.
+ * (integrity triple, owner check, refusal of an already-signed transaction).
+ * The input is never mutated; the returned transaction carries the appended
+ * signature.
  *
  * Mirrors viem's `walletClient.signTransaction`; non-owner co-signing still
  * goes through the `multiSign` action.
