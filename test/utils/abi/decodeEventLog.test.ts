@@ -3,6 +3,7 @@ import { describe, expect, test } from 'vitest'
 import {
   AbiEventSignatureNotFoundError,
   DecodeLogDataMismatch,
+  DecodeLogTopicsMismatch,
 } from '../../../src/errors/abi.js'
 import { decodeEventLog } from '../../../src/utils/abi/decodeEventLog.js'
 import { toEventSelector } from '../../../src/utils/hash/toEventSelector.js'
@@ -100,7 +101,117 @@ describe('decodeEventLog (units)', () => {
         data: '0x0001',
         eventName: 'Transfer',
       }),
-    ).toThrow()
+    ).toThrow(DecodeLogDataMismatch)
+  })
+})
+
+describe('strict: false decodes leniently', () => {
+  const transfer = fixtures.find((f) => f.name === 'transfer')!
+  const fromAddress = 'TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC'
+  const toAddress = 'TDvSsdrNM5eeXNL3czpa6AxLDHZA9nwe9K'
+
+  /** The ERC-721 `Transfer` layout — same selector, all three indexed. */
+  const nftTransferAbi = [
+    {
+      type: 'event',
+      name: 'Transfer',
+      inputs: [
+        { indexed: true, name: 'from', type: 'address' },
+        { indexed: true, name: 'to', type: 'address' },
+        { indexed: true, name: 'tokenId', type: 'uint256' },
+      ],
+    },
+  ] as unknown as Abi
+
+  test('missing data: the indexed parameters still decode', () => {
+    const { eventName, args } = decodeEventLog({
+      abi: transfer.abi as unknown as Abi,
+      topics: transfer.topics,
+      data: '0x',
+      strict: false,
+    })
+    expect(eventName).toBe('Transfer')
+    expect(args).toEqual({ from: fromAddress, to: toAddress })
+  })
+
+  test('truncated data is skipped, not thrown', () => {
+    const { args } = decodeEventLog({
+      abi: transfer.abi as unknown as Abi,
+      topics: transfer.topics,
+      data: '0x0001',
+      strict: false,
+    })
+    expect(args).toEqual({ from: fromAddress, to: toAddress })
+  })
+
+  test('an indexed parameter with no topic is recovered from data', () => {
+    // The ERC-721 layout over an ERC-20-shaped log: `tokenId` has no topic,
+    // so its value is decoded out of `data` instead.
+    const { args } = decodeEventLog({
+      abi: nftTransferAbi,
+      topics: transfer.topics,
+      data: transfer.data,
+      strict: false,
+    })
+    expect(args).toEqual({
+      from: fromAddress,
+      to: toAddress,
+      tokenId: 1000000n,
+    })
+  })
+
+  test('an indexed parameter with no topic still throws by default', () => {
+    expect(() =>
+      decodeEventLog({
+        abi: nftTransferAbi,
+        topics: transfer.topics,
+        data: transfer.data,
+      }),
+    ).toThrow(DecodeLogTopicsMismatch)
+  })
+
+  test('a recovered indexed parameter precedes the non-indexed data', () => {
+    // `data` carries the recovered indexed parameter FIRST, then the
+    // non-indexed ones — a swapped order would silently cross-assign values.
+    const abi = [
+      {
+        type: 'event',
+        name: 'Both',
+        inputs: [
+          { indexed: true, name: 'a', type: 'uint256' },
+          { indexed: false, name: 'b', type: 'uint256' },
+        ],
+      },
+    ] as unknown as Abi
+    const word = (n: number) => n.toString(16).padStart(64, '0')
+    const { args } = decodeEventLog({
+      abi,
+      topics: [toEventSelector('Both(uint256,uint256)')],
+      data: `0x${word(111)}${word(222)}`,
+      strict: false,
+    })
+    expect(args).toEqual({ a: 111n, b: 222n })
+  })
+})
+
+describe('strict data mismatches are reported as DecodeLogDataMismatch', () => {
+  test('an out-of-bounds tail offset is wrapped, not leaked raw', () => {
+    // One 32-byte word holding offset 32 — the dynamic tail it points at is
+    // absent, which surfaces as a cursor overrun rather than a size shortfall.
+    const abi = [
+      {
+        type: 'event',
+        name: 'Note',
+        inputs: [{ indexed: false, name: 'text', type: 'string' }],
+      },
+    ] as unknown as Abi
+    expect(() =>
+      decodeEventLog({
+        abi,
+        topics: [toEventSelector('Note(string)')],
+        data: `0x${(32).toString(16).padStart(64, '0')}`,
+      }),
+    ).toThrow(DecodeLogDataMismatch)
   })
 })
 

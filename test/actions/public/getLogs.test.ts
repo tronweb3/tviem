@@ -2,6 +2,7 @@ import { expect, test } from 'vitest'
 import { getLogs } from '../../../src/actions/public/getLogs.js'
 import { createPublicClient } from '../../../src/clients/createPublicClient.js'
 import { TronRpcError } from '../../../src/errors/rpc.js'
+import { toEventSelector } from '../../../src/utils/hash/toEventSelector.js'
 import { createMockTransport } from '../../mock/createMockTransport.js'
 
 const usdt = 'TA5DvvvmYbS75o3DKtgy2ATAGVHhpFkRLe'
@@ -28,6 +29,17 @@ const approvalEvent = {
     { indexed: true, name: 'owner', type: 'address' },
     { indexed: true, name: 'spender', type: 'address' },
     { indexed: false, name: 'value', type: 'uint256' },
+  ],
+} as const
+
+/** The ERC-721 `Transfer` layout — same selector as ERC-20, all indexed. */
+const nftTransferEvent = {
+  type: 'event',
+  name: 'Transfer',
+  inputs: [
+    { indexed: true, name: 'from', type: 'address' },
+    { indexed: true, name: 'to', type: 'address' },
+    { indexed: true, name: 'tokenId', type: 'uint256' },
   ],
 } as const
 
@@ -208,15 +220,16 @@ test('passes a raw topics filter through unchanged', async () => {
   expect(filter).toEqual({ topics })
 })
 
-test('non-strict keeps an undecodable log raw; strict drops it', async () => {
-  // `data` is empty, so `value` cannot be decoded → DecodeLogDataMismatch.
+test('non-strict partially decodes a mismatched log; strict drops it', async () => {
+  // `data` is empty, so `value` cannot be decoded — but the indexed
+  // parameters are still recoverable from the topics.
   const truncated = { ...rawLog, data: '0x' }
 
   const lenient = mock([truncated])
   const kept = await getLogs(lenient.client, { event: transferEvent })
   expect(kept).toHaveLength(1)
   expect(kept[0]?.eventName).toBe('Transfer')
-  expect(kept[0]?.args).toBeUndefined()
+  expect(kept[0]?.args).toEqual({ from, to })
 
   const strict = mock([truncated])
   const dropped = await getLogs(strict.client, {
@@ -224,6 +237,116 @@ test('non-strict keeps an undecodable log raw; strict drops it', async () => {
     strict: true,
   })
   expect(dropped).toEqual([])
+})
+
+test('a log whose selector matches none of the events is dropped', async () => {
+  // An Approval log against a Transfer-only filter (nodes can return more
+  // than the topic filter asked for): dropped in both modes.
+  const approvalLog = {
+    ...rawLog,
+    topics: [approvalTopic, ...rawLog.topics.slice(1)],
+  }
+
+  const lenient = mock([approvalLog])
+  expect(await getLogs(lenient.client, { event: transferEvent })).toEqual([])
+
+  const strict = mock([approvalLog])
+  expect(
+    await getLogs(strict.client, { event: transferEvent, strict: true }),
+  ).toEqual([])
+})
+
+test('same-selector overloads: each candidate is tried until one decodes', async () => {
+  // An ERC-721 Transfer: the third parameter is a topic and `data` is empty.
+  const nftLog = {
+    ...rawLog,
+    data: '0x',
+    topics: [...rawLog.topics, `0x${'2a'.padStart(64, '0')}`],
+  }
+
+  const { client } = mock([rawLog, nftLog])
+  const logs = await getLogs(client, {
+    events: [transferEvent, nftTransferEvent],
+    strict: true,
+  })
+
+  expect(logs).toHaveLength(2)
+  expect(logs[0]?.args).toEqual({ from, to, value: 7_561_729n })
+  expect(logs[1]?.args).toEqual({ from, to, tokenId: 42n })
+})
+
+test('non-strict recovers a missing indexed parameter from data', async () => {
+  // An ERC-20-shaped log read through the ERC-721 layout: `tokenId` has no
+  // topic, so its value is decoded out of `data` instead.
+  const { client } = mock([rawLog])
+  const logs = await getLogs(client, { event: nftTransferEvent })
+  expect(logs[0]?.eventName).toBe('Transfer')
+  expect(logs[0]?.args).toEqual({ from, to, tokenId: 7_561_729n })
+})
+
+test('non-strict falls back to eventName-only when the topics fail to decode', async () => {
+  // An undersized argument topic fails to decode even leniently: the log
+  // keeps its event name and an empty args container.
+  const badTopic = { ...rawLog, topics: [transferTopic, '0xdead'] }
+  const named = mock([badTopic])
+  const namedLogs = await getLogs(named.client, { event: transferEvent })
+  expect(namedLogs).toHaveLength(1)
+  expect(namedLogs[0]?.eventName).toBe('Transfer')
+  expect(namedLogs[0]?.args).toEqual({})
+
+  // Unnamed inputs get the positional container.
+  const pingEvent = {
+    type: 'event',
+    name: 'Ping',
+    inputs: [{ indexed: true, type: 'bool' }],
+  } as const
+  const pingLog = {
+    ...rawLog,
+    topics: [toEventSelector('Ping(bool)'), '0xdead'],
+    data: '0x',
+  }
+  const unnamed = mock([pingLog])
+  const unnamedLogs = await getLogs(unnamed.client, { event: pingEvent })
+  expect(unnamedLogs).toHaveLength(1)
+  expect(unnamedLogs[0]?.eventName).toBe('Ping')
+  expect(unnamedLogs[0]?.args).toEqual([])
+})
+
+test('non-strict falls back to the FIRST given event of a shared selector', async () => {
+  // Only `from` has a topic; `data` carries two words. Under the first given
+  // layout they decode as the recovered `to` then `value` — the ERC-721
+  // alternative would have labeled the second word `tokenId` instead.
+  const short = {
+    ...rawLog,
+    topics: [transferTopic, rawLog.topics[1]!],
+    data: `${rawLog.topics[2]}${rawLog.data.slice(2)}`,
+  }
+  const { client } = mock([short])
+  const logs = await getLogs(client, {
+    events: [transferEvent, nftTransferEvent],
+  })
+  expect(logs[0]?.args).toEqual({ from, to, value: 7_561_729n })
+})
+
+test('the plural events path shares the drop and partial-decode semantics', async () => {
+  const truncated = { ...rawLog, data: '0x' }
+  const unknown = { ...rawLog, topics: [`0x${'ab'.repeat(32)}`] }
+
+  const lenient = mock([truncated, unknown])
+  const kept = await getLogs(lenient.client, {
+    events: [transferEvent, approvalEvent],
+  })
+  expect(kept).toHaveLength(1)
+  expect(kept[0]?.eventName).toBe('Transfer')
+  expect(kept[0]?.args).toEqual({ from, to })
+
+  const strict = mock([truncated, unknown])
+  expect(
+    await getLogs(strict.client, {
+      events: [transferEvent, approvalEvent],
+      strict: true,
+    }),
+  ).toEqual([])
 })
 
 test('blockHash restricts to one block and rejects a block range', async () => {

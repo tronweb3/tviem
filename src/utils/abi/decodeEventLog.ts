@@ -1,6 +1,7 @@
 import type { Abi, AbiEvent, AbiParameter } from 'abitype'
 
 import {
+  AbiDecodingDataSizeTooSmallError,
   AbiEventNotFoundError,
   type AbiEventNotFoundErrorType,
   AbiEventSignatureEmptyTopicsError,
@@ -12,6 +13,7 @@ import {
   DecodeLogTopicsMismatch,
   type DecodeLogTopicsMismatchErrorType,
 } from '../../errors/abi.js'
+import { PositionOutOfBoundsError } from '../../errors/cursor.js'
 import type { ErrorType } from '../../errors/utils.js'
 import type { Hex } from '../../types/misc.js'
 import { size } from '../data/size.js'
@@ -35,6 +37,13 @@ export type DecodeEventLogParameters = {
   data?: Hex | undefined
   /** Event name (required to decode `anonymous` events). */
   eventName?: string | undefined
+  /**
+   * Whether decoding must be exact. When `false`, an indexed parameter with no
+   * topic is recovered from `data` instead, and `data` that fails to decode is
+   * skipped — the decodable subset of `args` is still returned.
+   * @default true
+   */
+  strict?: boolean | undefined
 }
 
 export type DecodeEventLogReturnType = {
@@ -66,6 +75,12 @@ const docsPath = '/docs/abi/decodeEventLog'
  * `bytes`, arrays, tuples) are only present as their `keccak256` hash in the
  * topic, so they decode to that 32-byte hash hex (not the original value).
  *
+ * By default a log that does not match the event exactly throws
+ * ({@link DecodeLogTopicsMismatch} / {@link DecodeLogDataMismatch}). With
+ * `strict: false` the mismatch is tolerated instead: an indexed parameter with
+ * no topic is recovered from `data`, undecodable `data` is skipped, and the
+ * decodable subset of `args` is returned.
+ *
  * @example
  * decodeEventLog({ abi, topics, data })
  * // { eventName: 'Transfer', args: { from: 'T…', to: 'T…', value: 1000000n } }
@@ -73,7 +88,7 @@ const docsPath = '/docs/abi/decodeEventLog'
 export function decodeEventLog(
   parameters: DecodeEventLogParameters,
 ): DecodeEventLogReturnType {
-  const { abi, topics, data, eventName } = parameters
+  const { abi, topics, data, eventName, strict = true } = parameters
   const [topic0, ...argTopics_] = topics
 
   const abiItem = selectEvent(abi, { eventName, topic0 })
@@ -90,46 +105,82 @@ export function decodeEventLog(
   }
 
   // Indexed parameters come from the topics, in declaration order.
+  const missingIndexed: (readonly [AbiParameter, number])[] = []
   let topicIndex = 0
   for (let i = 0; i < inputs.length; i++) {
     const input = inputs[i]!
     if (!('indexed' in input && input.indexed)) continue
     const topic = argTopics[topicIndex]
-    if (topic === undefined)
-      throw new DecodeLogTopicsMismatch({
-        abiItem,
-        formattedAbiItem: formatAbiItem(abiItem, { includeName: true }),
-        param: input as AbiParameter & { indexed: boolean },
-      })
-    setArg(input, i, decodeTopic(input, topic))
     topicIndex++
+    if (topic === undefined) {
+      if (strict)
+        throw new DecodeLogTopicsMismatch({
+          abiItem,
+          formattedAbiItem: formatAbiItem(abiItem, { includeName: true }),
+          param: input as AbiParameter & { indexed: boolean },
+        })
+      // The emitting contract may not have actually indexed this parameter —
+      // recover its value from `data` below.
+      missingIndexed.push([input, i])
+      continue
+    }
+    setArg(input, i, decodeTopic(input, topic))
   }
 
-  // Non-indexed parameters come from `data`.
+  // Non-indexed parameters come from `data` — preceded, in lenient mode, by
+  // the indexed parameters whose topics were missing.
   const nonIndexedInputs = inputs.filter(
     (input) => !('indexed' in input && input.indexed),
   )
-  if (nonIndexedInputs.length > 0) {
+  const inputsToDecode = strict
+    ? nonIndexedInputs
+    : [...missingIndexed.map(([input]) => input), ...nonIndexedInputs]
+  if (inputsToDecode.length > 0) {
     if (data && data !== '0x') {
-      const decoded = decodeAbiParameters(nonIndexedInputs, data)
-      // Consume the decoded values in order, like `topicIndex` above. An
-      // identity lookup (`nonIndexedInputs.indexOf(input)`) would resolve every
-      // occurrence of a reused parameter object to its first slot.
-      let dataIndex = 0
-      for (let i = 0; i < inputs.length; i++) {
-        const input = inputs[i]!
-        if ('indexed' in input && input.indexed) continue
-        setArg(input, i, (decoded as readonly unknown[])[dataIndex])
-        dataIndex++
+      try {
+        const decoded = decodeAbiParameters(
+          inputsToDecode,
+          data,
+        ) as readonly unknown[]
+        let dataIndex = 0
+        for (const [input, i] of missingIndexed)
+          setArg(input, i, decoded[dataIndex++])
+        // Consume the decoded values in order, like `topicIndex` above. An
+        // identity lookup (`nonIndexedInputs.indexOf(input)`) would resolve
+        // every occurrence of a reused parameter object to its first slot.
+        for (let i = 0; i < inputs.length; i++) {
+          const input = inputs[i]!
+          if ('indexed' in input && input.indexed) continue
+          setArg(input, i, decoded[dataIndex])
+          dataIndex++
+        }
+      } catch (err) {
+        if (strict) {
+          if (
+            err instanceof AbiDecodingDataSizeTooSmallError ||
+            err instanceof PositionOutOfBoundsError
+          )
+            throw new DecodeLogDataMismatch({
+              abiItem,
+              data,
+              formattedParams: formatAbiParams(inputsToDecode, {
+                includeName: true,
+              }),
+              params: inputsToDecode,
+              size: size(data),
+            })
+          throw err
+        }
+        // Lenient mode keeps whatever the topics yielded.
       }
-    } else {
+    } else if (strict) {
       throw new DecodeLogDataMismatch({
         abiItem,
         data: data ?? '0x',
-        formattedParams: formatAbiParams(nonIndexedInputs, {
+        formattedParams: formatAbiParams(inputsToDecode, {
           includeName: true,
         }),
-        params: nonIndexedInputs,
+        params: inputsToDecode,
         size: data ? size(data) : 0,
       })
     }
