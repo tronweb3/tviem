@@ -32,16 +32,41 @@ test('POSTs the signed transaction JSON to broadcasttransaction and returns the 
   })
   const client = createClient({ transport })
 
-  const { txid } = await broadcastTransaction(client, { signedTransaction })
+  const response = await broadcastTransaction(client, { signedTransaction })
 
-  // broadcasttransaction.ok echoes an all-zero txid; the local id wins.
-  expect(txid).toBe(TX_ID)
-  expect(txid).not.toBe(`0${'0'.repeat(63)}`)
+  // broadcasttransaction.ok echoes an all-zero txid; the local id wins. The
+  // node's other acknowledgement fields ride along.
+  expect(response.txid).toBe(TX_ID)
+  expect(response.txid).not.toBe(`0${'0'.repeat(63)}`)
+  expect(response).toEqual({ txid: TX_ID, result: true })
 
   expect(calls[0]?.node).toBe('full')
   expect(calls[0]?.path).toBe('broadcasttransaction')
   expect(calls[0]?.method).toBe('POST')
   expect(bodyOf('broadcasttransaction')).toEqual(signedTransaction)
+})
+
+test('passes the acknowledgement fields through (message hex-decoded), never the echoed txid', async () => {
+  const { transport } = createMockTransport({
+    responses: {
+      broadcasttransaction: {
+        response: {
+          result: true,
+          code: 'SUCCESS',
+          // "broadcast ok" — node message fields arrive hex-encoded.
+          message: '62726f616463617374206f6b',
+          txid: `0${'0'.repeat(63)}`,
+        },
+      },
+    },
+  })
+  const client = createClient({ transport })
+  expect(await broadcastTransaction(client, { signedTransaction })).toEqual({
+    txid: TX_ID,
+    result: true,
+    code: 'SUCCESS',
+    message: 'broadcast ok',
+  })
 })
 
 test('throws TronRpcError when the transaction carries no signature', async () => {

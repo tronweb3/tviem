@@ -1,6 +1,9 @@
 import type { SignableTransaction } from '../../accounts/types.js'
 import type { Client } from '../../clients/createClient.js'
-import type { RequestErrorType } from '../../clients/transports/http.js'
+import {
+  decodeNodeMessage,
+  type RequestErrorType,
+} from '../../clients/transports/http.js'
 import { BaseError } from '../../errors/base.js'
 import { TronNodeError } from '../../errors/node.js'
 import {
@@ -24,7 +27,27 @@ export type BroadcastTransactionParameters = {
   /** A signed transaction (must already carry at least one signature). */
   signedTransaction: SignableTransaction
 }
-export type BroadcastTransactionReturnType = { txid: string }
+export type BroadcastTransactionReturnType = {
+  /**
+   * The **locally** computed transaction id (bare lowercase hex) — never the
+   * node's echoed `txid` (see the action's JSDoc).
+   */
+  txid: string
+  /** The node's acknowledgement flag (`true` here — a rejection throws). */
+  result?: boolean | undefined
+  /** The node's response code, when echoed (e.g. `SUCCESS`). */
+  code?: string | undefined
+  /** The node's message, hex-decoded to UTF-8 when decodable. */
+  message?: string | undefined
+}
+
+/** The `broadcasttransaction` acknowledgement body. */
+type RawBroadcastResponse = {
+  result?: boolean | undefined
+  txid?: string | undefined
+  code?: string | undefined
+  message?: string | undefined
+}
 
 export type BroadcastTransactionErrorType =
   | AssertRpcSuccessErrorType
@@ -56,9 +79,11 @@ const expirationCodes = new Set(['TRANSACTION_EXPIRATION_ERROR', 'TAPOS_ERROR'])
  * drifted model would relay bytes the signature no longer covers, reported
  * under a `txid` the relayed transaction could never be found by. The returned
  * `txid` is that checked local `txID` (bare lowercase hex); the node's echoed
- * value is not read. This is the same gate every signing path runs, so bytes
- * carrying wire fields the model layer does not represent are refused here
- * the same way they would be at signing.
+ * `txid` is deliberately not read, while the rest of the acknowledgement
+ * (`result`, `code`, `message`) is passed through — `message` hex-decoded to
+ * UTF-8 like the error paths. This is the same gate every signing path runs,
+ * so bytes carrying wire fields the model layer does not represent are
+ * refused here the same way they would be at signing.
  *
  * The transport's error normalization already throws for the documented
  * rejection bodies (`{ result: false, code }` → `TronBroadcastError`, etc.); a
@@ -68,7 +93,8 @@ const expirationCodes = new Set(['TRANSACTION_EXPIRATION_ERROR', 'TAPOS_ERROR'])
  *
  * @param client The Client to use.
  * @param parameters The signed transaction to broadcast.
- * @returns `{ txid }` — the locally computed transaction id.
+ * @returns `{ txid, result, code, message }` — the locally computed
+ * transaction id plus the node's acknowledgement fields, when echoed.
  */
 export async function broadcastTransaction(
   client: Client,
@@ -127,7 +153,20 @@ export async function broadcastTransaction(
   // through the transport normalizer untouched.
   assertRpcSuccess(response, { path: 'broadcasttransaction' })
 
+  const body = (
+    response && typeof response === 'object' ? response : {}
+  ) as RawBroadcastResponse
+
   // Canonical spelling: txCheck compared via bareHex, so a caller's `0x` or
   // upper-case spelling passes — return the form the check actually ran on.
-  return { txid: bareHex(txID) }
+  // The node's remaining acknowledgement fields ride along (`message`
+  // hex-decoded); its echoed `txid` is deliberately not read.
+  return {
+    txid: bareHex(txID),
+    ...(typeof body.result === 'boolean' ? { result: body.result } : {}),
+    ...(body.code !== undefined ? { code: String(body.code) } : {}),
+    ...(body.message !== undefined
+      ? { message: decodeNodeMessage(body.message) }
+      : {}),
+  }
 }

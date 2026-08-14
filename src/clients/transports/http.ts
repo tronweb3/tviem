@@ -112,7 +112,7 @@ function parseBody(text: string): unknown {
 }
 
 /** TRON node message fields are hex-encoded; decode to UTF-8 (or pass through). */
-function decodeNodeMessage(message: unknown): string {
+export function decodeNodeMessage(message: unknown): string {
   if (typeof message !== 'string' || message.length === 0) return ''
   const hex = message.startsWith('0x') ? message : `0x${message}`
   if (/^0x[0-9a-fA-F]*$/.test(hex) && (hex.length - 2) % 2 === 0) {
