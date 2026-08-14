@@ -29,6 +29,8 @@ export {
 } from './privateKeyToAccount.js'
 export { type ToAccountErrorType, toAccount } from './toAccount.js'
 export type {
+  AccountMultiSignFn,
+  AccountMultiSignOptions,
   AccountSignMessageParameters,
   AccountSignTypedDataParameters,
   AccountSource,
@@ -40,6 +42,11 @@ export type {
   TronHDAccount,
   TronLocalAccount,
 } from './types.js'
+export {
+  type MultiSignTransactionErrorType,
+  type MultiSignTransactionParameters,
+  multiSignTransaction,
+} from './utils/multiSignTransaction.js'
 export {
   type PrivateKeyToAddressErrorType,
   privateKeyToAddress,

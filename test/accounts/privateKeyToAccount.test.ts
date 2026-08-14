@@ -4,10 +4,12 @@ import type { SignableTransaction } from '../../src/accounts/types.js'
 import { decodeRawData } from '../../src/utils/transaction/decodeRawData.js'
 import { getTransactionId } from '../../src/utils/transaction/getTransactionId.js'
 import { toRawDataHex } from '../../src/utils/transaction/serializeRawData.js'
-import { loadTxFixtures } from '../fixtures/tx/loader.js'
+import { loadTxFixtureFile, loadTxFixtures } from '../fixtures/tx/loader.js'
 
 // Only pk=1 is a permitted trivial private key.
 const pk1 = '0x0000000000000000000000000000000000000000000000000000000000000001'
+// pk=2: a non-owner co-signer for the multiSign tests.
+const pk2 = '0x0000000000000000000000000000000000000000000000000000000000000002'
 
 // §2.1 / §2.2 / §2.3 authoritative derivations for pk=1.
 const address = 'TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC'
@@ -131,5 +133,81 @@ describe('privateKeyToAccount', () => {
     const account = privateKeyToAccount(pk1)
     const signed = account.signTransaction(canonicalTransaction())
     expect(signed.txID).toBe(getTransactionId(canonicalRawData))
+  })
+})
+
+describe('multiSign', () => {
+  // Case 0: the canonical unbound transfer (owner = pk1's address). Case 1:
+  // the SAME transfer with Permission_id=2 baked in — the gold vector a
+  // fresh bind must reproduce.
+  const [transfer, transferBound] = loadTxFixtureFile('transfer-contract.json')
+
+  /** The fixture's full consistent triple (unbound bytes). */
+  function unboundTriple(): SignableTransaction {
+    return {
+      txID: transfer!.txID,
+      raw_data: decodeRawData(transfer!.rawDataHex),
+      raw_data_hex: transfer!.rawDataHex,
+    }
+  }
+
+  /** The Permission_id=2 gold vector's full consistent triple. */
+  function boundTriple(): SignableTransaction {
+    return {
+      txID: transferBound!.txID,
+      raw_data: decodeRawData(transferBound!.rawDataHex),
+      raw_data_hex: transferBound!.rawDataHex,
+    }
+  }
+
+  test('binds a fresh permission id and reproduces the bound gold vector', () => {
+    const account = privateKeyToAccount(pk1)
+    const signed = account.multiSign(unboundTriple(), { permissionId: 2 })
+    expect(signed.raw_data.contract[0]?.Permission_id).toBe(2)
+    expect(signed.raw_data_hex).toBe(transferBound!.rawDataHex)
+    expect(signed.txID).toBe(transferBound!.txID)
+    // Identical bytes → identical deterministic signature to signing the
+    // bound gold vector directly.
+    const direct = account.signTransaction(boundTriple())
+    expect(signed.signature).toHaveLength(1)
+    expect(signed.signature?.[0]).toBe(direct.signature?.[0])
+  })
+
+  test('a non-owner co-signer appends under the baked id', () => {
+    const owner = privateKeyToAccount(pk1)
+    const cosigner = privateKeyToAccount(pk2)
+    const first = owner.multiSign(unboundTriple(), { permissionId: 2 })
+    // No options: the co-signer inherits contract[0].Permission_id (2). pk2
+    // is NOT the owner — membership is the node's business, signing is local.
+    const second = cosigner.multiSign(first)
+    expect(second.signature).toHaveLength(2)
+    expect(second.signature?.[0]).toBe(first.signature?.[0])
+    expect(second.txID).toBe(first.txID)
+    expect(second.raw_data_hex).toBe(first.raw_data_hex)
+  })
+
+  test('omitted options mean the owner permission — bytes unchanged', () => {
+    const account = privateKeyToAccount(pk1)
+    const signed = account.multiSign(unboundTriple())
+    expect(signed.signature).toHaveLength(1)
+    expect(signed.raw_data_hex).toBe(transfer!.rawDataHex)
+    expect(signed.txID).toBe(transfer!.txID)
+  })
+
+  test('runs the multi-sig guards (permission id mismatch throws)', () => {
+    const owner = privateKeyToAccount(pk1)
+    const bound = owner.multiSign(unboundTriple(), { permissionId: 2 })
+    expect(() =>
+      privateKeyToAccount(pk2).multiSign(bound, { permissionId: 3 }),
+    ).toThrow(/^Permission id mismatch:/)
+  })
+
+  test('does not mutate its input', () => {
+    const account = privateKeyToAccount(pk1)
+    const transaction = unboundTriple()
+    account.multiSign(transaction, { permissionId: 2 })
+    expect(transaction.raw_data.contract[0]?.Permission_id).toBeUndefined()
+    expect(transaction.raw_data_hex).toBe(transfer!.rawDataHex)
+    expect(transaction.signature).toBeUndefined()
   })
 })

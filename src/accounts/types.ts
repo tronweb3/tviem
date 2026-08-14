@@ -49,6 +49,28 @@ export type AccountSignMessageParameters = {
  */
 export type AccountSignTypedDataParameters = HashTypedDataParameters
 
+/** Options for an account's `multiSign`. */
+export type AccountMultiSignOptions = {
+  /**
+   * The active/owner permission id (`Permission.id`) this signature is for.
+   * Defaults to the id already baked into the transaction
+   * (`contract[0].Permission_id`); absent everywhere means the owner
+   * permission (id 0).
+   */
+  permissionId?: number | undefined
+}
+
+/**
+ * An account's `multiSign`: adds this signer's signature to a multi-signature
+ * transaction under a permission id — binding the id into the bytes when it
+ * is fresh — and returns the co-signed transaction. Unlike `signTransaction`,
+ * the signer need not be the transaction's `owner_address`.
+ */
+export type AccountMultiSignFn = (
+  transaction: SignableTransaction,
+  options?: AccountMultiSignOptions,
+) => SignableTransaction
+
 /**
  * The signing surface shared by every account. Local (private-key) accounts
  * are implemented today; remote/delegated signers land in v0.1c. All methods
@@ -71,6 +93,13 @@ export type TronCustomSource = {
   signTypedData: (parameters: AccountSignTypedDataParameters) => Signature
   /** Signs a transaction, appending to its `signature` list. */
   signTransaction: (transaction: SignableTransaction) => SignableTransaction
+  /**
+   * Co-signs a multi-signature transaction under a permission id (see
+   * {@link AccountMultiSignFn}). Optional for custom sources — a source that
+   * omits it cannot co-sign as a non-owner; always present on key-backed
+   * accounts.
+   */
+  multiSign?: AccountMultiSignFn | undefined
 }
 
 /** How an account holds its signing material. */
@@ -78,6 +107,8 @@ export type AccountSource = 'privateKey' | 'custom' | 'hd'
 
 /** A locally-signing account backed by a raw secp256k1 private key. */
 export type TronLocalAccount = TronCustomSource & {
+  /** Co-signs a multi-signature transaction under a permission id. */
+  multiSign: AccountMultiSignFn
   /** Signing source. `'privateKey'` = a locally held key. */
   source: 'privateKey'
   /** Discriminant for the account union. */
@@ -91,6 +122,8 @@ export type TronLocalAccount = TronCustomSource & {
  * derivation or extended-key export.
  */
 export type TronHDAccount = TronCustomSource & {
+  /** Co-signs a multi-signature transaction under a permission id. */
+  multiSign: AccountMultiSignFn
   /** Signing source. `'hd'` = derived from an HD key. */
   source: 'hd'
   /** Discriminant for the account union. */

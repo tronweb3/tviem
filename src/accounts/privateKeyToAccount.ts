@@ -16,7 +16,15 @@ import {
   type SignTypedDataErrorType,
   signTypedData,
 } from '../utils/signature/signTypedData.js'
-import type { SignableTransaction, TronLocalAccount } from './types.js'
+import type {
+  AccountMultiSignOptions,
+  SignableTransaction,
+  TronLocalAccount,
+} from './types.js'
+import {
+  type MultiSignTransactionErrorType,
+  multiSignTransaction,
+} from './utils/multiSignTransaction.js'
 import {
   type PrivateKeyToAddressErrorType,
   privateKeyToAddress,
@@ -32,13 +40,15 @@ export type PrivateKeyToAccountErrorType =
   | SignMessageErrorType
   | SignTypedDataErrorType
   | SignTransactionErrorType
+  | MultiSignTransactionErrorType
   | BaseErrorType
   | ErrorType
 
 /**
  * Creates a local account from a secp256k1 private key. The returned account
  * derives its address and public key from the key, and signs messages
- * (TIP-191), typed data (TIP-712) and transactions with it. Signing is
+ * (TIP-191), typed data (TIP-712) and transactions with it; `multiSign`
+ * co-signs multi-signature transactions under a permission id. Signing is
  * synchronous. There is deliberately no raw-digest `sign` — blind signing is
  * not supported (see {@link TronCustomSource}).
  *
@@ -74,5 +84,14 @@ export function privateKeyToAccount(
       signTypedData({ ...parameters, privateKey: keyHex }),
     signTransaction: (transaction: SignableTransaction): SignableTransaction =>
       signTransaction({ transaction, privateKey: keyHex, address }),
+    multiSign: (
+      transaction: SignableTransaction,
+      options?: AccountMultiSignOptions,
+    ): SignableTransaction =>
+      multiSignTransaction({
+        transaction,
+        privateKey: keyHex,
+        permissionId: options?.permissionId,
+      }),
   }
 }
