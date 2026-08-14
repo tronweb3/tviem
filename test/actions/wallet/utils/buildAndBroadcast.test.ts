@@ -22,7 +22,7 @@ function writeMock() {
   return createMockTransport({
     responses: {
       getnowblock: { response: rpc('getnowblock.fixed') },
-      broadcasthex: { response: rpc('broadcasttransaction.ok') },
+      broadcasttransaction: { response: rpc('broadcasttransaction.ok') },
     },
   })
 }
@@ -54,11 +54,14 @@ test('runs getNowBlock → sign → broadcast and returns the local txID', async
 
   // Byte-for-byte gold: the helper produces the same bytes as the action.
   expect(txID).toBe(bandwidth?.txID)
-  expect(calls.map((c) => c.path)).toEqual(['getnowblock', 'broadcasthex'])
+  expect(calls.map((c) => c.path)).toEqual([
+    'getnowblock',
+    'broadcasttransaction',
+  ])
   expect(calls[0]?.method).toBe('GET')
   expect(calls[1]?.method).toBe('POST')
 
-  const body = parseBroadcast(bodyOf('broadcasthex')) as {
+  const body = parseBroadcast(bodyOf('broadcasttransaction')) as {
     txID: string
     raw_data_hex: string
     raw_data: { fee_limit?: number | undefined }
@@ -82,7 +85,7 @@ test('writes fee_limit into raw_data when supplied', async () => {
     feeLimit: 15000000n,
   })
 
-  const body = parseBroadcast(bodyOf('broadcasthex')) as {
+  const body = parseBroadcast(bodyOf('broadcasttransaction')) as {
     raw_data: { fee_limit?: number | undefined }
   }
   expect(body.raw_data.fee_limit).toBe(15000000)
@@ -95,7 +98,7 @@ test('derives timing from the latest block when blockHeader is omitted', async (
 
   await buildAndBroadcast(client, { contract: freezeContract(), account })
 
-  const body = parseBroadcast(bodyOf('broadcasthex')) as {
+  const body = parseBroadcast(bodyOf('broadcasttransaction')) as {
     raw_data: { timestamp: bigint }
   }
   // getnowblock.fixed pins block_header timestamp = 1700000000000; timing is

@@ -18,7 +18,7 @@ function writeMock() {
   return createMockTransport({
     responses: {
       getnowblock: { response: rpc('getnowblock.fixed') },
-      broadcasthex: { response: rpc('broadcasttransaction.ok') },
+      broadcasttransaction: { response: rpc('broadcasttransaction.ok') },
     },
   })
 }
@@ -33,9 +33,12 @@ test('freezes for BANDWIDTH byte-for-byte against the gold vector', async () => 
   })
 
   expect(txID).toBe(bandwidth?.txID)
-  expect(calls.map((c) => c.path)).toEqual(['getnowblock', 'broadcasthex'])
+  expect(calls.map((c) => c.path)).toEqual([
+    'getnowblock',
+    'broadcasttransaction',
+  ])
 
-  const body = parseBroadcast(bodyOf('broadcasthex')) as {
+  const body = parseBroadcast(bodyOf('broadcasttransaction')) as {
     txID: string
     raw_data_hex: string
     signature: string[]
@@ -57,7 +60,7 @@ test('freezes for ENERGY byte-for-byte against the gold vector', async () => {
   })
 
   expect(txID).toBe(energy?.txID)
-  const body = parseBroadcast(bodyOf('broadcasthex')) as {
+  const body = parseBroadcast(bodyOf('broadcasttransaction')) as {
     raw_data_hex: string
   }
   expect(body.raw_data_hex).toBe(energy?.rawDataHex)
@@ -75,7 +78,7 @@ test('memo lands in raw_data.data on a staking action', async () => {
     memo: '0x6d656d6f',
   })
 
-  const body = parseBroadcast(bodyOf('broadcasthex')) as {
+  const body = parseBroadcast(bodyOf('broadcasttransaction')) as {
     raw_data: { data?: string }
   }
   expect(body.raw_data.data).toBe('6d656d6f')
@@ -91,7 +94,7 @@ test('resolves the per-call account when the client hoists none', async () => {
   })
   expect(txID).toBe(bandwidth?.txID)
   expect(
-    (parseBroadcast(bodyOf('broadcasthex')) as { raw_data_hex: string })
+    (parseBroadcast(bodyOf('broadcasttransaction')) as { raw_data_hex: string })
       .raw_data_hex,
   ).toBe(bandwidth?.rawDataHex)
 })

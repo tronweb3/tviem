@@ -23,7 +23,7 @@ function writeMock() {
   return createMockTransport({
     responses: {
       getnowblock: { response: rpc('getnowblock.fixed') },
-      broadcasthex: { response: rpc('broadcasttransaction.ok') },
+      broadcasttransaction: { response: rpc('broadcasttransaction.ok') },
     },
   })
 }
@@ -38,14 +38,17 @@ test('builds, signs and broadcasts the canonical transfer byte-for-byte', async 
   expect(txID).toBe(TX_ID)
 
   // It fetched the latest block first (TaPoS), then broadcast.
-  expect(calls.map((c) => c.path)).toEqual(['getnowblock', 'broadcasthex'])
+  expect(calls.map((c) => c.path)).toEqual([
+    'getnowblock',
+    'broadcasttransaction',
+  ])
   expect(calls[0]?.node).toBe('full')
   expect(calls[0]?.method).toBe('GET')
   expect(calls[1]?.node).toBe('full')
   expect(calls[1]?.method).toBe('POST')
 
   // The broadcast body is the whole signed transaction, byte-for-byte gold.
-  const body = parseBroadcast(bodyOf('broadcasthex')) as {
+  const body = parseBroadcast(bodyOf('broadcasttransaction')) as {
     txID: string
     raw_data: unknown
     raw_data_hex: string
@@ -76,7 +79,7 @@ test('accepts a per-call account overriding the (absent) client account', async 
   })
   expect(txID).toBe(TX_ID)
   expect(
-    (parseBroadcast(bodyOf('broadcasthex')) as { raw_data_hex: string })
+    (parseBroadcast(bodyOf('broadcasttransaction')) as { raw_data_hex: string })
       .raw_data_hex,
   ).toBe(RAW_DATA_HEX)
 })
@@ -85,7 +88,7 @@ test('writes a memo into raw_data.data', async () => {
   const { transport, bodyOf } = writeMock()
   const client = createWalletClient({ account: pk1, transport })
   await client.sendTrx({ to, amount: 1000000n, memo: '0x6f6d6e69' })
-  const body = parseBroadcast(bodyOf('broadcasthex')) as {
+  const body = parseBroadcast(bodyOf('broadcasttransaction')) as {
     raw_data: { data?: string }
   }
   expect(body.raw_data.data).toBe('6f6d6e69')
@@ -99,7 +102,7 @@ test('accepts a memo as raw bytes (Uint8Array)', async () => {
     amount: 1000000n,
     memo: new Uint8Array([0x6f, 0x6d, 0x6e, 0x69]),
   })
-  const body = parseBroadcast(bodyOf('broadcasthex')) as {
+  const body = parseBroadcast(bodyOf('broadcasttransaction')) as {
     raw_data: { data?: string }
   }
   expect(body.raw_data.data).toBe('6f6d6e69')
@@ -139,7 +142,7 @@ test('expirationMs sets the lifetime from the chain-derived timestamp', async ()
   const { transport, bodyOf } = writeMock()
   const client = createWalletClient({ account: pk1, transport })
   await client.sendTrx({ to, amount: 1000000n, expirationMs: 3_600_000 })
-  const body = parseBroadcast(bodyOf('broadcasthex')) as {
+  const body = parseBroadcast(bodyOf('broadcasttransaction')) as {
     raw_data: { timestamp: number; expiration: number }
   }
   expect(body.raw_data.timestamp).toBe(1700000000000)
@@ -164,7 +167,7 @@ test('a complete blockHeader takes precedence over expirationMs', async () => {
       expiration: 1700000123456n,
     },
   })
-  const body = parseBroadcast(bodyOf('broadcasthex')) as {
+  const body = parseBroadcast(bodyOf('broadcasttransaction')) as {
     raw_data: { expiration: number }
   }
   expect(body.raw_data.expiration).toBe(1700000123456)

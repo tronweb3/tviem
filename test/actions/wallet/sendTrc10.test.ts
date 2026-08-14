@@ -23,7 +23,7 @@ function writeMock() {
   return createMockTransport({
     responses: {
       getnowblock: { response: rpc('getnowblock.fixed') },
-      broadcasthex: { response: rpc('broadcasttransaction.ok') },
+      broadcasttransaction: { response: rpc('broadcasttransaction.ok') },
     },
   })
 }
@@ -40,9 +40,12 @@ test('sends a TRC10 asset byte-for-byte against the gold vector (UTF-8 asset_nam
   })
 
   expect(txID).toBe(utf8Form?.txID)
-  expect(calls.map((c) => c.path)).toEqual(['getnowblock', 'broadcasthex'])
+  expect(calls.map((c) => c.path)).toEqual([
+    'getnowblock',
+    'broadcasttransaction',
+  ])
 
-  const body = parseBroadcast(bodyOf('broadcasthex')) as {
+  const body = parseBroadcast(bodyOf('broadcasttransaction')) as {
     txID: string
     raw_data_hex: string
     signature: string[]
@@ -66,7 +69,7 @@ test('accepts the hex asset_name form and yields the identical bytes', async () 
   })
 
   expect(txID).toBe(hexForm?.txID)
-  const body = parseBroadcast(bodyOf('broadcasthex')) as {
+  const body = parseBroadcast(bodyOf('broadcasttransaction')) as {
     raw_data_hex: string
   }
   expect(body.raw_data_hex).toBe(hexForm?.rawDataHex)
@@ -83,7 +86,7 @@ test('resolves the per-call account when the client hoists none', async () => {
   })
   expect(txID).toBe(utf8Form?.txID)
   expect(
-    (parseBroadcast(bodyOf('broadcasthex')) as { raw_data_hex: string })
+    (parseBroadcast(bodyOf('broadcasttransaction')) as { raw_data_hex: string })
       .raw_data_hex,
   ).toBe(utf8Form?.rawDataHex)
 })

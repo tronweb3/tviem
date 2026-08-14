@@ -36,7 +36,7 @@ function writeMock() {
   return createMockTransport({
     responses: {
       getnowblock: { response: rpc('getnowblock.fixed') },
-      broadcasthex: { response: rpc('broadcasttransaction.ok') },
+      broadcasttransaction: { response: rpc('broadcasttransaction.ok') },
     },
   })
 }
@@ -56,9 +56,12 @@ test('deploys byte-for-byte against the gold vector + backfills the address', as
   })
 
   expect(txID).toBe(basic?.txID)
-  expect(calls.map((c) => c.path)).toEqual(['getnowblock', 'broadcasthex'])
+  expect(calls.map((c) => c.path)).toEqual([
+    'getnowblock',
+    'broadcasttransaction',
+  ])
 
-  const body = parseBroadcast(bodyOf('broadcasthex')) as {
+  const body = parseBroadcast(bodyOf('broadcasttransaction')) as {
     txID: string
     raw_data_hex: string
     signature: string[]
@@ -90,7 +93,7 @@ test('carries call_token_value + token_id byte-for-byte', async () => {
 
   expect(txID).toBe(withToken?.txID)
   expect(
-    (parseBroadcast(bodyOf('broadcasthex')) as { raw_data_hex: string })
+    (parseBroadcast(bodyOf('broadcasttransaction')) as { raw_data_hex: string })
       .raw_data_hex,
   ).toBe(withToken?.rawDataHex)
   expect(toHex(contractAddress)).toBe(withToken?.contractAddress)
@@ -111,7 +114,7 @@ test('defaults consume_user_resource_percent to 100 and origin_energy_limit to 1
     bytecode: `0x${value.bytecode}` as Hex,
   })
 
-  const body = parseBroadcast(bodyOf('broadcasthex')) as {
+  const body = parseBroadcast(bodyOf('broadcasttransaction')) as {
     raw_data_hex: string
   }
   const created = decodeRawData(body.raw_data_hex).contract[0]?.parameter

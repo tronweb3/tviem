@@ -157,7 +157,7 @@ describe('getContract', () => {
       const { transport, calls, bodyOf } = createMockTransport({
         responses: {
           getnowblock: { response: rpc('getnowblock.fixed') },
-          broadcasthex: { response: { result: true } },
+          broadcasttransaction: { response: { result: true } },
         },
       })
       const client = createWalletClient({ transport, account })
@@ -173,9 +173,12 @@ describe('getContract', () => {
       // pinned reference block's own timestamp).
       expect(result.txID).toMatch(/^[0-9a-f]{64}$/)
       // Both node round-trips happened: fetch block, then broadcast.
-      expect(calls.map((c) => c.path)).toEqual(['getnowblock', 'broadcasthex'])
+      expect(calls.map((c) => c.path)).toEqual([
+        'getnowblock',
+        'broadcasttransaction',
+      ])
       // The broadcast body is the whole signed transaction.
-      const body = parseBroadcast(bodyOf('broadcasthex')) as {
+      const body = parseBroadcast(bodyOf('broadcasttransaction')) as {
         signature: string[]
         txID: string
       }

@@ -12,10 +12,6 @@ import {
 import type { ErrorType } from '../../errors/utils.js'
 import { bareHex } from '../../utils/encoding/bareHex.js'
 import {
-  type SerializeTransactionErrorType,
-  toBroadcastHex,
-} from '../../utils/transaction/serializeTransaction.js'
-import {
   type TxCheckErrorType,
   txCheck,
 } from '../../utils/transaction/txCheck.js'
@@ -33,14 +29,10 @@ export type BroadcastTransactionReturnType = { txid: string }
 export type BroadcastTransactionErrorType =
   | AssertRpcSuccessErrorType
   | RequestErrorType
-  | SerializeTransactionErrorType
   | TransactionExpiredErrorType
   | TronRpcErrorType
   | TxCheckErrorType
   | ErrorType
-
-/** The `broadcasthex` request body: the full signed `Transaction` protobuf. */
-type BroadcastBody = { transaction: string }
 
 /**
  * TRON broadcast rejection codes that mean the transaction's reference block
@@ -50,17 +42,19 @@ type BroadcastBody = { transaction: string }
 const expirationCodes = new Set(['TRANSACTION_EXPIRATION_ERROR', 'TAPOS_ERROR'])
 
 /**
- * Broadcasts an already-signed transaction via `broadcasthex` (full node): the
- * body is the full signed `Transaction` protobuf as hex, which the node relays
- * verbatim without re-parsing any JSON. `broadcasttransaction` would instead
- * rebuild the transaction from the `raw_data` JSON and ignore `raw_data_hex`.
+ * Broadcasts an already-signed transaction via `broadcasttransaction` (full
+ * node): the body is the full signed transaction in node JSON (`txID`,
+ * `raw_data`, `raw_data_hex`, `signature`). Node dialect: the node rebuilds
+ * the `Transaction` protobuf from the snake_case `raw_data` JSON —
+ * `raw_data_hex` is ignored server-side — so the JSON model, not the hex, is
+ * what gets relayed.
  *
  * The transaction is integrity-checked before any request is sent (via
  * {@link txCheck}): `raw_data` must serialize to exactly the `raw_data_hex`
  * bytes, whose SHA-256 must equal `txID`. An inconsistent or incomplete
- * triple is refused — the wire payload and the on-chain id both derive from
- * the bytes, so broadcasting it would relay real bytes while reporting a
- * `txid` under which the transaction could never be found. The returned
+ * triple is refused — the node rebuilds the wire bytes from `raw_data`, so a
+ * drifted model would relay bytes the signature no longer covers, reported
+ * under a `txid` the relayed transaction could never be found by. The returned
  * `txid` is that checked local `txID` (bare lowercase hex); the node's echoed
  * value is not read. This is the same gate every signing path runs, so bytes
  * carrying wire fields the model layer does not represent are refused here
@@ -91,7 +85,7 @@ export async function broadcastTransaction(
   if (!signature || signature.length === 0)
     throw new TronRpcError(
       'Cannot broadcast a transaction without a signature.',
-      { metaMessages: ['Path: broadcasthex'] },
+      { metaMessages: ['Path: broadcasttransaction'] },
     )
 
   // Pre-condition: the triple must be self-consistent (see the JSDoc). The
@@ -100,8 +94,6 @@ export async function broadcastTransaction(
   // `txID` has never been checked against the bytes until here.
   if (!txCheck(signedTransaction))
     throw new BaseError('The transaction failed its integrity check (txCheck).')
-
-  const body: BroadcastBody = { transaction: toBroadcastHex(signedTransaction) }
 
   let response: unknown
   try {
@@ -115,8 +107,8 @@ export async function broadcastTransaction(
       {
         node: 'full',
         method: 'POST',
-        path: 'broadcasthex',
-        body,
+        path: 'broadcasttransaction',
+        body: signedTransaction,
       },
       { retryCount: 0 },
     )
@@ -133,7 +125,7 @@ export async function broadcastTransaction(
 
   // Secondary guard: a `{ result: false }` rejection without a `code` passes
   // through the transport normalizer untouched.
-  assertRpcSuccess(response, { path: 'broadcasthex' })
+  assertRpcSuccess(response, { path: 'broadcasttransaction' })
 
   // Canonical spelling: txCheck compared via bareHex, so a caller's `0x` or
   // upper-case spelling passes — return the form the check actually ran on.

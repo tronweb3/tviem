@@ -18,7 +18,7 @@ function writeMock() {
   return createMockTransport({
     responses: {
       getnowblock: { response: rpc('getnowblock.fixed') },
-      broadcasthex: { response: rpc('broadcasttransaction.ok') },
+      broadcasttransaction: { response: rpc('broadcasttransaction.ok') },
     },
   })
 }
@@ -49,8 +49,11 @@ test('updates owner + active permissions byte-for-byte against the gold vector',
   })
 
   expect(txID).toBe(fixture?.txID)
-  expect(calls.map((c) => c.path)).toEqual(['getnowblock', 'broadcasthex'])
-  const body = parseBroadcast(bodyOf('broadcasthex')) as {
+  expect(calls.map((c) => c.path)).toEqual([
+    'getnowblock',
+    'broadcasttransaction',
+  ])
+  const body = parseBroadcast(bodyOf('broadcasttransaction')) as {
     raw_data_hex: string
   }
   expect(body.raw_data_hex).toBe(fixture?.rawDataHex)

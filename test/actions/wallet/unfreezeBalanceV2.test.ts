@@ -19,7 +19,7 @@ function writeMock() {
   return createMockTransport({
     responses: {
       getnowblock: { response: rpc('getnowblock.fixed') },
-      broadcasthex: { response: rpc('broadcasttransaction.ok') },
+      broadcasttransaction: { response: rpc('broadcasttransaction.ok') },
     },
   })
 }
@@ -34,9 +34,12 @@ test('unfreezes for BANDWIDTH byte-for-byte against the gold vector', async () =
   })
 
   expect(txID).toBe(bandwidth?.txID)
-  expect(calls.map((c) => c.path)).toEqual(['getnowblock', 'broadcasthex'])
+  expect(calls.map((c) => c.path)).toEqual([
+    'getnowblock',
+    'broadcasttransaction',
+  ])
 
-  const body = parseBroadcast(bodyOf('broadcasthex')) as {
+  const body = parseBroadcast(bodyOf('broadcasttransaction')) as {
     txID: string
     raw_data_hex: string
     signature: string[]
@@ -57,7 +60,7 @@ test('unfreezes for ENERGY byte-for-byte against the gold vector', async () => {
   })
 
   expect(txID).toBe(energy?.txID)
-  const body = parseBroadcast(bodyOf('broadcasthex')) as {
+  const body = parseBroadcast(bodyOf('broadcasttransaction')) as {
     raw_data_hex: string
   }
   expect(body.raw_data_hex).toBe(energy?.rawDataHex)

@@ -20,7 +20,7 @@ function writeMock() {
   return createMockTransport({
     responses: {
       getnowblock: { response: rpc('getnowblock.fixed') },
-      broadcasthex: { response: rpc('broadcasttransaction.ok') },
+      broadcasttransaction: { response: rpc('broadcasttransaction.ok') },
     },
   })
 }
@@ -37,9 +37,12 @@ test('delegates BANDWIDTH (lock=false) byte-for-byte against the gold vector', a
   })
 
   expect(txID).toBe(unlocked?.txID)
-  expect(calls.map((c) => c.path)).toEqual(['getnowblock', 'broadcasthex'])
+  expect(calls.map((c) => c.path)).toEqual([
+    'getnowblock',
+    'broadcasttransaction',
+  ])
 
-  const body = parseBroadcast(bodyOf('broadcasthex')) as {
+  const body = parseBroadcast(bodyOf('broadcasttransaction')) as {
     txID: string
     raw_data_hex: string
     signature: string[]
@@ -63,7 +66,7 @@ test('delegates ENERGY with lock + lock_period byte-for-byte', async () => {
   })
 
   expect(txID).toBe(locked?.txID)
-  const body = parseBroadcast(bodyOf('broadcasthex')) as {
+  const body = parseBroadcast(bodyOf('broadcasttransaction')) as {
     raw_data_hex: string
   }
   expect(body.raw_data_hex).toBe(locked?.rawDataHex)
@@ -81,7 +84,7 @@ test('omitting lock matches the unlocked vector (lock=false is not encoded)', as
 
   expect(txID).toBe(unlocked?.txID)
   expect(
-    (parseBroadcast(bodyOf('broadcasthex')) as { raw_data_hex: string })
+    (parseBroadcast(bodyOf('broadcasttransaction')) as { raw_data_hex: string })
       .raw_data_hex,
   ).toBe(unlocked?.rawDataHex)
 })
@@ -98,7 +101,7 @@ test('resolves the per-call account when the client hoists none', async () => {
   })
   expect(txID).toBe(unlocked?.txID)
   expect(
-    (parseBroadcast(bodyOf('broadcasthex')) as { raw_data_hex: string })
+    (parseBroadcast(bodyOf('broadcasttransaction')) as { raw_data_hex: string })
       .raw_data_hex,
   ).toBe(unlocked?.rawDataHex)
 })

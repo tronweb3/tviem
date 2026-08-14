@@ -60,7 +60,7 @@ function writeMock() {
   return createMockTransport({
     responses: {
       getnowblock: { response: rpc('getnowblock.fixed') },
-      broadcasthex: { response: rpc('broadcasttransaction.ok') },
+      broadcasttransaction: { response: rpc('broadcasttransaction.ok') },
     },
   })
 }
@@ -78,9 +78,12 @@ test('builds, signs and broadcasts a TRC20 transfer byte-for-byte (feeLimit)', a
   })
 
   expect(txID).toBe(TX_ID_FEELIMIT)
-  expect(calls.map((c) => c.path)).toEqual(['getnowblock', 'broadcasthex'])
+  expect(calls.map((c) => c.path)).toEqual([
+    'getnowblock',
+    'broadcasttransaction',
+  ])
 
-  const body = parseBroadcast(bodyOf('broadcasthex')) as {
+  const body = parseBroadcast(bodyOf('broadcasttransaction')) as {
     txID: string
     raw_data: { fee_limit?: number }
     raw_data_hex: string
@@ -106,7 +109,7 @@ test('attaches callValue to the TriggerSmartContract byte-for-byte', async () =>
   })
 
   expect(txID).toBe(TX_ID_CALLVALUE)
-  const body = parseBroadcast(bodyOf('broadcasthex')) as {
+  const body = parseBroadcast(bodyOf('broadcasttransaction')) as {
     raw_data_hex: string
     signature: string[]
   }
@@ -129,7 +132,7 @@ test('attaches callTokenValue + tokenId to the TriggerSmartContract byte-for-byt
   })
 
   expect(txID).toBe(TX_ID_TOKEN)
-  const body = parseBroadcast(bodyOf('broadcasthex')) as {
+  const body = parseBroadcast(bodyOf('broadcasttransaction')) as {
     raw_data_hex: string
     signature: string[]
   }
@@ -148,7 +151,7 @@ test('defaults feeLimit to defaultFeeLimit when omitted', async () => {
     args: [recipient, 1000000n],
   })
 
-  const body = parseBroadcast(bodyOf('broadcasthex')) as {
+  const body = parseBroadcast(bodyOf('broadcasttransaction')) as {
     raw_data: { fee_limit?: number }
   }
   expect(body.raw_data.fee_limit).toBe(Number(defaultFeeLimit))
@@ -170,7 +173,7 @@ test('memo lands in raw_data.data without touching the calldata', async () => {
     memo: '0x6f726465722d31323334', // "order-1234"
   })
 
-  const body = parseBroadcast(bodyOf('broadcasthex')) as unknown as {
+  const body = parseBroadcast(bodyOf('broadcasttransaction')) as unknown as {
     raw_data: {
       data?: string
       contract: { parameter: { value: { data?: string } } }[]
