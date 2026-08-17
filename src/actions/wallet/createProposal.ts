@@ -1,5 +1,6 @@
 import type { TronAccount } from '../../accounts/types.js'
 import type { Client } from '../../clients/createClient.js'
+import { BaseError, type BaseErrorType } from '../../errors/base.js'
 import {
   AccountNotFoundError,
   type AccountNotFoundErrorType,
@@ -74,6 +75,7 @@ export type CreateProposalReturnType = BuildAndBroadcastReturnType
 
 export type CreateProposalErrorType =
   | AccountNotFoundErrorType
+  | BaseErrorType
   | BuildAndBroadcastErrorType
   | ParseAccountErrorType
   | ToHexErrorType
@@ -87,6 +89,7 @@ export type BuildCreateProposalReturnType = BuildTransactionReturnType
 
 export type BuildCreateProposalErrorType =
   | AccountNotFoundErrorType
+  | BaseErrorType
   | BuildTransactionErrorType
   | ParseAccountErrorType
   | ToHexErrorType
@@ -96,15 +99,30 @@ export type BuildCreateProposalErrorType =
 function normalizeParameters(
   input: ProposalParametersInput,
 ): { key: bigint; value: bigint }[] {
-  if (Array.isArray(input))
-    return input.map((entry) => ({
-      key: BigInt(entry.key),
-      value: BigInt(entry.value),
-    }))
-  return Object.keys(input)
-    .map(Number)
-    .sort((a, b) => a - b)
-    .map((key) => ({ key: BigInt(key), value: BigInt(input[key] as number) }))
+  const entries = Array.isArray(input)
+    ? input.map((entry) => ({
+        key: BigInt(entry.key),
+        value: BigInt(entry.value),
+      }))
+    : Object.keys(input)
+        .map(Number)
+        .sort((a, b) => a - b)
+        .map((key) => ({
+          key: BigInt(key),
+          value: BigInt(input[key] as number),
+        }))
+  // `parameters` is a proto3 `map<int64,int64>`: a parser keeps only the LAST
+  // entry per key, so a duplicate would silently drop the earlier value
+  // on-chain while the txID still commits to both entries. Refuse instead.
+  const seen = new Set<bigint>()
+  for (const { key } of entries) {
+    if (seen.has(key))
+      throw new BaseError(
+        `Duplicate proposal parameter key: ${key}. Each chain-parameter id may appear at most once.`,
+      )
+    seen.add(key)
+  }
+  return entries
 }
 
 /** The signing account plus the assembled `ProposalCreateContract`. */
