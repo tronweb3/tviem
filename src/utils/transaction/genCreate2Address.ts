@@ -1,38 +1,41 @@
 import { BaseError, type BaseErrorType } from '../../errors/base.js'
 import type { ErrorType } from '../../errors/utils.js'
-import type { Hex } from '../../types/misc.js'
+import type { ByteArray, Hex } from '../../types/misc.js'
 import { type PadHexErrorType, padHex } from '../data/pad.js'
 import { hexToBytes } from '../encoding/toBytes.js'
+import { type BytesToHexErrorType, bytesToHex } from '../encoding/toHex.js'
 import { type Keccak256ErrorType, keccak256 } from '../hash/keccak256.js'
 
-/** Strips an optional `0x` prefix. */
-function strip0x(value: string): string {
+/** Normalizes a hex string (bare or `0x`) or byte array to bare hex. */
+function toBareHex(value: string | ByteArray): string {
+  if (typeof value !== 'string') return bytesToHex(value).slice(2)
   return value.startsWith('0x') ? value.slice(2) : value
 }
 
 export type GenCreate2AddressParameters = {
-  /** Creating contract address, TRON hex (`41…`, bare or `0x`). */
-  creatorAddress: string
+  /** Creating contract address, TRON form (`41…` hex, bare or `0x`, or bytes). */
+  creatorAddress: string | ByteArray
   /**
-   * Salt (bare or `0x` hex), left-padded to a 32-byte word; longer values
-   * throw.
+   * Salt (bare or `0x` hex, or bytes), left-padded to a 32-byte word; longer
+   * values throw.
    */
-  salt: string
+  salt: string | ByteArray
 } & (
   | {
-      /** Contract init code (bare or `0x` hex). */
-      bytecode: string
+      /** Contract init code (bare or `0x` hex, or bytes). */
+      bytecode: string | ByteArray
       bytecodeHash?: undefined
     }
   | {
       bytecode?: undefined
-      /** keccak256 digest of the contract init code (bare or `0x` hex). */
-      bytecodeHash: string
+      /** keccak256 digest of the contract init code (bare or `0x` hex, or bytes). */
+      bytecodeHash: string | ByteArray
     }
 )
 
 export type GenCreate2AddressErrorType =
   | BaseErrorType
+  | BytesToHexErrorType
   | Keccak256ErrorType
   | PadHexErrorType
   | ErrorType
@@ -60,7 +63,7 @@ export function genCreate2Address(
     )
   let initCodeHash: string
   if (bytecodeHash !== undefined) {
-    initCodeHash = strip0x(bytecodeHash)
+    initCodeHash = toBareHex(bytecodeHash)
     // A wrong-size digest would shift every byte after it in the 85-byte
     // preimage and still hash to a plausible-looking address.
     if (initCodeHash.length !== 64)
@@ -68,13 +71,13 @@ export function genCreate2Address(
         `Invalid bytecodeHash: ${initCodeHash.length} hex chars. Expected a 32-byte (64 hex char) keccak256 digest of the init code.`,
       )
   } else {
-    initCodeHash = strip0x(
-      keccak256(hexToBytes(`0x${strip0x(bytecode!)}` as Hex), 'hex'),
+    initCodeHash = toBareHex(
+      keccak256(hexToBytes(`0x${toBareHex(bytecode!)}` as Hex), 'hex'),
     )
   }
-  const salt32 = strip0x(padHex(`0x${strip0x(salt)}` as Hex, { size: 32 }))
+  const salt32 = toBareHex(padHex(`0x${toBareHex(salt)}` as Hex, { size: 32 }))
   const hash = keccak256(
-    hexToBytes(`0x${strip0x(creatorAddress)}${salt32}${initCodeHash}` as Hex),
+    hexToBytes(`0x${toBareHex(creatorAddress)}${salt32}${initCodeHash}` as Hex),
     'hex',
   )
   return `41${hash.slice(-40)}`

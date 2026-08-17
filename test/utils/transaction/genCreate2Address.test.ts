@@ -2,6 +2,7 @@ import { expect, test } from 'vitest'
 import { BaseError } from '../../../src/errors/base.js'
 import { SizeExceedsPaddingSizeError } from '../../../src/errors/data.js'
 import type { Hex } from '../../../src/types/misc.js'
+import { hexToBytes } from '../../../src/utils/encoding/toBytes.js'
 import { keccak256 } from '../../../src/utils/hash/keccak256.js'
 import { genCreate2Address } from '../../../src/utils/transaction/genCreate2Address.js'
 
@@ -92,6 +93,58 @@ test('genCreate2Address accepts a bare bytecodeHash', () => {
   expect(
     genCreate2Address({ creatorAddress: creator, salt, bytecodeHash }),
   ).toBe(expected)
+})
+
+test('genCreate2Address accepts ByteArray inputs', () => {
+  const { creator, salt, bytecode, expected } = vectors[3]
+  expect(
+    genCreate2Address({
+      creatorAddress: hexToBytes(`0x${creator}`),
+      salt: hexToBytes(`0x${salt}`),
+      bytecode: hexToBytes(`0x${bytecode}`),
+    }),
+  ).toBe(expected)
+})
+
+test('genCreate2Address accepts a ByteArray bytecodeHash', () => {
+  const { creator, salt, bytecode, expected } = vectors[3]
+  const bytecodeHash = keccak256(`0x${bytecode}` as Hex, 'bytes')
+  expect(
+    genCreate2Address({ creatorAddress: creator, salt, bytecodeHash }),
+  ).toBe(expected)
+})
+
+test('genCreate2Address accepts mixed ByteArray and hex inputs', () => {
+  const { creator, salt, bytecode, expected } = vectors[3]
+  expect(
+    genCreate2Address({
+      creatorAddress: hexToBytes(`0x${creator}`),
+      salt: `0x${salt}`,
+      bytecode,
+    }),
+  ).toBe(expected)
+})
+
+test('genCreate2Address left-pads a ByteArray salt to a 32-byte word', () => {
+  const creator = '417e5f4552091a69125d5dfcb7b8c2659029395bdf'
+  const bytecode = '608060405260008055'
+  expect(
+    genCreate2Address({
+      creatorAddress: creator,
+      salt: Uint8Array.of(1),
+      bytecode,
+    }),
+  ).toBe(genCreate2Address({ creatorAddress: creator, salt: '01', bytecode }))
+})
+
+test('genCreate2Address rejects a ByteArray bytecodeHash that is not 32 bytes', () => {
+  expect(() =>
+    genCreate2Address({
+      creatorAddress: '417e5f4552091a69125d5dfcb7b8c2659029395bdf',
+      salt: '01',
+      bytecodeHash: Uint8Array.of(0xde, 0xad, 0xbe, 0xef),
+    }),
+  ).toThrow(BaseError)
 })
 
 test('genCreate2Address left-pads salt to a 32-byte word', () => {
