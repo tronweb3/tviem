@@ -1,5 +1,8 @@
 import { expect, test } from 'vitest'
+import { BaseError } from '../../../src/errors/base.js'
 import { SizeExceedsPaddingSizeError } from '../../../src/errors/data.js'
+import type { Hex } from '../../../src/types/misc.js'
+import { keccak256 } from '../../../src/utils/hash/keccak256.js'
 import { genCreate2Address } from '../../../src/utils/transaction/genCreate2Address.js'
 
 // Gold vectors per TIP-26: `41` ++ keccak256(creator21 ‖ salt32 ‖
@@ -53,37 +56,103 @@ test.each(
   bytecode,
   expected,
 }) => {
-  expect(genCreate2Address(creator, salt, bytecode)).toBe(expected)
+  expect(genCreate2Address({ creatorAddress: creator, salt, bytecode })).toBe(
+    expected,
+  )
+})
+
+test.each(
+  vectors,
+)('genCreate2Address accepts bytecodeHash: creator $creator salt $salt', ({
+  creator,
+  salt,
+  bytecode,
+  expected,
+}) => {
+  const bytecodeHash = keccak256(`0x${bytecode}` as Hex, 'hex')
+  expect(
+    genCreate2Address({ creatorAddress: creator, salt, bytecodeHash }),
+  ).toBe(expected)
 })
 
 test('genCreate2Address accepts 0x-prefixed inputs', () => {
   const { creator, salt, bytecode, expected } = vectors[3]
-  expect(genCreate2Address(`0x${creator}`, `0x${salt}`, `0x${bytecode}`)).toBe(
-    expected,
-  )
+  expect(
+    genCreate2Address({
+      creatorAddress: `0x${creator}`,
+      salt: `0x${salt}`,
+      bytecode: `0x${bytecode}`,
+    }),
+  ).toBe(expected)
+})
+
+test('genCreate2Address accepts a bare bytecodeHash', () => {
+  const { creator, salt, bytecode, expected } = vectors[3]
+  const bytecodeHash = keccak256(`0x${bytecode}` as Hex, 'hex').slice(2)
+  expect(
+    genCreate2Address({ creatorAddress: creator, salt, bytecodeHash }),
+  ).toBe(expected)
 })
 
 test('genCreate2Address left-pads salt to a 32-byte word', () => {
   const creator = '417e5f4552091a69125d5dfcb7b8c2659029395bdf'
   const bytecode = '608060405260008055'
-  expect(genCreate2Address(creator, '01', bytecode)).toBe(
-    genCreate2Address(creator, `${'00'.repeat(31)}01`, bytecode),
+  expect(
+    genCreate2Address({ creatorAddress: creator, salt: '01', bytecode }),
+  ).toBe(
+    genCreate2Address({
+      creatorAddress: creator,
+      salt: `${'00'.repeat(31)}01`,
+      bytecode,
+    }),
   )
 })
 
 test('genCreate2Address: 41 prefix + low 20 bytes of the outer keccak256', () => {
   const { creator, salt, bytecode } = vectors[0]
-  const address = genCreate2Address(creator, salt, bytecode)
+  const address = genCreate2Address({ creatorAddress: creator, salt, bytecode })
   expect(address.startsWith('41')).toBe(true)
   expect(address).toHaveLength(42)
 })
 
 test('genCreate2Address rejects salts longer than 32 bytes', () => {
   expect(() =>
-    genCreate2Address(
-      '417e5f4552091a69125d5dfcb7b8c2659029395bdf',
-      '00'.repeat(33),
-      '00',
-    ),
+    genCreate2Address({
+      creatorAddress: '417e5f4552091a69125d5dfcb7b8c2659029395bdf',
+      salt: '00'.repeat(33),
+      bytecode: '00',
+    }),
   ).toThrow(SizeExceedsPaddingSizeError)
+})
+
+test('genCreate2Address rejects a bytecodeHash that is not 32 bytes', () => {
+  expect(() =>
+    genCreate2Address({
+      creatorAddress: '417e5f4552091a69125d5dfcb7b8c2659029395bdf',
+      salt: '01',
+      bytecodeHash: 'deadbeef',
+    }),
+  ).toThrow(BaseError)
+})
+
+test('genCreate2Address rejects bytecode and bytecodeHash together', () => {
+  expect(() =>
+    // @ts-expect-error exactly one of bytecode/bytecodeHash is allowed
+    genCreate2Address({
+      creatorAddress: '417e5f4552091a69125d5dfcb7b8c2659029395bdf',
+      salt: '01',
+      bytecode: '00',
+      bytecodeHash: keccak256('0x00', 'hex'),
+    }),
+  ).toThrow(BaseError)
+})
+
+test('genCreate2Address rejects neither bytecode nor bytecodeHash', () => {
+  expect(() =>
+    // @ts-expect-error exactly one of bytecode/bytecodeHash is required
+    genCreate2Address({
+      creatorAddress: '417e5f4552091a69125d5dfcb7b8c2659029395bdf',
+      salt: '01',
+    }),
+  ).toThrow(BaseError)
 })

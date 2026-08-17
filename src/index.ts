@@ -1148,6 +1148,7 @@ export {
 } from './utils/transaction/genContractAddress.js'
 export {
   type GenCreate2AddressErrorType,
+  type GenCreate2AddressParameters,
   genCreate2Address,
 } from './utils/transaction/genCreate2Address.js'
 export {
