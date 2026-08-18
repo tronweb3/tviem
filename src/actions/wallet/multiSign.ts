@@ -19,7 +19,7 @@ export type MultiSignParameters = {
    * (`contract[0].Permission_id`); absent everywhere means the owner
    * permission (id 0).
    */
-  permissionId?: number
+  permissionId?: number | undefined
 }
 
 export type MultiSignReturnType = SignableTransaction
