@@ -97,6 +97,11 @@ export {
   tryDecodeBase58Check,
 } from './address/base58check.js'
 export {
+  type GetCreate2AddressErrorType,
+  type GetCreate2AddressParameters,
+  getCreate2Address,
+} from './address/getCreate2Address.js'
+export {
   type IsAddressErrorType,
   type IsAddressOptions,
   isAddress,
@@ -305,11 +310,6 @@ export {
   type GenContractAddressErrorType,
   genContractAddress,
 } from './transaction/genContractAddress.js'
-export {
-  type GenCreate2AddressErrorType,
-  type GenCreate2AddressParameters,
-  genCreate2Address,
-} from './transaction/genCreate2Address.js'
 export {
   type GetTransactionIdErrorType,
   getTransactionId,

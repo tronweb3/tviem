@@ -12,7 +12,7 @@ function toBareHex(value: string | ByteArray): string {
   return value.startsWith('0x') ? value.slice(2) : value
 }
 
-export type GenCreate2AddressParameters = {
+export type GetCreate2AddressParameters = {
   /** Creating contract address, TRON form (`41…` hex, bare or `0x`, or bytes). */
   creatorAddress: string | ByteArray
   /**
@@ -33,7 +33,7 @@ export type GenCreate2AddressParameters = {
     }
 )
 
-export type GenCreate2AddressErrorType =
+export type GetCreate2AddressErrorType =
   | BaseErrorType
   | BytesToHexErrorType
   | Keccak256ErrorType
@@ -53,8 +53,8 @@ export type GenCreate2AddressErrorType =
  *
  * @returns Contract address in TRON hex form (`41…`, 42 hex chars).
  */
-export function genCreate2Address(
-  parameters: GenCreate2AddressParameters,
+export function getCreate2Address(
+  parameters: GetCreate2AddressParameters,
 ): string {
   const { creatorAddress, salt, bytecode, bytecodeHash } = parameters
   if ((bytecode === undefined) === (bytecodeHash === undefined))
