@@ -25,9 +25,10 @@ export type GetTransactionParameters = {
   /** The transaction id (64 hex chars; a `0x` prefix is tolerated). */
   hash: string
   /**
-   * Read confirmed (solidified) state from the SolidityNode instead of the
-   * FullNode — the id then resolves only once the transaction is solidified.
-   * @default false
+   * Look the transaction up on the SolidityNode, which only carries solidified
+   * (irreversible) transactions, instead of the FullNode. Solidification trails
+   * the chain head, so a just-broadcast transaction is not found there — the
+   * call returns `null` — until it solidifies. @default false
    */
   confirmed?: boolean | undefined
 }

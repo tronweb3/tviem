@@ -73,8 +73,10 @@ export type ReadContractParameters<
    */
   account?: TronAccount | AddressInput | undefined
   /**
-   * Run the constant call against confirmed (solidified) state on the
-   * SolidityNode instead of the FullNode's latest state. @default false
+   * Run the constant call against solidified state on the SolidityNode
+   * instead of the FullNode's latest state. Solidified state trails the chain
+   * head, so a write made moments ago is not reflected in the result yet.
+   * @default false
    */
   confirmed?: boolean | undefined
 } & (readonly [] extends allArgs

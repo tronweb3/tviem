@@ -61,7 +61,10 @@ export function formatBlock(raw: RawBlock): Block {
 export type GetNowBlockParameters = {
   /**
    * Read the latest solidified block from the SolidityNode instead of the
-   * FullNode's chain head. @default false
+   * FullNode's chain head — the solidified block trails the head. Note that a
+   * transaction's TaPoS reference block must be the head: `expiration` is
+   * derived from the reference block's own timestamp, so a solidified one has
+   * already spent most of the default lifetime before signing. @default false
    */
   confirmed?: boolean | undefined
 }

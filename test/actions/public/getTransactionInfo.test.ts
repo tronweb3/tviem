@@ -50,8 +50,8 @@ test('maps a successful TRC20 receipt (status, resources, log addresses)', async
     '0x00000000000000000000000000000000000000000000000000000000000f4240',
   )
 
-  // sent-right: solidity node, `value` body.
-  expect(calls[0]?.node).toBe('solidity')
+  // sent-right: full node, `value` body.
+  expect(calls[0]?.node).toBe('full')
   expect(calls[0]?.path).toBe('gettransactioninfobyid')
   expect(bodyOf('gettransactioninfobyid')).toEqual({ value: successHash })
 })
@@ -183,9 +183,10 @@ test('an unpacked transaction ({}) returns null', async () => {
   expect(await client.getTransactionInfo({ hash: 'deadbeef' })).toBeNull()
 })
 
-// The receipt reads confirmed (SolidityNode) state by default; confirmed: false
-// reads the FullNode's latest (unconfirmed) state instead.
-test('confirmed: false reads the receipt from the FullNode', async () => {
+// The receipt reads the FullNode's latest state by default, so it is readable
+// as soon as the transaction is packed; confirmed: true reads the SolidityNode,
+// which only carries solidified transactions.
+test('confirmed: true reads the receipt from the SolidityNode', async () => {
   const { transport, calls } = createMockTransport({
     responses: {
       gettransactioninfobyid: {
@@ -195,6 +196,6 @@ test('confirmed: false reads the receipt from the FullNode', async () => {
   })
   const client = createPublicClient({ transport })
 
-  await client.getTransactionInfo({ hash: successHash, confirmed: false })
-  expect(calls[0]?.node).toBe('full')
+  await client.getTransactionInfo({ hash: successHash, confirmed: true })
+  expect(calls[0]?.node).toBe('solidity')
 })

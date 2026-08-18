@@ -6,7 +6,7 @@ import { IntegerOutOfRangeError } from '../../../src/errors/encoding.js'
 import { rpc, rpcReq } from '../../fixtures/rpc/loader.js'
 import { createMockTransport } from '../../mock/createMockTransport.js'
 
-test('sends the 41-hex address to solidity getaccount and decodes SUN', async () => {
+test('sends the 41-hex address to the FullNode getaccount and decodes SUN', async () => {
   const { transport, calls, bodyOf } = createMockTransport({
     responses: { getaccount: { response: rpc('getaccount') } },
   })
@@ -17,8 +17,8 @@ test('sends the 41-hex address to solidity getaccount and decodes SUN', async ()
   })
   expect(balance).toBe(1234567890n)
 
-  // sent-right: solidity node, correct path/method, Base58 -> 41-hex body.
-  expect(calls[0]?.node).toBe('solidity')
+  // sent-right: full node, correct path/method, Base58 -> 41-hex body.
+  expect(calls[0]?.node).toBe('full')
   expect(calls[0]?.path).toBe('getaccount')
   expect(calls[0]?.method).toBe('POST')
   expect(bodyOf('getaccount')).toEqual({
@@ -77,9 +77,9 @@ test('an unsafe numeric balance is refused, not silently corrupted', async () =>
   ).rejects.toBeInstanceOf(IntegerOutOfRangeError)
 })
 
-// The balance reads confirmed (SolidityNode) state by default; confirmed: false
-// reads the FullNode's latest (unconfirmed) state instead.
-test('confirmed: false reads the balance from the FullNode', async () => {
+// The balance reads the FullNode's latest state by default; confirmed: true
+// reads the SolidityNode's solidified state instead.
+test('confirmed: true reads the balance from the SolidityNode', async () => {
   const { transport, calls } = createMockTransport({
     responses: { getaccount: { response: { balance: 42 } } },
   })
@@ -87,7 +87,7 @@ test('confirmed: false reads the balance from the FullNode', async () => {
 
   await client.getBalance({
     address: 'TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC',
-    confirmed: false,
+    confirmed: true,
   })
-  expect(calls[0]?.node).toBe('full')
+  expect(calls[0]?.node).toBe('solidity')
 })

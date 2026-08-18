@@ -13,8 +13,9 @@ export type GetBlockParameters = {
   /** The block number to fetch. */
   blockNumber: bigint | number
   /**
-   * Read confirmed (solidified) state from the SolidityNode instead of the
-   * FullNode. @default false
+   * Read solidified state from the SolidityNode instead of the FullNode's
+   * latest state. Solidification trails the chain head, so a block close
+   * enough to the head is not there yet. @default false
    */
   confirmed?: boolean | undefined
 }

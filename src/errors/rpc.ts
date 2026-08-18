@@ -153,11 +153,49 @@ export type WaitForTransactionReceiptTimeoutErrorType =
 export class WaitForTransactionReceiptTimeoutError extends BaseError {
   constructor({ hash }: { hash?: string | undefined } = {}) {
     super(
-      `Timed out while waiting for transaction${
-        hash ? ` "${hash}"` : ''
-      } to be confirmed.`,
+      // Deliberately does not name a cause: the poller times out on either a
+      // receipt that never appeared or one short of the requested depth, and
+      // it cannot tell which from the outside. The word "confirmed" is avoided
+      // because this action has a `confirmed` parameter meaning something else.
+      `Timed out while waiting for ${
+        hash ? `transaction "${hash}"` : 'the transaction'
+      }.`,
       { name: 'WaitForTransactionReceiptTimeoutError' },
     )
+  }
+}
+
+/**
+ * Thrown by `waitForTransactionReceipt` with `throwOnRevert` when the receipt's
+ * `status` is `'reverted'`. Not an RPC failure — the call succeeded and the
+ * node returned a valid receipt; the transaction itself reverted on chain, so
+ * the fee was still burned. The receipt is attached rather than discarded: it
+ * carries the revert data (`contractResult`), the resources actually consumed
+ * and any `logs` emitted before the revert.
+ */
+export type TransactionRevertedErrorType = TransactionRevertedError & {
+  name: 'TransactionRevertedError'
+}
+export class TransactionRevertedError extends BaseError {
+  /**
+   * The reverted receipt. Structurally typed (rather than importing the
+   * Action's `TransactionReceipt`) to keep this module free of dependencies on
+   * the Actions layer; a receipt from a Client override is accepted too.
+   */
+  receipt: { status?: 'success' | 'reverted'; [key: string]: unknown }
+
+  constructor({
+    hash,
+    receipt,
+  }: {
+    hash?: string | undefined
+    receipt: { status?: 'success' | 'reverted'; [key: string]: unknown }
+  }) {
+    super(`Transaction${hash ? ` "${hash}"` : ''} reverted.`, {
+      name: 'TransactionRevertedError',
+    })
+
+    this.receipt = receipt
   }
 }
 

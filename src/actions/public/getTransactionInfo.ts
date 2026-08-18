@@ -19,8 +19,10 @@ export type GetTransactionInfoParameters = {
   /** The transaction id (64 hex chars, no `0x` prefix). */
   hash: string
   /**
-   * Read confirmed (solidified) state from the SolidityNode; pass `false` to
-   * read the FullNode's latest (unconfirmed) state instead. @default true
+   * Read the receipt from the SolidityNode, which only carries solidified
+   * (irreversible) transactions, instead of the FullNode's latest state.
+   * Solidification trails the chain head, so a just-executed transaction reads
+   * as `null` there until it solidifies. @default false
    */
   confirmed?: boolean | undefined
 }
@@ -91,8 +93,11 @@ function formatLog(log: RawLog): TransactionLog {
 
 /**
  * Fetches a transaction's receipt / execution info via
- * `gettransactioninfobyid` — SolidityNode (confirmed state) by default,
- * FullNode with `confirmed: false`. The returned `logs` are the receipt's raw
+ * `gettransactioninfobyid` — the FullNode's latest state by default, the
+ * SolidityNode's solidified state with `confirmed: true`. A receipt is
+ * therefore readable as soon as the transaction is packed; pass
+ * `confirmed: true` to read only once it can no longer be reverted.
+ * The returned `logs` are the receipt's raw
  * event entries — the per-transaction counterpart to `getLogs` (whose
  * `eth_getLogs` filter has no transaction-hash dimension); decode them with
  * `decodeEventLog` when an ABI is at hand. Addresses that come out of the
@@ -103,14 +108,16 @@ function formatLog(log: RawLog): TransactionLog {
  * @param client The Client to use.
  * @param parameters `hash` — the transaction id.
  * @returns The formatted receipt, or `null` if the transaction is not yet
- *   packed (`waitForTransactionReceipt` polls on this).
+ *   packed — or, under `confirmed: true`, not yet solidified.
+ *   `waitForTransactionReceipt` polls on this, and defaults to `true` because
+ *   it gates whatever irreversible step follows it.
  */
 export async function getTransactionInfo(
   client: Client,
   { confirmed, hash }: GetTransactionInfoParameters,
 ): Promise<GetTransactionInfoReturnType> {
   const response = await client.request<RawTransactionInfo>({
-    node: (confirmed ?? true) ? 'solidity' : 'full',
+    node: confirmed ? 'solidity' : 'full',
     path: 'gettransactioninfobyid',
     method: 'POST',
     body: { value: hash },

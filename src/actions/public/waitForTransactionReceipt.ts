@@ -1,5 +1,7 @@
 import type { Client } from '../../clients/createClient.js'
 import {
+  TransactionRevertedError,
+  type TransactionRevertedErrorType,
   TronRpcError,
   type TronRpcErrorType,
   WaitForTransactionReceiptTimeoutError,
@@ -19,10 +21,29 @@ export type WaitForTransactionReceiptParameters = {
   /**
    * Block depth to wait for, where the mining block itself counts as the first
    * confirmation: `head - receipt.blockNumber + 1 >= confirmations`. A value of
-   * `1` (default) returns as soon as the receipt is available.
+   * `1` (default) returns as soon as the receipt is available. Each further
+   * confirmation costs one block of waiting, and block depth is only a proxy
+   * for irreversibility — for the real thing use `confirmed`.
    */
   confirmations?: number | undefined
-  /** Max time (in ms) to wait before timing out. @default 60_000 */
+  /**
+   * Wait for a solidified (irreversible) receipt, reading both it and the
+   * confirmation head from the SolidityNode. Solidification trails the chain
+   * head, so this waits considerably longer than packing does.
+   *
+   * Pass `false` to resolve as soon as the transaction is packed, reading both
+   * from the FullNode. That is enough to learn the execution outcome —
+   * `status`, the energy and fee actually burned, `contractResult`, `logs` —
+   * but the block it landed in can still be reorganized away. @default true
+   */
+  confirmed?: boolean | undefined
+  /**
+   * Max time (in ms) to wait before timing out — the same budget in both
+   * modes, sized to cover packing plus solidification. Raise it when the send
+   * raised `expirationMs` (the poller holds only a hash and cannot derive that
+   * lifetime), or when a congested chain is packing slowly enough that the
+   * timeout fires on transactions that do eventually land. @default 90_000
+   */
   timeout?: number | undefined
   /**
    * Poll interval (in ms) between receipt checks. Defaults to the Client's
@@ -30,8 +51,9 @@ export type WaitForTransactionReceiptParameters = {
    */
   pollingInterval?: number | undefined
   /**
-   * Reject with a {@link TronRpcError} when the receipt's `status` is
-   * `'reverted'`. @default false
+   * Reject with a {@link TransactionRevertedError} when the receipt's `status`
+   * is `'reverted'`. The receipt is carried on the error's `receipt` property,
+   * so the revert data is not lost by opting into the throw. @default false
    */
   throwOnRevert?: boolean | undefined
 }
@@ -51,6 +73,7 @@ export type WaitForTransactionReceiptReturnType = TransactionReceipt
 export type WaitForTransactionReceiptErrorType =
   | GetNowBlockErrorType
   | GetTransactionInfoErrorType
+  | TransactionRevertedErrorType
   | TronRpcErrorType
   | WaitForTransactionReceiptTimeoutErrorType
   | ErrorType
@@ -89,6 +112,20 @@ function toBlockNumber(value: unknown): number {
  * Polls `getTransactionInfo` until the transaction is packed into a block, then
  * (optionally) polls `getNowBlock` until the requested block depth is reached.
  *
+ * Both reads go to the SolidityNode, so what resolves is a receipt that can no
+ * longer be reverted — the poller is a one-shot gate for whatever irreversible
+ * step follows it, and solidification is what that costs. This is deliberately
+ * not the rule the individual read actions follow: a `getBalance` is repeated,
+ * transient and self-correcting, so it reads the head, whereas a receipt that
+ * evaporates after the caller acted on it announces itself to nobody.
+ *
+ * `confirmed: false` routes both reads to the FullNode instead and resolves
+ * within a block or two of broadcast, which is enough to learn the execution
+ * outcome a broadcast cannot report: `status`, the energy and fee actually
+ * burned, `contractResult`, `logs`. The node role is passed explicitly on
+ * every call, so it stays a property of this poller rather than of another
+ * action's default.
+ *
  * A `null`/empty receipt means "not yet packed": the poller waits
  * `pollingInterval` and retries. Exceeding `timeout` rejects with a
  * {@link WaitForTransactionReceiptTimeoutError}. A `'reverted'` status does
@@ -100,8 +137,13 @@ export async function waitForTransactionReceipt(
   client: Client,
   parameters: WaitForTransactionReceiptParameters,
 ): Promise<WaitForTransactionReceiptReturnType> {
-  const { hash, confirmations = 1, throwOnRevert = false } = parameters
-  const timeout = parameters.timeout ?? 60_000
+  const {
+    confirmations = 1,
+    confirmed = true,
+    hash,
+    throwOnRevert = false,
+  } = parameters
+  const timeout = parameters.timeout ?? 90_000
   const pollingInterval = parameters.pollingInterval ?? client.pollingInterval
 
   const getReceipt = getAction(client, getTransactionInfo, 'getTransactionInfo')
@@ -113,23 +155,31 @@ export async function waitForTransactionReceipt(
       throw new WaitForTransactionReceiptTimeoutError({ hash })
   }
 
-  // Phase 1 — wait for the receipt to be packed.
-  let receipt = await getReceipt({ hash })
+  // Phase 1 — wait for the receipt to be packed (or solidified).
+  let receipt = await getReceipt({ hash, confirmed })
   while (isPending(receipt)) {
     assertNotTimedOut()
     await sleep(pollingInterval)
     assertNotTimedOut()
-    receipt = await getReceipt({ hash })
+    receipt = await getReceipt({ hash, confirmed })
   }
 
   const packed = receipt as TransactionReceipt
 
-  // Phase 2 — wait for the requested block depth. Both block numbers must be
-  // positive integers (see toBlockNumber): the receipt may come from a Client
-  // override rather than getTransactionInfo, and any coerced junk value
-  // corrupts the depth formula in the fail-open direction — a 0 (or `null`,
-  // or `-1`) receipt block makes every receipt look at least `head` blocks
-  // deep, silently passing any requested confirmation count.
+  // Phase 2 — wait for the requested block depth. The head is read from the
+  // same node as the receipt: comparing a solidified receipt block against an
+  // unsolidified head would start the count already deep enough to make every
+  // value up to the solidification distance a silent no-op.
+  //
+  // Both block numbers must be positive integers (see toBlockNumber): the
+  // receipt may come from a Client override rather than getTransactionInfo,
+  // and any coerced junk value corrupts the depth formula in the fail-open
+  // direction — a 0 (or `null`, or `-1`) receipt block makes every receipt
+  // look at least `head` blocks deep, silently passing any requested
+  // confirmation count.
+  //
+  // `confirmations: 1` needs no head read: a packed receipt is by definition
+  // already one block deep.
   if (confirmations > 1) {
     const receiptBlock = toBlockNumber(packed.blockNumber)
     if (Number.isNaN(receiptBlock))
@@ -137,7 +187,7 @@ export async function waitForTransactionReceipt(
         `The receipt for "${hash}" does not carry a usable blockNumber; confirmations cannot be counted.`,
       )
     while (true) {
-      const now = (await getBlock(undefined as never)) as {
+      const now = (await getBlock({ confirmed })) as {
         number?: number | bigint
       } | null
       const head = toBlockNumber(now?.number)
@@ -156,7 +206,7 @@ export async function waitForTransactionReceipt(
   }
 
   if (throwOnRevert && packed.status === 'reverted')
-    throw new TronRpcError(`Transaction "${hash}" reverted.`)
+    throw new TransactionRevertedError({ hash, receipt: packed })
 
   return packed
 }

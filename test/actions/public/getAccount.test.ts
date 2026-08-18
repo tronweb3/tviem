@@ -47,8 +47,8 @@ test('reads a minimal account (all absent fields defaulted)', async () => {
   expect(account.activePermission).toEqual([])
   expect(account.witnessPermission).toBeUndefined()
 
-  // sent-right (gold request of the base fixture): SolidityNode, 41-hex body.
-  expect(calls[0]?.node).toBe('solidity')
+  // sent-right: FullNode by default, plus the base fixture's 41-hex body.
+  expect(calls[0]?.node).toBe('full')
   expect(calls[0]?.path).toBe('getaccount')
   expect(calls[0]?.method).toBe('POST')
   expect(bodyOf('getaccount')).toEqual({
@@ -233,14 +233,14 @@ test('an unsafe plain-number balance fails closed with IntegerOutOfRangeError', 
   )
 })
 
-// The account reads confirmed (SolidityNode) state by default; confirmed: false
-// reads the FullNode's latest (unconfirmed) state instead.
-test('confirmed: false reads the account from the FullNode', async () => {
+// The account reads the FullNode's latest state by default; confirmed: true
+// reads the SolidityNode's solidified state instead.
+test('confirmed: true reads the account from the SolidityNode', async () => {
   const { transport, calls } = createMockTransport({
     responses: { getaccount: { response: rpc('getaccount') } },
   })
   const client = createPublicClient({ transport })
 
-  await client.getAccount({ address: minimalAddress, confirmed: false })
-  expect(calls[0]?.node).toBe('full')
+  await client.getAccount({ address: minimalAddress, confirmed: true })
+  expect(calls[0]?.node).toBe('solidity')
 })

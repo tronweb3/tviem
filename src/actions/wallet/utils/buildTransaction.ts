@@ -175,11 +175,16 @@ export async function buildTransaction(
   if (blockHeader) {
     rawData = { ...rawData, ...blockHeader }
   } else {
+    // Explicitly the chain head, never solidified state: `expiration` is
+    // derived from the reference block's own timestamp, so a solidified block
+    // — which trails the head — would leave a default-lifetime transaction
+    // almost no time to be packed. Transaction validity must not depend on
+    // another action's default.
     const block = await getAction(
       client,
       getNowBlock,
       'getNowBlock',
-    )(undefined as never)
+    )({ confirmed: false })
     rawData = fillBlockHeader(rawData, block, { expirationMs })
   }
 
