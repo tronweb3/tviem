@@ -177,6 +177,7 @@ exports[`package exports surface (freeze guard) > root + subpath export names ar
     "StateMutabilityTypeName",
     "TimeoutError",
     "TransactionExpiredError",
+    "TransactionRevertedError",
     "TransactionTamperedError",
     "TronBroadcastError",
     "TronContractValidateError",

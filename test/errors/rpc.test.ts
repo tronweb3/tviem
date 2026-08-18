@@ -128,11 +128,15 @@ test('WaitForTransactionReceiptTimeoutError names the hash when provided', () =>
   expect(err).toBeInstanceOf(BaseError)
   expect(err.name).toBe('WaitForTransactionReceiptTimeoutError')
   expect(err.shortMessage).toBe(
-    'Timed out while waiting for transaction "0xabc" to be confirmed.',
+    'Timed out while waiting for transaction "0xabc".',
   )
   expect(new WaitForTransactionReceiptTimeoutError().shortMessage).toBe(
-    'Timed out while waiting for transaction to be confirmed.',
+    'Timed out while waiting for the transaction.',
   )
+
+  // It names no cause: the poller cannot tell "never appeared" from "short of
+  // the requested depth", so it does not guess at one.
+  expect(err.metaMessages).toBeUndefined()
 })
 
 test('TransactionExpiredError names the hash when provided', () => {

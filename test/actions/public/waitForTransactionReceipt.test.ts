@@ -2,6 +2,7 @@ import { afterEach, describe, expect, test, vi } from 'vitest'
 import { waitForTransactionReceipt } from '../../../src/actions/public/waitForTransactionReceipt.js'
 import type { Client } from '../../../src/clients/createClient.js'
 import {
+  TransactionRevertedError,
   TronRpcError,
   WaitForTransactionReceiptTimeoutError,
 } from '../../../src/errors/rpc.js'
@@ -185,12 +186,186 @@ describe('waitForTransactionReceipt', () => {
     expect(await waitForTransactionReceipt(client, { hash: 'r' })).toBe(receipt)
   })
 
+  // Opting into the throw must not cost the caller the revert data: a revert
+  // is not an RPC failure, and the receipt carries why it failed and what it
+  // burned, so the error carries the receipt rather than discarding it.
   test('throws when throwOnRevert is set and the receipt reverted', async () => {
-    const receipt = { id: 'r', blockNumber: 5, status: 'reverted' as const }
+    const receipt = {
+      id: 'r',
+      blockNumber: 5,
+      status: 'reverted' as const,
+      contractResult: ['08c379a0'],
+      energyFee: 1_000n,
+    }
     const client = makeClient({ getTransactionInfo: queued([receipt]).fn })
 
-    await expect(
-      waitForTransactionReceipt(client, { hash: 'r', throwOnRevert: true }),
-    ).rejects.toBeInstanceOf(TronRpcError)
+    const err = (await waitForTransactionReceipt(client, {
+      hash: 'r',
+      throwOnRevert: true,
+    }).catch((e) => e)) as TransactionRevertedError
+    expect(err).toBeInstanceOf(TransactionRevertedError)
+    // Not an RPC failure — the call succeeded and returned a valid receipt.
+    expect(err).not.toBeInstanceOf(TronRpcError)
+    expect(err.shortMessage).toBe('Transaction "r" reverted.')
+    expect(err.receipt).toBe(receipt)
+  })
+})
+
+// The node role is passed explicitly on every call rather than inherited from
+// getTransactionInfo / getNowBlock's own defaults, so it stays a property of
+// the poller. Both phases must agree: a solidified receipt block compared
+// against an unsolidified head would start the depth count already deep in.
+describe('waitForTransactionReceipt node selection', () => {
+  const receipt = { id: 'abc', blockNumber: 100, status: 'success' as const }
+
+  /** Records the parameters each polled action was called with. */
+  function spy<T>(value: T): {
+    fn: (parameters: unknown) => T
+    calls: unknown[]
+  } {
+    const calls: unknown[] = []
+    return {
+      fn: (parameters: unknown) => {
+        calls.push(parameters)
+        return value
+      },
+      calls,
+    }
+  }
+
+  // Unlike the individual read actions, which default to the head, the poller
+  // gates whatever irreversible step follows it, so it waits for solidified
+  // state unless the caller opts out.
+  test('polls the SolidityNode by default, on both phases', async () => {
+    const info = spy(receipt)
+    const blocks = spy({ number: 101 })
+    const client = makeClient({
+      getTransactionInfo: info.fn,
+      getNowBlock: blocks.fn,
+    })
+
+    await waitForTransactionReceipt(client, { hash: 'abc', confirmations: 2 })
+
+    expect(info.calls[0]).toEqual({ hash: 'abc', confirmed: true })
+    expect(blocks.calls[0]).toEqual({ confirmed: true })
+  })
+
+  test('confirmed: false routes both phases to the FullNode', async () => {
+    const info = spy(receipt)
+    const blocks = spy({ number: 101 })
+    const client = makeClient({
+      getTransactionInfo: info.fn,
+      getNowBlock: blocks.fn,
+    })
+
+    await waitForTransactionReceipt(client, {
+      hash: 'abc',
+      confirmations: 2,
+      confirmed: false,
+    })
+
+    expect(info.calls[0]).toEqual({ hash: 'abc', confirmed: false })
+    expect(blocks.calls[0]).toEqual({ confirmed: false })
+  })
+
+  // A real transaction is never packed by the time of the first poll, so the
+  // retry is the common path: it must carry the node role too, or the default
+  // mode silently polls the SolidityNode and cannot see a receipt until it
+  // solidifies.
+  test.each([
+    [false],
+    [true],
+  ])('every repeat poll carries confirmed: %s', async (confirmed) => {
+    vi.useFakeTimers()
+    const calls: unknown[] = []
+    const values = [null, null, receipt]
+    let i = 0
+    const client = makeClient({
+      getTransactionInfo: (parameters: unknown) => {
+        calls.push(parameters)
+        return values[Math.min(i++, values.length - 1)]
+      },
+    })
+
+    const promise = waitForTransactionReceipt(client, {
+      hash: 'abc',
+      confirmed,
+      pollingInterval: 1000,
+    })
+    await vi.advanceTimersByTimeAsync(2000)
+    await promise
+
+    expect(calls).toHaveLength(3)
+    for (const call of calls) expect(call).toEqual({ hash: 'abc', confirmed })
+  })
+
+  // The deadline covers the depth wait too, not just the receipt wait: with a
+  // head that never advances, phase 2 must reject rather than poll forever.
+  // Nothing else can break that loop, so dropping the check leaves the promise
+  // pending — hence the tight per-test timeout, which turns the stall into a
+  // ~1s failure instead of a wait on vitest's own default.
+  test('the timeout also fires while waiting for confirmations', async () => {
+    vi.useFakeTimers()
+    const stuck = makeClient({
+      getTransactionInfo: () => receipt,
+      getNowBlock: () => ({ number: 100 }),
+    })
+
+    const promise = waitForTransactionReceipt(stuck, {
+      hash: 'abc',
+      confirmations: 5,
+      timeout: 5_000,
+      pollingInterval: 1000,
+    }).catch((err) => err)
+    await vi.advanceTimersByTimeAsync(6_000)
+
+    expect(await promise).toBeInstanceOf(WaitForTransactionReceiptTimeoutError)
+  }, 1000)
+
+  test('an explicit timeout wins over the mode default', async () => {
+    vi.useFakeTimers()
+    const client = makeClient({ getTransactionInfo: () => null })
+
+    const promise = waitForTransactionReceipt(client, {
+      hash: 'abc',
+      timeout: 10_000,
+      pollingInterval: 1000,
+    }).catch((err) => err)
+    // Well inside the 90_000 default: only the explicit value can fire.
+    await vi.advanceTimersByTimeAsync(11_000)
+
+    expect(await promise).toBeInstanceOf(WaitForTransactionReceiptTimeoutError)
+  })
+
+  // One budget for both modes, sized for the longer of the two (solidified).
+  // Both bounds are pinned in each mode: the upper bound alone would pass with
+  // any budget at all, down to 0, and the lower alone with any budget at all.
+  test.each([
+    [true],
+    [false],
+  ])('the default timeout is 90s with confirmed: %s', async (confirmed) => {
+    vi.useFakeTimers()
+
+    /** Whether a promise has settled, after flushing pending microtasks. */
+    const isSettled = async (promise: Promise<unknown>) => {
+      let settled = false
+      void promise.then(() => {
+        settled = true
+      })
+      await vi.advanceTimersByTimeAsync(0)
+      return settled
+    }
+
+    const client = makeClient({ getTransactionInfo: () => null })
+    const promise = waitForTransactionReceipt(client, {
+      hash: 'abc',
+      confirmed,
+      pollingInterval: 1000,
+    }).catch((err) => err)
+
+    await vi.advanceTimersByTimeAsync(89_000)
+    expect(await isSettled(promise)).toBe(false)
+    await vi.advanceTimersByTimeAsync(2_000)
+    expect(await promise).toBeInstanceOf(WaitForTransactionReceiptTimeoutError)
   })
 })

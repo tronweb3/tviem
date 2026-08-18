@@ -718,6 +718,8 @@ export {
   type ContractFunctionRevertedErrorType,
   TransactionExpiredError,
   type TransactionExpiredErrorType,
+  TransactionRevertedError,
+  type TransactionRevertedErrorType,
   TransactionTamperedError,
   type TransactionTamperedErrorType,
   TronRpcError,

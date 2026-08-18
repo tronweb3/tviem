@@ -12,8 +12,9 @@ export type GetBalanceParameters = {
   /** The Base58Check address to read the TRX balance of. */
   address: Address
   /**
-   * Read confirmed (solidified) state from the SolidityNode; pass `false` to
-   * read the FullNode's latest (unconfirmed) state instead. @default true
+   * Read solidified state from the SolidityNode instead of the FullNode's
+   * latest state. Solidified state trails the chain head, so a transfer made
+   * moments ago is not reflected there yet. @default false
    */
   confirmed?: boolean | undefined
 }
@@ -33,8 +34,8 @@ type GetAccountResponse = {
 /**
  * Reads the TRX balance (in SUN) of an account.
  *
- * Queries `getaccount` — SolidityNode (confirmed state) by default, FullNode
- * with `confirmed: false`. A non-existent
+ * Queries `getaccount` — the FullNode's latest state by default, the
+ * SolidityNode's solidified state with `confirmed: true`. A non-existent
  * account returns an empty `{}`, which maps to `0n` — no success assertion is
  * made (an empty body is a valid "zero balance" answer, not an error).
  *
@@ -47,7 +48,7 @@ export async function getBalance(
   { address, confirmed }: GetBalanceParameters,
 ): Promise<GetBalanceReturnType> {
   const response = await client.request<GetAccountResponse>({
-    node: (confirmed ?? true) ? 'solidity' : 'full',
+    node: confirmed ? 'solidity' : 'full',
     path: 'getaccount',
     method: 'POST',
     body: { address: toHex(address) },

@@ -85,8 +85,10 @@ export type TriggerConstantContractParameters<
   /** TRC10 token id (`token_id`). */
   tokenId?: bigint | undefined
   /**
-   * Run the simulation against confirmed (solidified) state on the
-   * SolidityNode instead of the FullNode's latest state. @default false
+   * Run the simulation against solidified state on the SolidityNode instead
+   * of the FullNode's latest state. Solidified state trails the chain head, so
+   * the simulation would not see a write made moments ago — while the
+   * transaction it simulates will execute against the head. @default false
    */
   confirmed?: boolean | undefined
 } & (readonly [] extends allArgs
