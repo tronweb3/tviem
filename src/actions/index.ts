@@ -128,6 +128,12 @@ export {
   buildApplyForSr,
 } from './wallet/applyForSr.js'
 export {
+  type BroadcastHexErrorType,
+  type BroadcastHexParameters,
+  type BroadcastHexReturnType,
+  broadcastHex,
+} from './wallet/broadcastHex.js'
+export {
   type BroadcastTransactionErrorType,
   type BroadcastTransactionParameters,
   type BroadcastTransactionReturnType,

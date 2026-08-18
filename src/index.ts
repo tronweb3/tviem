@@ -189,6 +189,12 @@ export {
   buildApplyForSr,
 } from './actions/wallet/applyForSr.js'
 export {
+  type BroadcastHexErrorType,
+  type BroadcastHexParameters,
+  type BroadcastHexReturnType,
+  broadcastHex,
+} from './actions/wallet/broadcastHex.js'
+export {
   type BroadcastTransactionErrorType,
   type BroadcastTransactionParameters,
   type BroadcastTransactionReturnType,

@@ -17,6 +17,11 @@ import {
   buildApplyForSr,
 } from '../../actions/wallet/applyForSr.js'
 import {
+  type BroadcastHexParameters,
+  type BroadcastHexReturnType,
+  broadcastHex,
+} from '../../actions/wallet/broadcastHex.js'
+import {
   type BroadcastTransactionParameters,
   type BroadcastTransactionReturnType,
   broadcastTransaction,
@@ -358,6 +363,10 @@ export type WalletActions = {
   broadcastTransaction: (
     parameters: BroadcastTransactionParameters,
   ) => Promise<BroadcastTransactionReturnType>
+  /** Broadcasts a signed transaction as exact `Transaction` protobuf hex. */
+  broadcastHex: (
+    parameters: BroadcastHexParameters,
+  ) => Promise<BroadcastHexReturnType>
   /** Stakes (freezes) TRX for bandwidth or energy (Stake 2.0). */
   freezeBalanceV2: (
     parameters: FreezeBalanceV2Parameters,
@@ -614,8 +623,8 @@ function requireAccount<
 
 /**
  * The TRON write (wallet) action set. `sendTrx` / `writeContract` require an
- * account (per-call or hoisted on the Client); `broadcastTransaction` takes an
- * already-signed transaction and needs none.
+ * account (per-call or hoisted on the Client); `broadcastTransaction` /
+ * `broadcastHex` take an already-signed transaction and need none.
  */
 export function walletActions(client: Client): WalletActions {
   return {
@@ -705,6 +714,8 @@ export function walletActions(client: Client): WalletActions {
         broadcastTransaction,
         'broadcastTransaction',
       )(parameters),
+    broadcastHex: (parameters) =>
+      getAction(client, broadcastHex, 'broadcastHex')(parameters),
     freezeBalanceV2: async (parameters) =>
       getAction(
         client,

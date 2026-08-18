@@ -37,6 +37,7 @@ test('exposes the wallet action set', () => {
     'sendTrx',
     'writeContract',
     'broadcastTransaction',
+    'broadcastHex',
   ] as const)
     expect(typeof client[name]).toBe('function')
 })
