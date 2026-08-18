@@ -3,6 +3,10 @@ import type { ErrorType } from '../../../errors/utils.js'
 import type { TronHexAddress } from '../../../types/address.js'
 import type { ByteArray, Hex } from '../../../types/misc.js'
 import { concatBytes } from '../../data/concat.js'
+import {
+  type AssertHexBytesErrorType,
+  assertHexBytes,
+} from '../../data/isHex.js'
 import { bareHex } from '../../encoding/bareHex.js'
 import { bytesToString } from '../../encoding/fromBytes.js'
 import {
@@ -60,6 +64,7 @@ const maxInt64 = 9223372036854775807n
 const twoPow64 = 18446744073709551616n
 
 export type EncodeMessageErrorType =
+  | AssertHexBytesErrorType
   | NormalizeAddressErrorType
   | HexToBytesErrorType
   | FBytesErrorType
@@ -144,7 +149,13 @@ function int64InputToBigInt(value: Int64): bigint {
 /** Converts a bytes field input (hex or raw bytes) to bytes. */
 function bytesInputToBytes(value: BytesInput): ByteArray {
   if (value instanceof Uint8Array) return value
-  return hexToBytes((value.startsWith('0x') ? value : `0x${value}`) as Hex)
+  const hex = (value.startsWith('0x') ? value : `0x${value}`) as Hex
+  // Whole-byte hex only. `hexToBytes` left-pads an odd nibble count, which
+  // silently rewrites the caller's bytes: a `Permission.operations` bitmap
+  // that lost a trailing nibble comes back shifted half a byte — a different
+  // set of allowed contract types, still 32 bytes, so the chain accepts it.
+  assertHexBytes(hex)
+  return hexToBytes(hex)
 }
 
 export type DecodeMessageErrorType =

@@ -3,6 +3,7 @@ import { buildAccountPermissionUpdate } from '../../../src/actions/wallet/accoun
 import { createPublicClient } from '../../../src/clients/createPublicClient.js'
 import { createWalletClient } from '../../../src/clients/createWalletClient.js'
 import { AccountNotFoundError } from '../../../src/errors/rpc.js'
+import { hexToBytes } from '../../../src/utils/encoding/toBytes.js'
 import { rpc } from '../../fixtures/rpc/loader.js'
 import { loadTxFixtureFile } from '../../fixtures/tx/loader.js'
 import { createMockTransport } from '../../mock/createMockTransport.js'
@@ -115,6 +116,31 @@ test('permissionId is baked in as Permission_id and changes the id', async () =>
   // The permission id is part of the serialized bytes → a different txID.
   expect(tx.txID).not.toBe(fixture?.txID)
   expect(tx.raw_data_hex).not.toBe(fixture?.rawDataHex)
+})
+
+test('refuses an operations bitmap that is not whole-byte hex', async () => {
+  const { transport } = buildMock()
+  const client = createWalletClient({ account: pk1, transport })
+  const active = params.actives[0]!
+
+  // The gold bitmap with its last nibble lost. Left-padding it — which is what
+  // `hexToBytes` does with an odd nibble count — would restore a 32-byte value,
+  // the exact length java-tron demands, so the chain would accept it. But every
+  // set bit has shifted half a byte, granting a different set of contract types
+  // than the caller wrote. Refuse it instead of guessing at the missing nibble.
+  await expect(
+    buildAccountPermissionUpdate(client, {
+      ...params,
+      actives: [{ ...active, operations: active.operations.slice(0, -1) }],
+    }),
+  ).rejects.toThrow('is an odd length')
+
+  // Raw bytes are unambiguous and stay accepted.
+  const tx = await buildAccountPermissionUpdate(client, {
+    ...params,
+    actives: [{ ...active, operations: hexToBytes(active.operations) }],
+  })
+  expect(tx.txID).toBe(fixture?.txID)
 })
 
 test('throws AccountNotFoundError when no account is available (bare action)', async () => {
