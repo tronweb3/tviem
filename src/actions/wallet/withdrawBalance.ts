@@ -135,7 +135,8 @@ export async function buildWithdrawBalance(
  *
  * @param client The Client to use.
  * @param parameters Optional account/blockHeader.
- * @returns `{ txID }` — the locally computed transaction id.
+ * @returns `{ txID, result, code, message }` — the locally computed
+ * transaction id plus the node's acknowledgement fields, when echoed.
  */
 export async function withdrawBalance(
   client: Client,

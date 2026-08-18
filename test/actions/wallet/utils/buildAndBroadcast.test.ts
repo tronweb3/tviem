@@ -74,6 +74,41 @@ test('runs getNowBlock → sign → broadcast and returns the local txID', async
   expect(body.raw_data.fee_limit).toBeUndefined()
 })
 
+test('passes the broadcast acknowledgement through alongside the local txID', async () => {
+  const { transport } = createMockTransport({
+    responses: {
+      getnowblock: { response: rpc('getnowblock.fixed') },
+      broadcasttransaction: {
+        response: {
+          result: true,
+          code: 'SUCCESS',
+          // "broadcast ok" — node message fields arrive hex-encoded.
+          message: '62726f616463617374206f6b',
+          txid: `0${'0'.repeat(63)}`,
+        },
+      },
+    },
+  })
+  const client = createPublicClient({ transport })
+  const account = parseAccount(pk1)
+
+  const response = await buildAndBroadcast(client, {
+    contract: freezeContract(),
+    account,
+  })
+
+  // All acknowledgement fields ride along (`message` hex-decoded); the id is
+  // returned once, under the model's `txID` spelling — the node's echoed
+  // all-zero `txid` never leaks.
+  expect(response).toEqual({
+    txID: bandwidth?.txID,
+    result: true,
+    code: 'SUCCESS',
+    message: 'broadcast ok',
+  })
+  expect(response).not.toHaveProperty('txid')
+})
+
 test('writes fee_limit into raw_data when supplied', async () => {
   const { transport, bodyOf } = writeMock()
   const client = createPublicClient({ transport })

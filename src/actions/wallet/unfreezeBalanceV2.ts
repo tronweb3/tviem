@@ -148,7 +148,8 @@ export async function buildUnfreezeBalanceV2(
  *
  * @param client The Client to use.
  * @param parameters Amount, resource, optional account/blockHeader.
- * @returns `{ txID }` — the locally computed transaction id.
+ * @returns `{ txID, result, code, message }` — the locally computed
+ * transaction id plus the node's acknowledgement fields, when echoed.
  */
 export async function unfreezeBalanceV2(
   client: Client,

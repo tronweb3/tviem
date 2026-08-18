@@ -320,7 +320,9 @@ export async function buildDeployContract<
  *
  * @param client The Client to use.
  * @param parameters ABI, bytecode, optional constructor args, resource limits.
- * @returns `{ txID, contractAddress }`.
+ * @returns `{ txID, contractAddress, result, code, message }` — the locally
+ * computed transaction id and derived contract address, plus the node's
+ * acknowledgement fields, when echoed.
  */
 export async function deployContract<
   const abi extends Abi | readonly unknown[],
@@ -333,7 +335,7 @@ export async function deployContract<
     parameters as DeployContractParameters<Abi>,
   )
 
-  const { txID } = await buildAndBroadcast(client, {
+  const { txID, ...acknowledgement } = await buildAndBroadcast(client, {
     contract,
     account,
     feeLimit,
@@ -345,5 +347,5 @@ export async function deployContract<
   const contractAddress = toBase58(
     genContractAddress(txID, addressToHex(account.address)) as AddressInput,
   )
-  return { txID, contractAddress }
+  return { txID, ...acknowledgement, contractAddress }
 }

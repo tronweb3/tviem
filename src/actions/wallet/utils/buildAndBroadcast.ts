@@ -40,7 +40,16 @@ export type BuildAndBroadcastParameters = {
    */
   expirationMs?: bigint | number | undefined
 }
-export type BuildAndBroadcastReturnType = { txID: string }
+export type BuildAndBroadcastReturnType = {
+  /** The locally computed transaction id (the model's `txID` spelling). */
+  txID: string
+  /** The node's acknowledgement flag (`true` here — a rejection throws). */
+  result?: boolean | undefined
+  /** The node's response code, when echoed (e.g. `SUCCESS`). */
+  code?: string | undefined
+  /** The node's message, hex-decoded to UTF-8 when decodable. */
+  message?: string | undefined
+}
 
 export type BuildAndBroadcastErrorType =
   | BroadcastTransactionErrorType
@@ -60,7 +69,8 @@ export type BuildAndBroadcastErrorType =
  *
  * @param client The Client to use.
  * @param parameters The built contract, signing account, optional header/fee.
- * @returns `{ txID }` — the locally computed transaction id.
+ * @returns `{ txID, result, code, message }` — the locally computed
+ * transaction id plus the node's acknowledgement fields, when echoed.
  */
 export async function buildAndBroadcast(
   client: Client,
@@ -81,12 +91,15 @@ export async function buildAndBroadcast(
   // Sign locally (recomputes txID, owner guard, txCheck, appends sig).
   const signed = account.signTransaction(unsigned)
 
-  // Broadcast; the local txID is authoritative.
-  await getAction(
+  // Broadcast; the local txID is authoritative. The acknowledgement's `txid`
+  // is that same local id (broadcastTransaction never reads the node's echo),
+  // so it is returned once, under the model's `txID` spelling; the node's
+  // other acknowledgement fields (`result`, `code`, `message`) ride along.
+  const { txid: _, ...acknowledgement } = await getAction(
     client,
     broadcastTransaction,
     'broadcastTransaction',
   )({ signedTransaction: signed })
 
-  return { txID: signed.txID }
+  return { txID: signed.txID, ...acknowledgement }
 }

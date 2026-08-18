@@ -81,12 +81,15 @@ test('write.<fn> / estimateEnergy.<fn> parameter inference (Wallet Client)', () 
   expectTypeOf(contract).not.toHaveProperty('read')
 
   // transfer: `(address, uint256)` → args `readonly [AddressInput, bigint | number]`,
-  // resolves to `{ txID: string }`.
+  // resolves to the local txID plus the broadcast acknowledgement fields.
   expectTypeOf(contract.write.transfer)
     .parameter(0)
     .toEqualTypeOf<readonly [AddressInput, bigint | number]>()
   expectTypeOf(contract.write.transfer).returns.resolves.toEqualTypeOf<{
     txID: string
+    result?: boolean | undefined
+    code?: string | undefined
+    message?: string | undefined
   }>()
 
   // estimateEnergy.transfer: same args, resolves to `bigint`.

@@ -146,7 +146,8 @@ export async function buildSendTrx(
  *
  * @param client The Client to use.
  * @param parameters Recipient, amount, optional memo/account/blockHeader.
- * @returns `{ txID }` — the locally computed transaction id.
+ * @returns `{ txID, result, code, message }` — the locally computed
+ * transaction id plus the node's acknowledgement fields, when echoed.
  */
 export async function sendTrx(
   client: Client,

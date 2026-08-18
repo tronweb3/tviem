@@ -167,7 +167,8 @@ export async function buildAccountPermissionUpdate(
  *
  * @param client The Client to use.
  * @param parameters The new permission set, optional account/fee/blockHeader.
- * @returns `{ txID }` — the locally computed transaction id.
+ * @returns `{ txID, result, code, message }` — the locally computed
+ * transaction id plus the node's acknowledgement fields, when echoed.
  */
 export async function accountPermissionUpdate(
   client: Client,

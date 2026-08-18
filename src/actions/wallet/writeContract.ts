@@ -31,6 +31,7 @@ import type { RawContract } from '../../utils/transaction/serializeRawData.js'
 import type { TriggerSmartContract } from '../../utils/transaction/types.js'
 import {
   type BuildAndBroadcastErrorType,
+  type BuildAndBroadcastReturnType,
   buildAndBroadcast,
 } from './utils/buildAndBroadcast.js'
 import {
@@ -103,7 +104,7 @@ export type WriteContractParameters<
       /** The function arguments. */
       args: allArgs
     })
-export type WriteContractReturnType = { txID: string }
+export type WriteContractReturnType = BuildAndBroadcastReturnType
 
 export type WriteContractErrorType =
   | AccountNotFoundErrorType
@@ -228,7 +229,8 @@ export async function buildWriteContract<
  *
  * @param client The Client to use.
  * @param parameters Contract address / ABI / function / args / fee / blockHeader.
- * @returns `{ txID }` — the locally computed transaction id.
+ * @returns `{ txID, result, code, message }` — the locally computed
+ * transaction id plus the node's acknowledgement fields, when echoed.
  */
 export async function writeContract<
   const abi extends Abi | readonly unknown[],
