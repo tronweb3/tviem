@@ -36,9 +36,11 @@ export type EncodeDeployDataErrorType =
 
 /**
  * Encodes contract-creation calldata: the creation `bytecode` followed by the
- * ABI-encoded constructor `args` (or the bytecode unchanged when no arguments
- * are given). TRON `address` constructor arguments accept any address form and
- * `trcToken` arguments encode like `uint256`.
+ * ABI-encoded constructor `args` (or the bytecode unchanged when the
+ * constructor takes no arguments). Throws when the constructor declares inputs
+ * but `args` are missing or mismatched in length. TRON `address` constructor
+ * arguments accept any address form and `trcToken` arguments encode like
+ * `uint256`.
  *
  * @example
  * encodeDeployData({
@@ -57,15 +59,21 @@ export function encodeDeployData<const abi extends Abi | readonly unknown[]>(
     bytecode: Hex
   }
 
-  if (!args || args.length === 0) return bytecode
-
   const description = abi.find((x) => x.type === 'constructor')
-  if (!description) throw new AbiConstructorNotFoundError({ docsPath })
-  if (!('inputs' in description))
-    throw new AbiConstructorParamsNotFoundError({ docsPath })
-  if (!description.inputs || description.inputs.length === 0)
-    throw new AbiConstructorParamsNotFoundError({ docsPath })
 
-  const data = encodeAbiParameters(description.inputs, args)
+  if (!description) {
+    if (!args || args.length === 0) return bytecode
+    throw new AbiConstructorNotFoundError({ docsPath })
+  }
+  if (
+    !('inputs' in description) ||
+    !description.inputs ||
+    description.inputs.length === 0
+  ) {
+    if (!args || args.length === 0) return bytecode
+    throw new AbiConstructorParamsNotFoundError({ docsPath })
+  }
+
+  const data = encodeAbiParameters(description.inputs, args ?? [])
   return concatHex([bytecode, data])
 }

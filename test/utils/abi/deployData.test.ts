@@ -4,6 +4,7 @@ import { expect, test } from 'vitest'
 import {
   AbiConstructorNotFoundError,
   AbiConstructorParamsNotFoundError,
+  AbiEncodingLengthMismatchError,
 } from '../../../src/errors/abi.js'
 import { decodeDeployData } from '../../../src/utils/abi/decodeDeployData.js'
 import { encodeAbiParameters } from '../../../src/utils/abi/encodeAbiParameters.js'
@@ -27,7 +28,19 @@ const args = [1000000n, 'TA5DvvvmYbS75o3DKtgy2ATAGVHhpFkRLe'] as const
 
 test('encodeDeployData: no args returns the bytecode unchanged', () => {
   expect(encodeDeployData({ abi: [], bytecode })).toBe(bytecode)
-  expect(encodeDeployData({ abi: abiWithConstructor, bytecode })).toBe(bytecode)
+  const abiNoInputs = [
+    { type: 'constructor', stateMutability: 'nonpayable', inputs: [] },
+  ] as const satisfies Abi
+  expect(encodeDeployData({ abi: abiNoInputs, bytecode })).toBe(bytecode)
+})
+
+test('encodeDeployData: throws when the constructor requires args but none are given', () => {
+  expect(() =>
+    encodeDeployData({ abi: abiWithConstructor, bytecode }),
+  ).toThrowError(AbiEncodingLengthMismatchError)
+  expect(() =>
+    encodeDeployData({ abi: abiWithConstructor, bytecode, args: [] }),
+  ).toThrowError(AbiEncodingLengthMismatchError)
 })
 
 test('encodeDeployData: appends ABI-encoded constructor args to the bytecode', () => {
