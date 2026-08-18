@@ -155,9 +155,11 @@ describe('readContract', () => {
       args: [holder],
       account,
     })
-    const { toHex } = await import('../../../src/utils/address/toHex.js')
+    const { addressToHex } = await import(
+      '../../../src/utils/address/addressToHex.js'
+    )
     expect((calls[0]?.body as { owner_address: string }).owner_address).toBe(
-      toHex(account.address),
+      addressToHex(account.address),
     )
   })
 
@@ -174,9 +176,11 @@ describe('readContract', () => {
       functionName: 'balanceOf',
       args: [holder],
     })
-    const { toHex } = await import('../../../src/utils/address/toHex.js')
+    const { addressToHex } = await import(
+      '../../../src/utils/address/addressToHex.js'
+    )
     expect((calls[0]?.body as { owner_address: string }).owner_address).toBe(
-      toHex(account.address),
+      addressToHex(account.address),
     )
   })
 

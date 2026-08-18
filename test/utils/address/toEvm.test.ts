@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest'
 
 import { InvalidAddressError } from '../../../src/errors/address.js'
-import { addressToHex, toEvm } from '../../../src/utils/address/toEvm.js'
+import { toEvm } from '../../../src/utils/address/toEvm.js'
 import { hexToBytes } from '../../../src/utils/encoding/toBytes.js'
 
 // §2.1 global test vectors (byte-compared against TronWeb).
@@ -65,17 +65,5 @@ describe('toEvm', () => {
     expect(toEvm('0x417e5f4552091a69125d5dfcb7b8c2659029395bdf')).toBe(
       '0x7e5f4552091a69125d5dfcb7b8c2659029395bdf',
     )
-  })
-})
-
-describe('addressToHex (ABI adapter)', () => {
-  test.each(vectors)('returns the 20-byte 0x form of $base58', (vector) => {
-    expect(addressToHex(vector.base58)).toBe(vector.evm0x)
-    expect(addressToHex(vector.hex41)).toBe(vector.evm0x)
-    expect(addressToHex(vector.evm0x)).toBe(vector.evm0x)
-  })
-
-  test('throws InvalidAddressError on invalid input', () => {
-    expect(() => addressToHex('T123')).toThrow(InvalidAddressError)
   })
 })

@@ -11,7 +11,10 @@ import {
 } from '../../types/account.js'
 import type { Address } from '../../types/address.js'
 import type { Hex } from '../../types/misc.js'
-import { type ToHexErrorType, toHex } from '../../utils/address/toHex.js'
+import {
+  type AddressToHexErrorType,
+  addressToHex,
+} from '../../utils/address/addressToHex.js'
 import {
   type FlexErrorType,
   type FlexInput,
@@ -73,7 +76,7 @@ export type SendTrc10ErrorType =
   | BuildAndBroadcastErrorType
   | FlexErrorType
   | ParseAccountErrorType
-  | ToHexErrorType
+  | AddressToHexErrorType
   | ErrorType
 
 export type BuildSendTrc10Parameters = SendTrc10Parameters & {
@@ -87,7 +90,7 @@ export type BuildSendTrc10ErrorType =
   | BuildTransactionErrorType
   | FlexErrorType
   | ParseAccountErrorType
-  | ToHexErrorType
+  | AddressToHexErrorType
   | ErrorType
 
 /** The signing account plus the assembled `TransferAssetContract`. */
@@ -110,8 +113,8 @@ function assemble(
       type_url: `${contractTypeUrlPrefix}TransferAssetContract`,
       value: {
         asset_name: flexToHex(assetName),
-        owner_address: toHex(account.address),
-        to_address: toHex(to),
+        owner_address: addressToHex(account.address),
+        to_address: addressToHex(to),
         amount,
       },
     },

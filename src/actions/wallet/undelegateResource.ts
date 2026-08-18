@@ -11,7 +11,10 @@ import {
 } from '../../types/account.js'
 import type { Address } from '../../types/address.js'
 import type { Hex } from '../../types/misc.js'
-import { type ToHexErrorType, toHex } from '../../utils/address/toHex.js'
+import {
+  type AddressToHexErrorType,
+  addressToHex,
+} from '../../utils/address/addressToHex.js'
 import {
   ContractType,
   contractTypeUrlPrefix,
@@ -71,7 +74,7 @@ export type UndelegateResourceErrorType =
   | BuildAndBroadcastErrorType
   | ParseAccountErrorType
   | ResourceCodeOfErrorType
-  | ToHexErrorType
+  | AddressToHexErrorType
   | ErrorType
 
 export type BuildUndelegateResourceParameters = UndelegateResourceParameters & {
@@ -88,7 +91,7 @@ export type BuildUndelegateResourceErrorType =
   | BuildTransactionErrorType
   | ParseAccountErrorType
   | ResourceCodeOfErrorType
-  | ToHexErrorType
+  | AddressToHexErrorType
   | ErrorType
 
 /** The signing account plus the assembled `UnDelegateResourceContract`. */
@@ -104,10 +107,10 @@ function assemble(
   const account = parseAccount(source)
 
   const value: UnDelegateResourceContract = {
-    owner_address: toHex(account.address),
+    owner_address: addressToHex(account.address),
     resource: resourceCodeOf(resource),
     balance,
-    receiver_address: toHex(receiverAddress),
+    receiver_address: addressToHex(receiverAddress),
   }
 
   const contract: RawContract = {

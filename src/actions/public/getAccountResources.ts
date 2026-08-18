@@ -2,7 +2,10 @@ import type { Client } from '../../clients/createClient.js'
 import type { RequestErrorType } from '../../clients/transports/http.js'
 import type { ErrorType } from '../../errors/utils.js'
 import type { Address } from '../../types/address.js'
-import { type ToHexErrorType, toHex } from '../../utils/address/toHex.js'
+import {
+  type AddressToHexErrorType,
+  addressToHex,
+} from '../../utils/address/addressToHex.js'
 
 export type GetAccountResourcesParameters = {
   /** The Base58Check address to read resource usage/limits of. */
@@ -43,7 +46,7 @@ export type GetAccountResourcesReturnType = {
 
 export type GetAccountResourcesErrorType =
   | RequestErrorType
-  | ToHexErrorType
+  | AddressToHexErrorType
   | ErrorType
 
 /** Raw `getaccountresource` body; TRON omits zero-valued fields entirely. */
@@ -87,7 +90,7 @@ export async function getAccountResources(
     node: 'full',
     path: 'getaccountresource',
     method: 'POST',
-    body: { address: toHex(address) },
+    body: { address: addressToHex(address) },
   })
   return {
     freeNetLimit: toBigInt(response?.freeNetLimit),

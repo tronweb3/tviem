@@ -3,10 +3,13 @@ import type { ErrorType } from '../../errors/utils.js'
 import type { AddressInput } from '../../types/address.js'
 import type { Hex } from '../../types/misc.js'
 import {
+  type AddressToHexErrorType,
+  addressToHex,
+} from '../../utils/address/addressToHex.js'
+import {
   type IsAddressEqualErrorType,
   isAddressEqual,
 } from '../../utils/address/isAddressEqual.js'
-import { type ToHexErrorType, toHex } from '../../utils/address/toHex.js'
 import { bareHex } from '../../utils/index.js'
 import { type SignErrorType, sign } from '../../utils/signature/sign.js'
 import {
@@ -46,7 +49,7 @@ export type SignTransactionErrorType =
   | GetTransactionIdErrorType
   | TxCheckErrorType
   | IsAddressEqualErrorType
-  | ToHexErrorType
+  | AddressToHexErrorType
   | SignErrorType
   | BaseErrorType
   | ErrorType
@@ -96,7 +99,7 @@ export function signTransaction(
 
   const { raw_data, txID } = transaction
   const owner = (raw_data.contract[0]?.parameter.value as any).owner_address
-  if (owner === undefined || !isAddressEqual(toHex(owner), address))
+  if (owner === undefined || !isAddressEqual(addressToHex(owner), address))
     throw new BaseError(
       `The transaction's owner_address does not match the signing account (${address}).`,
     )

@@ -7,10 +7,13 @@ import {
 import type { ErrorType } from '../../errors/utils.js'
 import type { Address, AddressInput } from '../../types/address.js'
 import {
+  type AddressToHexErrorType,
+  addressToHex,
+} from '../../utils/address/addressToHex.js'
+import {
   type ToBase58ErrorType,
   toBase58,
 } from '../../utils/address/toBase58.js'
-import { type ToHexErrorType, toHex } from '../../utils/address/toHex.js'
 import type { ResourceCodeName } from '../../utils/transaction/types.js'
 import { isEmptyResponse } from './getNowBlock.js'
 import {
@@ -170,7 +173,7 @@ export type GetAccountErrorType =
   | IntegerOutOfRangeErrorType
   | RequestErrorType
   | ToBase58ErrorType
-  | ToHexErrorType
+  | AddressToHexErrorType
   | ErrorType
 
 type RawFrozenV1 = {
@@ -307,7 +310,7 @@ export async function getAccount(
     node: confirmed ? 'solidity' : 'full',
     path: 'getaccount',
     method: 'POST',
-    body: { address: toHex(address) },
+    body: { address: addressToHex(address) },
   })
   if (isEmptyResponse(response)) return null
 

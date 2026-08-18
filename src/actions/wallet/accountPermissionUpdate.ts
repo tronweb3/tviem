@@ -10,7 +10,10 @@ import {
   parseAccount,
 } from '../../types/account.js'
 import type { Hex } from '../../types/misc.js'
-import { type ToHexErrorType, toHex } from '../../utils/address/toHex.js'
+import {
+  type AddressToHexErrorType,
+  addressToHex,
+} from '../../utils/address/addressToHex.js'
 import {
   ContractType,
   contractTypeUrlPrefix,
@@ -70,7 +73,7 @@ export type AccountPermissionUpdateErrorType =
   | AccountNotFoundErrorType
   | BuildAndBroadcastErrorType
   | ParseAccountErrorType
-  | ToHexErrorType
+  | AddressToHexErrorType
   | ErrorType
 
 export type BuildAccountPermissionUpdateParameters =
@@ -84,7 +87,7 @@ export type BuildAccountPermissionUpdateErrorType =
   | AccountNotFoundErrorType
   | BuildTransactionErrorType
   | ParseAccountErrorType
-  | ToHexErrorType
+  | AddressToHexErrorType
   | ErrorType
 
 /** The signing account plus the assembled `AccountPermissionUpdateContract` and `fee_limit`. */
@@ -105,7 +108,7 @@ function assemble(
 
   // Each permission's `type` is forced from the slot it was passed in.
   const value: AccountPermissionUpdateContract = {
-    owner_address: toHex(account.address),
+    owner_address: addressToHex(account.address),
     ...(owner ? { owner: { ...owner, type: PermissionType.OWNER } } : {}),
     ...(witness
       ? { witness: { ...witness, type: PermissionType.WITNESS } }

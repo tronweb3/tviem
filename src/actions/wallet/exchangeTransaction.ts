@@ -10,7 +10,10 @@ import {
   parseAccount,
 } from '../../types/account.js'
 import type { Hex } from '../../types/misc.js'
-import { type ToHexErrorType, toHex } from '../../utils/address/toHex.js'
+import {
+  type AddressToHexErrorType,
+  addressToHex,
+} from '../../utils/address/addressToHex.js'
 import {
   type FlexErrorType,
   flexToHex,
@@ -71,7 +74,7 @@ export type ExchangeTransactionErrorType =
   | BuildAndBroadcastErrorType
   | FlexErrorType
   | ParseAccountErrorType
-  | ToHexErrorType
+  | AddressToHexErrorType
   | ErrorType
 
 export type BuildExchangeTransactionParameters =
@@ -86,7 +89,7 @@ export type BuildExchangeTransactionErrorType =
   | BuildTransactionErrorType
   | FlexErrorType
   | ParseAccountErrorType
-  | ToHexErrorType
+  | AddressToHexErrorType
   | ErrorType
 
 /** The signing account plus the assembled `ExchangeTransactionContract`. */
@@ -102,7 +105,7 @@ function assemble(
   const account = parseAccount(source)
 
   const value: ExchangeTransactionContract = {
-    owner_address: toHex(account.address),
+    owner_address: addressToHex(account.address),
     exchange_id: BigInt(exchangeId),
     token_id: flexToHex(tokenId),
     quant,

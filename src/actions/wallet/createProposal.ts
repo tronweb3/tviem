@@ -11,7 +11,10 @@ import {
   parseAccount,
 } from '../../types/account.js'
 import type { Hex } from '../../types/misc.js'
-import { type ToHexErrorType, toHex } from '../../utils/address/toHex.js'
+import {
+  type AddressToHexErrorType,
+  addressToHex,
+} from '../../utils/address/addressToHex.js'
 import {
   ContractType,
   contractTypeUrlPrefix,
@@ -78,7 +81,7 @@ export type CreateProposalErrorType =
   | BaseErrorType
   | BuildAndBroadcastErrorType
   | ParseAccountErrorType
-  | ToHexErrorType
+  | AddressToHexErrorType
   | ErrorType
 
 export type BuildCreateProposalParameters = CreateProposalParameters & {
@@ -92,7 +95,7 @@ export type BuildCreateProposalErrorType =
   | BaseErrorType
   | BuildTransactionErrorType
   | ParseAccountErrorType
-  | ToHexErrorType
+  | AddressToHexErrorType
   | ErrorType
 
 /** Normalizes proposal parameters to ascending-key `{ key, value }` bigints. */
@@ -136,7 +139,7 @@ function assemble(
   const account = parseAccount(source)
 
   const value: ProposalCreateContract = {
-    owner_address: toHex(account.address),
+    owner_address: addressToHex(account.address),
     parameters: normalizeParameters(parameters.parameters),
   }
 

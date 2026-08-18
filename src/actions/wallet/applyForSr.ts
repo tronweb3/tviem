@@ -10,7 +10,10 @@ import {
   parseAccount,
 } from '../../types/account.js'
 import type { Hex } from '../../types/misc.js'
-import { type ToHexErrorType, toHex } from '../../utils/address/toHex.js'
+import {
+  type AddressToHexErrorType,
+  addressToHex,
+} from '../../utils/address/addressToHex.js'
 import {
   type FlexErrorType,
   flexToHex,
@@ -65,7 +68,7 @@ export type ApplyForSrErrorType =
   | BuildAndBroadcastErrorType
   | FlexErrorType
   | ParseAccountErrorType
-  | ToHexErrorType
+  | AddressToHexErrorType
   | ErrorType
 
 export type BuildApplyForSrParameters = ApplyForSrParameters & {
@@ -79,7 +82,7 @@ export type BuildApplyForSrErrorType =
   | BuildTransactionErrorType
   | FlexErrorType
   | ParseAccountErrorType
-  | ToHexErrorType
+  | AddressToHexErrorType
   | ErrorType
 
 /** The signing account plus the assembled `WitnessCreateContract`. */
@@ -95,7 +98,7 @@ function assemble(
   const account = parseAccount(source)
 
   const value: WitnessCreateContract = {
-    owner_address: toHex(account.address),
+    owner_address: addressToHex(account.address),
     url: flexToHex(url),
   }
 

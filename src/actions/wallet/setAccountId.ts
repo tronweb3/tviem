@@ -10,7 +10,10 @@ import {
   parseAccount,
 } from '../../types/account.js'
 import type { Hex } from '../../types/misc.js'
-import { type ToHexErrorType, toHex } from '../../utils/address/toHex.js'
+import {
+  type AddressToHexErrorType,
+  addressToHex,
+} from '../../utils/address/addressToHex.js'
 import {
   type FlexErrorType,
   flexToHex,
@@ -65,7 +68,7 @@ export type SetAccountIdErrorType =
   | BuildAndBroadcastErrorType
   | FlexErrorType
   | ParseAccountErrorType
-  | ToHexErrorType
+  | AddressToHexErrorType
   | ErrorType
 
 export type BuildSetAccountIdParameters = SetAccountIdParameters & {
@@ -79,7 +82,7 @@ export type BuildSetAccountIdErrorType =
   | BuildTransactionErrorType
   | FlexErrorType
   | ParseAccountErrorType
-  | ToHexErrorType
+  | AddressToHexErrorType
   | ErrorType
 
 /** The signing account plus the assembled `SetAccountIdContract`. */
@@ -96,7 +99,7 @@ function assemble(
 
   const value: SetAccountIdContract = {
     account_id: flexToHex(accountId),
-    owner_address: toHex(account.address),
+    owner_address: addressToHex(account.address),
   }
 
   const contract: RawContract = {

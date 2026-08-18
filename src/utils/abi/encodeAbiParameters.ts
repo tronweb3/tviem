@@ -26,7 +26,7 @@ import type { ErrorType } from '../../errors/utils.js'
 import type { Address, AddressInput } from '../../types/address.js'
 import type { Hex } from '../../types/misc.js'
 import type { Prettify } from '../../types/utils.js'
-import { type AddressToHexErrorType, addressToHex } from '../address/toEvm.js'
+import { type ToEvmErrorType, toEvm } from '../address/toEvm.js'
 import { type ConcatHexErrorType, concatHex } from '../data/concat.js'
 import {
   type AssertHexBytesErrorType,
@@ -132,7 +132,7 @@ export type EncodeAbiParametersErrorType =
   | AssertHexBytesErrorType
   | AbiEncodingBytesSizeMismatchErrorType
   | AbiEncodingLengthMismatchErrorType
-  | AddressToHexErrorType
+  | ToEvmErrorType
   | BoolToHexErrorType
   | ConcatHexErrorType
   | IntegerOutOfRangeErrorType
@@ -315,7 +315,7 @@ function encodeAddress(value: unknown): PreparedParam {
     throw new InvalidAbiParameterValueError({ type: 'address', value })
   return {
     dynamic: false,
-    encoded: padHex(addressToHex(value as AddressInput), { size: 32 }),
+    encoded: padHex(toEvm(value as AddressInput), { size: 32 }),
   }
 }
 

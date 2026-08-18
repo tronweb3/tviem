@@ -16,7 +16,7 @@ import { IntegerOutOfRangeError } from '../../errors/encoding.js'
 import type { ErrorType } from '../../errors/utils.js'
 import type { AddressInput } from '../../types/address.js'
 import type { Hex } from '../../types/misc.js'
-import { type AddressToHexErrorType, addressToHex } from '../address/toEvm.js'
+import { type ToEvmErrorType, toEvm } from '../address/toEvm.js'
 import { type ConcatHexErrorType, concatHex } from '../data/concat.js'
 import {
   type AssertHexBytesErrorType,
@@ -57,7 +57,7 @@ export type EncodePackedErrorType =
   | AbiEncodingBytesSizeMismatchErrorType
   | AssertHexBytesErrorType
   | AbiEncodingLengthMismatchErrorType
-  | AddressToHexErrorType
+  | ToEvmErrorType
   | BoolToHexErrorType
   | ConcatHexErrorType
   | NumberToHexErrorType
@@ -114,7 +114,7 @@ function encode(type: string, value: unknown, isArray = false): Hex {
   // `trcToken` packs exactly like `uint256` — delegate to the integer path.
   if (type === 'trcToken') return encode('uint256', value, isArray)
   if (type === 'address') {
-    const hex = addressToHex(value as AddressInput)
+    const hex = toEvm(value as AddressInput)
     return isArray ? padHex(hex, { size: 32 }) : hex
   }
   if (type === 'string') {

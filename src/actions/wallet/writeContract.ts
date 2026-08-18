@@ -19,7 +19,10 @@ import {
   type EncodeFunctionDataErrorType,
   encodeFunctionData,
 } from '../../utils/abi/encodeFunctionData.js'
-import { type ToHexErrorType, toHex } from '../../utils/address/toHex.js'
+import {
+  type AddressToHexErrorType,
+  addressToHex,
+} from '../../utils/address/addressToHex.js'
 import {
   ContractType,
   contractTypeUrlPrefix,
@@ -107,7 +110,7 @@ export type WriteContractErrorType =
   | BuildAndBroadcastErrorType
   | EncodeFunctionDataErrorType
   | ParseAccountErrorType
-  | ToHexErrorType
+  | AddressToHexErrorType
   | ErrorType
 
 export type BuildWriteContractParameters<
@@ -127,7 +130,7 @@ export type BuildWriteContractErrorType =
   | BuildTransactionErrorType
   | EncodeFunctionDataErrorType
   | ParseAccountErrorType
-  | ToHexErrorType
+  | AddressToHexErrorType
   | ErrorType
 
 /** The signing account plus the assembled `TriggerSmartContract` and fee limit. */
@@ -158,8 +161,8 @@ function assemble(
 
   // ② build the TriggerSmartContract (addresses enter the body as 41-hex).
   const value: TriggerSmartContract = {
-    owner_address: toHex(account.address),
-    contract_address: toHex(address),
+    owner_address: addressToHex(account.address),
+    contract_address: addressToHex(address),
     data,
   }
   if (callValue !== undefined) value.call_value = callValue

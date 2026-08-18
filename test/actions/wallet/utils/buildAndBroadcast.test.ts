@@ -2,7 +2,7 @@ import { expect, test } from 'vitest'
 import { buildAndBroadcast } from '../../../../src/actions/wallet/utils/buildAndBroadcast.js'
 import { createPublicClient } from '../../../../src/clients/createPublicClient.js'
 import { parseAccount } from '../../../../src/types/account.js'
-import { toHex } from '../../../../src/utils/address/toHex.js'
+import { addressToHex } from '../../../../src/utils/address/addressToHex.js'
 import {
   ContractType,
   contractTypeUrlPrefix,
@@ -35,7 +35,7 @@ function freezeContract(): RawContract {
     parameter: {
       type_url: `${contractTypeUrlPrefix}FreezeBalanceV2Contract`,
       value: {
-        owner_address: toHex(account.address),
+        owner_address: addressToHex(account.address),
         frozen_balance: 1000000n,
       },
     },

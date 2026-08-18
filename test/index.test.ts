@@ -9,7 +9,7 @@ test('root barrel exposes public utils', () => {
   expect(mod.toBase58('412b5ad5c4795c026514f8317c7a215e218dccd6cf')).toBe(
     'TDvSsdrNM5eeXNL3czpa6AxLDHZA9nwe9K',
   )
-  expect(mod.toTronHex('TDvSsdrNM5eeXNL3czpa6AxLDHZA9nwe9K')).toBe(
+  expect(mod.addressToHex('TDvSsdrNM5eeXNL3czpa6AxLDHZA9nwe9K')).toBe(
     '412b5ad5c4795c026514f8317c7a215e218dccd6cf',
   )
   expect(mod.keccak256('0x')).toBe(

@@ -11,7 +11,10 @@ import {
 } from '../../types/account.js'
 import type { Address } from '../../types/address.js'
 import type { Hex } from '../../types/misc.js'
-import { type ToHexErrorType, toHex } from '../../utils/address/toHex.js'
+import {
+  type AddressToHexErrorType,
+  addressToHex,
+} from '../../utils/address/addressToHex.js'
 import {
   ContractType,
   contractTypeUrlPrefix,
@@ -69,7 +72,7 @@ export type VoteWitnessErrorType =
   | AccountNotFoundErrorType
   | BuildAndBroadcastErrorType
   | ParseAccountErrorType
-  | ToHexErrorType
+  | AddressToHexErrorType
   | ErrorType
 
 export type BuildVoteWitnessParameters = VoteWitnessParameters & {
@@ -82,7 +85,7 @@ export type BuildVoteWitnessErrorType =
   | AccountNotFoundErrorType
   | BuildTransactionErrorType
   | ParseAccountErrorType
-  | ToHexErrorType
+  | AddressToHexErrorType
   | ErrorType
 
 /** The signing account plus the assembled `VoteWitnessContract`. */
@@ -99,9 +102,9 @@ function assemble(
 
   // Build the VoteWitnessContract (addresses enter the body as 41-hex).
   const value: VoteWitnessContract = {
-    owner_address: toHex(account.address),
+    owner_address: addressToHex(account.address),
     votes: votes.map((vote) => ({
-      vote_address: toHex(vote.voteAddress),
+      vote_address: addressToHex(vote.voteAddress),
       vote_count: vote.voteCount,
     })),
   }

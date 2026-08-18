@@ -5,7 +5,7 @@ import { createPublicClient } from '../../../src/clients/createPublicClient.js'
 import { createWalletClient } from '../../../src/clients/createWalletClient.js'
 import { AccountNotFoundError } from '../../../src/errors/rpc.js'
 import type { Hex } from '../../../src/types/misc.js'
-import { toHex } from '../../../src/utils/address/toHex.js'
+import { addressToHex } from '../../../src/utils/address/addressToHex.js'
 import { decodeRawData } from '../../../src/utils/transaction/decodeRawData.js'
 import { rpc } from '../../fixtures/rpc/loader.js'
 import { loadTxFixtureFile, type TxFixture } from '../../fixtures/tx/loader.js'
@@ -72,7 +72,7 @@ test('deploys byte-for-byte against the gold vector + backfills the address', as
 
   // The deployed address is derived deterministically from txID + owner and
   // returned as Base58Check; converting it back to TRON hex matches the pin.
-  expect(toHex(contractAddress)).toBe(basic?.contractAddress)
+  expect(addressToHex(contractAddress)).toBe(basic?.contractAddress)
 })
 
 test('carries call_token_value + token_id byte-for-byte', async () => {
@@ -96,7 +96,7 @@ test('carries call_token_value + token_id byte-for-byte', async () => {
     (parseBroadcast(bodyOf('broadcasttransaction')) as { raw_data_hex: string })
       .raw_data_hex,
   ).toBe(withToken?.rawDataHex)
-  expect(toHex(contractAddress)).toBe(withToken?.contractAddress)
+  expect(addressToHex(contractAddress)).toBe(withToken?.contractAddress)
 })
 
 // A bare deployment defaults the two on-chain economics fields to the

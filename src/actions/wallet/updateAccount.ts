@@ -10,7 +10,10 @@ import {
   parseAccount,
 } from '../../types/account.js'
 import type { Hex } from '../../types/misc.js'
-import { type ToHexErrorType, toHex } from '../../utils/address/toHex.js'
+import {
+  type AddressToHexErrorType,
+  addressToHex,
+} from '../../utils/address/addressToHex.js'
 import {
   type FlexErrorType,
   flexToHex,
@@ -65,7 +68,7 @@ export type UpdateAccountErrorType =
   | BuildAndBroadcastErrorType
   | FlexErrorType
   | ParseAccountErrorType
-  | ToHexErrorType
+  | AddressToHexErrorType
   | ErrorType
 
 export type BuildUpdateAccountParameters = UpdateAccountParameters & {
@@ -79,7 +82,7 @@ export type BuildUpdateAccountErrorType =
   | BuildTransactionErrorType
   | FlexErrorType
   | ParseAccountErrorType
-  | ToHexErrorType
+  | AddressToHexErrorType
   | ErrorType
 
 /** The signing account plus the assembled `AccountUpdateContract`. */
@@ -96,7 +99,7 @@ function assemble(
 
   const value: AccountUpdateContract = {
     account_name: flexToHex(accountName),
-    owner_address: toHex(account.address),
+    owner_address: addressToHex(account.address),
   }
 
   const contract: RawContract = {

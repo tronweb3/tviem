@@ -268,9 +268,11 @@ describe('triggerConstantContract', () => {
       functionName: 'transfer',
       args: [holder, 1n],
     })
-    const { toHex } = await import('../../../src/utils/address/toHex.js')
+    const { addressToHex } = await import(
+      '../../../src/utils/address/addressToHex.js'
+    )
     expect((calls[0]?.body as { owner_address: string }).owner_address).toBe(
-      toHex(account.address),
+      addressToHex(account.address),
     )
   })
 

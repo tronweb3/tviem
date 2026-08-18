@@ -11,7 +11,10 @@ import {
 } from '../../types/account.js'
 import type { Address } from '../../types/address.js'
 import type { Hex } from '../../types/misc.js'
-import { type ToHexErrorType, toHex } from '../../utils/address/toHex.js'
+import {
+  type AddressToHexErrorType,
+  addressToHex,
+} from '../../utils/address/addressToHex.js'
 import {
   ContractType,
   contractTypeUrlPrefix,
@@ -69,7 +72,7 @@ export type UnfreezeBalanceErrorType =
   | BuildAndBroadcastErrorType
   | ParseAccountErrorType
   | ResourceCodeOfErrorType
-  | ToHexErrorType
+  | AddressToHexErrorType
   | ErrorType
 
 export type BuildUnfreezeBalanceParameters = UnfreezeBalanceParameters & {
@@ -83,7 +86,7 @@ export type BuildUnfreezeBalanceErrorType =
   | BuildTransactionErrorType
   | ParseAccountErrorType
   | ResourceCodeOfErrorType
-  | ToHexErrorType
+  | AddressToHexErrorType
   | ErrorType
 
 /** The signing account plus the assembled `UnfreezeBalanceContract`. */
@@ -99,11 +102,11 @@ function assemble(
   const account = parseAccount(source)
 
   const value: UnfreezeBalanceContract = {
-    owner_address: toHex(account.address),
+    owner_address: addressToHex(account.address),
     resource: resourceCodeOf(resource),
   }
   if (receiverAddress !== undefined)
-    value.receiver_address = toHex(receiverAddress)
+    value.receiver_address = addressToHex(receiverAddress)
 
   const contract: RawContract = {
     type: ContractType.UnfreezeBalanceContract,

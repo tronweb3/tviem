@@ -14,6 +14,7 @@ import type {
   TronRequestFn,
 } from '../src/index.js'
 import {
+  addressToHex,
   createPublicClient,
   http,
   isAddress,
@@ -22,7 +23,6 @@ import {
   parseTrx,
   toBase58,
   toEvm,
-  toTronHex,
 } from '../src/index.js'
 
 test('branded address types', () => {
@@ -38,7 +38,7 @@ test('address utils return branded forms', () => {
     toBase58('412b5ad5c4795c026514f8317c7a215e218dccd6cf'),
   ).toEqualTypeOf<Address>()
   expectTypeOf(
-    toTronHex('TDvSsdrNM5eeXNL3czpa6AxLDHZA9nwe9K'),
+    addressToHex('TDvSsdrNM5eeXNL3czpa6AxLDHZA9nwe9K'),
   ).toEqualTypeOf<TronHexAddress>()
   expectTypeOf(
     toEvm('TDvSsdrNM5eeXNL3czpa6AxLDHZA9nwe9K'),

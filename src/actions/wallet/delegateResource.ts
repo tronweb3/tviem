@@ -11,7 +11,10 @@ import {
 } from '../../types/account.js'
 import type { Address } from '../../types/address.js'
 import type { Hex } from '../../types/misc.js'
-import { type ToHexErrorType, toHex } from '../../utils/address/toHex.js'
+import {
+  type AddressToHexErrorType,
+  addressToHex,
+} from '../../utils/address/addressToHex.js'
 import {
   ContractType,
   contractTypeUrlPrefix,
@@ -77,7 +80,7 @@ export type DelegateResourceErrorType =
   | BuildAndBroadcastErrorType
   | ParseAccountErrorType
   | ResourceCodeOfErrorType
-  | ToHexErrorType
+  | AddressToHexErrorType
   | ErrorType
 
 export type BuildDelegateResourceParameters = DelegateResourceParameters & {
@@ -94,7 +97,7 @@ export type BuildDelegateResourceErrorType =
   | BuildTransactionErrorType
   | ParseAccountErrorType
   | ResourceCodeOfErrorType
-  | ToHexErrorType
+  | AddressToHexErrorType
   | ErrorType
 
 /** The signing (delegator) account plus the assembled `DelegateResourceContract`. */
@@ -110,10 +113,10 @@ function assemble(
   const account = parseAccount(source)
 
   const value: DelegateResourceContract = {
-    owner_address: toHex(account.address),
+    owner_address: addressToHex(account.address),
     resource: resourceCodeOf(resource),
     balance,
-    receiver_address: toHex(receiverAddress),
+    receiver_address: addressToHex(receiverAddress),
   }
   if (lock !== undefined) value.lock = lock
   if (lockPeriod !== undefined) value.lock_period = lockPeriod

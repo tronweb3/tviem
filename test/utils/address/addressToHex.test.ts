@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest'
 
 import { InvalidAddressError } from '../../../src/errors/address.js'
-import { toHex } from '../../../src/utils/address/toHex.js'
+import { addressToHex } from '../../../src/utils/address/addressToHex.js'
 import { hexToBytes } from '../../../src/utils/encoding/toBytes.js'
 
 // §2.1 global test vectors (byte-compared against TronWeb).
@@ -23,22 +23,22 @@ const vectors = [
   },
 ] as const
 
-describe('toHex', () => {
+describe('addressToHex', () => {
   test.each(vectors)('converts every accepted form to $hex41', ({
     base58,
     hex41,
     evm0x,
   }) => {
-    expect(toHex(base58)).toBe(hex41)
-    expect(toHex(hex41)).toBe(hex41)
-    expect(toHex(`0x${hex41}`)).toBe(hex41)
-    expect(toHex(evm0x)).toBe(hex41)
-    expect(toHex(hexToBytes(`0x${hex41}`))).toBe(hex41)
-    expect(toHex(hexToBytes(evm0x))).toBe(hex41)
+    expect(addressToHex(base58)).toBe(hex41)
+    expect(addressToHex(hex41)).toBe(hex41)
+    expect(addressToHex(`0x${hex41}`)).toBe(hex41)
+    expect(addressToHex(evm0x)).toBe(hex41)
+    expect(addressToHex(hexToBytes(`0x${hex41}`))).toBe(hex41)
+    expect(addressToHex(hexToBytes(evm0x))).toBe(hex41)
   })
 
   test('outputs 42 lowercase hex characters, 41-prefixed, without 0x', () => {
-    const hex = toHex(vectors[0].base58)
+    const hex = addressToHex(vectors[0].base58)
     expect(hex).toHaveLength(42)
     expect(hex.startsWith('41')).toBe(true)
     expect(hex).toBe(hex.toLowerCase())
@@ -47,15 +47,17 @@ describe('toHex', () => {
 
   test('lowercases uppercase hex input (e.g. sliced out of raw_data_hex)', () => {
     expect(
-      toHex('417E5F4552091A69125D5DFCB7B8C2659029395BDF' as `41${string}`),
+      addressToHex(
+        '417E5F4552091A69125D5DFCB7B8C2659029395BDF' as `41${string}`,
+      ),
     ).toBe('417e5f4552091a69125d5dfcb7b8c2659029395bdf')
   })
 
   test('throws InvalidAddressError on invalid input', () => {
-    expect(() => toHex('TA5DvvvmYbS75o3DKtgy2ATAGVHhpFkRLX')).toThrow(
+    expect(() => addressToHex('TA5DvvvmYbS75o3DKtgy2ATAGVHhpFkRLX')).toThrow(
       InvalidAddressError,
     )
-    expect(() => toHex('T123')).toThrow(InvalidAddressError)
-    expect(() => toHex('' as `T${string}`)).toThrow(InvalidAddressError)
+    expect(() => addressToHex('T123')).toThrow(InvalidAddressError)
+    expect(() => addressToHex('' as `T${string}`)).toThrow(InvalidAddressError)
   })
 })

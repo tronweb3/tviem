@@ -34,7 +34,10 @@ import {
   type EncodeFunctionDataErrorType,
   encodeFunctionData,
 } from '../../utils/abi/encodeFunctionData.js'
-import { type ToHexErrorType, toHex } from '../../utils/address/toHex.js'
+import {
+  type AddressToHexErrorType,
+  addressToHex,
+} from '../../utils/address/addressToHex.js'
 import type { HexToStringErrorType } from '../../utils/encoding/fromHex.js'
 import { decodeRevert } from '../utils/decodeRevert.js'
 
@@ -134,7 +137,7 @@ export type TriggerConstantContractErrorType =
   | HexToStringErrorType
   | IntegerOutOfRangeErrorType
   | RequestErrorType
-  | ToHexErrorType
+  | AddressToHexErrorType
   | ErrorType
 
 /** Shape of a `triggerconstantcontract` response body. */
@@ -225,8 +228,8 @@ export async function triggerConstantContract<
     method: 'POST',
     path: 'triggerconstantcontract',
     body: {
-      owner_address: toHex(owner),
-      contract_address: toHex(address),
+      owner_address: addressToHex(owner),
+      contract_address: addressToHex(address),
       data: data.slice(2),
       ...(callValue !== undefined ? { call_value: Number(callValue) } : {}),
       ...(callTokenValue !== undefined

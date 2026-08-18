@@ -24,10 +24,13 @@ import {
   encodeDeployData,
 } from '../../utils/abi/encodeDeployData.js'
 import {
+  type AddressToHexErrorType,
+  addressToHex,
+} from '../../utils/address/addressToHex.js'
+import {
   type ToBase58ErrorType,
   toBase58,
 } from '../../utils/address/toBase58.js'
-import { type ToHexErrorType, toHex } from '../../utils/address/toHex.js'
 import {
   type GenContractAddressErrorType,
   genContractAddress,
@@ -192,7 +195,7 @@ export type DeployContractErrorType =
   | GenContractAddressErrorType
   | ParseAccountErrorType
   | ToBase58ErrorType
-  | ToHexErrorType
+  | AddressToHexErrorType
   | ErrorType
 
 export type BuildDeployContractParameters<
@@ -208,7 +211,7 @@ export type BuildDeployContractErrorType =
   | BuildTransactionErrorType
   | EncodeDeployDataErrorType
   | ParseAccountErrorType
-  | ToHexErrorType
+  | AddressToHexErrorType
   | ErrorType
 
 /** The signing account plus the assembled `CreateSmartContract` and fee limit. */
@@ -227,7 +230,7 @@ function assemble(
   const source = parameters.account ?? client.account
   if (!source) throw new AccountNotFoundError()
   const account = parseAccount(source)
-  const ownerAddress = toHex(account.address)
+  const ownerAddress = addressToHex(account.address)
 
   // A contract deployment needs an energy budget — default the fee limit like
   // writeContract so the natural no-feeLimit call is not rejected on-chain for
@@ -340,7 +343,7 @@ export async function deployContract<
   })
 
   const contractAddress = toBase58(
-    genContractAddress(txID, toHex(account.address)) as AddressInput,
+    genContractAddress(txID, addressToHex(account.address)) as AddressInput,
   )
   return { txID, contractAddress }
 }

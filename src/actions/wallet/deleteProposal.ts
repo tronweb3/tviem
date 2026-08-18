@@ -10,7 +10,10 @@ import {
   parseAccount,
 } from '../../types/account.js'
 import type { Hex } from '../../types/misc.js'
-import { type ToHexErrorType, toHex } from '../../utils/address/toHex.js'
+import {
+  type AddressToHexErrorType,
+  addressToHex,
+} from '../../utils/address/addressToHex.js'
 import {
   ContractType,
   contractTypeUrlPrefix,
@@ -60,7 +63,7 @@ export type DeleteProposalErrorType =
   | AccountNotFoundErrorType
   | BuildAndBroadcastErrorType
   | ParseAccountErrorType
-  | ToHexErrorType
+  | AddressToHexErrorType
   | ErrorType
 
 export type BuildDeleteProposalParameters = DeleteProposalParameters & {
@@ -73,7 +76,7 @@ export type BuildDeleteProposalErrorType =
   | AccountNotFoundErrorType
   | BuildTransactionErrorType
   | ParseAccountErrorType
-  | ToHexErrorType
+  | AddressToHexErrorType
   | ErrorType
 
 /** The signing account plus the assembled `ProposalDeleteContract`. */
@@ -89,7 +92,7 @@ function assemble(
   const account = parseAccount(source)
 
   const value: ProposalDeleteContract = {
-    owner_address: toHex(account.address),
+    owner_address: addressToHex(account.address),
     proposal_id: BigInt(proposalId),
   }
 

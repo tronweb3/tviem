@@ -10,7 +10,10 @@ import {
   parseAccount,
 } from '../../types/account.js'
 import type { Hex } from '../../types/misc.js'
-import { type ToHexErrorType, toHex } from '../../utils/address/toHex.js'
+import {
+  type AddressToHexErrorType,
+  addressToHex,
+} from '../../utils/address/addressToHex.js'
 import {
   ContractType,
   contractTypeUrlPrefix,
@@ -58,7 +61,7 @@ export type WithdrawBalanceErrorType =
   | AccountNotFoundErrorType
   | BuildAndBroadcastErrorType
   | ParseAccountErrorType
-  | ToHexErrorType
+  | AddressToHexErrorType
   | ErrorType
 
 export type BuildWithdrawBalanceParameters = WithdrawBalanceParameters & {
@@ -71,7 +74,7 @@ export type BuildWithdrawBalanceErrorType =
   | AccountNotFoundErrorType
   | BuildTransactionErrorType
   | ParseAccountErrorType
-  | ToHexErrorType
+  | AddressToHexErrorType
   | ErrorType
 
 /** The signing account plus the assembled `WithdrawBalanceContract`. */
@@ -85,7 +88,7 @@ function assemble(
   const account = parseAccount(source)
 
   const value: WithdrawBalanceContract = {
-    owner_address: toHex(account.address),
+    owner_address: addressToHex(account.address),
   }
 
   const contract: RawContract = {

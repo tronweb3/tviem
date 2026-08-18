@@ -25,7 +25,10 @@ import {
   type EncodeFunctionDataErrorType,
   encodeFunctionData,
 } from '../../utils/abi/encodeFunctionData.js'
-import { type ToHexErrorType, toHex } from '../../utils/address/toHex.js'
+import {
+  type AddressToHexErrorType,
+  addressToHex,
+} from '../../utils/address/addressToHex.js'
 import type { HexToStringErrorType } from '../../utils/encoding/fromHex.js'
 import { decodeRevert } from '../utils/decodeRevert.js'
 
@@ -114,7 +117,7 @@ export type ReadContractErrorType =
   | EncodeFunctionDataErrorType
   | HexToStringErrorType
   | RequestErrorType
-  | ToHexErrorType
+  | AddressToHexErrorType
   | ErrorType
 
 /** Shape of a `triggerconstantcontract` response body. */
@@ -181,8 +184,8 @@ export async function readContract<
     method: 'POST',
     path: 'triggerconstantcontract',
     body: {
-      owner_address: toHex(owner),
-      contract_address: toHex(address),
+      owner_address: addressToHex(owner),
+      contract_address: addressToHex(address),
       data: data.slice(2),
     },
   })

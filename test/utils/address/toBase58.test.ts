@@ -1,9 +1,9 @@
 import { describe, expect, test } from 'vitest'
 
 import { InvalidAddressError } from '../../../src/errors/address.js'
+import { addressToHex } from '../../../src/utils/address/addressToHex.js'
 import { hexToBase58, toBase58 } from '../../../src/utils/address/toBase58.js'
 import { toEvm } from '../../../src/utils/address/toEvm.js'
-import { toHex } from '../../../src/utils/address/toHex.js'
 import { hexToBytes } from '../../../src/utils/encoding/toBytes.js'
 
 // §2.1 global test vectors (byte-compared against TronWeb).
@@ -51,10 +51,10 @@ describe('toBase58', () => {
     expect(toBase58(hexToBytes(evm0x))).toBe(base58)
   })
 
-  test.each(vectors)('round-trips toBase58(toHex(toEvm($base58)))', ({
+  test.each(vectors)('round-trips toBase58(addressToHex(toEvm($base58)))', ({
     base58,
   }) => {
-    expect(toBase58(toHex(toEvm(base58)))).toBe(base58)
+    expect(toBase58(addressToHex(toEvm(base58)))).toBe(base58)
   })
 
   test('round-trips 200 random 20-byte payloads across all three forms', () => {
@@ -63,8 +63,8 @@ describe('toBase58', () => {
       const payload = new Uint8Array(20)
       for (let j = 0; j < 20; j++) payload[j] = Math.floor(rand() * 256)
       const base58 = toBase58(payload)
-      expect(toBase58(toHex(toEvm(base58)))).toBe(base58)
-      expect(toBase58(toEvm(toHex(base58)))).toBe(base58)
+      expect(toBase58(addressToHex(toEvm(base58)))).toBe(base58)
+      expect(toBase58(toEvm(addressToHex(base58)))).toBe(base58)
     }
   })
 

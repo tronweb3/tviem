@@ -10,7 +10,10 @@ import {
   parseAccount,
 } from '../../types/account.js'
 import type { Hex } from '../../types/misc.js'
-import { type ToHexErrorType, toHex } from '../../utils/address/toHex.js'
+import {
+  type AddressToHexErrorType,
+  addressToHex,
+} from '../../utils/address/addressToHex.js'
 import {
   ContractType,
   contractTypeUrlPrefix,
@@ -65,7 +68,7 @@ export type VoteProposalErrorType =
   | AccountNotFoundErrorType
   | BuildAndBroadcastErrorType
   | ParseAccountErrorType
-  | ToHexErrorType
+  | AddressToHexErrorType
   | ErrorType
 
 export type BuildVoteProposalParameters = VoteProposalParameters & {
@@ -78,7 +81,7 @@ export type BuildVoteProposalErrorType =
   | AccountNotFoundErrorType
   | BuildTransactionErrorType
   | ParseAccountErrorType
-  | ToHexErrorType
+  | AddressToHexErrorType
   | ErrorType
 
 /**
@@ -98,7 +101,7 @@ function assemble(
   const account = parseAccount(source)
 
   const value: ProposalApproveContract = {
-    owner_address: toHex(account.address),
+    owner_address: addressToHex(account.address),
     proposal_id: BigInt(proposalId),
     is_add_approval: isApproval,
   }

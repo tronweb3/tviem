@@ -11,7 +11,10 @@ import {
 } from '../../types/account.js'
 import type { Address } from '../../types/address.js'
 import type { Hex } from '../../types/misc.js'
-import { type ToHexErrorType, toHex } from '../../utils/address/toHex.js'
+import {
+  type AddressToHexErrorType,
+  addressToHex,
+} from '../../utils/address/addressToHex.js'
 import {
   ContractType,
   contractTypeUrlPrefix,
@@ -62,7 +65,7 @@ export type SendTrxErrorType =
   | AccountNotFoundErrorType
   | BuildAndBroadcastErrorType
   | ParseAccountErrorType
-  | ToHexErrorType
+  | AddressToHexErrorType
   | ErrorType
 
 export type BuildSendTrxParameters = SendTrxParameters & {
@@ -78,7 +81,7 @@ export type BuildSendTrxErrorType =
   | AccountNotFoundErrorType
   | BuildTransactionErrorType
   | ParseAccountErrorType
-  | ToHexErrorType
+  | AddressToHexErrorType
   | ErrorType
 
 /** The signing account plus the assembled `TransferContract`. */
@@ -99,8 +102,8 @@ function assemble(
     parameter: {
       type_url: `${contractTypeUrlPrefix}TransferContract`,
       value: {
-        owner_address: toHex(account.address),
-        to_address: toHex(to),
+        owner_address: addressToHex(account.address),
+        to_address: addressToHex(to),
         amount,
       },
     },

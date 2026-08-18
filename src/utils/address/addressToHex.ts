@@ -7,7 +7,7 @@ import {
   normalizeAddress,
 } from './normalize.js'
 
-export type ToHexErrorType =
+export type AddressToHexErrorType =
   | NormalizeAddressErrorType
   | BytesToHexErrorType
   | ErrorType
@@ -21,9 +21,11 @@ export type ToHexErrorType =
  * Throws `InvalidAddressError` on invalid input.
  *
  * @example
- * toHex('T...')
+ * addressToHex('T...')
  * // '41...' — the same address in TRON hex form
  */
-export function toHex(address: AddressInput | ByteArray): TronHexAddress {
+export function addressToHex(
+  address: AddressInput | ByteArray,
+): TronHexAddress {
   return bytesToHex(normalizeAddress(address)).slice(2) as TronHexAddress
 }

@@ -6,7 +6,10 @@ import {
 } from '../../errors/encoding.js'
 import type { ErrorType } from '../../errors/utils.js'
 import type { Address } from '../../types/address.js'
-import { type ToHexErrorType, toHex } from '../../utils/address/toHex.js'
+import {
+  type AddressToHexErrorType,
+  addressToHex,
+} from '../../utils/address/addressToHex.js'
 
 export type GetBalanceParameters = {
   /** The Base58Check address to read the TRX balance of. */
@@ -23,7 +26,7 @@ export type GetBalanceReturnType = bigint
 export type GetBalanceErrorType =
   | IntegerOutOfRangeErrorType
   | RequestErrorType
-  | ToHexErrorType
+  | AddressToHexErrorType
   | ErrorType
 
 type GetAccountResponse = {
@@ -51,7 +54,7 @@ export async function getBalance(
     node: confirmed ? 'solidity' : 'full',
     path: 'getaccount',
     method: 'POST',
-    body: { address: toHex(address) },
+    body: { address: addressToHex(address) },
   })
   const balance = response?.balance ?? 0
   // The transport re-materializes unsafe integer literals as bigint where the

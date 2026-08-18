@@ -11,7 +11,10 @@ import {
 } from '../../types/account.js'
 import type { Address } from '../../types/address.js'
 import type { Hex } from '../../types/misc.js'
-import { type ToHexErrorType, toHex } from '../../utils/address/toHex.js'
+import {
+  type AddressToHexErrorType,
+  addressToHex,
+} from '../../utils/address/addressToHex.js'
 import {
   ContractType,
   contractTypeUrlPrefix,
@@ -63,7 +66,7 @@ export type UpdateSettingErrorType =
   | AccountNotFoundErrorType
   | BuildAndBroadcastErrorType
   | ParseAccountErrorType
-  | ToHexErrorType
+  | AddressToHexErrorType
   | ErrorType
 
 export type BuildUpdateSettingParameters = UpdateSettingParameters & {
@@ -76,7 +79,7 @@ export type BuildUpdateSettingErrorType =
   | AccountNotFoundErrorType
   | BuildTransactionErrorType
   | ParseAccountErrorType
-  | ToHexErrorType
+  | AddressToHexErrorType
   | ErrorType
 
 /** The signing account plus the assembled `UpdateSettingContract`. */
@@ -92,8 +95,8 @@ function assemble(
   const account = parseAccount(source)
 
   const value: UpdateSettingContract = {
-    owner_address: toHex(account.address),
-    contract_address: toHex(contractAddress),
+    owner_address: addressToHex(account.address),
+    contract_address: addressToHex(contractAddress),
     consume_user_resource_percent: consumeUserResourcePercent,
   }
 

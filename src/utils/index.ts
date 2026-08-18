@@ -89,6 +89,10 @@ export {
   prepareEncodeFunctionData,
 } from './abi/prepareEncodeFunctionData.js'
 export {
+  type AddressToHexErrorType,
+  addressToHex,
+} from './address/addressToHex.js'
+export {
   type DecodeBase58CheckErrorType,
   decodeBase58Check,
   type EncodeBase58CheckErrorType,
@@ -124,16 +128,7 @@ export {
   type ToBase58ErrorType,
   toBase58,
 } from './address/toBase58.js'
-export {
-  type AddressToHexErrorType,
-  addressToHex,
-  type ToEvmErrorType,
-  toEvm,
-} from './address/toEvm.js'
-export {
-  type ToHexErrorType as ToTronHexErrorType,
-  toHex as toTronHex,
-} from './address/toHex.js'
+export { type ToEvmErrorType, toEvm } from './address/toEvm.js'
 export {
   type ConcatBytesErrorType,
   type ConcatErrorType,

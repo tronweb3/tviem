@@ -11,7 +11,7 @@ import { BaseError, type BaseErrorType } from '../../errors/base.js'
 import type { ErrorType } from '../../errors/utils.js'
 import type { AddressInput } from '../../types/address.js'
 import type { Hex } from '../../types/misc.js'
-import { addressToHex } from '../address/toEvm.js'
+import { toEvm } from '../address/toEvm.js'
 import { concat } from '../data/concat.js'
 import { pad } from '../data/pad.js'
 import { toBytes } from '../encoding/toBytes.js'
@@ -106,8 +106,7 @@ function encodeField(types: TypedDataTypes, type: string, value: unknown): Hex {
   if (type === 'bytes') return keccak256(value as Hex)
   if (type === 'string') return keccak256(toBytes(value as string))
   if (type === 'bool') return pad(value ? '0x01' : '0x00')
-  if (type === 'address')
-    return pad(addressToHex(value as AddressInput), { size: 32 })
+  if (type === 'address') return pad(toEvm(value as AddressInput), { size: 32 })
   if (type.startsWith('bytes'))
     return pad(value as Hex, { dir: 'right', size: 32 })
   if (type.startsWith('uint') || type.startsWith('int') || type === 'trcToken')

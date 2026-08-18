@@ -10,7 +10,10 @@ import {
   parseAccount,
 } from '../../types/account.js'
 import type { Hex } from '../../types/misc.js'
-import { type ToHexErrorType, toHex } from '../../utils/address/toHex.js'
+import {
+  type AddressToHexErrorType,
+  addressToHex,
+} from '../../utils/address/addressToHex.js'
 import {
   ContractType,
   contractTypeUrlPrefix,
@@ -67,7 +70,7 @@ export type UnfreezeBalanceV2ErrorType =
   | BuildAndBroadcastErrorType
   | ParseAccountErrorType
   | ResourceCodeOfErrorType
-  | ToHexErrorType
+  | AddressToHexErrorType
   | ErrorType
 
 export type BuildUnfreezeBalanceV2Parameters = UnfreezeBalanceV2Parameters & {
@@ -81,7 +84,7 @@ export type BuildUnfreezeBalanceV2ErrorType =
   | BuildTransactionErrorType
   | ParseAccountErrorType
   | ResourceCodeOfErrorType
-  | ToHexErrorType
+  | AddressToHexErrorType
   | ErrorType
 
 /** The signing account plus the assembled `UnfreezeBalanceV2Contract`. */
@@ -101,7 +104,7 @@ function assemble(
     parameter: {
       type_url: `${contractTypeUrlPrefix}UnfreezeBalanceV2Contract`,
       value: {
-        owner_address: toHex(account.address),
+        owner_address: addressToHex(account.address),
         unfreeze_balance: unfreezeBalance,
         resource: resourceCodeOf(resource),
       },
