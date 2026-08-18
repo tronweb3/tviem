@@ -158,6 +158,23 @@ export async function buildTransaction(
       )
   }
 
+  // Reject a malformed permission id here, before any node call — the same
+  // guard `multiSignTransaction` applies. This is the canonical place to bind
+  // an id, so it must not be the looser of the two: a negative id encodes as a
+  // 10-byte two's-complement varint and decodes back past Number's precision,
+  // yielding a transaction that fails the SDK's own `txCheck`, and a
+  // non-integer escapes `BigInt()` as a raw RangeError from the writer.
+  // Nothing bounds the id from above: java-tron has no numeric maximum, only
+  // the requirement that the id resolve to a permission on the signing
+  // account, which cannot be checked offline.
+  if (
+    permissionId !== undefined &&
+    (!Number.isInteger(permissionId) || permissionId < 0)
+  )
+    throw new BaseError(
+      `Invalid multi-sig permission id: ${permissionId}. Expected a non-negative integer (an active permission's id is >= 2).`,
+    )
+
   // Bake the permission id into the contract before the id is derived, so the
   // built transaction is bound to that permission (matches signTransaction).
   const boundContract =
