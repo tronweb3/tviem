@@ -30,8 +30,10 @@ export type BuildAndBroadcastParameters = {
   feeLimit?: bigint | undefined
   /**
    * Optional memo written to `raw_data.data` (hex or raw bytes). Enters the
-   * signed bytes; the chain charges a memo fee (`getMemoFee`, 1 TRX). Empty
-   * memos are rejected in `buildTransaction`.
+   * signed bytes; the chain charges a memo fee (`getMemoFee`, 1 TRX).
+   *
+   * If provided, the memo must not be empty; empty memos are rejected in
+   * `buildTransaction`.
    */
   memo?: MemoInput | undefined
   /**
