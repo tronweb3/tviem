@@ -1,6 +1,11 @@
 import type { TronAccount } from '../../accounts/types.js'
 import type { Client } from '../../clients/createClient.js'
 import {
+  maxAccountIdLength,
+  minAccountIdLength,
+} from '../../constants/transaction.js'
+import { BaseError, type BaseErrorType } from '../../errors/base.js'
+import {
   AccountNotFoundError,
   type AccountNotFoundErrorType,
 } from '../../errors/rpc.js'
@@ -16,6 +21,7 @@ import {
 } from '../../utils/address/addressToHex.js'
 import {
   type FlexErrorType,
+  type FlexInput,
   flexToHex,
 } from '../../utils/transaction/normalize.js'
 import {
@@ -40,8 +46,11 @@ import {
 export type SetAccountIdParameters = {
   /** The signing account (falls back to `client.account`). */
   account?: TronAccount | Hex | undefined
-  /** Account id to set (hex string, `0x` prefix optional). */
-  accountId: string
+  /**
+   * Account id to set (`account_id`). Dual-form ("flex"): plain text/id
+   * (e.g. `'omniaaa'`) is UTF-8 encoded; a `0x`-prefixed value is hex.
+   */
+  accountId: FlexInput
   /**
    * A pre-derived TaPoS + timing header. When supplied the transaction is built
    * fully offline against it; otherwise it is derived from the latest block.
@@ -65,6 +74,7 @@ export type SetAccountIdReturnType = BuildAndBroadcastReturnType
 
 export type SetAccountIdErrorType =
   | AccountNotFoundErrorType
+  | BaseErrorType
   | BuildAndBroadcastErrorType
   | FlexErrorType
   | ParseAccountErrorType
@@ -79,6 +89,7 @@ export type BuildSetAccountIdReturnType = BuildTransactionReturnType
 
 export type BuildSetAccountIdErrorType =
   | AccountNotFoundErrorType
+  | BaseErrorType
   | BuildTransactionErrorType
   | FlexErrorType
   | ParseAccountErrorType
@@ -97,8 +108,20 @@ function assemble(
   if (!source) throw new AccountNotFoundError()
   const account = parseAccount(source)
 
+  // Bound the id before it can be signed. java-tron checks the length in
+  // `SetAccountIdActuator.validate()`, and the id is write-once — a rejected
+  // attempt costs bandwidth, and there is no second chance to correct one that
+  // slips through. The bound is on the encoded BYTES: a flex id arrives as
+  // either text or hex, so the input string's own length says nothing.
+  const account_id = flexToHex(accountId)
+  const byteLength = account_id.length / 2
+  if (byteLength < minAccountIdLength || byteLength > maxAccountIdLength)
+    throw new BaseError(
+      `Invalid account id: ${byteLength} bytes. Expected ${minAccountIdLength} to ${maxAccountIdLength} bytes — java-tron rejects anything outside that range.`,
+    )
+
   const value: SetAccountIdContract = {
-    account_id: flexToHex(accountId),
+    account_id,
     owner_address: addressToHex(account.address),
   }
 

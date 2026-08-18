@@ -26,3 +26,19 @@ export const defaultConsumeUserResourcePercent = 100n
  * @remarks Consumed by `deployContract`; overridable per deployment.
  */
 export const defaultOriginEnergyLimit = 10_000_000n
+
+/**
+ * Inclusive byte-length bounds java-tron accepts for `account_id`
+ * (`TransactionUtil.MIN_ACCOUNT_ID_LEN` / `MAX_ACCOUNT_ID_LEN`): an id of 8
+ * bytes passes, 7 does not; 32 passes, 33 does not. Measured on the encoded
+ * bytes, never on the input string — the same id is 8 bytes as text and 16
+ * characters as hex.
+ *
+ * The bound is checked in `SetAccountIdActuator.validate()`, so it is a
+ * consensus rule rather than a node policy, and it is not stated in any
+ * public TRON documentation.
+ *
+ * @remarks Consumed by `setAccountId`.
+ */
+export const minAccountIdLength = 8
+export const maxAccountIdLength = 32
