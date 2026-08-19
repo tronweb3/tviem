@@ -35,10 +35,15 @@ test('POSTs the signed transaction JSON to broadcasttransaction and returns the 
   const response = await broadcastTransaction(client, { signedTransaction })
 
   // broadcasttransaction.ok echoes an all-zero txid; the local id wins. The
-  // node's other acknowledgement fields ride along.
+  // node's other acknowledgement fields ride along, and the broadcast
+  // transaction itself is returned.
   expect(response.txid).toBe(TX_ID)
   expect(response.txid).not.toBe(`0${'0'.repeat(63)}`)
-  expect(response).toEqual({ txid: TX_ID, result: true })
+  expect(response).toEqual({
+    txid: TX_ID,
+    result: true,
+    transaction: signedTransaction,
+  })
 
   expect(calls[0]?.node).toBe('full')
   expect(calls[0]?.path).toBe('broadcasttransaction')
@@ -66,7 +71,27 @@ test('passes the acknowledgement fields through (message hex-decoded), never the
     result: true,
     code: 'SUCCESS',
     message: 'broadcast ok',
+    transaction: signedTransaction,
   })
+})
+
+test('returns the snapshot it broadcast, not the caller object', async () => {
+  const { transport, bodyOf } = createMockTransport({
+    responses: {
+      broadcasttransaction: { response: rpc('broadcasttransaction.ok') },
+    },
+  })
+  const client = createClient({ transport })
+
+  // A caller object may carry extra properties; the returned transaction is
+  // the four-field snapshot that was integrity-checked and actually sent.
+  const decorated = { ...signedTransaction, visible: false }
+  const response = await broadcastTransaction(client, {
+    signedTransaction: decorated,
+  })
+  expect(response.transaction).toEqual(signedTransaction)
+  expect(response.transaction).not.toHaveProperty('visible')
+  expect(response.transaction).toEqual(bodyOf('broadcasttransaction'))
 })
 
 test('throws TronRpcError when the transaction carries no signature', async () => {

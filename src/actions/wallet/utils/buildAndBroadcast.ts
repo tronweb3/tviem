@@ -1,4 +1,7 @@
-import type { TronAccount } from '../../../accounts/types.js'
+import type {
+  SignableTransaction,
+  TronAccount,
+} from '../../../accounts/types.js'
 import type { SignTransactionErrorType } from '../../../accounts/utils/signTransaction.js'
 import type { Client } from '../../../clients/createClient.js'
 import type { ErrorType } from '../../../errors/utils.js'
@@ -51,6 +54,12 @@ export type BuildAndBroadcastReturnType = {
   code?: string | undefined
   /** The node's message, hex-decoded to UTF-8 when decodable. */
   message?: string | undefined
+  /**
+   * The signed transaction that was broadcast — the four-field snapshot
+   * (`txID`, `raw_data`, `raw_data_hex`, `signature`) that passed the
+   * integrity check and was sent as the request body.
+   */
+  transaction: SignableTransaction
 }
 
 export type BuildAndBroadcastErrorType =
@@ -71,8 +80,9 @@ export type BuildAndBroadcastErrorType =
  *
  * @param client The Client to use.
  * @param parameters The built contract, signing account, optional header/fee.
- * @returns `{ txID, result, code, message }` — the locally computed
- * transaction id plus the node's acknowledgement fields, when echoed.
+ * @returns `{ txID, result, code, message, transaction }` — the locally
+ * computed transaction id, the node's acknowledgement fields (when echoed)
+ * and the signed transaction that was broadcast.
  */
 export async function buildAndBroadcast(
   client: Client,
@@ -96,7 +106,8 @@ export async function buildAndBroadcast(
   // Broadcast; the local txID is authoritative. The acknowledgement's `txid`
   // is that same local id (broadcastTransaction never reads the node's echo),
   // so it is returned once, under the model's `txID` spelling; the node's
-  // other acknowledgement fields (`result`, `code`, `message`) ride along.
+  // other acknowledgement fields (`result`, `code`, `message`) ride along,
+  // as does the signed transaction that was broadcast.
   const { txid: _, ...acknowledgement } = await getAction(
     client,
     broadcastTransaction,

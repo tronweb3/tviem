@@ -47,13 +47,13 @@ test('runs getNowBlock → sign → broadcast and returns the local txID', async
   const client = createPublicClient({ transport })
   const account = parseAccount(pk1)
 
-  const { txID } = await buildAndBroadcast(client, {
+  const response = await buildAndBroadcast(client, {
     contract: freezeContract(),
     account,
   })
 
   // Byte-for-byte gold: the helper produces the same bytes as the action.
-  expect(txID).toBe(bandwidth?.txID)
+  expect(response.txID).toBe(bandwidth?.txID)
   expect(calls.map((c) => c.path)).toEqual([
     'getnowblock',
     'broadcasttransaction',
@@ -72,6 +72,9 @@ test('runs getNowBlock → sign → broadcast and returns the local txID', async
   expect(body.signature).toHaveLength(1)
   // No feeLimit is set on the raw_data model when none was supplied.
   expect(body.raw_data.fee_limit).toBeUndefined()
+
+  // The signed transaction that was broadcast rides along in the result.
+  expect(response.transaction).toEqual(body)
 })
 
 test('passes the broadcast acknowledgement through alongside the local txID', async () => {
@@ -97,14 +100,21 @@ test('passes the broadcast acknowledgement through alongside the local txID', as
     account,
   })
 
-  // All acknowledgement fields ride along (`message` hex-decoded); the id is
-  // returned once, under the model's `txID` spelling — the node's echoed
-  // all-zero `txid` never leaks.
+  // All acknowledgement fields ride along (`message` hex-decoded), as does
+  // the signed transaction that was broadcast; the id is returned once,
+  // under the model's `txID` spelling — the node's echoed all-zero `txid`
+  // never leaks.
   expect(response).toEqual({
     txID: bandwidth?.txID,
     result: true,
     code: 'SUCCESS',
     message: 'broadcast ok',
+    transaction: {
+      txID: bandwidth?.txID,
+      raw_data: expect.any(Object),
+      raw_data_hex: bandwidth?.rawDataHex,
+      signature: [expect.stringMatching(/^[0-9a-f]{130}$/)],
+    },
   })
   expect(response).not.toHaveProperty('txid')
 })

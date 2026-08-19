@@ -1,4 +1,5 @@
 import { expectTypeOf, test } from 'vitest'
+import type { SignableTransaction } from '../../src/accounts/types.js'
 import { getContract } from '../../src/actions/getContract.js'
 import type { Client } from '../../src/clients/createClient.js'
 import type { PublicClient } from '../../src/clients/createPublicClient.js'
@@ -81,7 +82,8 @@ test('write.<fn> / estimateEnergy.<fn> parameter inference (Wallet Client)', () 
   expectTypeOf(contract).not.toHaveProperty('read')
 
   // transfer: `(address, uint256)` → args `readonly [AddressInput, bigint | number]`,
-  // resolves to the local txID plus the broadcast acknowledgement fields.
+  // resolves to the local txID plus the broadcast acknowledgement fields and
+  // the broadcast transaction.
   expectTypeOf(contract.write.transfer)
     .parameter(0)
     .toEqualTypeOf<readonly [AddressInput, bigint | number]>()
@@ -90,6 +92,7 @@ test('write.<fn> / estimateEnergy.<fn> parameter inference (Wallet Client)', () 
     result?: boolean | undefined
     code?: string | undefined
     message?: string | undefined
+    transaction: SignableTransaction
   }>()
 
   // estimateEnergy.transfer: same args, resolves to `bigint`.

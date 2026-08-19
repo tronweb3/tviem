@@ -39,6 +39,12 @@ export type BroadcastTransactionReturnType = {
   code?: string | undefined
   /** The node's message, hex-decoded to UTF-8 when decodable. */
   message?: string | undefined
+  /**
+   * The signed transaction that was broadcast — the four-field snapshot
+   * (`txID`, `raw_data`, `raw_data_hex`, `signature`) that passed the
+   * integrity check and was sent as the request body.
+   */
+  transaction: SignableTransaction
 }
 
 /** The `broadcasttransaction` acknowledgement body. */
@@ -95,8 +101,9 @@ const expirationCodes = new Set(['TRANSACTION_EXPIRATION_ERROR', 'TAPOS_ERROR'])
  *
  * @param client The Client to use.
  * @param parameters The signed transaction to broadcast.
- * @returns `{ txid, result, code, message }` — the locally computed
- * transaction id plus the node's acknowledgement fields, when echoed.
+ * @returns `{ txid, result, code, message, transaction }` — the locally
+ * computed transaction id, the node's acknowledgement fields (when echoed)
+ * and the signed transaction that was broadcast.
  */
 export async function broadcastTransaction(
   client: Client,
@@ -180,5 +187,6 @@ export async function broadcastTransaction(
     ...(body.message !== undefined
       ? { message: decodeNodeMessage(body.message) }
       : {}),
+    transaction: signedTransaction,
   }
 }
