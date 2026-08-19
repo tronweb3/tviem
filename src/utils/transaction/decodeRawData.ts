@@ -70,7 +70,11 @@ function decodeContract(bytes: ByteArray): RawContract {
           ({ typeUrl, valueBytes } = decodeAny(field.value))
         break
       case 5:
-        if (field.wireType === 0) permissionId = Number(field.value)
+        // `Permission_id` is `int32`: low 32 bits, sign-extended, matching
+        // java-tron's parser. Reading the raw varint instead would render a
+        // negative id as a ~1.8e19 positive number.
+        if (field.wireType === 0)
+          permissionId = Number(BigInt.asIntN(32, field.value as bigint))
         break
       default:
         break

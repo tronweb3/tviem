@@ -208,11 +208,16 @@ export function decodeMessage(
       case 'i64':
         message[field.name] = int64ToJson(toInt64(wire.value as bigint))
         break
+      // `int32` (and `enum`, which is `int32` on the wire): keep the low 32
+      // bits, sign-extended. That is what java-tron's parser reads back from a
+      // wider varint, so a foreign transaction decodes to the value the chain
+      // acts on rather than the one its sender wrote. Identity for any value
+      // the encoder can produce, which is bounded to int32.
       case 'i32':
-        message[field.name] = Number(toInt64(wire.value as bigint))
+        message[field.name] = Number(BigInt.asIntN(32, wire.value as bigint))
         break
       case 'enum': {
-        const value = Number(toInt64(wire.value as bigint))
+        const value = Number(BigInt.asIntN(32, wire.value as bigint))
         message[field.name] = field.names[value] ?? value
         break
       }

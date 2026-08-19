@@ -172,3 +172,45 @@ test('an unknown wire field inside a contract body throws end-to-end', () => {
     'Unknown wire field 31 (wire type 0) in contract message.',
   )
 })
+
+test('int32 fields decode as java-tron reads them, not as the sender wrote them', () => {
+  // An AssetIssueContract whose trx_num (field 6, int32) carries a value the
+  // type cannot hold. Only a foreign transaction can look like this — this
+  // encoder bounds int32 fields — and java-tron's parser keeps the low 32
+  // bits, so 5_000_000_000 is the value 705_032_704 on chain.
+  const assetTypeUrl = 'type.googleapis.com/protocol.AssetIssueContract'
+  const body = concatBytes([
+    fBytes(1, hexToBytes(`0x${v1}`)),
+    fInt(6, 5_000_000_000n),
+  ])
+  const any = concatBytes([
+    fBytes(1, new TextEncoder().encode(assetTypeUrl)),
+    fBytes(2, body),
+  ])
+  const raw = concatBytes([
+    fMessage(11, concatBytes([fInt(1, 6), fBytes(2, any)]), {
+      emitDefault: true,
+    }),
+  ])
+
+  const value = decodeRawData(raw).contract[0]!.parameter.value as {
+    trx_num?: number
+  }
+  expect(value.trx_num).toBe(705_032_704)
+})
+
+test('a negative Permission_id decodes as int32, not as a huge positive', () => {
+  const any = concatBytes([
+    fBytes(1, new TextEncoder().encode(transferTypeUrl)),
+    fBytes(2, hexToBytes(transferBody)),
+  ])
+  // Permission_id (contract field 5, int32) as a 10-byte two's complement -1.
+  const raw = concatBytes([
+    fMessage(11, concatBytes([fInt(1, 1), fBytes(2, any), fInt(5, -1)]), {
+      emitDefault: true,
+    }),
+  ])
+
+  // Read as a raw unsigned varint this would surface as ~1.8e19.
+  expect(decodeRawData(raw).contract[0]!.Permission_id).toBe(-1)
+})
