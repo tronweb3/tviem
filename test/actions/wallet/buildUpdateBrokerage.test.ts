@@ -35,6 +35,24 @@ test('permissionId is baked in as Permission_id', async () => {
   expect(contract.Permission_id).toBe(2)
 })
 
+test('bounds brokerage to the integer percentage java-tron accepts', async () => {
+  const client = makeTviemClient()
+  const build = (brokerage: number) =>
+    client.buildUpdateBrokerage({ brokerage, blockHeader: tviemHeader })
+
+  // `UpdateBrokerageActuator.validate()` accepts [0, 100] inclusive.
+  await expect(build(0)).resolves.toBeDefined()
+  await expect(build(100)).resolves.toBeDefined()
+
+  await expect(build(-1)).rejects.toThrow(
+    'Invalid brokerage: -1. Expected an integer percentage in [0, 100]',
+  )
+  await expect(build(101)).rejects.toThrow('Invalid brokerage: 101')
+  // The field is int32: a fraction has no wire representation, and would
+  // otherwise surface as a raw RangeError from the protobuf writer.
+  await expect(build(20.5)).rejects.toThrow('Invalid brokerage: 20.5')
+})
+
 test('throws AccountNotFoundError when no account is available', async () => {
   const { transport } = createMockTransport({ responses: {} })
   const client = createPublicClient({ transport })

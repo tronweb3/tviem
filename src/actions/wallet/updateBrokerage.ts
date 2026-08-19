@@ -1,5 +1,6 @@
 import type { TronAccount } from '../../accounts/types.js'
 import type { Client } from '../../clients/createClient.js'
+import { BaseError, type BaseErrorType } from '../../errors/base.js'
 import {
   AccountNotFoundError,
   type AccountNotFoundErrorType,
@@ -61,6 +62,7 @@ export type UpdateBrokerageReturnType = BuildAndBroadcastReturnType
 
 export type UpdateBrokerageErrorType =
   | AccountNotFoundErrorType
+  | BaseErrorType
   | BuildAndBroadcastErrorType
   | ParseAccountErrorType
   | AddressToHexErrorType
@@ -74,6 +76,7 @@ export type BuildUpdateBrokerageReturnType = BuildTransactionReturnType
 
 export type BuildUpdateBrokerageErrorType =
   | AccountNotFoundErrorType
+  | BaseErrorType
   | BuildTransactionErrorType
   | ParseAccountErrorType
   | AddressToHexErrorType
@@ -90,6 +93,15 @@ function assemble(
   const source = parameters.account ?? client.account
   if (!source) throw new AccountNotFoundError()
   const account = parseAccount(source)
+
+  // `UpdateBrokerageActuator.validate()` rejects anything outside [0, 100]
+  // ("Invalid brokerage"); the field is `int32`, so a fraction has no wire
+  // representation and would otherwise escape `BigInt()` as a raw RangeError
+  // from the protobuf writer.
+  if (!Number.isInteger(brokerage) || brokerage < 0 || brokerage > 100)
+    throw new BaseError(
+      `Invalid brokerage: ${brokerage}. Expected an integer percentage in [0, 100].`,
+    )
 
   const value: UpdateBrokerageContract = {
     owner_address: addressToHex(account.address),
