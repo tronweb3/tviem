@@ -264,16 +264,6 @@ export {
   exchangeWithdraw,
 } from './wallet/exchangeWithdraw.js'
 export {
-  type BuildFreezeBalanceErrorType,
-  type BuildFreezeBalanceParameters,
-  type BuildFreezeBalanceReturnType,
-  buildFreezeBalance,
-  type FreezeBalanceErrorType,
-  type FreezeBalanceParameters,
-  type FreezeBalanceReturnType,
-  freezeBalance,
-} from './wallet/freezeBalance.js'
-export {
   type BuildFreezeBalanceV2ErrorType,
   type BuildFreezeBalanceV2Parameters,
   type BuildFreezeBalanceV2ReturnType,

@@ -123,14 +123,6 @@ import {
   exchangeWithdraw,
 } from '../../actions/wallet/exchangeWithdraw.js'
 import {
-  type BuildFreezeBalanceParameters,
-  type BuildFreezeBalanceReturnType,
-  buildFreezeBalance,
-  type FreezeBalanceParameters,
-  type FreezeBalanceReturnType,
-  freezeBalance,
-} from '../../actions/wallet/freezeBalance.js'
-import {
   type BuildFreezeBalanceV2Parameters,
   type BuildFreezeBalanceV2ReturnType,
   buildFreezeBalanceV2,
@@ -507,14 +499,6 @@ export type WalletActions = {
   buildSendTrc10: (
     parameters: BuildSendTrc10Parameters,
   ) => Promise<BuildSendTrc10ReturnType>
-  /** Stakes (freezes) TRX for bandwidth or energy (Stake 1.0). */
-  freezeBalance: (
-    parameters: FreezeBalanceParameters,
-  ) => Promise<FreezeBalanceReturnType>
-  /** Builds an unsigned Stake 1.0 freeze in TronWeb JSON shape (no sign/broadcast). */
-  buildFreezeBalance: (
-    parameters: BuildFreezeBalanceParameters,
-  ) => Promise<BuildFreezeBalanceReturnType>
   /** Unstakes (unfreezes) TRX previously frozen under Stake 1.0. */
   unfreezeBalance: (
     parameters: UnfreezeBalanceParameters,
@@ -935,18 +919,6 @@ export function walletActions(client: Client): WalletActions {
         client,
         buildSendTrc10,
         'buildSendTrc10',
-      )(requireAccount(client, parameters)),
-    freezeBalance: async (parameters) =>
-      getAction(
-        client,
-        freezeBalance,
-        'freezeBalance',
-      )(requireAccount(client, parameters)),
-    buildFreezeBalance: async (parameters) =>
-      getAction(
-        client,
-        buildFreezeBalance,
-        'buildFreezeBalance',
       )(requireAccount(client, parameters)),
     unfreezeBalance: async (parameters) =>
       getAction(

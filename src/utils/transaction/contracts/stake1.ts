@@ -13,7 +13,14 @@ import {
   type MessageSpec,
 } from './codec.js'
 
-/** `FreezeBalanceContract` (type 11, Stake 1.0) field schema. */
+/**
+ * `FreezeBalanceContract` (type 11, Stake 1.0) field schema. No action builds
+ * this type: nodes where `getUnfreezeDelayDays > 0` reject it ("freeze v2 is
+ * open, old freeze is closed") — currently every public network — and the
+ * parameter's proposal range [1, 365] cannot set it back to 0. The codec stays
+ * for decoding historical transactions, and for chains still at the fresh-
+ * deployment default of 0.
+ */
 const freezeBalanceContractSpec: MessageSpec = [
   { no: 1, name: 'owner_address', kind: 'address' },
   { no: 2, name: 'frozen_balance', kind: 'i64' },
