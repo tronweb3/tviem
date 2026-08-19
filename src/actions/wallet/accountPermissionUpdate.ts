@@ -46,8 +46,6 @@ export type AccountPermissionUpdateParameters = {
   witness?: Permission | undefined
   /** The new active permissions (each `type` is forced to `ACTIVE`). */
   actives?: Permission[] | undefined
-  /** Energy/bandwidth fee ceiling in SUN (`raw_data.fee_limit`). */
-  feeLimit?: bigint | undefined
   /**
    * A pre-derived TaPoS + timing header. When supplied the transaction is built
    * fully offline against it; otherwise it is derived from the latest block.
@@ -94,12 +92,8 @@ export type BuildAccountPermissionUpdateErrorType =
 function assemble(
   client: Client,
   parameters: AccountPermissionUpdateParameters,
-): {
-  account: TronAccount
-  contract: RawContract
-  feeLimit: bigint | undefined
-} {
-  const { owner, witness, actives, feeLimit } = parameters
+): { account: TronAccount; contract: RawContract } {
+  const { owner, witness, actives } = parameters
 
   // Resolve the owner/signing account (per-call, else hoisted on the Client).
   const source = parameters.account ?? client.account
@@ -126,7 +120,7 @@ function assemble(
     },
   }
 
-  return { account, contract, feeLimit }
+  return { account, contract }
 }
 
 /**
@@ -138,17 +132,16 @@ function assemble(
  * to fetch the latest block (TaPoS).
  *
  * @param client The Client to use.
- * @param parameters The new permission set, optional account/fee/permissionId/blockHeader.
+ * @param parameters The new permission set, optional account/permissionId/blockHeader.
  * @returns A TronWeb-shaped unsigned transaction ({@link BuildTransactionReturnType}).
  */
 export async function buildAccountPermissionUpdate(
   client: Client,
   parameters: BuildAccountPermissionUpdateParameters,
 ): Promise<BuildAccountPermissionUpdateReturnType> {
-  const { contract, feeLimit } = assemble(client, parameters)
+  const { contract } = assemble(client, parameters)
   return buildTransaction(client, {
     contract,
-    feeLimit,
     permissionId: parameters.permissionId,
     blockHeader: parameters.blockHeader,
     expirationMs: parameters.expirationMs,
@@ -166,7 +159,7 @@ export async function buildAccountPermissionUpdate(
  * `operations` bitmap of allowed contract types.
  *
  * @param client The Client to use.
- * @param parameters The new permission set, optional account/fee/blockHeader.
+ * @param parameters The new permission set, optional account/blockHeader.
  * @returns `{ txID, result, code, message }` — the locally computed
  * transaction id plus the node's acknowledgement fields, when echoed.
  */
@@ -174,11 +167,10 @@ export async function accountPermissionUpdate(
   client: Client,
   parameters: AccountPermissionUpdateParameters,
 ): Promise<AccountPermissionUpdateReturnType> {
-  const { account, contract, feeLimit } = assemble(client, parameters)
+  const { account, contract } = assemble(client, parameters)
   return buildAndBroadcast(client, {
     contract,
     account,
-    feeLimit,
     blockHeader: parameters.blockHeader,
     expirationMs: parameters.expirationMs,
     memo: parameters.memo,
