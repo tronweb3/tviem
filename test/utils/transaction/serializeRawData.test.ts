@@ -1,4 +1,5 @@
 import { expect, test } from 'vitest'
+import { IntegerOutOfRangeError } from '../../../src/errors/encoding.js'
 import { UnknownContractTypeError } from '../../../src/errors/transaction.js'
 import { decodeRawData } from '../../../src/utils/transaction/decodeRawData.js'
 import { getTransactionId } from '../../../src/utils/transaction/getTransactionId.js'
@@ -160,6 +161,83 @@ test('§2.3 canonical: Permission_id is contract field 5', () => {
     timestamp: 1700000000000n,
   }
   expect(toRawDataHex(rawData)).toBe(withPermission.rawDataHex)
+})
+
+test('int32 fields are bounded to int32; int64 fields are not', () => {
+  /** A `raw_data` whose AssetIssue `trx_num` (an int32 field) is `trxNum`. */
+  const assetIssue = (trxNum: number): RawData => ({
+    ref_block_bytes: '1234',
+    ref_block_hash: '0102030405060708',
+    expiration: 1700000060000n,
+    contract: [
+      {
+        type: ContractType.AssetIssueContract,
+        parameter: {
+          type_url: 'type.googleapis.com/protocol.AssetIssueContract',
+          value: {
+            owner_address: owner,
+            name: '746f6b656e',
+            total_supply: 1000n,
+            trx_num: trxNum,
+            num: 1,
+            start_time: 1700000000000n,
+            end_time: 1700086400000n,
+          },
+        },
+      },
+    ],
+    timestamp: 1700000000000n,
+  })
+
+  // Both ends of the declared type still encode.
+  expect(() => toRawDataHex(assetIssue(2147483647))).not.toThrow()
+  expect(() => toRawDataHex(assetIssue(-2147483648))).not.toThrow()
+
+  // Past them, refuse. java-tron would not read back what was signed: its JSON
+  // endpoint drops the contract outright, and on the byte-exact path
+  // `readInt32` keeps the low 32 bits — 5_000_000_000 becomes 705_032_704,
+  // still positive, so the actuator accepts a token priced 7x off intent.
+  expect(() => toRawDataHex(assetIssue(2147483648))).toThrow(
+    IntegerOutOfRangeError,
+  )
+  expect(() => toRawDataHex(assetIssue(5_000_000_000))).toThrow(
+    IntegerOutOfRangeError,
+  )
+  expect(() => toRawDataHex(assetIssue(-2147483649))).toThrow(
+    IntegerOutOfRangeError,
+  )
+
+  // The bound must not leak onto int64 fields: `total_supply` is int64 and a
+  // value far past int32 is perfectly legal there.
+  const bigSupply = assetIssue(1)
+  ;(
+    bigSupply.contract[0]!.parameter.value as { total_supply: bigint }
+  ).total_supply = 90_000_000_000_000_000n
+  expect(() => toRawDataHex(bigSupply)).not.toThrow()
+})
+
+test('Permission_id is bounded to int32', () => {
+  const withPermission = (id: number): RawData => ({
+    ref_block_bytes: '1234',
+    ref_block_hash: '0102030405060708',
+    expiration: 1700000060000n,
+    contract: [
+      {
+        type: ContractType.TransferContract,
+        parameter: {
+          type_url: 'type.googleapis.com/protocol.TransferContract',
+          value: { owner_address: owner, to_address: to, amount: 1000000n },
+        },
+        Permission_id: id,
+      },
+    ],
+    timestamp: 1700000000000n,
+  })
+
+  expect(() => toRawDataHex(withPermission(2147483647))).not.toThrow()
+  expect(() => toRawDataHex(withPermission(2147483648))).toThrow(
+    IntegerOutOfRangeError,
+  )
 })
 
 test('toRawDataHex is bare lowercase hex (no 0x)', () => {

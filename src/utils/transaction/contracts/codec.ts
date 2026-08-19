@@ -27,10 +27,12 @@ import {
 import {
   type FBoolErrorType,
   type FBytesErrorType,
+  type FInt32ErrorType,
   type FIntErrorType,
   fBool,
   fBytes,
   fInt,
+  fInt32,
   fMessage,
 } from '../protobuf/writer.js'
 import type { BytesInput, ContractAddressInput, Int64 } from '../types.js'
@@ -68,6 +70,7 @@ export type EncodeMessageErrorType =
   | NormalizeAddressErrorType
   | HexToBytesErrorType
   | FBytesErrorType
+  | FInt32ErrorType
   | FIntErrorType
   | FBoolErrorType
   | BaseErrorType
@@ -113,14 +116,16 @@ function encodeField(field: FieldSpec, value: unknown): ByteArray {
     case 'string':
       return fBytes(field.no, stringToBytes(value as string))
     case 'i64':
-    case 'i32':
       return fInt(field.no, int64InputToBigInt(value as Int64))
+    case 'i32':
+      return fInt32(field.no, int64InputToBigInt(value as Int64))
     case 'enum': {
-      if (typeof value !== 'string') return fInt(field.no, value as number)
+      // Enums are `int32` on the wire, so they carry the same bound.
+      if (typeof value !== 'string') return fInt32(field.no, value as number)
       const index = field.names.indexOf(value)
       if (index === -1)
         throw new BaseError(`Unknown ${field.name} enum name "${value}".`)
-      return fInt(field.no, index)
+      return fInt32(field.no, index)
     }
     case 'bool':
       return fBool(field.no, Boolean(value))

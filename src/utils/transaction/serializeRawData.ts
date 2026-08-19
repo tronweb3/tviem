@@ -16,10 +16,12 @@ import {
 import type { EncodeMessageErrorType } from './contracts/codec.js'
 import {
   type FBytesErrorType,
+  type FInt32ErrorType,
   type FIntErrorType,
   type FMessageErrorType,
   fBytes,
   fInt,
+  fInt32,
   fMessage,
 } from './protobuf/writer.js'
 import {
@@ -140,7 +142,10 @@ function serializeContract(contract: RawContract): ByteArray {
     fBytes(2, valueBytes),
   ])
   const parts = [fInt(1, typeInt), fBytes(2, any, { emitDefault: true })]
-  if (contract.Permission_id) parts.push(fInt(5, contract.Permission_id))
+  // `Permission_id` is `int32` (Tron.proto), and unlike the contract body it
+  // sits in `raw_data` itself — an over-wide value re-serializes differently
+  // node-side and dies as an opaque signature error rather than corrupting.
+  if (contract.Permission_id) parts.push(fInt32(5, contract.Permission_id))
   return concatBytes(parts)
 }
 
@@ -153,6 +158,7 @@ export type SerializeRawDataErrorType =
   // The registered codec's `encode` surface (address normalization included).
   | EncodeMessageErrorType
   | FBytesErrorType
+  | FInt32ErrorType
   | FIntErrorType
   | FMessageErrorType
   | HexToBytesErrorType

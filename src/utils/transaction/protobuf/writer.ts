@@ -27,6 +27,9 @@ export const maxFieldNumber = 536870911
 
 /** Minimum value of a two's-complement 64-bit signed integer (`-(2^63)`). */
 const minInt64 = -9223372036854775808n
+/** Bounds of a two's-complement 32-bit signed integer (protobuf `int32`). */
+const minInt32 = -2147483648n
+const maxInt32 = 2147483647n
 /** Offset used to encode negative `int64` values as two's complement. */
 const twoPow64 = 18446744073709551616n
 
@@ -120,6 +123,38 @@ export function fInt(fieldNo: number, value: bigint | number): ByteArray {
     })
   const unsigned = value_ < 0n ? value_ + twoPow64 : value_
   return concatBytes([tag(fieldNo, WireType.Varint), writeUvarint(unsigned)])
+}
+
+export type FInt32ErrorType = FIntErrorType
+
+/**
+ * Encodes an `int32` field — {@link fInt} bounded to the declared wire type.
+ *
+ * The encoding is identical (protobuf writes `int32` as a plain varint,
+ * negatives sign-extended to 64 bits); only the accepted range differs. The
+ * bound is not client-side strictness: java-tron never accepts a wider value
+ * as written. Its JSON endpoint refuses to parse one (`JsonFormat.parseInt32`
+ * throws, and `Util.packTransaction` then drops the whole contract), while on
+ * the byte-exact path `Transaction.parseFrom` truncates to the low 32 bits —
+ * and because the contract body rides inside an `Any`, whose `value` is a
+ * `bytes` field, that truncation happens at `any.unpack()` AFTER the signature
+ * is verified. The transaction commits a value the signer never wrote.
+ *
+ * @param fieldNo Field number.
+ * @param value Integer value (`-(2^31)` to `2^31 - 1`).
+ * @returns Encoded field bytes.
+ */
+export function fInt32(fieldNo: number, value: bigint | number): ByteArray {
+  const value_ = BigInt(value)
+  if (value_ < minInt32 || value_ > maxInt32)
+    throw new IntegerOutOfRangeError({
+      max: maxInt32.toString(),
+      min: minInt32.toString(),
+      signed: true,
+      size: 4,
+      value: value_.toString(),
+    })
+  return fInt(fieldNo, value_)
 }
 
 export type FBoolErrorType = TagErrorType | ErrorType
