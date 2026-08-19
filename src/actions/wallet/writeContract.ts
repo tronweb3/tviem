@@ -183,7 +183,7 @@ function assemble(
 
 /**
  * Builds an **unsigned** `TriggerSmartContract` transaction (§4.2) and returns
- * it in java-tron's HTTP JSON shape (TronWeb-compatible `{ visible, txID,
+ * it in java-tron's HTTP JSON shape (`{ visible, txID,
  * raw_data, raw_data_hex }`) — the build half of {@link writeContract}, without
  * signing or broadcasting. `feeLimit` still enters the signed hash (field 18)
  * and defaults to {@link defaultFeeLimit}. Pass `permissionId` to bind it to an
@@ -193,7 +193,7 @@ function assemble(
  * @param client The Client to use.
  * @param parameters Contract address / ABI / function / args / fee, optional
  * callValue/callTokenValue/tokenId/account/permissionId/blockHeader.
- * @returns A TronWeb-shaped unsigned transaction ({@link BuildTransactionReturnType}).
+ * @returns An unsigned transaction ({@link BuildTransactionReturnType}).
  */
 export async function buildWriteContract<
   const abi extends Abi | readonly unknown[],

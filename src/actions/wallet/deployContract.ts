@@ -287,7 +287,7 @@ function assemble(
 
 /**
  * Builds an **unsigned** `CreateSmartContract` transaction (§ type 30) and
- * returns it in java-tron's HTTP JSON shape (TronWeb-compatible `{ visible,
+ * returns it in java-tron's HTTP JSON shape (`{ visible,
  * txID, raw_data, raw_data_hex }`) — the build half of {@link deployContract},
  * without signing or broadcasting. The constructor `args` are ABI-encoded and
  * appended to `bytecode` (see {@link encodeDeployData}); pass `permissionId` to
@@ -300,7 +300,7 @@ function assemble(
  *
  * @param client The Client to use.
  * @param parameters ABI, bytecode, optional args/limits/permissionId/blockHeader.
- * @returns A TronWeb-shaped unsigned transaction ({@link BuildTransactionReturnType}).
+ * @returns An unsigned transaction ({@link BuildTransactionReturnType}).
  */
 export async function buildDeployContract<
   const abi extends Abi | readonly unknown[],

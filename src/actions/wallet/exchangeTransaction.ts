@@ -129,7 +129,7 @@ function assemble(
 
 /**
  * Builds an **unsigned** `ExchangeTransactionContract` transaction (§ type 44)
- * and returns it in java-tron's HTTP JSON shape (TronWeb-compatible `{ visible,
+ * and returns it in java-tron's HTTP JSON shape (`{ visible,
  * txID, raw_data, raw_data_hex }`) — the build half of
  * {@link exchangeTransaction}, without signing or broadcasting. Pass
  * `permissionId` to bind it to an active/owner permission. The node is used
@@ -137,7 +137,7 @@ function assemble(
  *
  * @param client The Client to use.
  * @param parameters Exchange id + token/quant/expected, optional account/permissionId/blockHeader.
- * @returns A TronWeb-shaped unsigned transaction ({@link BuildTransactionReturnType}).
+ * @returns An unsigned transaction ({@link BuildTransactionReturnType}).
  */
 export async function buildExchangeTransaction(
   client: Client,

@@ -114,14 +114,14 @@ function assemble(
 
 /**
  * Builds an **unsigned** `TransferContract` transaction (§4.1) and returns it in
- * java-tron's HTTP JSON shape (TronWeb-compatible `{ visible, txID, raw_data,
+ * java-tron's HTTP JSON shape (`{ visible, txID, raw_data,
  * raw_data_hex }`) — the build half of {@link sendTrx}, without signing or
  * broadcasting. Pass `permissionId` to bind it to an active/owner permission.
  * The node is used only to fetch the latest block (TaPoS).
  *
  * @param client The Client to use.
  * @param parameters Recipient, amount, optional memo/account/permissionId/blockHeader.
- * @returns A TronWeb-shaped unsigned transaction ({@link BuildTransactionReturnType}).
+ * @returns An unsigned transaction ({@link BuildTransactionReturnType}).
  */
 export async function buildSendTrx(
   client: Client,
