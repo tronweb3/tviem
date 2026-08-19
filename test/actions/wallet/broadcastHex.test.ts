@@ -7,6 +7,8 @@ import {
   TransactionExpiredError,
   TronRpcError,
 } from '../../../src/errors/rpc.js'
+import { hexToBytes } from '../../../src/utils/encoding/toBytes.js'
+import { sha256 } from '../../../src/utils/hash/sha256.js'
 import { toBroadcastHex } from '../../../src/utils/transaction/serializeTransaction.js'
 import { rpc } from '../../fixtures/rpc/loader.js'
 import { createMockTransport } from '../../mock/createMockTransport.js'
@@ -25,11 +27,27 @@ const BROADCAST_HEX = toBroadcastHex({
   signature: [SIG],
 })
 
+// The node's echo: broadcasthex acknowledgements carry the transaction the
+// node decoded from the relayed bytes, as a JSON string.
+const ECHOED_TX = `{"raw_data":{"ref_block_bytes":"1234"},"raw_data_hex":"${RAW_DATA_HEX}","txID":"${TX_ID}","signature":["${SIG}"]}`
+
+// Its parsed form — what broadcastHex returns.
+const ECHOED_TX_PARSED = {
+  raw_data: { ref_block_bytes: '1234' },
+  raw_data_hex: RAW_DATA_HEX,
+  txID: TX_ID,
+  signature: [SIG],
+}
+
 test('POSTs the exact hex to broadcasthex and returns the LOCAL txid', async () => {
   const { transport, calls, bodyOf } = createMockTransport({
     responses: {
       broadcasthex: {
-        response: { result: true, txid: `0${'0'.repeat(63)}` },
+        response: {
+          result: true,
+          txid: `0${'0'.repeat(63)}`,
+          transaction: ECHOED_TX,
+        },
       },
     },
   })
@@ -38,14 +56,15 @@ test('POSTs the exact hex to broadcasthex and returns the LOCAL txid', async () 
   const response = await broadcastHex(client, { transaction: BROADCAST_HEX })
 
   // The node echoes an all-zero txid; the locally computed sha256(raw_data)
-  // wins. The node's other acknowledgement fields ride along, and the relayed
-  // transaction hex is returned.
+  // wins. The node's other acknowledgement fields ride along, plus the
+  // relayed hex and the node's echoed transaction, parsed.
   expect(response.txid).toBe(TX_ID)
   expect(response.txid).not.toBe(`0${'0'.repeat(63)}`)
   expect(response).toEqual({
     txid: TX_ID,
     result: true,
-    transaction: BROADCAST_HEX,
+    transaction: ECHOED_TX_PARSED,
+    transactionHex: BROADCAST_HEX,
   })
 
   expect(calls[0]?.node).toBe('full')
@@ -66,9 +85,10 @@ test('normalizes a `0x`-prefixed upper-case input to the bare lowercase wire for
 
   expect(response.txid).toBe(TX_ID)
   expect(bodyOf('broadcasthex')).toEqual({ transaction: BROADCAST_HEX })
-  // The returned transaction is the normalized wire form actually relayed,
-  // not the caller's spelling.
-  expect(response.transaction).toBe(BROADCAST_HEX)
+  // The returned hex is the normalized wire form actually relayed, not the
+  // caller's spelling; no echoed transaction in this acknowledgement.
+  expect(response.transactionHex).toBe(BROADCAST_HEX)
+  expect(response.transaction).toBeUndefined()
 })
 
 test('passes the acknowledgement fields through (message hex-decoded), never the echoed txid', async () => {
@@ -81,6 +101,7 @@ test('passes the acknowledgement fields through (message hex-decoded), never the
           // "broadcast ok" — node message fields arrive hex-encoded.
           message: '62726f616463617374206f6b',
           txid: `0${'0'.repeat(63)}`,
+          transaction: ECHOED_TX,
         },
       },
     },
@@ -91,8 +112,47 @@ test('passes the acknowledgement fields through (message hex-decoded), never the
     result: true,
     code: 'SUCCESS',
     message: 'broadcast ok',
-    transaction: BROADCAST_HEX,
+    transaction: ECHOED_TX_PARSED,
+    transactionHex: BROADCAST_HEX,
   })
+})
+
+test('omits an echoed transaction that does not parse as JSON', async () => {
+  const { transport } = createMockTransport({
+    responses: {
+      broadcasthex: {
+        response: { result: true, transaction: 'not json {' },
+      },
+    },
+  })
+  const client = createClient({ transport })
+  const response = await broadcastHex(client, { transaction: BROADCAST_HEX })
+  // The echo is informational — a malformed one never fails the broadcast.
+  expect(response.txid).toBe(TX_ID)
+  expect(response.transaction).toBeUndefined()
+})
+
+test('relays bytes the model layer cannot represent untouched', async () => {
+  const { transport, bodyOf } = createMockTransport({
+    responses: { broadcasthex: { response: { result: true } } },
+  })
+  const client = createClient({ transport })
+
+  // raw_data carrying an unknown wire field (field 100, varint 1): no JSON
+  // model can represent it — exactly the payload broadcasthex exists for.
+  const foreignRawData = `${RAW_DATA_HEX}a00601`
+  const foreignHex = toBroadcastHex({
+    raw_data_hex: foreignRawData,
+    signature: [SIG],
+  })
+  const response = await broadcastHex(client, { transaction: foreignHex })
+
+  // Relayed untouched, txid still computed from the exact raw_data bytes.
+  expect(bodyOf('broadcasthex')).toEqual({ transaction: foreignHex })
+  expect(response.txid).toBe(
+    sha256(hexToBytes(`0x${foreignRawData}`), 'hex').slice(2),
+  )
+  expect(response.transactionHex).toBe(foreignHex)
 })
 
 test('throws TronRpcError when the hex carries no signature', async () => {

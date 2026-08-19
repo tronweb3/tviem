@@ -1,6 +1,7 @@
 import type { Client } from '../../clients/createClient.js'
 import {
   decodeNodeMessage,
+  parseNodeJson,
   type RequestErrorType,
 } from '../../clients/transports/http.js'
 import { BaseError } from '../../errors/base.js'
@@ -49,11 +50,21 @@ export type BroadcastHexReturnType = {
   /** The node's message, hex-decoded to UTF-8 when decodable. */
   message?: string | undefined
   /**
+   * The node's echo of the relayed transaction: the acknowledgement's
+   * `transaction` field — the transaction the node decoded from the bytes,
+   * a JSON string — parsed ({@link parseNodeJson}, so unsafe int64 literals
+   * survive as `bigint`). Omitted when not echoed or not parseable.
+   * Informational only: like `result`/`code`/`message` it is the node's own
+   * reading, never verified locally (the returned `txid` never comes from
+   * it).
+   */
+  transaction?: unknown | undefined
+  /**
    * The signed `Transaction` protobuf hex that was relayed, in the canonical
    * wire spelling (bare lowercase) — the exact request body, whatever
    * spelling the caller supplied.
    */
-  transaction: string
+  transactionHex: string
 }
 
 /** The `broadcasthex` acknowledgement body. */
@@ -62,6 +73,7 @@ type RawBroadcastResponse = {
   txid?: string | undefined
   code?: string | undefined
   message?: string | undefined
+  transaction?: string | undefined
 }
 
 export type BroadcastHexErrorType =
@@ -96,10 +108,12 @@ const expirationCodes = new Set(['TRANSACTION_EXPIRATION_ERROR', 'TAPOS_ERROR'])
  * be present — an unsigned or frameless payload is refused locally. The
  * returned `txid` is computed locally as `sha256(raw_data)` from those exact
  * bytes (bare lowercase hex); the node's echoed `txid` is deliberately not
- * read, while the rest of the acknowledgement (`result`, `code`, `message`) is
- * passed through — `message` hex-decoded to UTF-8 like the error paths. No
- * further model-level checks run: the relayed bytes are the signed bytes by
- * construction, so there is no model/byte drift for a `txCheck` to catch.
+ * read, while the rest of the acknowledgement (`result`, `code`, `message`,
+ * and the node-decoded `transaction`) is passed through — `message`
+ * hex-decoded to UTF-8 like the error paths, `transaction` parsed from the
+ * node's JSON string ({@link parseNodeJson}). No further model-level checks
+ * run: the relayed bytes are the signed bytes by construction, so there is
+ * no model/byte drift for a `txCheck` to catch.
  *
  * The transport's error normalization already throws for the documented
  * rejection bodies (`{ result: false, code }` → `TronBroadcastError`, etc.); a
@@ -111,9 +125,10 @@ const expirationCodes = new Set(['TRANSACTION_EXPIRATION_ERROR', 'TAPOS_ERROR'])
  *
  * @param client The Client to use.
  * @param parameters The signed transaction hex to broadcast.
- * @returns `{ txid, result, code, message, transaction }` — the locally
- * computed transaction id, the node's acknowledgement fields (when echoed)
- * and the relayed transaction hex in its canonical wire spelling.
+ * @returns `{ txid, result, code, message, transaction, transactionHex }` —
+ * the locally computed transaction id, the node's acknowledgement fields
+ * (when echoed, `transaction` being the node-decoded transaction, parsed)
+ * and the relayed hex in its canonical wire spelling.
  */
 export async function broadcastHex(
   client: Client,
@@ -207,8 +222,18 @@ export async function broadcastHex(
       metaMessages: ['Path: broadcasthex'],
     })
 
+  // The echoed transaction is a JSON string; parse it with the node-JSON
+  // parser so int64 fields survive losslessly. Informational only — a
+  // missing or malformed echo never fails a broadcast the node accepted.
+  let echoed: unknown
+  try {
+    if (typeof body.transaction === 'string')
+      echoed = parseNodeJson(body.transaction)
+  } catch {}
+
   // The node's remaining acknowledgement fields ride along (`message`
-  // hex-decoded); its echoed `txid` is deliberately not read.
+  // hex-decoded, the echoed `transaction` parsed); its echoed `txid` is
+  // deliberately not read.
   return {
     txid,
     result: body.result,
@@ -216,6 +241,7 @@ export async function broadcastHex(
     ...(body.message !== undefined
       ? { message: decodeNodeMessage(body.message) }
       : {}),
-    transaction,
+    ...(echoed !== undefined ? { transaction: echoed } : {}),
+    transactionHex: transaction,
   }
 }
