@@ -31,11 +31,10 @@ import {
 /**
  * A fully-specified TaPoS + timing header — a `raw_data` fragment, so its
  * keys are the raw_data keys (TronWeb's `blockHeader` option is the same
- * shape). When all four fields are supplied to {@link buildTransaction} they
- * are used verbatim and the latest block is NOT fetched — mirrors TronWeb's
- * `checkBlockHeader`, which only treats a header as an override when it is
- * complete. Lets a caller build (and diff) transactions fully offline
- * against a pinned block.
+ * shape). When supplied to {@link buildTransaction} it is used in place of
+ * the latest block: the values are format-checked and written verbatim.
+ * Lets a caller build (and diff) transactions fully offline against a
+ * pinned block.
  */
 export type TransactionHeader = {
   /** Low 2 bytes of the block number (bare hex). */
@@ -187,9 +186,34 @@ export async function buildTransaction(
   if (feeLimit !== undefined) rawData = { ...rawData, fee_limit: feeLimit }
   if (data !== undefined) rawData = { ...rawData, data }
 
-  // Timing + TaPoS: a complete custom header is used verbatim (no node call);
+  // Timing + TaPoS: a custom header is used verbatim (no node call);
   // otherwise derive them from the latest block's own timestamp.
   if (blockHeader) {
+    // Hold the override to the same postcondition the derived path meets:
+    // sized TaPoS fields and positive timing, before anything can be signed.
+    const { ref_block_bytes, ref_block_hash, expiration, timestamp } =
+      blockHeader
+    if (!/^[0-9a-fA-F]{4}$/.test(ref_block_bytes))
+      throw new BaseError(
+        `Invalid blockHeader.ref_block_bytes: expected 2 bytes of bare hex, got "${ref_block_bytes}".`,
+      )
+    if (!/^[0-9a-fA-F]{16}$/.test(ref_block_hash))
+      throw new BaseError(
+        `Invalid blockHeader.ref_block_hash: expected 8 bytes of bare hex, got "${ref_block_hash}".`,
+      )
+    for (const [name, value] of [
+      ['timestamp', timestamp],
+      ['expiration', expiration],
+    ] as const) {
+      if (typeof value === 'number' && !Number.isInteger(value))
+        throw new BaseError(
+          `Invalid blockHeader.${name}: ${value}. Expected an integer timestamp in ms.`,
+        )
+      if (BigInt(value) <= 0n)
+        throw new BaseError(
+          `Invalid blockHeader.${name}: ${value}. Expected a positive timestamp in ms.`,
+        )
+    }
     rawData = { ...rawData, ...blockHeader }
   } else {
     // Explicitly the chain head, never solidified state: `expiration` is

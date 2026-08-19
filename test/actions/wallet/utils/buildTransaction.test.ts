@@ -1,5 +1,8 @@
 import { expect, test } from 'vitest'
-import { buildTransaction } from '../../../../src/actions/wallet/utils/buildTransaction.js'
+import {
+  buildTransaction,
+  type TransactionHeader,
+} from '../../../../src/actions/wallet/utils/buildTransaction.js'
 import { createPublicClient } from '../../../../src/clients/createPublicClient.js'
 import { parseAccount } from '../../../../src/types/account.js'
 import { addressToHex } from '../../../../src/utils/address/addressToHex.js'
@@ -87,6 +90,45 @@ test('rejects the permission id before any node call', async () => {
     buildTransaction(client, { contract: freezeContract(), permissionId: -1 }),
   ).rejects.toThrow('Invalid multi-sig permission id')
   expect(calls).toHaveLength(0)
+})
+
+test('format-checks a blockHeader override before signing', async () => {
+  const { transport, calls } = buildMock()
+  const client = createPublicClient({ transport })
+  const good = {
+    ref_block_bytes: '1234',
+    ref_block_hash: '0102030405060708',
+    expiration: 1700000060000n,
+    timestamp: 1700000000000n,
+  }
+  const build = (blockHeader: TransactionHeader) =>
+    buildTransaction(client, { contract: freezeContract(), blockHeader })
+
+  await expect(build(good)).resolves.toBeDefined()
+
+  // A zero expiration would serialize to no field at all — a signable
+  // transaction that never expires client-side and is only refused by the
+  // node at broadcast.
+  await expect(build({ ...good, expiration: 0 })).rejects.toThrow(
+    'Invalid blockHeader.expiration',
+  )
+  await expect(build({ ...good, timestamp: 1.5 })).rejects.toThrow(
+    'Invalid blockHeader.timestamp',
+  )
+  // Sized fields: an odd nibble count would otherwise be left-padded into
+  // different TaPoS bytes, and an empty value dropped from the wire.
+  await expect(build({ ...good, ref_block_bytes: '123' })).rejects.toThrow(
+    'Invalid blockHeader.ref_block_bytes',
+  )
+  await expect(build({ ...good, ref_block_bytes: '' })).rejects.toThrow(
+    'Invalid blockHeader.ref_block_bytes',
+  )
+  await expect(build({ ...good, ref_block_hash: '01020304' })).rejects.toThrow(
+    'Invalid blockHeader.ref_block_hash',
+  )
+
+  // The override path is offline: nothing above may touch the node.
+  expect(calls.filter((c) => c.path === 'getnowblock')).toHaveLength(0)
 })
 
 test('leaves a large permission id to the node', async () => {
