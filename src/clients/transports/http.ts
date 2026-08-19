@@ -89,14 +89,16 @@ const supportsParseSource = (() => {
 })()
 
 /**
- * Parses a node response body. java-tron renders `int64` fields (balances,
- * amounts) as bare JSON numbers, which a naive `JSON.parse` corrupts past
- * `2^53 - 1` BEFORE any `BigInt(...)` coercion can save them — so, where the
- * engine exposes the raw literal to the reviver, an unsafe integer literal is
- * re-materialized losslessly as a `bigint`. On engines without reviver source
- * access this falls back to a plain parse (actions guard the affected fields).
+ * Parses node-rendered JSON (a response body, or a JSON string nested inside
+ * one, e.g. a `broadcasthex` acknowledgement's `transaction` field).
+ * java-tron renders `int64` fields (balances, amounts) as bare JSON numbers,
+ * which a naive `JSON.parse` corrupts past `2^53 - 1` BEFORE any
+ * `BigInt(...)` coercion can save them — so, where the engine exposes the
+ * raw literal to the reviver, an unsafe integer literal is re-materialized
+ * losslessly as a `bigint`. On engines without reviver source access this
+ * falls back to a plain parse (actions guard the affected fields).
  */
-function parseBody(text: string): unknown {
+export function parseNodeJson(text: string): unknown {
   if (!supportsParseSource) return JSON.parse(text)
   return JSON.parse(text, ((_key, value, context?: { source?: string }) => {
     if (
@@ -309,7 +311,7 @@ export function http(
           let body: any
           try {
             const text = await response.text()
-            body = text ? parseBody(text) : {}
+            body = text ? parseNodeJson(text) : {}
           } catch (err) {
             throw new HttpRequestError({
               body: args.body as Record<string, unknown> | undefined,
