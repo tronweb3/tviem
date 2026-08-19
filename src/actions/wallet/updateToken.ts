@@ -45,9 +45,12 @@ export type UpdateTokenParameters = {
   description: FlexInput
   /** New token website URL (dual string/hex form). */
   url: FlexInput
-  /** New per-holder free bandwidth. */
+  /** New per-holder free bandwidth cap, per rolling 24h (`free_asset_net_limit`). */
   newLimit: bigint
-  /** New total free bandwidth. */
+  /**
+   * New total free bandwidth shared by all holders, per rolling 24h
+   * (`public_free_asset_net_limit`).
+   */
   newPublicLimit: bigint
   /**
    * A pre-derived TaPoS + timing header. When supplied the transaction is built

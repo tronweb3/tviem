@@ -379,9 +379,12 @@ export type AssetIssueContract = {
   description: BytesInput
   /** Token website URL (field 21, `bytes`, hex). */
   url: BytesInput
-  /** Creator-donated bandwidth for holders (field 22, `int64`). */
+  /** Free bandwidth cap per holder, per rolling 24h (field 22, `int64`). */
   free_asset_net_limit?: Int64 | undefined
-  /** Per-holder free bandwidth cap (field 23, `int64`). */
+  /**
+   * Total free bandwidth shared by all holders, per rolling 24h (field 23,
+   * `int64`).
+   */
   public_free_asset_net_limit?: Int64 | undefined
 }
 
@@ -393,9 +396,12 @@ export type UpdateAssetContract = {
   description: BytesInput
   /** New token website URL (field 3, `bytes`, hex). */
   url: BytesInput
-  /** New per-holder free bandwidth (field 4, `int64`). */
+  /** New per-holder free bandwidth cap, per rolling 24h (field 4, `int64`). */
   new_limit: Int64
-  /** New total free bandwidth (field 5, `int64`). */
+  /**
+   * New total free bandwidth shared by all holders, per rolling 24h (field 5,
+   * `int64`).
+   */
   new_public_limit: Int64
 }
 

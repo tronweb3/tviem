@@ -69,9 +69,15 @@ export type CreateTokenParameters = {
   description: FlexInput
   /** Token website URL (dual string/hex form). */
   url: FlexInput
-  /** Creator-donated bandwidth for token holders. */
+  /**
+   * Free bandwidth cap each holder may consume on transfers of this token,
+   * per rolling 24h (`free_asset_net_limit`).
+   */
   freeAssetNetLimit?: bigint | undefined
-  /** Per-holder free bandwidth cap. */
+  /**
+   * Total free bandwidth shared by all holders of this token, per rolling 24h
+   * (`public_free_asset_net_limit`).
+   */
   publicFreeAssetNetLimit?: bigint | undefined
   /** Staked-supply tranches. */
   frozenSupply?: CreateTokenFrozenSupply[] | undefined
