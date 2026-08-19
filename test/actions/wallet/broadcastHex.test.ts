@@ -173,6 +173,19 @@ test('maps an expiration rejection to TransactionExpiredError', async () => {
   ).rejects.toBeInstanceOf(TransactionExpiredError)
 })
 
+test('refuses an empty acknowledgement body instead of resolving', async () => {
+  // An LB stub / warming node answers `{}` — neither `result: true` nor any
+  // rejection shape. The transaction may never have reached a node, so this
+  // must not resolve as a success carrying only the local txid.
+  const { transport } = createMockTransport({
+    responses: { broadcasthex: { response: {} } },
+  })
+  const client = createClient({ transport })
+  await expect(
+    broadcastHex(client, { transaction: BROADCAST_HEX }),
+  ).rejects.toThrow('The node did not acknowledge the broadcast.')
+})
+
 test('throws TronRpcError on a `{ result: false }` rejection without a code', async () => {
   const { transport } = createMockTransport({
     responses: { broadcasthex: { response: { result: false } } },
