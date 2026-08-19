@@ -16,6 +16,7 @@ import {
 } from '../../utils/address/addressToHex.js'
 import {
   type FlexErrorType,
+  type FlexInput,
   flexToHex,
 } from '../../utils/transaction/normalize.js'
 import {
@@ -42,8 +43,11 @@ export type ExchangeTransactionParameters = {
   account?: TronAccount | Hex | undefined
   /** Id of the exchange to trade against. */
   exchangeId: bigint | number
-  /** Token id being sold into the exchange (TRC10 id text, or `'_'` for TRX). */
-  tokenId: string
+  /**
+   * Token id being sold (`token_id`) — TRC10 id, or `'_'` for TRX. Dual-form ("flex"):
+   * plain text is UTF-8 encoded; a `0x`-prefixed value is hex.
+   */
+  tokenId: FlexInput
   /** Amount of the token sold. */
   quant: bigint
   /** Minimum amount of the counter-token expected in return. */

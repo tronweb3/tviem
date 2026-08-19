@@ -128,9 +128,10 @@ export async function buildCancelAllUnfreezeV2(
 }
 
 /**
- * Cancels all pending Stake 2.0 unfreeze requests, re-staking their amounts,
- * by locally building, signing and broadcasting a `CancelAllUnfreezeV2Contract`
- * (§ type 59). Carries only the owner address.
+ * Cancels all pending Stake 2.0 unfreeze requests by locally building,
+ * signing and broadcasting a `CancelAllUnfreezeV2Contract` (§ type 59):
+ * amounts still pending are re-staked, while entries already matured are
+ * withdrawn to the liquid balance instead. Carries only the owner address.
  *
  * @param client The Client to use.
  * @param parameters Optional account/blockHeader.

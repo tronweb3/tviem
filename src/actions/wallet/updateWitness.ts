@@ -16,6 +16,7 @@ import {
 } from '../../utils/address/addressToHex.js'
 import {
   type FlexErrorType,
+  type FlexInput,
   flexToHex,
 } from '../../utils/transaction/normalize.js'
 import {
@@ -40,8 +41,11 @@ import {
 export type UpdateWitnessParameters = {
   /** The signing (witness) account (falls back to `client.account`). */
   account?: TronAccount | Hex | undefined
-  /** New witness page URL (UTF-8 text). */
-  url: string
+  /**
+   * New witness page URL (`update_url`). Dual-form ("flex"): plain text is
+   * UTF-8 encoded; a `0x`-prefixed value is hex.
+   */
+  url: FlexInput
   /**
    * A pre-derived TaPoS + timing header. When supplied the transaction is built
    * fully offline against it; otherwise it is derived from the latest block.

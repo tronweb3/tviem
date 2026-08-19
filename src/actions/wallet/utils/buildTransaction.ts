@@ -70,7 +70,7 @@ export type BuildTransactionParameters = {
   /**
    * Multi-sig permission id (`Contract.Permission_id`). When set it is written
    * into the contract before the `txID` is derived, so the built transaction is
-   * bound to that active/owner permission (mirrors {@link signTransaction}).
+   * bound to that active/owner permission (mirrors `multiSignTransaction`).
    */
   permissionId?: number | undefined
   /**
@@ -175,7 +175,7 @@ export async function buildTransaction(
     )
 
   // Bake the permission id into the contract before the id is derived, so the
-  // built transaction is bound to that permission (matches signTransaction).
+  // built transaction is bound to that permission (matches multiSignTransaction).
   const boundContract =
     permissionId !== undefined
       ? { ...contract, Permission_id: permissionId }

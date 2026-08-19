@@ -16,6 +16,7 @@ import {
 } from '../../utils/address/addressToHex.js'
 import {
   type FlexErrorType,
+  type FlexInput,
   flexToHex,
 } from '../../utils/transaction/normalize.js'
 import {
@@ -42,8 +43,11 @@ export type ExchangeWithdrawParameters = {
   account?: TronAccount | Hex | undefined
   /** Id of the exchange to withdraw liquidity from. */
   exchangeId: bigint | number
-  /** Token id being withdrawn (TRC10 id text, or `'_'` for TRX). */
-  tokenId: string
+  /**
+   * Token id being withdrawn (`token_id`) — TRC10 id, or `'_'` for TRX. Dual-form ("flex"):
+   * plain text is UTF-8 encoded; a `0x`-prefixed value is hex.
+   */
+  tokenId: FlexInput
   /** Amount of the token to withdraw. */
   quant: bigint
   /**

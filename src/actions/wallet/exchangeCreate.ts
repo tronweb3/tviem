@@ -16,6 +16,7 @@ import {
 } from '../../utils/address/addressToHex.js'
 import {
   type FlexErrorType,
+  type FlexInput,
   flexToHex,
 } from '../../utils/transaction/normalize.js'
 import {
@@ -40,12 +41,20 @@ import {
 export type ExchangeCreateParameters = {
   /** The signing (creator) account (falls back to `client.account`). */
   account?: TronAccount | Hex | undefined
-  /** First token id (TRC10 id text like `'1000001'`, or `'_'` for TRX). */
-  firstTokenId: string
+  /**
+   * First token id (`first_token_id`) — TRC10 id like `'1000001'`, or `'_'`
+   * for TRX. Dual-form ("flex"): plain text is UTF-8 encoded; a
+   * `0x`-prefixed value is hex.
+   */
+  firstTokenId: FlexInput
   /** First token balance seeded into the exchange. */
   firstTokenBalance: bigint
-  /** Second token id (TRC10 id text, or `'_'` for TRX). */
-  secondTokenId: string
+  /**
+   * Second token id (`second_token_id`) — TRC10 id, or `'_'` for TRX.
+   * Dual-form ("flex"): plain text is UTF-8 encoded; a `0x`-prefixed value
+   * is hex.
+   */
+  secondTokenId: FlexInput
   /** Second token balance seeded into the exchange. */
   secondTokenBalance: bigint
   /**

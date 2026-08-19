@@ -283,9 +283,9 @@ function assemble(
  * bind it to an active/owner permission. The node is used only to fetch the
  * latest block (TaPoS).
  *
- * The deployed contract address depends on the final `txID`, so — unlike
- * {@link deployContract} — it is not derived here; callers compute it after the
- * transaction is signed and its id is fixed.
+ * Unlike {@link deployContract} the deployed contract address is not
+ * returned here; derive it from the returned `txID` and the deployer via
+ * {@link genContractAddress}.
  *
  * @param client The Client to use.
  * @param parameters ABI, bytecode, optional args/limits/permissionId/blockHeader.
