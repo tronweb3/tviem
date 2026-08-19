@@ -330,12 +330,12 @@ export type WalletActions = {
     parameters: BuildWriteContractParameters<abi, functionName>,
   ) => Promise<BuildWriteContractReturnType>
   /** Deploys a smart contract (local build → sign → broadcast). */
-  deployContract: (
-    parameters: DeployContractParameters,
+  deployContract: <const abi extends Abi | readonly unknown[]>(
+    parameters: DeployContractParameters<abi>,
   ) => Promise<DeployContractReturnType>
   /** Builds an unsigned contract deployment in TronWeb JSON shape (no sign/broadcast). */
-  buildDeployContract: (
-    parameters: BuildDeployContractParameters,
+  buildDeployContract: <const abi extends Abi | readonly unknown[]>(
+    parameters: BuildDeployContractParameters<abi>,
   ) => Promise<BuildDeployContractReturnType>
   /** Updates the account's owner/witness/active permissions (multi-sig setup). */
   accountPermissionUpdate: (
@@ -663,18 +663,22 @@ export function walletActions(client: Client): WalletActions {
         buildWriteContract,
         'buildWriteContract',
       )(requireAccount(client, parameters as BuildWriteContractParameters)),
-    deployContract: async (parameters) =>
+    deployContract: async <const abi extends Abi | readonly unknown[]>(
+      parameters: DeployContractParameters<abi>,
+    ) =>
       getAction(
         client,
         deployContract,
         'deployContract',
-      )(requireAccount(client, parameters)),
-    buildDeployContract: async (parameters) =>
+      )(requireAccount(client, parameters as DeployContractParameters)),
+    buildDeployContract: async <const abi extends Abi | readonly unknown[]>(
+      parameters: BuildDeployContractParameters<abi>,
+    ) =>
       getAction(
         client,
         buildDeployContract,
         'buildDeployContract',
-      )(requireAccount(client, parameters)),
+      )(requireAccount(client, parameters as BuildDeployContractParameters)),
     accountPermissionUpdate: async (parameters) =>
       getAction(
         client,

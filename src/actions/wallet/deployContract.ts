@@ -130,6 +130,11 @@ function toSmartContractAbi(abi: Abi): SmartContractAbi {
 
 export type DeployContractParameters<
   abi extends Abi | readonly unknown[] = Abi,
+  ///
+  // Falls back to `readonly unknown[]` inside ContractConstructorArgs when
+  // the constructor cannot be extracted (wide abi), keeping the wide call
+  // shape working.
+  allArgs = ContractConstructorArgs<abi>,
 > = {
   /** The signing account (falls back to `client.account`). */
   account?: TronAccount | Hex | undefined
@@ -137,8 +142,6 @@ export type DeployContractParameters<
   abi: abi
   /** Contract creation bytecode. */
   bytecode: Hex
-  /** Constructor arguments, appended to the bytecode. */
-  args?: ContractConstructorArgs<abi> | readonly unknown[] | undefined
   /** Contract name stored on-chain (`SmartContract.name`). */
   name?: string | undefined
   /** TRX sent with the deployment, in SUN (`SmartContract.call_value`). */
@@ -181,7 +184,15 @@ export type DeployContractParameters<
    * mainnet and Nile) on top of the transaction's normal costs.
    */
   memo?: MemoInput | undefined
-}
+} & (readonly [] extends allArgs
+  ? {
+      /** Constructor arguments, appended to the bytecode. */
+      args?: allArgs | undefined
+    }
+  : {
+      /** Constructor arguments, appended to the bytecode. */
+      args: allArgs
+    })
 
 export type DeployContractReturnType = BuildAndBroadcastReturnType & {
   /** Deterministically derived deployed contract address (Base58Check). */

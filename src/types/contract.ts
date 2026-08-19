@@ -79,16 +79,18 @@ export type ContractFunctionArgs<
       : args
     : readonly unknown[]
 
+// TRON-flavored argument tuples (like {@link ContractFunctionArgs}), so a
+// `T…` Base58Check address constructor argument type-checks — the runtime
+// (`encodeDeployData` → `encodeAbiParameters`) accepts every address form.
 export type ContractConstructorArgs<
   abi extends Abi | readonly unknown[] = Abi,
 > =
-  AbiParametersToPrimitiveTypes<
+  TronAbiParametersToPrimitiveTypes<
     Extract<
       (abi extends Abi ? abi : Abi)[number],
       { type: 'constructor' }
     >['inputs'],
-    'inputs',
-    true
+    'inputs'
   > extends infer args
     ? [args] extends [never]
       ? readonly unknown[]
