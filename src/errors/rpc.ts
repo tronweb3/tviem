@@ -204,12 +204,19 @@ export type TransactionExpiredErrorType = TransactionExpiredError & {
   name: 'TransactionExpiredError'
 }
 export class TransactionExpiredError extends BaseError {
-  constructor({ hash }: { hash?: string | undefined } = {}) {
+  constructor({
+    hash,
+    cause,
+  }: {
+    hash?: string | undefined
+    /** The node rejection this was mapped from (keeps `code`/`response`). */
+    cause?: BaseError | Error | undefined
+  } = {}) {
     super(
       `Transaction${
         hash ? ` "${hash}"` : ''
       } expired before it could be included in a block.`,
-      { name: 'TransactionExpiredError' },
+      { cause, name: 'TransactionExpiredError' },
     )
   }
 }

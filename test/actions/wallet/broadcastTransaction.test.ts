@@ -150,6 +150,42 @@ test('maps an expiration rejection to TransactionExpiredError', async () => {
   ).rejects.toBeInstanceOf(TransactionExpiredError)
 })
 
+test('the expiration remap keeps the node rejection as cause', async () => {
+  const rejection = {
+    result: false,
+    code: 'TAPOS_ERROR',
+    message: '5461706f7320636865636b206572726f722e',
+    txid: TX_ID,
+  }
+  const { transport } = createMockTransport({
+    responses: { broadcasttransaction: { error: rejection } },
+  })
+  const client = createClient({ transport })
+  const err = (await broadcastTransaction(client, { signedTransaction }).catch(
+    (e) => e,
+  )) as TransactionExpiredError
+
+  expect(err).toBeInstanceOf(TransactionExpiredError)
+  // The raw node body stays reachable through the cause.
+  const cause = err.cause as TronBroadcastError
+  expect(cause).toBeInstanceOf(TronBroadcastError)
+  expect(cause.code).toBe('TAPOS_ERROR')
+  expect(cause.response).toEqual(rejection)
+})
+
+test('refuses an empty acknowledgement body instead of resolving', async () => {
+  // An LB stub / warming node answers `{}` — neither `result: true` nor any
+  // rejection shape. The transaction may never have reached a node, so this
+  // must not resolve as a success carrying only the local txid.
+  const { transport } = createMockTransport({
+    responses: { broadcasttransaction: { response: {} } },
+  })
+  const client = createClient({ transport })
+  await expect(
+    broadcastTransaction(client, { signedTransaction }),
+  ).rejects.toThrow('The node did not acknowledge the broadcast.')
+})
+
 test('throws TronRpcError on a `{ result: false }` rejection without a code', async () => {
   const { transport } = createMockTransport({
     responses: { broadcasttransaction: { response: { result: false } } },

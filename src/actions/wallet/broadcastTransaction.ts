@@ -88,8 +88,10 @@ const expirationCodes = new Set(['TRANSACTION_EXPIRATION_ERROR', 'TAPOS_ERROR'])
  * The transport's error normalization already throws for the documented
  * rejection bodies (`{ result: false, code }` → `TronBroadcastError`, etc.); a
  * `{ result: false }` rejection without a `code` is caught here by
- * {@link assertRpcSuccess}. A rejection whose code indicates the reference
- * block expired is re-surfaced as a {@link TransactionExpiredError}.
+ * {@link assertRpcSuccess}, and a body carrying no acknowledgement at all
+ * (`{}` from an LB stub / warming node) is refused rather than resolved. A
+ * rejection whose code indicates the reference block expired is re-surfaced
+ * as a {@link TransactionExpiredError}, with the node rejection as `cause`.
  *
  * @param client The Client to use.
  * @param parameters The signed transaction to broadcast.
@@ -145,7 +147,7 @@ export async function broadcastTransaction(
       error.code !== undefined &&
       expirationCodes.has(error.code)
     )
-      throw new TransactionExpiredError({ hash: bareHex(txID) })
+      throw new TransactionExpiredError({ hash: bareHex(txID), cause: error })
     throw error
   }
 
@@ -157,13 +159,23 @@ export async function broadcastTransaction(
     response && typeof response === 'object' ? response : {}
   ) as RawBroadcastResponse
 
+  // Positive acknowledgement required. java-tron's success body always prints
+  // `result: true` (proto3 omits only defaults) and every rejection shape was
+  // thrown above — a body with neither (`{}` from an LB stub / warming node)
+  // means the transaction may never have reached a node.
+  if (body.result !== true)
+    throw new TronRpcError('The node did not acknowledge the broadcast.', {
+      details: JSON.stringify(body),
+      metaMessages: ['Path: broadcasttransaction'],
+    })
+
   // Canonical spelling: txCheck compared via bareHex, so a caller's `0x` or
   // upper-case spelling passes — return the form the check actually ran on.
   // The node's remaining acknowledgement fields ride along (`message`
   // hex-decoded); its echoed `txid` is deliberately not read.
   return {
     txid: bareHex(txID),
-    ...(typeof body.result === 'boolean' ? { result: body.result } : {}),
+    result: body.result,
     ...(body.code !== undefined ? { code: String(body.code) } : {}),
     ...(body.message !== undefined
       ? { message: decodeNodeMessage(body.message) }
