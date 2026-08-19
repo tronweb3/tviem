@@ -38,10 +38,15 @@ test('POSTs the exact hex to broadcasthex and returns the LOCAL txid', async () 
   const response = await broadcastHex(client, { transaction: BROADCAST_HEX })
 
   // The node echoes an all-zero txid; the locally computed sha256(raw_data)
-  // wins. The node's other acknowledgement fields ride along.
+  // wins. The node's other acknowledgement fields ride along, and the relayed
+  // transaction hex is returned.
   expect(response.txid).toBe(TX_ID)
   expect(response.txid).not.toBe(`0${'0'.repeat(63)}`)
-  expect(response).toEqual({ txid: TX_ID, result: true })
+  expect(response).toEqual({
+    txid: TX_ID,
+    result: true,
+    transaction: BROADCAST_HEX,
+  })
 
   expect(calls[0]?.node).toBe('full')
   expect(calls[0]?.path).toBe('broadcasthex')
@@ -61,6 +66,9 @@ test('normalizes a `0x`-prefixed upper-case input to the bare lowercase wire for
 
   expect(response.txid).toBe(TX_ID)
   expect(bodyOf('broadcasthex')).toEqual({ transaction: BROADCAST_HEX })
+  // The returned transaction is the normalized wire form actually relayed,
+  // not the caller's spelling.
+  expect(response.transaction).toBe(BROADCAST_HEX)
 })
 
 test('passes the acknowledgement fields through (message hex-decoded), never the echoed txid', async () => {
@@ -83,6 +91,7 @@ test('passes the acknowledgement fields through (message hex-decoded), never the
     result: true,
     code: 'SUCCESS',
     message: 'broadcast ok',
+    transaction: BROADCAST_HEX,
   })
 })
 
