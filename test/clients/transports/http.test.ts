@@ -364,3 +364,93 @@ test('re-materializes unsafe integer literals losslessly as bigint', async () =>
   expect(body.small).toBe(5) // safe integers stay numbers
   expect(body.note).toBe('ok')
 })
+
+// `fetch` resolves on response HEADERS; the body can still be streaming. The
+// timeout and the caller's AbortSignal must stay armed until the body has been
+// read, or a trickling node hangs the call with both safety nets already
+// disconnected. These pin the whole lifetime, not just the fetch phase.
+
+/** A response whose headers are ready but whose body never settles. */
+function stallingBody(signal: AbortSignal | undefined, status = 200) {
+  return {
+    ok: status >= 200 && status < 300,
+    status,
+    headers: new Headers(),
+    text: () =>
+      new Promise<string>((_resolve, reject) => {
+        signal?.addEventListener('abort', () =>
+          reject(
+            Object.assign(new Error('The operation was aborted.'), {
+              name: 'AbortError',
+            }),
+          ),
+        )
+      }),
+  } as unknown as Response
+}
+
+test('the timeout covers the response body, not just the headers', async () => {
+  const transport = http('https://node.example', {
+    timeout: 20,
+    retryCount: 0,
+    fetchFn: ((_url: string, init: RequestInit) =>
+      Promise.resolve(stallingBody(init.signal ?? undefined))) as never,
+  })({})
+
+  await expect(
+    transport.request({ path: 'wallet/getnowblock', body: {} }),
+  ).rejects.toThrow(/timed out/i)
+})
+
+test('the timeout covers a stalling ERROR body too', async () => {
+  const transport = http('https://node.example', {
+    timeout: 20,
+    retryCount: 0,
+    fetchFn: ((_url: string, init: RequestInit) =>
+      Promise.resolve(stallingBody(init.signal ?? undefined, 500))) as never,
+  })({})
+
+  // Not a bare status-500 HttpRequestError: nothing ever came back to explain
+  // the 500, and the reason the call ended was the timeout.
+  await expect(
+    transport.request({ path: 'wallet/getnowblock', body: {} }),
+  ).rejects.toThrow(/timed out/i)
+})
+
+test("a caller's AbortSignal still cancels once the body is streaming", async () => {
+  const controller = new AbortController()
+  const transport = http('https://node.example', {
+    timeout: 10_000,
+    retryCount: 0,
+    fetchFn: ((_url: string, init: RequestInit) => {
+      // Headers have arrived; the caller changes its mind afterwards.
+      setTimeout(() => controller.abort(), 5)
+      return Promise.resolve(stallingBody(init.signal ?? undefined))
+    }) as never,
+  })({})
+
+  const err = (await transport
+    .request(
+      { path: 'wallet/getnowblock', body: {} },
+      { signal: controller.signal },
+    )
+    .catch((e) => e)) as Error
+  // The caller's abort propagates as an abort — never as the transport's own
+  // TimeoutError, and never as a status-200 HttpRequestError.
+  expect(err.name).toBe('AbortError')
+})
+
+test('an abort during the body read is not reported as a status-200 error', async () => {
+  const transport = http('https://node.example', {
+    timeout: 20,
+    retryCount: 0,
+    fetchFn: ((_url: string, init: RequestInit) =>
+      Promise.resolve(stallingBody(init.signal ?? undefined))) as never,
+  })({})
+
+  const err = (await transport
+    .request({ path: 'wallet/getnowblock', body: {} })
+    .catch((e) => e)) as HttpRequestError & { status?: number }
+  expect(err).not.toBeInstanceOf(HttpRequestError)
+  expect(err.status).toBeUndefined()
+})

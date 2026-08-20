@@ -268,62 +268,97 @@ export function http(
           const timer = setTimeout(() => controller.abort(), timeout)
 
           const fetchImpl = fetchFn ?? globalThis.fetch
-          let response: Response
-          try {
-            response = await fetchImpl(requestUrl, {
-              ...mergedFetchOptions,
-              method,
-              ...(requestBody !== undefined ? { body: requestBody } : {}),
-              signal: controller.signal,
-            })
-          } catch (err) {
-            // Timeout aborts the controller without the caller's signal firing.
+
+          /** Whether this failure is our own abort rather than a network fault. */
+          function isAbortSignalled(err: unknown): boolean {
+            return controller.signal.aborted || isAbortError(err)
+          }
+
+          /**
+           * Maps an abort to the error that says WHO aborted: the caller's own
+           * signal propagates as-is, while our timer becomes a `TimeoutError`.
+           */
+          function abortAware(err: unknown): Error {
             if (controller.signal.aborted && !externalSignal?.aborted)
-              throw new TimeoutError({
+              return new TimeoutError({
                 body: (args.body ?? {}) as Record<string, unknown>,
                 url: requestUrl,
               })
-            if (isAbortError(err)) throw err
-            throw new HttpRequestError({
+            if (isAbortError(err)) return err as Error
+            return new HttpRequestError({
               body: args.body as Record<string, unknown> | undefined,
               cause: err as Error,
               url: requestUrl,
             })
+          }
+
+          /**
+           * `fetch` resolves as soon as the response HEADERS arrive; the body
+           * can still be streaming, or never finish. The timer and the caller's
+           * abort listener therefore have to outlive the fetch and stay armed
+           * until the body has been consumed — tearing them down at the fetch
+           * boundary would leave a trickling or half-open response able to hang
+           * the call forever, with the configured `timeout` and the caller's
+           * `AbortSignal` both already disconnected.
+           */
+          try {
+            let response: Response
+            try {
+              response = await fetchImpl(requestUrl, {
+                ...mergedFetchOptions,
+                method,
+                ...(requestBody !== undefined ? { body: requestBody } : {}),
+                signal: controller.signal,
+              })
+            } catch (err) {
+              throw abortAware(err)
+            }
+
+            if (!response.ok) {
+              // Reading the error body is itself covered by the timeout: an
+              // error response can stall exactly like a successful one.
+              let details: string | undefined
+              try {
+                details = await response.text()
+              } catch (err) {
+                // A stalled error body must surface as the timeout/abort it is,
+                // not as a status-only error that hides why nothing came back.
+                if (isAbortSignalled(err)) throw abortAware(err)
+              }
+              throw new HttpRequestError({
+                body: args.body as Record<string, unknown> | undefined,
+                details,
+                headers: response.headers,
+                status: response.status,
+                url: requestUrl,
+              })
+            }
+
+            let body: any
+            try {
+              const text = await response.text()
+              body = text ? parseNodeJson(text) : {}
+            } catch (err) {
+              // Same classification as the fetch phase. Without this an abort
+              // during the body read would be reported as an `HttpRequestError`
+              // carrying `status: 200` — a "successful" response that never
+              // arrived, which no retry predicate can read correctly.
+              if (isAbortSignalled(err)) throw abortAware(err)
+              throw new HttpRequestError({
+                body: args.body as Record<string, unknown> | undefined,
+                cause: err as Error,
+                headers: response.headers,
+                status: response.status,
+                url: requestUrl,
+              })
+            }
+
+            if (raw) return body
+            return normalizeTronError(body, { node, path: args.path })
           } finally {
             clearTimeout(timer)
             externalSignal?.removeEventListener('abort', onExternalAbort)
           }
-
-          if (!response.ok) {
-            let details: string | undefined
-            try {
-              details = await response.text()
-            } catch {}
-            throw new HttpRequestError({
-              body: args.body as Record<string, unknown> | undefined,
-              details,
-              headers: response.headers,
-              status: response.status,
-              url: requestUrl,
-            })
-          }
-
-          let body: any
-          try {
-            const text = await response.text()
-            body = text ? parseNodeJson(text) : {}
-          } catch (err) {
-            throw new HttpRequestError({
-              body: args.body as Record<string, unknown> | undefined,
-              cause: err as Error,
-              headers: response.headers,
-              status: response.status,
-              url: requestUrl,
-            })
-          }
-
-          if (raw) return body
-          return normalizeTronError(body, { node, path: args.path })
         },
         retryCount,
         retryDelay,
