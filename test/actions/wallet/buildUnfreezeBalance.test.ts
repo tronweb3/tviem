@@ -22,6 +22,24 @@ test('builds UnfreezeBalanceContract offline', async () => {
   expect(tviemTx.signature).toBeUndefined()
 })
 
+test('receiver_address is omitted when it equals the owner', async () => {
+  const client = makeTviemClient()
+
+  const tviemTx = await client.buildUnfreezeBalance({
+    resource: 'ENERGY',
+    // pk1's own address — self-unfreeze, so no receiver should be encoded.
+    receiverAddress: 'TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC',
+    blockHeader: tviemHeader,
+  })
+
+  const contract = (
+    tviemTx.raw_data.contract as Record<string, unknown>[]
+  )[0] as {
+    parameter: { value: Record<string, unknown> }
+  }
+  expect(contract.parameter.value.receiver_address).toBeUndefined()
+})
+
 test('permissionId is baked in as Permission_id', async () => {
   const client = makeTviemClient()
 

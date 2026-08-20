@@ -44,7 +44,10 @@ export type UnfreezeBalanceParameters = {
   account?: TronAccount | Hex | undefined
   /** Resource to unfreeze. */
   resource: StakeResource
-  /** Address the resource was obtained for (defaults to the owner). */
+  /**
+   * Address the resource was obtained for (defaults to the owner). Passing
+   * the owner's own address is equivalent to leaving it unset.
+   */
   receiverAddress?: Address | undefined
   /**
    * A pre-derived TaPoS + timing header. When supplied the transaction is built
@@ -105,8 +108,11 @@ function assemble(
     owner_address: addressToHex(account.address),
     resource: resourceCodeOf(resource),
   }
-  if (receiverAddress !== undefined)
-    value.receiver_address = addressToHex(receiverAddress)
+  if (receiverAddress !== undefined) {
+    const receiver = addressToHex(receiverAddress)
+    // A self-receiver is meaningless on-chain; encode it as absent.
+    if (receiver !== value.owner_address) value.receiver_address = receiver
+  }
 
   const contract: RawContract = {
     type: ContractType.UnfreezeBalanceContract,
