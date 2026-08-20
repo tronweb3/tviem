@@ -50,9 +50,12 @@ export type DelegateResourceParameters = {
   balance: bigint
   /** Resource delegated. */
   resource: DelegateResource
-  /** Whether the delegation is locked (cannot be undelegated until unlock). */
+  /**
+   * Whether the delegation is locked (cannot be undelegated until unlock).
+   * Only encoded into the contract when true — `false` is the chain default.
+   */
   lock?: boolean | undefined
-  /** Lock period, in blocks (only meaningful when `lock` is true). */
+  /** Lock period, in blocks (ignored unless `lock` is true). */
   lockPeriod?: bigint | undefined
   /**
    * A pre-derived TaPoS + timing header. When supplied the transaction is built
@@ -118,8 +121,11 @@ function assemble(
     balance,
     receiver_address: addressToHex(receiverAddress),
   }
-  if (lock !== undefined) value.lock = lock
-  if (lockPeriod !== undefined) value.lock_period = lockPeriod
+  // `false` is the proto default — only a real lock enters the contract.
+  if (lock) {
+    value.lock = lock
+    if (lockPeriod !== undefined) value.lock_period = lockPeriod
+  }
 
   const contract: RawContract = {
     type: ContractType.DelegateResourceContract,

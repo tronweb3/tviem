@@ -106,6 +106,77 @@ test('raw_data is java-tron node JSON (snake_case, 41-hex, string type)', async 
   expect(tx.raw_data.timestamp).toBe(Number(blockTimestamp))
 })
 
+test('lock: false writes neither lock nor lock_period', async () => {
+  const { transport } = buildMock()
+  const client = createWalletClient({ account: pk1, transport })
+
+  const tx = await buildDelegateResource(client, {
+    receiverAddress: receiver,
+    balance: 1000000n,
+    resource: 'BANDWIDTH',
+    lock: false,
+    lockPeriod: 86400n,
+  })
+  const contract = (tx.raw_data.contract as Record<string, unknown>[])[0] as {
+    parameter: { value: Record<string, unknown> }
+  }
+
+  expect(contract.parameter.value.lock).toBeUndefined()
+  expect(contract.parameter.value.lock_period).toBeUndefined()
+})
+
+test('lockPeriod without lock is not written', async () => {
+  const { transport } = buildMock()
+  const client = createWalletClient({ account: pk1, transport })
+
+  const tx = await buildDelegateResource(client, {
+    receiverAddress: receiver,
+    balance: 1000000n,
+    resource: 'BANDWIDTH',
+    lockPeriod: 86400n,
+  })
+  const contract = (tx.raw_data.contract as Record<string, unknown>[])[0] as {
+    parameter: { value: Record<string, unknown> }
+  }
+
+  expect(contract.parameter.value.lock).toBeUndefined()
+  expect(contract.parameter.value.lock_period).toBeUndefined()
+})
+
+test('lock: true writes lock, and lock_period only when given', async () => {
+  const { transport } = buildMock()
+  const client = createWalletClient({ account: pk1, transport })
+
+  const bare = await buildDelegateResource(client, {
+    receiverAddress: receiver,
+    balance: 1000000n,
+    resource: 'BANDWIDTH',
+    lock: true,
+  })
+  const bareValue = (
+    (bare.raw_data.contract as Record<string, unknown>[])[0] as {
+      parameter: { value: Record<string, unknown> }
+    }
+  ).parameter.value
+  expect(bareValue.lock).toBe(true)
+  expect(bareValue.lock_period).toBeUndefined()
+
+  const locked = await buildDelegateResource(client, {
+    receiverAddress: receiver,
+    balance: 1000000n,
+    resource: 'BANDWIDTH',
+    lock: true,
+    lockPeriod: 86400n,
+  })
+  const lockedValue = (
+    (locked.raw_data.contract as Record<string, unknown>[])[0] as {
+      parameter: { value: Record<string, unknown> }
+    }
+  ).parameter.value
+  expect(lockedValue.lock).toBe(true)
+  expect(lockedValue.lock_period).toBe(86400)
+})
+
 test('permissionId is baked in as Permission_id and changes the id', async () => {
   const { transport } = buildMock()
   const client = createWalletClient({ account: pk1, transport })
