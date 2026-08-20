@@ -64,6 +64,7 @@ export {
   type GetContractErrorType,
   type GetContractParameters,
   type GetContractReturnType,
+  type GetEventsOptions,
   getContract,
 } from './actions/getContract.js'
 export {
