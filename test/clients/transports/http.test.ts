@@ -216,9 +216,9 @@ test('value exposes fullUrl / solidityUrl / fetchOptions', () => {
   expect(t.value?.solidityUrl).toBe('https://solidity.example')
   // headers is a `Headers` instance: lookup is by the platform API,
   // case-insensitively, not by object indexing.
-  expect((t.value?.fetchOptions?.headers as Headers).get('tron-pro-api-key')).toBe(
-    API_KEY,
-  )
+  expect(
+    (t.value?.fetchOptions?.headers as Headers).get('tron-pro-api-key'),
+  ).toBe(API_KEY)
 })
 
 test('solidityUrl defaults to the full url', () => {

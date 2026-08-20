@@ -401,7 +401,9 @@ describe('getContract', () => {
 
       const err = (await contract.getEvents.Transfer().catch((e) => e)) as Error
       expect(err).toBeInstanceOf(AbiEventOverloadError)
-      expect(err.message).toContain('Event "Transfer" is overloaded on the ABI.')
+      expect(err.message).toContain(
+        'Event "Transfer" is overloaded on the ABI.',
+      )
       // Both overload signatures are spelled out for the caller.
       expect(err.message).toContain('Transfer(address,address,uint256)')
     })

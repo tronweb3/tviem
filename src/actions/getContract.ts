@@ -8,10 +8,7 @@ import type {
 } from 'abitype'
 
 import type { Client } from '../clients/createClient.js'
-import {
-  AbiEventNotFoundError,
-  AbiEventOverloadError,
-} from '../errors/abi.js'
+import { AbiEventNotFoundError, AbiEventOverloadError } from '../errors/abi.js'
 import type { ErrorType } from '../errors/utils.js'
 import type { Address } from '../types/address.js'
 import type { ContractFunctionName } from '../types/contract.js'
