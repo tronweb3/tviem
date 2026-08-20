@@ -231,11 +231,19 @@ export function http(
     const eventUrl =
       config.eventUrl || chain?.rpcUrls.default.event?.http[0] || fullUrl
 
-    const headers = {
-      'Content-Type': 'application/json',
-      ...(fetchOptions?.headers as Record<string, string> | undefined),
-      ...(apiKey ? { 'TRON-PRO-API-KEY': apiKey } : {}),
-    }
+    // Merge through the platform's `Headers` rather than object spread: all
+    // three legal `HeadersInit` forms survive (a spread silently turns a
+    // `Headers` instance into `{}` and a tuple list into a header named "0"),
+    // and names are matched case-insensitively as HTTP requires — a caller's
+    // lowercase `content-type` or `tron-pro-api-key` replaces the default
+    // instead of riding alongside it as a duplicate.
+    const headers = new Headers(fetchOptions?.headers)
+    // The caller's explicit Content-Type wins; JSON is only the default.
+    if (!headers.has('Content-Type'))
+      headers.set('Content-Type', 'application/json')
+    // The config `apiKey` is the documented channel and wins over any header
+    // spelling of the same key, so exactly one key is ever sent.
+    if (apiKey) headers.set('TRON-PRO-API-KEY', apiKey)
     const mergedFetchOptions = { ...fetchOptions, headers }
 
     return createTransport(

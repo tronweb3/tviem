@@ -50,9 +50,9 @@ test('POST full node: url, method, headers and JSON body', async () => {
   const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit]
   expect(url).toBe(`${HOST}/wallet/getaccount`)
   expect(init.method).toBe('POST')
-  const headers = init.headers as Record<string, string>
-  expect(headers['Content-Type']).toBe('application/json')
-  expect(headers['TRON-PRO-API-KEY']).toBe(API_KEY)
+  const headers = new Headers(init.headers)
+  expect(headers.get('Content-Type')).toBe('application/json')
+  expect(headers.get('TRON-PRO-API-KEY')).toBe(API_KEY)
   expect(init.body).toBe(JSON.stringify({ address: '4112' }))
 })
 
@@ -214,11 +214,11 @@ test('value exposes fullUrl / solidityUrl / fetchOptions', () => {
   })({})
   expect(t.value?.fullUrl).toBe(HOST)
   expect(t.value?.solidityUrl).toBe('https://solidity.example')
-  expect(
-    (t.value?.fetchOptions?.headers as Record<string, string>)[
-      'TRON-PRO-API-KEY'
-    ],
-  ).toBe(API_KEY)
+  // headers is a `Headers` instance: lookup is by the platform API,
+  // case-insensitively, not by object indexing.
+  expect((t.value?.fetchOptions?.headers as Headers).get('tron-pro-api-key')).toBe(
+    API_KEY,
+  )
 })
 
 test('solidityUrl defaults to the full url', () => {
@@ -453,4 +453,56 @@ test('an abort during the body read is not reported as a status-200 error', asyn
     .catch((e) => e)) as HttpRequestError & { status?: number }
   expect(err).not.toBeInstanceOf(HttpRequestError)
   expect(err.status).toBeUndefined()
+})
+
+// Header merging goes through the platform `Headers` class, so every legal
+// `HeadersInit` form survives and names merge case-insensitively. The old
+// object spread silently emptied a `Headers` instance, turned a tuple list
+// into a header named "0", and let a lowercase `content-type` or
+// `tron-pro-api-key` ride alongside the default as a duplicate.
+
+/** What actually reaches fetch, re-materialized through the platform. */
+function capturedHeaders(fetchOptions: RequestInit) {
+  let seen: Headers | undefined
+  const transport = http('https://node.example', {
+    apiKey: 'config-key',
+    fetchOptions: fetchOptions as never,
+    retryCount: 0,
+    fetchFn: (async (_url: string, init: RequestInit) => {
+      seen = new Headers(init.headers)
+      return new Response('{}', { status: 200 })
+    }) as never,
+  })({})
+  return transport
+    .request({ path: 'wallet/getnowblock', body: {} })
+    .then(() => seen!)
+}
+
+test('a Headers-instance fetchOptions.headers survives the merge', async () => {
+  const seen = await capturedHeaders({
+    headers: new Headers([['X-Custom', 'a']]),
+  })
+  expect(seen.get('X-Custom')).toBe('a')
+  expect(seen.get('Content-Type')).toBe('application/json')
+})
+
+test('a tuple-list fetchOptions.headers survives the merge', async () => {
+  const seen = await capturedHeaders({ headers: [['X-Custom', 'b']] })
+  expect(seen.get('X-Custom')).toBe('b')
+  expect(seen.get('0')).toBeNull() // the spread artifact must not exist
+})
+
+test("a caller's explicit content-type wins over the JSON default", async () => {
+  const seen = await capturedHeaders({
+    headers: { 'content-type': 'text/plain' },
+  })
+  expect(seen.get('Content-Type')).toBe('text/plain')
+})
+
+test('the config apiKey wins over any header spelling of the key', async () => {
+  const seen = await capturedHeaders({
+    headers: { 'tron-pro-api-key': 'stale-header-key' },
+  })
+  // Exactly one key on the wire, and it is the config's.
+  expect(seen.get('TRON-PRO-API-KEY')).toBe('config-key')
 })
