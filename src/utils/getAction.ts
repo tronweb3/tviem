@@ -2,9 +2,18 @@
  * Retrieves an action from a client (if it exists), falling back to the
  * tree-shakable action function.
  *
- * This is the indirection layer that lets a consumer override an action's
- * implementation on the client (e.g. a custom `writeContract`) while the
- * built-in actions still call each other through the client.
+ * The client consulted is the one the CALLING action was composed with — the
+ * object its decorator received — not the final extended client (`.extend()`
+ * returns a new object; decorator closures keep the old one). An override is
+ * therefore seen by composed actions only when it is installed before the
+ * decorator that composes them:
+ *
+ *   createClient({...}).extend(() => ({ getNowBlock })).extend(publicActions)
+ *
+ * An override added after the decorators — including any `.extend()` on a
+ * client from `createPublicClient` / `createWalletClient`, whose factories
+ * apply the decorators first — applies to direct calls only; composed actions
+ * keep calling the implementations they were composed with.
  *
  * Lookup order:
  * 1. `client[actionFn.name]` — the implicit name from the function itself.

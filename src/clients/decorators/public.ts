@@ -157,9 +157,11 @@ export type PublicActions = {
 }
 
 /**
- * The TRON read (public) action set. Each action is bound to `client` through
- * {@link getAction}, so a consumer may override any of them on the Client and
- * the others will call the overridden implementation.
+ * The TRON read (public) action set. Each action is bound through
+ * {@link getAction} to the `client` this decorator RECEIVES, so an override is
+ * seen by the other actions only when it was installed on that client before
+ * this decorator ran (`createClient(...).extend(overrides).extend(publicActions)`).
+ * An override added afterwards applies to direct calls only.
  */
 export function publicActions(client: Client): PublicActions {
   return {

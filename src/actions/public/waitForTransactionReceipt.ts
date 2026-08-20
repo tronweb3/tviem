@@ -130,8 +130,8 @@ function toBlockNumber(value: unknown): number {
  * `pollingInterval` and retries. Exceeding `timeout` rejects with a
  * {@link WaitForTransactionReceiptTimeoutError}. A `'reverted'` status does
  * **not** reject unless `throwOnRevert` is set. Both the receipt lookup and the
- * confirmation lookup go through {@link getAction}, so a Client may override
- * either.
+ * confirmation lookup go through {@link getAction}; overrides for either are
+ * seen only when installed before the public decorator (see `getAction`).
  */
 export async function waitForTransactionReceipt(
   client: Client,
