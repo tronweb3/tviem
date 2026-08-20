@@ -155,11 +155,14 @@ test('@tronweb3/tviem: TRC-20 selectors', () => {
   )
 })
 
-test('bare Solidity type aliases are NOT canonicalized', () => {
-  // pins viem-aligned behavior: bare 'uint' is hashed as-is (not expanded to
-  // 'uint256'), so callers must pass canonical types to get canonical selectors.
-  expect(toFunctionSelector('foo(uint)')).not.toBe(
+test('bare Solidity type aliases are canonicalized', () => {
+  // `uint`/`int` hash as their canonical `uint256`/`int256` forms.
+  expect(toFunctionSelector('foo(uint)')).toBe('0x2fbebd38')
+  expect(toFunctionSelector('foo(uint)')).toBe(
     toFunctionSelector('foo(uint256)'),
   )
-  expect(toFunctionSelector('foo(uint256)')).toBe('0x2fbebd38')
+  expect(toFunctionSelector('foo(int)')).toBe(toFunctionSelector('foo(int256)'))
+  expect(toFunctionSelector('function transfer(address to, uint amount)')).toBe(
+    '0xa9059cbb',
+  )
 })

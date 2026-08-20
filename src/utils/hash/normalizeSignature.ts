@@ -60,5 +60,9 @@ export function normalizeSignature(
 
   if (!valid) throw new BaseError('Unable to normalize signature.')
 
-  return result
+  // Canonicalize bare integer aliases (`uint` → `uint256`, `int` → `int256`);
+  // the ABI signature that gets hashed always uses the sized form. `\b` keeps
+  // sized types (`uint8`) and look-alike names (`mint`) untouched, and names
+  // can never collide since `uint`/`int` are reserved words in Solidity.
+  return result.replace(/\b(u?int)\b/g, '$1256')
 }
