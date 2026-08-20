@@ -57,14 +57,13 @@ test('POSTs the exact hex to broadcasthex and returns the LOCAL txid', async () 
 
   // The node echoes an all-zero txid; the locally computed sha256(raw_data)
   // wins. The node's other acknowledgement fields ride along, plus the
-  // relayed hex and the node's echoed transaction, parsed.
+  // node's echoed transaction, parsed.
   expect(response.txid).toBe(TX_ID)
   expect(response.txid).not.toBe(`0${'0'.repeat(63)}`)
   expect(response).toEqual({
     txid: TX_ID,
     result: true,
     transaction: ECHOED_TX_PARSED,
-    transactionHex: BROADCAST_HEX,
   })
 
   expect(calls[0]?.node).toBe('full')
@@ -85,10 +84,9 @@ test('normalizes a `0x`-prefixed upper-case input to the bare lowercase wire for
 
   expect(response.txid).toBe(TX_ID)
   expect(bodyOf('broadcasthex')).toEqual({ transaction: BROADCAST_HEX })
-  // The returned hex is the normalized wire form actually relayed, not the
-  // caller's spelling; no echoed transaction in this acknowledgement.
-  expect(response.transactionHex).toBe(BROADCAST_HEX)
-  expect(response.transaction).toBeUndefined()
+  // No echoed transaction in this acknowledgement — the return is just the
+  // local txid and the node's flag.
+  expect(response).toEqual({ txid: TX_ID, result: true })
 })
 
 test('passes the acknowledgement fields through (message hex-decoded), never the echoed txid', async () => {
@@ -113,7 +111,6 @@ test('passes the acknowledgement fields through (message hex-decoded), never the
     code: 'SUCCESS',
     message: 'broadcast ok',
     transaction: ECHOED_TX_PARSED,
-    transactionHex: BROADCAST_HEX,
   })
 })
 
@@ -149,10 +146,10 @@ test('relays bytes the model layer cannot represent untouched', async () => {
 
   // Relayed untouched, txid still computed from the exact raw_data bytes.
   expect(bodyOf('broadcasthex')).toEqual({ transaction: foreignHex })
-  expect(response.txid).toBe(
-    sha256(hexToBytes(`0x${foreignRawData}`), 'hex').slice(2),
-  )
-  expect(response.transactionHex).toBe(foreignHex)
+  expect(response).toEqual({
+    txid: sha256(hexToBytes(`0x${foreignRawData}`), 'hex').slice(2),
+    result: true,
+  })
 })
 
 test('throws TronRpcError when the hex carries no signature', async () => {

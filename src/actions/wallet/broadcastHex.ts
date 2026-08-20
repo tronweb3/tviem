@@ -59,12 +59,6 @@ export type BroadcastHexReturnType = {
    * it).
    */
   transaction?: unknown | undefined
-  /**
-   * The signed `Transaction` protobuf hex that was relayed, in the canonical
-   * wire spelling (bare lowercase) — the exact request body, whatever
-   * spelling the caller supplied.
-   */
-  transactionHex: string
 }
 
 /** The `broadcasthex` acknowledgement body. */
@@ -125,10 +119,9 @@ const expirationCodes = new Set(['TRANSACTION_EXPIRATION_ERROR', 'TAPOS_ERROR'])
  *
  * @param client The Client to use.
  * @param parameters The signed transaction hex to broadcast.
- * @returns `{ txid, result, code, message, transaction, transactionHex }` —
- * the locally computed transaction id, the node's acknowledgement fields
- * (when echoed, `transaction` being the node-decoded transaction, parsed)
- * and the relayed hex in its canonical wire spelling.
+ * @returns `{ txid, result, code, message, transaction }` — the locally
+ * computed transaction id and the node's acknowledgement fields (when echoed,
+ * `transaction` being the node-decoded transaction, parsed).
  */
 export async function broadcastHex(
   client: Client,
@@ -242,6 +235,5 @@ export async function broadcastHex(
       ? { message: decodeNodeMessage(body.message) }
       : {}),
     ...(echoed !== undefined ? { transaction: echoed } : {}),
-    transactionHex: transaction,
   }
 }
