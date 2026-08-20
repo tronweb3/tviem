@@ -7,7 +7,10 @@ import {
 import { createPublicClient } from '../../src/clients/createPublicClient.js'
 import { createWalletClient } from '../../src/clients/createWalletClient.js'
 import { walletActions } from '../../src/clients/decorators/wallet.js'
-import { AbiEventNotFoundError } from '../../src/errors/abi.js'
+import {
+  AbiEventNotFoundError,
+  AbiEventOverloadError,
+} from '../../src/errors/abi.js'
 import type { Address } from '../../src/types/address.js'
 import { rpc } from '../fixtures/rpc/loader.js'
 import { createMockTransport } from '../mock/createMockTransport.js'
@@ -363,6 +366,44 @@ describe('getContract', () => {
       ).Missing!().catch((e) => e)) as Error
       expect(err).toBeInstanceOf(AbiEventNotFoundError)
       expect(err.message).toContain('Event "Missing" not found on ABI.')
+    })
+
+    test('rejects for an overloaded event name', async () => {
+      // ERC-20-style + ERC-721-style Transfer (same name, different layout):
+      // the facade cannot know which overload to filter on.
+      const overloadedAbi = [
+        {
+          type: 'event',
+          name: 'Transfer',
+          inputs: [
+            { indexed: true, name: 'from', type: 'address' },
+            { indexed: true, name: 'to', type: 'address' },
+            { indexed: false, name: 'value', type: 'uint256' },
+          ],
+        },
+        {
+          type: 'event',
+          name: 'Transfer',
+          inputs: [
+            { indexed: true, name: 'from', type: 'address' },
+            { indexed: true, name: 'to', type: 'address' },
+            { indexed: true, name: 'tokenId', type: 'uint256' },
+          ],
+        },
+      ] as const
+      const { transport } = createMockTransport({ responses: {} })
+      const client = createPublicClient({ transport })
+      const contract = getContract({
+        abi: overloadedAbi,
+        address: contractAddress,
+        client,
+      })
+
+      const err = (await contract.getEvents.Transfer().catch((e) => e)) as Error
+      expect(err).toBeInstanceOf(AbiEventOverloadError)
+      expect(err.message).toContain('Event "Transfer" is overloaded on the ABI.')
+      // Both overload signatures are spelled out for the caller.
+      expect(err.message).toContain('Transfer(address,address,uint256)')
     })
 
     test('getEvents.<Event> forwards args / strict / blockHash to getLogs', async () => {

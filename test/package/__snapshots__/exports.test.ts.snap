@@ -127,6 +127,7 @@ exports[`package exports surface (freeze guard) > root + subpath export names ar
     "AbiErrorNotFoundError",
     "AbiErrorSignatureNotFoundError",
     "AbiEventNotFoundError",
+    "AbiEventOverloadError",
     "AbiEventSignatureEmptyTopicsError",
     "AbiEventSignatureNotFoundError",
     "AbiFunctionNotFoundError",

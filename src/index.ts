@@ -602,6 +602,8 @@ export {
   type AbiErrorSignatureNotFoundErrorType,
   AbiEventNotFoundError,
   type AbiEventNotFoundErrorType,
+  AbiEventOverloadError,
+  type AbiEventOverloadErrorType,
   AbiEventSignatureEmptyTopicsError,
   type AbiEventSignatureEmptyTopicsErrorType,
   AbiEventSignatureNotFoundError,

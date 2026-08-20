@@ -8,13 +8,17 @@ import type {
 } from 'abitype'
 
 import type { Client } from '../clients/createClient.js'
-import { AbiEventNotFoundError } from '../errors/abi.js'
+import {
+  AbiEventNotFoundError,
+  AbiEventOverloadError,
+} from '../errors/abi.js'
 import type { ErrorType } from '../errors/utils.js'
 import type { Address } from '../types/address.js'
 import type { ContractFunctionName } from '../types/contract.js'
 import type { Hex } from '../types/misc.js'
 import type { IsNever, Prettify } from '../types/utils.js'
 import type { TronAbiParametersToPrimitiveTypes } from '../utils/abi/encodeAbiParameters.js'
+import { formatAbiItem } from '../utils/abi/formatAbiItem.js'
 import { getAction } from '../utils/getAction.js'
 import {
   type EstimateEnergyParameters,
@@ -386,11 +390,19 @@ export function getContract<
     {
       get(_, eventName: string) {
         return async (options?: GetEventsOptions) => {
-          const event = abi.find(
+          const matches = abi.filter(
             (item): item is AbiEvent =>
               item.type === 'event' && item.name === eventName,
           )
+          const event = matches[0]
           if (!event) throw new AbiEventNotFoundError(eventName)
+          // A name shared by several overloads is ambiguous — refuse rather
+          // than silently filtering/decoding against the first one.
+          if (matches.length > 1)
+            throw new AbiEventOverloadError(
+              eventName,
+              matches.map((item) => formatAbiItem(item)),
+            )
           return getAction(
             client,
             getLogs,

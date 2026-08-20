@@ -310,6 +310,29 @@ export class AbiEventNotFoundError extends BaseError {
   }
 }
 
+export type AbiEventOverloadErrorType = AbiEventOverloadError & {
+  name: 'AbiEventOverloadError'
+}
+export class AbiEventOverloadError extends BaseError {
+  constructor(eventName: string, signatures: readonly string[]) {
+    super(
+      [
+        `Event "${eventName}" is overloaded on the ABI.`,
+        'The name alone cannot resolve which overload to filter on.',
+      ].join('\n'),
+      {
+        metaMessages: [
+          'Overloads:',
+          ...signatures.map((signature) => `  ${signature}`),
+          '',
+          'Call `getLogs` with the specific `event` definition instead.',
+        ],
+        name: 'AbiEventOverloadError',
+      },
+    )
+  }
+}
+
 export type AbiFunctionNotFoundErrorType = AbiFunctionNotFoundError & {
   name: 'AbiFunctionNotFoundError'
 }
