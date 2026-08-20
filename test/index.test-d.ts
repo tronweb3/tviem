@@ -9,6 +9,7 @@ import type {
   EvmAddress,
   Hex,
   PublicClient,
+  RequestErrorType,
   Transport,
   TronHexAddress,
   TronRequestFn,
@@ -98,4 +99,10 @@ test('root barrel exposes the client / transport / chain type surface', () => {
   // Chain / Transport are re-exported as types.
   expectTypeOf(nile).toMatchTypeOf<Chain>()
   expectTypeOf(http).returns.toMatchTypeOf<Transport>()
+})
+
+test('RequestErrorType is importable from the root entrypoint', () => {
+  // The error-union building block every action's *ErrorType references; it
+  // must be nameable by consumers, not only resolvable structurally.
+  expectTypeOf<RequestErrorType>().not.toBeNever()
 })

@@ -574,6 +574,7 @@ export {
   type HttpTransportConfig,
   http,
   normalizeTronError,
+  type RequestErrorType,
 } from './clients/transports/http.js'
 export { trxUnits } from './constants/unit.js'
 export {
