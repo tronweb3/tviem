@@ -75,6 +75,29 @@ test('getBlock accepts a plain number for blockNumber', async () => {
   expect(bodyOf('getblockbynum')).toEqual({ num: 4660 })
 })
 
+test('getBlock rejects negative, fractional, NaN and infinite block numbers', async () => {
+  const { transport, calls } = createMockTransport({
+    responses: { getblockbynum: { response: rpc('getblockbynum') } },
+  })
+  const client = createPublicClient({ transport })
+
+  for (const blockNumber of [
+    -1n,
+    -1,
+    1.5,
+    Number.NaN,
+    Number.POSITIVE_INFINITY,
+    Number.NEGATIVE_INFINITY,
+  ]) {
+    await expect(
+      client.getBlock({ blockNumber }),
+      `blockNumber: ${blockNumber}`,
+    ).rejects.toThrow('Invalid blockNumber')
+  }
+  // Nothing ever reached the node.
+  expect(calls).toEqual([])
+})
+
 test('getBlock throws BlockNotFoundError on an empty ({}) body', async () => {
   const { transport } = createMockTransport({
     responses: { getblockbynum: { response: {} } },

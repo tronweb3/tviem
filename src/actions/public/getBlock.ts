@@ -1,5 +1,6 @@
 import type { Client } from '../../clients/createClient.js'
 import type { RequestErrorType } from '../../clients/transports/http.js'
+import { BaseError, type BaseErrorType } from '../../errors/base.js'
 import {
   BlockNotFoundError,
   type BlockNotFoundErrorType,
@@ -22,6 +23,7 @@ export type GetBlockParameters = {
 export type GetBlockReturnType = Block
 
 export type GetBlockErrorType =
+  | BaseErrorType
   | BlockNotFoundErrorType
   | RequestErrorType
   | ToBase58ErrorType
@@ -40,11 +42,18 @@ export async function getBlock(
   client: Client,
   { blockNumber, confirmed }: GetBlockParameters,
 ): Promise<GetBlockReturnType> {
+  // `Number()` folds bigints in, so one check rejects negatives, fractions,
+  // `NaN` and infinities before anything reaches the node.
+  const num = Number(blockNumber)
+  if (!Number.isInteger(num) || num < 0)
+    throw new BaseError(
+      `Invalid blockNumber: ${blockNumber}. Expected a non-negative integer block height.`,
+    )
   const response = await client.request<RawBlock>({
     node: confirmed ? 'solidity' : 'full',
     path: 'getblockbynum',
     method: 'POST',
-    body: { num: Number(blockNumber) },
+    body: { num },
   })
   if (isEmptyResponse(response)) throw new BlockNotFoundError({ blockNumber })
   return formatBlock(response)
