@@ -209,3 +209,66 @@ test('getCreate2Address rejects neither bytecode nor bytecodeHash', () => {
     }),
   ).toThrow(BaseError)
 })
+
+// The creator is the first component of the 85-byte preimage: a wrong-size or
+// wrong-prefix creator shifts every byte after it and still hashes to a
+// plausible-looking address — the exact hazard the bytecodeHash size check
+// already guards. It now goes through the SDK's address normalization.
+test('creator must be a valid TRON address', () => {
+  const good = {
+    creatorAddress: '41a7d8a35b260395c14aa456297662092ba3b76f08',
+    salt: '0x01',
+    bytecode: '0x00',
+  } as const
+  const reference = getCreate2Address(good)
+
+  // Every SDK address form of the same creator predicts the same address.
+  expect(
+    getCreate2Address({
+      ...good,
+      creatorAddress: 'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t',
+    }),
+  ).toBe(
+    getCreate2Address({
+      ...good,
+      creatorAddress: '41a614f803b6fd780986a42c78ec9c7f77e6ded13c',
+    }),
+  )
+  expect(
+    getCreate2Address({
+      ...good,
+      creatorAddress: '0xa7d8a35b260395c14aa456297662092ba3b76f08',
+    }),
+  ).toBe(reference)
+
+  // 20 bytes without the 41 prefix, a truncated 21-byte form, and an odd
+  // nibble count are all refused instead of silently mis-hashed.
+  expect(() =>
+    getCreate2Address({
+      ...good,
+      creatorAddress: 'a7d8a35b260395c14aa456297662092ba3b76f08' as never,
+    }),
+  ).toThrow()
+  expect(() =>
+    getCreate2Address({
+      ...good,
+      creatorAddress: '41a7d8a35b260395c14aa456297662092ba3b76f' as never,
+    }),
+  ).toThrow()
+  expect(() =>
+    getCreate2Address({
+      ...good,
+      creatorAddress: '41a7d8a35b260395c14aa456297662092ba3b76f0' as never,
+    }),
+  ).toThrow()
+})
+
+test('bytecode must be whole-byte hex', () => {
+  expect(() =>
+    getCreate2Address({
+      creatorAddress: '41a7d8a35b260395c14aa456297662092ba3b76f08',
+      salt: '0x01',
+      bytecode: '0x0',
+    }),
+  ).toThrow('odd length')
+})
