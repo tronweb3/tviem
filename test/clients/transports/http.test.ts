@@ -506,3 +506,31 @@ test('the config apiKey wins over any header spelling of the key', async () => {
   // Exactly one key on the wire, and it is the config's.
   expect(seen.get('TRON-PRO-API-KEY')).toBe('config-key')
 })
+
+// Redirects: fetch's default `follow` re-sends custom headers — including
+// `TRON-PRO-API-KEY` — to whatever cross-origin target a 30x names. The
+// transport must refuse redirects unless the caller explicitly opts in.
+
+/** The `redirect` mode that actually reaches fetch. */
+function capturedRedirect(fetchOptions?: RequestInit) {
+  let seen: RequestInit['redirect']
+  const transport = http(HOST, {
+    fetchOptions: fetchOptions as never,
+    retryCount: 0,
+    fetchFn: (async (_url: string, init: RequestInit) => {
+      seen = init.redirect
+      return new Response('{}', { status: 200 })
+    }) as never,
+  })({})
+  return transport
+    .request({ path: 'wallet/getnowblock', body: {} })
+    .then(() => seen)
+}
+
+test('requests refuse redirects by default (redirect: "error")', async () => {
+  expect(await capturedRedirect()).toBe('error')
+})
+
+test("a caller's explicit fetchOptions.redirect is honored as an opt-in", async () => {
+  expect(await capturedRedirect({ redirect: 'follow' })).toBe('follow')
+})
