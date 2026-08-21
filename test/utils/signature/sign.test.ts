@@ -105,3 +105,31 @@ describe('serializeSignature', () => {
     expect(serializeSignature({ r, s, v })).toBe(serialized)
   })
 })
+
+// serializeSignature enforces what its JSDoc already promised: r/s exactly
+// 32 bytes of hex, v in {27, 28}, output exactly 65 bytes. Short components
+// are rejected rather than numerically normalized — the same stance the repo
+// took when it removed private-key zero-padding.
+describe('serializeSignature input validation', () => {
+  const r = `0x${'11'.repeat(32)}` as const
+  const s = `0x${'22'.repeat(32)}` as const
+
+  test('rejects a short r', () => {
+    expect(() => serializeSignature({ r: '0x01', s, v: 27 })).toThrow(
+      'Invalid signature r',
+    )
+  })
+  test('rejects a non-hex s', () => {
+    expect(() =>
+      serializeSignature({ r, s: `0x${'zz'.repeat(32)}` as never, v: 27 }),
+    ).toThrow('Invalid signature s')
+  })
+  test('rejects v outside {27, 28}', () => {
+    expect(() => serializeSignature({ r, s, v: 1 })).toThrow('Invalid v')
+    expect(() => serializeSignature({ r, s, v: 29 })).toThrow('Invalid v')
+  })
+  test('valid components serialize to exactly 65 bytes', () => {
+    const out = serializeSignature({ r, s, v: 28 })
+    expect(out).toBe(`0x${'11'.repeat(32)}${'22'.repeat(32)}1c`)
+  })
+})

@@ -29,7 +29,7 @@ function toComponents(signature: SignatureInput): {
     return {
       r: BigInt(r),
       s: BigInt(s),
-      recovery: recovery ?? (v >= 27 ? v - 27 : v),
+      recovery: recovery ?? toRecovery(v),
     }
   }
   const bytes =
@@ -42,13 +42,32 @@ function toComponents(signature: SignatureInput): {
     )
   const r = bytesToBigInt(bytes.subarray(0, 32))
   const s = bytesToBigInt(bytes.subarray(32, 64))
-  const v = bytes[64] as number
-  return { r, s, recovery: v >= 27 ? v - 27 : v }
+  return { r, s, recovery: toRecovery(bytes[64] as number) }
 }
+
+/**
+ * Maps a recovery byte to the raw recovery id. The accepted set is exactly
+ * `{0, 1, 27, 28}` — bare recovery ids and their Ethereum-offset forms.
+ */
+function toRecovery(v: number): number {
+  if (v === 0 || v === 1) return v
+  if (v === 27 || v === 28) return v - 27
+  throw new BaseError(`Invalid recovery value: ${v}. Expected 0, 1, 27 or 28.`)
+}
+
+const wireHex = /^[0-9a-fA-F]{130}$/
 
 function hexToWireBytes(hex: string): ByteArray {
   const clean = hex.startsWith('0x') ? hex.slice(2) : hex
-  const out = new Uint8Array(clean.length / 2)
+  // Exactly 130 hex characters, checked before any per-byte parsing: a
+  // fractional `Uint8Array` length would silently drop a trailing nibble, and
+  // `Number.parseInt('zz', 16)` is NaN, which a typed array stores as 0 — both
+  // would turn a malformed string into a "valid" 65-byte signature.
+  if (!wireHex.test(clean))
+    throw new BaseError(
+      `Invalid signature hex: expected 130 hex characters (r ++ s ++ v), got ${clean.length}.`,
+    )
+  const out = new Uint8Array(65)
   for (let i = 0; i < out.length; i++)
     out[i] = Number.parseInt(clean.slice(i * 2, i * 2 + 2), 16)
   return out

@@ -2,6 +2,7 @@ import { BaseError, type BaseErrorType } from '../../errors/base.js'
 import type { ErrorType } from '../../errors/utils.js'
 import type { ByteArray, Hex } from '../../types/misc.js'
 import { concatBytes } from '../data/concat.js'
+import { type AssertHexBytesErrorType, assertHexBytes } from '../data/isHex.js'
 import { type BareHexErrorType, bareHex } from '../encoding/bareHex.js'
 import { type HexToBytesErrorType, hexToBytes } from '../encoding/toBytes.js'
 import {
@@ -27,6 +28,7 @@ export type SerializableTransaction = {
 }
 
 export type SerializeTransactionErrorType =
+  | AssertHexBytesErrorType
   | SerializeRawDataErrorType
   | HexToBytesErrorType
   | BareHexErrorType
@@ -36,7 +38,12 @@ export type SerializeTransactionErrorType =
   | ErrorType
 
 function bareHexToBytes(hex: string): ByteArray {
-  return hexToBytes(`0x${hex.replace(/^0x/, '')}` as Hex)
+  const prefixed = `0x${hex.replace(/^0x/, '')}` as Hex
+  // Whole bytes only: these are already-serialized bytes (`raw_data_hex`,
+  // signatures), and a left-padded odd nibble would relay different bytes
+  // than the caller supplied.
+  assertHexBytes(prefixed)
+  return hexToBytes(prefixed)
 }
 
 /**
