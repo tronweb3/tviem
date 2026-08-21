@@ -39,8 +39,9 @@ export type DecodeEventLogParameters = {
   eventName?: string | undefined
   /**
    * Whether decoding must be exact. When `false`, an indexed parameter with no
-   * topic is recovered from `data` instead, and `data` that fails to decode is
-   * skipped — the decodable subset of `args` is still returned.
+   * topic is recovered from `data` instead, extra topics are ignored, and
+   * `data` that fails to decode is skipped — the decodable subset of `args`
+   * is still returned.
    * @default true
    */
   strict?: boolean | undefined
@@ -76,10 +77,12 @@ const docsPath = '/docs/abi/decodeEventLog'
  * topic, so they decode to that 32-byte hash hex (not the original value).
  *
  * By default a log that does not match the event exactly throws
- * ({@link DecodeLogTopicsMismatch} / {@link DecodeLogDataMismatch}). With
+ * ({@link DecodeLogTopicsMismatch} / {@link DecodeLogDataMismatch}) — a
+ * missing topic for an indexed parameter and a log carrying more topics than
+ * the event has indexed parameters both count as mismatches. With
  * `strict: false` the mismatch is tolerated instead: an indexed parameter with
- * no topic is recovered from `data`, undecodable `data` is skipped, and the
- * decodable subset of `args` is returned.
+ * no topic is recovered from `data`, extra topics are ignored, undecodable
+ * `data` is skipped, and the decodable subset of `args` is returned.
  *
  * @example
  * decodeEventLog({ abi, topics, data })
@@ -96,6 +99,19 @@ export function decodeEventLog(
 
   // Anonymous events carry no selector, so every topic is an argument topic.
   const argTopics = abiItem.anonymous ? topics : argTopics_
+
+  // A log carrying MORE topics than the event has indexed parameters is not a
+  // log of this event — reject it instead of silently dropping the extras.
+  const indexedCount = inputs.filter(
+    (input) => 'indexed' in input && input.indexed,
+  ).length
+  if (strict && argTopics.length > indexedCount)
+    throw new DecodeLogTopicsMismatch({
+      abiItem,
+      expectedTopics: indexedCount,
+      formattedAbiItem: formatAbiItem(abiItem, { includeName: true }),
+      receivedTopics: argTopics.length,
+    })
 
   const isUnnamed = inputs.some((input) => !input.name)
   const args: Record<string, unknown> | unknown[] = isUnnamed ? [] : {}

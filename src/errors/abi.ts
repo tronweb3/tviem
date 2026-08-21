@@ -477,25 +477,22 @@ export type DecodeLogTopicsMismatchErrorType = DecodeLogTopicsMismatch & {
 export class DecodeLogTopicsMismatch extends BaseError {
   abiItem: AbiEvent
 
-  constructor({
-    abiItem,
-    formattedAbiItem,
-    param,
-  }: {
-    abiItem: AbiEvent
-    formattedAbiItem: string
-    param: AbiParameter & { indexed: boolean }
-  }) {
+  constructor(
+    args: { abiItem: AbiEvent; formattedAbiItem: string } & (
+      | { param: AbiParameter & { indexed: boolean } }
+      | { expectedTopics: number; receivedTopics: number }
+    ),
+  ) {
     super(
-      [
-        `Expected a topic for indexed event parameter${
-          param.name ? ` "${param.name}"` : ''
-        } on event "${formattedAbiItem}".`,
-      ].join('\n'),
+      'param' in args
+        ? `Expected a topic for indexed event parameter${
+            args.param.name ? ` "${args.param.name}"` : ''
+          } on event "${args.formattedAbiItem}".`
+        : `Expected ${args.expectedTopics} argument topics for event "${args.formattedAbiItem}", but got ${args.receivedTopics}.`,
       { name: 'DecodeLogTopicsMismatch' },
     )
 
-    this.abiItem = abiItem
+    this.abiItem = args.abiItem
   }
 }
 

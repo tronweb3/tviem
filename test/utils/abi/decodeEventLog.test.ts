@@ -194,6 +194,64 @@ describe('strict: false decodes leniently', () => {
   })
 })
 
+describe('extra topics are rejected in strict mode', () => {
+  const transfer = fixtures.find((f) => f.name === 'transfer')!
+  const EXTRA_TOPIC =
+    '0x00000000000000000000000000000000000000000000000000000000000004d2'
+
+  test('a log with more argument topics than indexed parameters throws', () => {
+    // An ERC-721-shaped log (3 argument topics) decoded with the ERC-20
+    // Transfer ABI (2 indexed): the extra topic proves the log is not this
+    // event, even though the data alone would decode cleanly.
+    expect(() =>
+      decodeEventLog({
+        abi: transfer.abi as unknown as Abi,
+        topics: [...transfer.topics, EXTRA_TOPIC],
+        data: transfer.data,
+      }),
+    ).toThrow(DecodeLogTopicsMismatch)
+  })
+
+  test('the error reports the expected and received topic counts', () => {
+    expect(() =>
+      decodeEventLog({
+        abi: transfer.abi as unknown as Abi,
+        topics: [...transfer.topics, EXTRA_TOPIC],
+        data: transfer.data,
+      }),
+    ).toThrow('Expected 2 argument topics')
+  })
+
+  test('anonymous events count every topic as an argument topic', () => {
+    const abi = [
+      {
+        type: 'event',
+        name: 'Ping',
+        anonymous: true,
+        inputs: [{ indexed: true, name: 'n', type: 'uint256' }],
+      },
+    ] as unknown as Abi
+    expect(() =>
+      decodeEventLog({
+        abi,
+        eventName: 'Ping',
+        topics: [EXTRA_TOPIC, EXTRA_TOPIC],
+      }),
+    ).toThrow(DecodeLogTopicsMismatch)
+  })
+
+  test('strict: false tolerates the extra topic', () => {
+    const { eventName, args } = decodeEventLog({
+      abi: transfer.abi as unknown as Abi,
+      topics: [...transfer.topics, EXTRA_TOPIC],
+      data: transfer.data,
+      strict: false,
+    })
+    expect(eventName).toBe('Transfer')
+    expect((args as Record<string, unknown>).value).toBe(1000000n)
+  })
+})
+
 describe('strict data mismatches are reported as DecodeLogDataMismatch', () => {
   test('an out-of-bounds tail offset is wrapped, not leaked raw', () => {
     // One 32-byte word holding offset 32 — the dynamic tail it points at is
