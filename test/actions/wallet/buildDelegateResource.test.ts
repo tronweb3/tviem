@@ -210,3 +210,17 @@ test('throws AccountNotFoundError when no account is available (bare action)', a
     }),
   ).rejects.toBeInstanceOf(AccountNotFoundError)
 })
+
+test('a stringly-typed lock is refused, not signed as locked', async () => {
+  const { transport } = buildMock()
+  const client = createWalletClient({ account: pk1, transport })
+
+  await expect(
+    client.buildDelegateResource({
+      receiverAddress: receiver,
+      balance: 1_000_000n,
+      resource: 'ENERGY',
+      lock: 'false' as never,
+    }),
+  ).rejects.toThrow('Invalid lock: expected a boolean, got "false"')
+})

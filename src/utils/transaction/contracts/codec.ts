@@ -127,8 +127,18 @@ function encodeField(field: FieldSpec, value: unknown): ByteArray {
         throw new BaseError(`Unknown ${field.name} enum name "${value}".`)
       return fInt32(field.no, index)
     }
-    case 'bool':
-      return fBool(field.no, Boolean(value))
+    case 'bool': {
+      // A real boolean only. `Boolean('false')` is true, so a stringly-typed
+      // caller would sign the OPPOSITE of what the value spells — a revoked
+      // approval as an approval, an unlocked delegation as locked.
+      if (typeof value !== 'boolean')
+        throw new BaseError(
+          `Invalid ${field.name}: expected a boolean, got ${
+            typeof value === 'string' ? `"${value}"` : String(value)
+          }.`,
+        )
+      return fBool(field.no, value)
+    }
     case 'message':
       return fMessage(
         field.no,

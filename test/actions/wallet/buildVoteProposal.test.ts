@@ -48,3 +48,18 @@ test('throws AccountNotFoundError when no account is available', async () => {
     }),
   ).rejects.toBeInstanceOf(AccountNotFoundError)
 })
+
+test('a stringly-typed isApproval is refused, not signed as approval', async () => {
+  const client = makeTviemClient()
+
+  // Untyped JS (or JSON/env config) hands over 'false'; Boolean('false') is
+  // true, so without the codec guard this would SIGN an approval for a call
+  // that spells revocation.
+  await expect(
+    client.buildVoteProposal({
+      proposalId: 1n,
+      isApproval: 'false' as never,
+      blockHeader: tviemHeader,
+    }),
+  ).rejects.toThrow('Invalid is_add_approval: expected a boolean, got "false"')
+})
