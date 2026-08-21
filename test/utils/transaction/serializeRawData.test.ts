@@ -314,3 +314,19 @@ test('serializes a 1MB contract bytecode to a txID without a stack overflow (K4)
   }).not.toThrow()
   expect(txId).toMatch(/^[0-9a-f]{64}$/)
 })
+
+test('raw-level byte fields reject odd-nibble hex instead of left-padding', () => {
+  // These are already-serialized bytes: '123' padded to '0123' would sign
+  // different bytes than the caller wrote. Whole bytes only — SIZE is not
+  // checked here (that is the action layer's business), only fidelity.
+  const base = { contract: [] }
+  expect(() =>
+    toRawDataHex({ ...base, ref_block_bytes: '123' } as RawData),
+  ).toThrow('odd length')
+  expect(() =>
+    toRawDataHex({ ...base, ref_block_hash: '0102030405060' } as RawData),
+  ).toThrow('odd length')
+  expect(() => toRawDataHex({ ...base, data: 'abc' } as RawData)).toThrow(
+    'odd length',
+  )
+})

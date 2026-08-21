@@ -6,6 +6,7 @@ import {
 import type { ErrorType } from '../../errors/utils.js'
 import type { ByteArray, Hex } from '../../types/misc.js'
 import { concatBytes } from '../data/concat.js'
+import { type AssertHexBytesErrorType, assertHexBytes } from '../data/isHex.js'
 import { bareHex } from '../encoding/bareHex.js'
 import {
   type HexToBytesErrorType,
@@ -78,6 +79,17 @@ export type RawData = {
 /** Prefixes a bare hex string with `0x` (leaves an already-prefixed one). */
 function toHexInput(value: string): Hex {
   return (value.startsWith('0x') ? value : `0x${value}`) as Hex
+}
+
+/**
+ * A raw-level byte field (`ref_block_bytes` / `ref_block_hash` / `data`):
+ * whole bytes only. `hexToBytes` left-pads an odd nibble count, which would
+ * silently serialize different bytes than the caller wrote — into the txID.
+ */
+function toByteField(value: string): ByteArray {
+  const hex = toHexInput(value)
+  assertHexBytes(hex)
+  return hexToBytes(hex)
 }
 
 /**
@@ -161,6 +173,7 @@ export type SerializeRawDataErrorType =
   | FInt32ErrorType
   | FIntErrorType
   | FMessageErrorType
+  | AssertHexBytesErrorType
   | HexToBytesErrorType
   | StringToBytesErrorType
   | ErrorType
@@ -192,11 +205,11 @@ export function serializeRawData(rawData: RawData): ByteArray {
   )
   const parts: ByteArray[] = []
   if (rawData.ref_block_bytes)
-    parts.push(fBytes(1, hexToBytes(toHexInput(rawData.ref_block_bytes))))
+    parts.push(fBytes(1, toByteField(rawData.ref_block_bytes)))
   if (rawData.ref_block_hash)
-    parts.push(fBytes(4, hexToBytes(toHexInput(rawData.ref_block_hash))))
+    parts.push(fBytes(4, toByteField(rawData.ref_block_hash)))
   if (rawData.expiration) parts.push(fInt(8, BigInt(rawData.expiration)))
-  if (rawData.data) parts.push(fBytes(10, hexToBytes(toHexInput(rawData.data))))
+  if (rawData.data) parts.push(fBytes(10, toByteField(rawData.data)))
   for (const contract of rawData.contract)
     parts.push(fMessage(11, serializeContract(contract), { emitDefault: true }))
   if (rawData.timestamp) parts.push(fInt(14, BigInt(rawData.timestamp)))

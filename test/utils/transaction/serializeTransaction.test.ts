@@ -73,3 +73,14 @@ describe('serializeTransaction / toBroadcastHex', () => {
     expect(() => serializeTransaction({ signature: [signature] })).toThrow()
   })
 })
+
+test('broadcast hex inputs reject odd-nibble hex instead of left-padding', () => {
+  // raw_data_hex and signatures are already-serialized bytes: 'a' padded to
+  // '0a' would relay different bytes than the caller supplied.
+  expect(() =>
+    toBroadcastHex({ raw_data_hex: 'a', signature: ['bb'] } as never),
+  ).toThrow('odd length')
+  expect(() =>
+    toBroadcastHex({ raw_data_hex: 'aa', signature: ['b'] } as never),
+  ).toThrow('odd length')
+})
