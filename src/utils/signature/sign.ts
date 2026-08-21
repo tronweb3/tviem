@@ -3,7 +3,6 @@ import { secp256k1 } from '@noble/curves/secp256k1'
 import { BaseError, type BaseErrorType } from '../../errors/base.js'
 import type { ErrorType } from '../../errors/utils.js'
 import type { ByteArray, Hex } from '../../types/misc.js'
-import { type ConcatErrorType, concat } from '../data/concat.js'
 import { type HexToBytesErrorType, hexToBytes } from '../encoding/toBytes.js'
 
 /** A secp256k1 signature in TRON wire form (`r(32) ++ s(32) ++ v(1)`). */
@@ -25,11 +24,24 @@ export type Signature = {
   serialized: Hex
 }
 
-export type SerializeSignatureErrorType = ConcatErrorType | ErrorType
+export type SerializeSignatureErrorType = BaseErrorType | ErrorType
+
+/** Exactly 32 bytes of hex, or a structured error naming the component. */
+function componentHex(name: 'r' | 's', value: Hex): string {
+  const clean = value.startsWith('0x') ? value.slice(2) : value
+  if (!/^[0-9a-fA-F]{64}$/.test(clean))
+    throw new BaseError(
+      `Invalid signature ${name}: expected 32 bytes of hex, got "${value}".`,
+    )
+  return clean
+}
 
 /**
  * Serializes the `r`, `s` and `v` components into the `0x`-prefixed TRON wire
- * form `r(32) ++ s(32) ++ v(1)` (65 bytes).
+ * form `r(32) ++ s(32) ++ v(1)` (65 bytes). Each component is required in the
+ * exact width the wire form carries — a shorter `r`/`s` is rejected rather
+ * than zero-padded, since a short value cannot be told apart from a truncated
+ * one.
  *
  * @param signature Signature components (`r`/`s` as `0x`-prefixed 32-byte hex,
  * `v` in `{27, 28}`).
@@ -44,8 +56,9 @@ export function serializeSignature({
   s: Hex
   v: number
 }): Hex {
-  const rs = concat([r, s])
-  return `0x${rs.slice(2)}${v.toString(16).padStart(2, '0')}` as Hex
+  if (v !== 27 && v !== 28)
+    throw new BaseError(`Invalid v: ${v}. Expected 27 or 28.`)
+  return `0x${componentHex('r', r)}${componentHex('s', s)}${v.toString(16)}` as Hex
 }
 
 export type SignParameters = {

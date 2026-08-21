@@ -104,3 +104,59 @@ describe('verifyMessage', () => {
     )
   })
 })
+
+// Wire-form strictness: the parser accepts exactly 130 hex characters
+// (optionally 0x-prefixed) and the recovery set {0, 1, 27, 28}. Anything else
+// verifies false — never a silent truncation (a trailing nibble used to be
+// dropped by `Uint8Array(65.5)`) and never NaN→0 (`parseInt('zz', 16)`).
+describe('malformed wire signatures', () => {
+  const verify = (signature: string) =>
+    verifyMessage({ message, signature, address })
+
+  test('a valid signature stays valid (baseline)', () => {
+    expect(verify(messageSignature)).toBe(true)
+    expect(verify(`0x${messageSignature}`)).toBe(true)
+  })
+
+  test('a trailing extra nibble verifies false', () => {
+    expect(verify(`${messageSignature}f`)).toBe(false)
+  })
+
+  test('a missing trailing nibble verifies false', () => {
+    expect(verify(messageSignature.slice(0, -1))).toBe(false)
+  })
+
+  test('non-hex characters verify false', () => {
+    expect(verify(`${messageSignature.slice(0, -2)}zz`)).toBe(false)
+  })
+
+  test('a recovery byte outside {0,1,27,28} verifies false', () => {
+    // 0x1d = 29.
+    expect(verify(`${messageSignature.slice(0, -2)}1d`)).toBe(false)
+  })
+
+  test('a 64- or 66-byte array verifies false', () => {
+    const bytes = new Uint8Array(
+      messageSignature.match(/.{2}/g)!.map((b) => Number.parseInt(b, 16)),
+    )
+    expect(verify(bytes.subarray(0, 64) as never)).toBe(false)
+    const wide = new Uint8Array(66)
+    wide.set(bytes)
+    expect(verify(wide as never)).toBe(false)
+  })
+
+  test('recoverPublicKey names the defect instead of mis-parsing', () => {
+    expect(() =>
+      recoverPublicKey({
+        hash: hashMessage(message),
+        signature: `${messageSignature}f`,
+      }),
+    ).toThrow('130 hex characters')
+    expect(() =>
+      recoverPublicKey({
+        hash: hashMessage(message),
+        signature: `${messageSignature.slice(0, -2)}1d`,
+      }),
+    ).toThrow('Expected 0, 1, 27 or 28')
+  })
+})
