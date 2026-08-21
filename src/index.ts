@@ -730,6 +730,14 @@ export {
   type UrlRequiredErrorType,
 } from './errors/transport.js'
 export {
+  InvalidDomainError,
+  type InvalidDomainErrorType,
+  InvalidPrimaryTypeError,
+  type InvalidPrimaryTypeErrorType,
+  InvalidStructTypeError,
+  type InvalidStructTypeErrorType,
+} from './errors/typedData.js'
+export {
   InvalidDecimalNumberError,
   type InvalidDecimalNumberErrorType,
 } from './errors/unit.js'

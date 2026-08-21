@@ -7,16 +7,30 @@ import type {
   TypedData,
   TypedDataParameter,
 } from 'abitype'
+import {
+  BytesSizeMismatchError,
+  type BytesSizeMismatchErrorType,
+} from '../../errors/abi.js'
 import { BaseError, type BaseErrorType } from '../../errors/base.js'
+import {
+  InvalidDomainError,
+  type InvalidDomainErrorType,
+  InvalidPrimaryTypeError,
+  type InvalidPrimaryTypeErrorType,
+  InvalidStructTypeError,
+  type InvalidStructTypeErrorType,
+} from '../../errors/typedData.js'
 import type { ErrorType } from '../../errors/utils.js'
 import type { AddressInput } from '../../types/address.js'
 import type { Hex } from '../../types/misc.js'
 import { toEvm } from '../address/toEvm.js'
 import { concat } from '../data/concat.js'
 import { pad } from '../data/pad.js'
+import { size } from '../data/size.js'
 import { toBytes } from '../encoding/toBytes.js'
-import { numberToHex } from '../encoding/toHex.js'
+import { type NumberToHexErrorType, numberToHex } from '../encoding/toHex.js'
 import { keccak256 } from '../hash/keccak256.js'
+import { bytesRegex, integerRegex } from '../regex.js'
 
 /** A map of struct name → its ordered fields. */
 export type TypedDataTypes = Record<string, readonly TypedDataParameter[]>
@@ -42,7 +56,14 @@ export type HashTypedDataParameters = {
   message?: Record<string, unknown> | undefined
 }
 
-export type HashTypedDataErrorType = BaseErrorType | ErrorType
+export type HashTypedDataErrorType =
+  | BaseErrorType
+  | BytesSizeMismatchErrorType
+  | InvalidDomainErrorType
+  | InvalidPrimaryTypeErrorType
+  | InvalidStructTypeErrorType
+  | NumberToHexErrorType
+  | ErrorType
 
 /** Canonical domain field order and their EIP-712 types. */
 const DOMAIN_FIELDS: readonly { name: string; type: string }[] = [
@@ -139,6 +160,124 @@ function hashStruct(
   return keccak256(encodeData(primaryType, types, data))
 }
 
+/**
+ * A struct name that also reads as a primitive type would win the struct
+ * branch of `encodeField`, silently hijacking every field of that type —
+ * the TRON-specific `trcToken` included.
+ */
+function assertStructNotShadowing(type: string): void {
+  if (
+    type === 'address' ||
+    type === 'bool' ||
+    type === 'string' ||
+    type === 'trcToken' ||
+    bytesRegex.test(type) ||
+    integerRegex.test(type)
+  )
+    throw new InvalidStructTypeError({ type })
+}
+
+/** Validates every field of a struct value against its declared types. */
+function validateStruct(
+  types: TypedDataTypes,
+  type: string,
+  data: Record<string, unknown>,
+): void {
+  for (const field of types[type] ?? [])
+    validateField(types, field.type, data?.[field.name])
+}
+
+/** Validates one value against its declared field type (recursing into
+ * structs and arrays). Mirrors `encodeField`'s dispatch order. */
+function validateField(
+  types: TypedDataTypes,
+  type: string,
+  value: unknown,
+): void {
+  if (types[type]) {
+    assertStructNotShadowing(type)
+    validateStruct(types, type, value as Record<string, unknown>)
+    return
+  }
+
+  if (type.endsWith(']')) {
+    const base = type.replace(/\[\d*\]$/, '')
+    if (Array.isArray(value))
+      for (const item of value) validateField(types, base, item)
+    return
+  }
+
+  // `(u)intN`: the value must fit the declared width. `encodeField` always
+  // encodes a full 32-byte word, so narrower widths are only enforced here.
+  const integerMatch = type.match(integerRegex)
+  if (
+    integerMatch &&
+    (typeof value === 'number' ||
+      typeof value === 'bigint' ||
+      typeof value === 'string')
+  ) {
+    const [, base, bits] = integerMatch
+    const big = (() => {
+      try {
+        return BigInt(value)
+      } catch {
+        return undefined // not numeric — encodeField reports the conversion
+      }
+    })()
+    if (big !== undefined)
+      numberToHex(big, {
+        signed: base === 'int',
+        size: (bits ? Number(bits) : 256) / 8,
+      })
+    return
+  }
+
+  // `bytesN`: must be exactly `N` bytes (`encodeField` would silently
+  // right-pad a short value into a different digest).
+  const bytesMatch = type.match(bytesRegex)
+  if (
+    bytesMatch?.[1] &&
+    (typeof value === 'string' || value instanceof Uint8Array)
+  ) {
+    const expectedSize = Number(bytesMatch[1])
+    const givenSize = size(value as Hex)
+    if (givenSize !== expectedSize)
+      throw new BytesSizeMismatchError({ expectedSize, givenSize })
+  }
+}
+
+/**
+ * Validates typed-data parameters before any hashing: `primaryType` must be
+ * a defined struct (or `EIP712Domain`) and must not shadow a primitive type,
+ * the domain must be an object whose present fields match the canonical
+ * domain types, integer values must fit their declared width, and `bytesN`
+ * values must be exactly `N` bytes — so malformed input fails loudly instead
+ * of producing a silently wrong digest.
+ */
+function validateTypedData(parameters: HashTypedDataParameters): void {
+  const { domain, types, primaryType, message } = parameters
+  const types_ = types as TypedDataTypes
+
+  if (primaryType !== 'EIP712Domain' && !types_[primaryType])
+    throw new InvalidPrimaryTypeError({ primaryType, types: types_ })
+
+  if (domain !== undefined) {
+    if (typeof domain !== 'object' || domain === null || Array.isArray(domain))
+      throw new InvalidDomainError({ domain })
+    // The domain is encoded against the fixed `DOMAIN_FIELDS` types (never
+    // against `types`), so its fields are validated as bare primitives.
+    for (const field of DOMAIN_FIELDS) {
+      const value = (domain as Record<string, unknown>)[field.name]
+      if (value != null) validateField({}, field.type, value)
+    }
+  }
+
+  if (primaryType !== 'EIP712Domain') {
+    assertStructNotShadowing(primaryType)
+    validateStruct(types_, primaryType, message ?? {})
+  }
+}
+
 /** Hashes the domain as an `EIP712Domain` struct over its present fields. */
 export function hashDomain(domain: TypedDataDomain): Hex {
   const present = DOMAIN_FIELDS.filter(
@@ -160,10 +299,15 @@ export function hashDomain(domain: TypedDataDomain): Hex {
  * any TRON address form and are encoded as their 20-byte EVM form, left-padded
  * to 32 bytes. When `primaryType` is `EIP712Domain`, only the domain is hashed.
  *
+ * Parameters are validated before hashing (unknown `primaryType`, primitive-
+ * shadowing struct names, malformed domain, out-of-width integers, wrong-size
+ * `bytesN` values), so bad input throws instead of yielding a wrong digest.
+ *
  * @param parameters `domain`, `types`, `primaryType`, `message`.
  * @returns The `0x`-prefixed 32-byte digest.
  */
 export function hashTypedData(parameters: HashTypedDataParameters): Hex {
+  validateTypedData(parameters)
   const { domain = {}, types, primaryType, message = {} } = parameters
   const parts: Hex[] = ['0x1901']
   parts.push(hashDomain(domain))

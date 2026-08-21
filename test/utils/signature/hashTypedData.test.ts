@@ -5,6 +5,8 @@
 // the one genuinely TRON-specific behavior of the digest).
 import { describe, expect, test } from 'vitest'
 
+import { BytesSizeMismatchError } from '../../../src/errors/abi.js'
+import { IntegerOutOfRangeError } from '../../../src/errors/encoding.js'
 import type { AddressInput, EvmAddress } from '../../../src/types/address.js'
 import { concat } from '../../../src/utils/data/concat.js'
 import { keccak256 } from '../../../src/utils/hash/keccak256.js'
@@ -194,5 +196,171 @@ describe('hashTypedData', () => {
         message: { f: '0x00' },
       }),
     ).toThrow()
+  })
+})
+
+describe('hashTypedData validation', () => {
+  test('rejects an integer beyond its declared width', () => {
+    expect(() =>
+      hashTypedData({
+        domain,
+        types: { X: [{ name: 'n', type: 'uint8' }] },
+        primaryType: 'X',
+        message: { n: 256 },
+      }),
+    ).toThrow(IntegerOutOfRangeError)
+  })
+
+  test('rejects a signed integer below its declared width', () => {
+    expect(() =>
+      hashTypedData({
+        domain,
+        types: { X: [{ name: 'n', type: 'int8' }] },
+        primaryType: 'X',
+        message: { n: -129 },
+      }),
+    ).toThrow(IntegerOutOfRangeError)
+  })
+
+  test('rejects a negative value for an unsigned integer given as a string', () => {
+    expect(() =>
+      hashTypedData({
+        domain,
+        types: { X: [{ name: 'n', type: 'uint16' }] },
+        primaryType: 'X',
+        message: { n: '65536' },
+      }),
+    ).toThrow(IntegerOutOfRangeError)
+  })
+
+  test('validates integers inside array elements', () => {
+    expect(() =>
+      hashTypedData({
+        domain,
+        types: { X: [{ name: 'nums', type: 'uint8[3]' }] },
+        primaryType: 'X',
+        message: { nums: [1, 256, 3] },
+      }),
+    ).toThrow(IntegerOutOfRangeError)
+  })
+
+  test('validates fields of nested structs', () => {
+    expect(() =>
+      hashTypedData({
+        domain,
+        types: {
+          Inner: [{ name: 'n', type: 'uint8' }],
+          X: [{ name: 'inner', type: 'Inner' }],
+        },
+        primaryType: 'X',
+        message: { inner: { n: 300 } },
+      }),
+    ).toThrow(IntegerOutOfRangeError)
+  })
+
+  test('rejects a bytesN value of the wrong size', () => {
+    // Undersized: 31 bytes for bytes32 (currently right-padded silently).
+    expect(() =>
+      hashTypedData({
+        domain,
+        types: { X: [{ name: 'b', type: 'bytes32' }] },
+        primaryType: 'X',
+        message: {
+          b: '0x00112233445566778899aabbccddeeff00112233445566778899aabbccddee',
+        },
+      }),
+    ).toThrow(BytesSizeMismatchError)
+    // Oversized (but under a word): 5 bytes for bytes4.
+    expect(() =>
+      hashTypedData({
+        domain,
+        types: { X: [{ name: 'b', type: 'bytes4' }] },
+        primaryType: 'X',
+        message: { b: '0x1122334455' },
+      }),
+    ).toThrow(BytesSizeMismatchError)
+  })
+
+  test('rejects a primaryType missing from types', () => {
+    expect(() =>
+      hashTypedData({
+        domain,
+        types: mailTypes,
+        primaryType: 'Missing',
+        message: mail,
+      }),
+    ).toThrow('Invalid primary type')
+  })
+
+  test('rejects a struct type that shadows a primitive type', () => {
+    expect(() =>
+      hashTypedData({
+        domain,
+        types: {
+          uint256: [{ name: 'value', type: 'string' }],
+          X: [{ name: 'n', type: 'uint256' }],
+        },
+        primaryType: 'X',
+        message: { n: { value: 'hijacked' } },
+      }),
+    ).toThrow('Struct type "uint256" is invalid')
+  })
+
+  test('rejects a primaryType that shadows a primitive type', () => {
+    expect(() =>
+      hashTypedData({
+        domain,
+        types: { uint256: [{ name: 'value', type: 'string' }] },
+        primaryType: 'uint256',
+        message: { value: 'hijacked' },
+      }),
+    ).toThrow('Struct type "uint256" is invalid')
+  })
+
+  test('rejects a struct type that shadows trcToken', () => {
+    expect(() =>
+      hashTypedData({
+        domain,
+        types: {
+          trcToken: [{ name: 'value', type: 'string' }],
+          X: [{ name: 't', type: 'trcToken' }],
+        },
+        primaryType: 'X',
+        message: { t: { value: 'hijacked' } },
+      }),
+    ).toThrow('Struct type "trcToken" is invalid')
+  })
+
+  test('rejects a non-object domain', () => {
+    expect(() =>
+      hashTypedData({
+        domain: 'not a domain' as never,
+        types: mailTypes,
+        primaryType: 'Mail',
+        message: mail,
+      }),
+    ).toThrow('Invalid domain')
+  })
+
+  test('rejects a domain salt of the wrong size', () => {
+    expect(() =>
+      hashTypedData({
+        domain: { ...domain, salt: '0x1234' },
+        types: mailTypes,
+        primaryType: 'Mail',
+        message: mail,
+      }),
+    ).toThrow(BytesSizeMismatchError)
+  })
+
+  test('rejects a domain chainId beyond uint256', () => {
+    expect(() =>
+      hashTypedData({
+        domain: { ...domain, chainId: 2n ** 256n },
+        types: mailTypes,
+        primaryType: 'Mail',
+        message: mail,
+      }),
+    ).toThrow(IntegerOutOfRangeError)
   })
 })
