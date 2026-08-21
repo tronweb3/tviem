@@ -15,7 +15,7 @@ import {
   stringToBytes,
 } from '../../encoding/toBytes.js'
 import { bytesToHex } from '../../encoding/toHex.js'
-import { int64ToJson } from '../int64.js'
+import { int64InputToBigInt, int64ToJson } from '../int64.js'
 import {
   type NormalizeAddressErrorType,
   normalizeAddress,
@@ -116,9 +116,9 @@ function encodeField(field: FieldSpec, value: unknown): ByteArray {
     case 'string':
       return fBytes(field.no, stringToBytes(value as string))
     case 'i64':
-      return fInt(field.no, int64InputToBigInt(value as Int64))
+      return fInt(field.no, int64InputToBigInt(field.name, value as Int64))
     case 'i32':
-      return fInt32(field.no, int64InputToBigInt(value as Int64))
+      return fInt32(field.no, int64InputToBigInt(field.name, value as Int64))
     case 'enum': {
       // Enums are `int32` on the wire, so they carry the same bound.
       if (typeof value !== 'string') return fInt32(field.no, value as number)
@@ -154,11 +154,6 @@ function encodeField(field: FieldSpec, value: unknown): ByteArray {
         ),
       )
   }
-}
-
-/** Converts an `int64` input (bigint, number, or decimal string) to bigint. */
-function int64InputToBigInt(value: Int64): bigint {
-  return BigInt(value)
 }
 
 /** Converts a bytes field input (hex or raw bytes) to bytes. */

@@ -15,6 +15,7 @@ import {
   stringToBytes,
 } from '../encoding/toBytes.js'
 import type { EncodeMessageErrorType } from './contracts/codec.js'
+import { int64InputToBigInt } from './int64.js'
 import {
   type FBytesErrorType,
   type FInt32ErrorType,
@@ -208,12 +209,15 @@ export function serializeRawData(rawData: RawData): ByteArray {
     parts.push(fBytes(1, toByteField(rawData.ref_block_bytes)))
   if (rawData.ref_block_hash)
     parts.push(fBytes(4, toByteField(rawData.ref_block_hash)))
-  if (rawData.expiration) parts.push(fInt(8, BigInt(rawData.expiration)))
+  if (rawData.expiration)
+    parts.push(fInt(8, int64InputToBigInt('expiration', rawData.expiration)))
   if (rawData.data) parts.push(fBytes(10, toByteField(rawData.data)))
   for (const contract of rawData.contract)
     parts.push(fMessage(11, serializeContract(contract), { emitDefault: true }))
-  if (rawData.timestamp) parts.push(fInt(14, BigInt(rawData.timestamp)))
-  if (rawData.fee_limit) parts.push(fInt(18, BigInt(rawData.fee_limit)))
+  if (rawData.timestamp)
+    parts.push(fInt(14, int64InputToBigInt('timestamp', rawData.timestamp)))
+  if (rawData.fee_limit)
+    parts.push(fInt(18, int64InputToBigInt('fee_limit', rawData.fee_limit)))
   return concatBytes(parts)
 }
 

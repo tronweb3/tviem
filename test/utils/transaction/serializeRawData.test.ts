@@ -11,6 +11,7 @@ import {
   type RawData,
   toRawDataHex,
 } from '../../../src/utils/transaction/serializeRawData.js'
+import type { Int64 } from '../../../src/utils/transaction/types.js'
 import { loadTxFixtures } from '../../fixtures/tx/loader.js'
 
 // §2.3 canonical reference vector.
@@ -328,5 +329,55 @@ test('raw-level byte fields reject odd-nibble hex instead of left-padding', () =
   ).toThrow('odd length')
   expect(() => toRawDataHex({ ...base, data: 'abc' } as RawData)).toThrow(
     'odd length',
+  )
+})
+
+test('int64 inputs reject what cannot round-trip', () => {
+  const transfer = (amount: Int64): RawData => ({
+    ref_block_bytes: '1234',
+    ref_block_hash: '0102030405060708',
+    expiration: 1700000060000n,
+    timestamp: 1700000000000n,
+    contract: [
+      {
+        type: ContractType.TransferContract,
+        parameter: {
+          type_url: 'type.googleapis.com/protocol.TransferContract',
+          value: { owner_address: owner, to_address: to, amount },
+        },
+      },
+    ],
+  })
+
+  // The exact safe boundary still encodes; so do bigint and decimal-string
+  // values far past it.
+  expect(() => toRawDataHex(transfer(9007199254740991))).not.toThrow()
+  expect(() => toRawDataHex(transfer(90_000_000_000_000_000n))).not.toThrow()
+  expect(() => toRawDataHex(transfer('90000000000000000'))).not.toThrow()
+
+  // A number past 2^53 has ALREADY been rounded by IEEE-754 — BigInt() would
+  // faithfully sign a value the caller never wrote (off by 1 SUN here).
+  expect(() => toRawDataHex(transfer(Number(9007199254740993n)))).toThrow(
+    'not a safe integer',
+  )
+  // Fractions and non-decimal strings used to escape as raw RangeError /
+  // SyntaxError from inside BigInt().
+  expect(() => toRawDataHex(transfer(1.5))).toThrow('not a safe integer')
+  expect(() => toRawDataHex(transfer('1.5'))).toThrow(
+    'not a decimal integer string',
+  )
+  expect(() => toRawDataHex(transfer('abc'))).toThrow(
+    'not a decimal integer string',
+  )
+
+  // The raw-level int64 fields carry the same guard.
+  expect(() =>
+    toRawDataHex({
+      ...transfer(1n),
+      fee_limit: Number(9007199254740993n),
+    }),
+  ).toThrow('Invalid fee_limit')
+  expect(() => toRawDataHex({ ...transfer(1n), expiration: '1e10' })).toThrow(
+    'Invalid expiration',
   )
 })
