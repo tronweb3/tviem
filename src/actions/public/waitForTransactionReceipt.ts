@@ -1,4 +1,5 @@
 import type { Client } from '../../clients/createClient.js'
+import { BaseError, type BaseErrorType } from '../../errors/base.js'
 import {
   TransactionRevertedError,
   type TransactionRevertedErrorType,
@@ -71,17 +72,13 @@ export type TransactionReceipt = {
 export type WaitForTransactionReceiptReturnType = TransactionReceipt
 
 export type WaitForTransactionReceiptErrorType =
+  | BaseErrorType
   | GetNowBlockErrorType
   | GetTransactionInfoErrorType
   | TransactionRevertedErrorType
   | TronRpcErrorType
   | WaitForTransactionReceiptTimeoutErrorType
   | ErrorType
-
-/** Resolves after `ms` milliseconds (timer-based, so fake timers can drive it). */
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms))
-}
 
 /** Whether a `getTransactionInfo` result means the tx is not yet packed. */
 function isPending(receipt: unknown): boolean {
@@ -127,8 +124,10 @@ function toBlockNumber(value: unknown): number {
  * action's default.
  *
  * A `null`/empty receipt means "not yet packed": the poller waits
- * `pollingInterval` and retries. Exceeding `timeout` rejects with a
- * {@link WaitForTransactionReceiptTimeoutError}. A `'reverted'` status does
+ * `pollingInterval` and retries. `timeout` is a wall-clock deadline: when it
+ * passes the promise rejects with a
+ * {@link WaitForTransactionReceiptTimeoutError} even if a poll is still in
+ * flight — a result arriving after the deadline is discarded. A `'reverted'` status does
  * **not** reject unless `throwOnRevert` is set. Both the receipt lookup and the
  * confirmation lookup go through {@link getAction}; overrides for either are
  * seen only when installed before the public decorator (see `getAction`).
@@ -146,67 +145,126 @@ export async function waitForTransactionReceipt(
   const timeout = parameters.timeout ?? 90_000
   const pollingInterval = parameters.pollingInterval ?? client.pollingInterval
 
+  // The caller's numbers get the same scrutiny the node's do (toBlockNumber):
+  // a NaN timeout never times out, a NaN confirmations skips the confirmation
+  // phase entirely, and a negative interval polls hot — each failing open.
+  if (!Number.isFinite(timeout) || timeout < 0)
+    throw new BaseError(
+      `Invalid timeout: ${timeout}. Expected a finite, non-negative number of milliseconds.`,
+    )
+  if (!Number.isFinite(pollingInterval) || pollingInterval < 0)
+    throw new BaseError(
+      `Invalid pollingInterval: ${pollingInterval}. Expected a finite, non-negative number of milliseconds.`,
+    )
+  if (!Number.isSafeInteger(confirmations) || confirmations < 1)
+    throw new BaseError(
+      `Invalid confirmations: ${confirmations}. Expected an integer of at least 1.`,
+    )
+
   const getReceipt = getAction(client, getTransactionInfo, 'getTransactionInfo')
   const getBlock = getAction(client, getNowBlock, 'getNowBlock')
 
   const start = Date.now()
+  // `settled` makes the in-loop termination exact: once the race has resolved
+  // either way, the background poll stops at its next boundary even when the
+  // wall clock reads exactly `timeout`.
+  let settled = false
   const assertNotTimedOut = () => {
-    if (Date.now() - start > timeout)
+    if (settled || Date.now() - start > timeout)
       throw new WaitForTransactionReceiptTimeoutError({ hash })
   }
 
-  // Phase 1 — wait for the receipt to be packed (or solidified).
-  let receipt = await getReceipt({ hash, confirmed })
-  while (isPending(receipt)) {
-    assertNotTimedOut()
-    await sleep(pollingInterval)
-    assertNotTimedOut()
-    receipt = await getReceipt({ hash, confirmed })
-  }
+  // Interruptible sleep: `finally` below cancels a pending one, so a lost
+  // race leaves no stray timer holding the process for up to a full
+  // pollingInterval — the woken loop hits assertNotTimedOut and winds down
+  // without another RPC. (Timer-based, so fake timers can drive it.)
+  let cancelSleep: (() => void) | undefined
+  const sleep = (ms: number) =>
+    new Promise<void>((resolve) => {
+      const t = setTimeout(() => {
+        cancelSleep = undefined
+        resolve()
+      }, ms)
+      cancelSleep = () => {
+        clearTimeout(t)
+        cancelSleep = undefined
+        resolve()
+      }
+    })
 
-  const packed = receipt as TransactionReceipt
-
-  // Phase 2 — wait for the requested block depth. The head is read from the
-  // same node as the receipt: comparing a solidified receipt block against an
-  // unsolidified head would start the count already deep enough to make every
-  // value up to the solidification distance a silent no-op.
-  //
-  // Both block numbers must be positive integers (see toBlockNumber): the
-  // receipt may come from a Client override rather than getTransactionInfo,
-  // and any coerced junk value corrupts the depth formula in the fail-open
-  // direction — a 0 (or `null`, or `-1`) receipt block makes every receipt
-  // look at least `head` blocks deep, silently passing any requested
-  // confirmation count.
-  //
-  // `confirmations: 1` needs no head read: a packed receipt is by definition
-  // already one block deep.
-  if (confirmations > 1) {
-    const receiptBlock = toBlockNumber(packed.blockNumber)
-    if (Number.isNaN(receiptBlock))
-      throw new TronRpcError(
-        `The receipt for "${hash}" does not carry a usable blockNumber; confirmations cannot be counted.`,
-      )
-    while (true) {
-      const now = (await getBlock({ confirmed })) as {
-        number?: number | bigint
-      } | null
-      const head = toBlockNumber(now?.number)
-      if (Number.isNaN(head))
-        throw new TronRpcError(
-          'getNowBlock returned a block without a usable number; confirmations cannot be counted.',
-        )
-      // The mining block counts as the first confirmation, so `confirmations`
-      // is reached at depth `confirmations - 1` on top of it (N=1 resolves at
-      // the receipt block itself, handled by the `> 1` fast-path above).
-      if (head - receiptBlock + 1 >= confirmations) break
+  async function poll(): Promise<WaitForTransactionReceiptReturnType> {
+    // Phase 1 — wait for the receipt to be packed (or solidified).
+    let receipt = await getReceipt({ hash, confirmed })
+    while (isPending(receipt)) {
       assertNotTimedOut()
       await sleep(pollingInterval)
       assertNotTimedOut()
+      receipt = await getReceipt({ hash, confirmed })
     }
+
+    const packed = receipt as TransactionReceipt
+
+    // Phase 2 — wait for the requested block depth. The head is read from the
+    // same node as the receipt: comparing a solidified receipt block against an
+    // unsolidified head would start the count already deep enough to make every
+    // value up to the solidification distance a silent no-op.
+    //
+    // Both block numbers must be positive integers (see toBlockNumber): the
+    // receipt may come from a Client override rather than getTransactionInfo,
+    // and any coerced junk value corrupts the depth formula in the fail-open
+    // direction — a 0 (or `null`, or `-1`) receipt block makes every receipt
+    // look at least `head` blocks deep, silently passing any requested
+    // confirmation count.
+    //
+    // `confirmations: 1` needs no head read: a packed receipt is by definition
+    // already one block deep.
+    if (confirmations > 1) {
+      const receiptBlock = toBlockNumber(packed.blockNumber)
+      if (Number.isNaN(receiptBlock))
+        throw new TronRpcError(
+          `The receipt for "${hash}" does not carry a usable blockNumber; confirmations cannot be counted.`,
+        )
+      while (true) {
+        const now = (await getBlock({ confirmed })) as {
+          number?: number | bigint
+        } | null
+        const head = toBlockNumber(now?.number)
+        if (Number.isNaN(head))
+          throw new TronRpcError(
+            'getNowBlock returned a block without a usable number; confirmations cannot be counted.',
+          )
+        // The mining block counts as the first confirmation, so `confirmations`
+        // is reached at depth `confirmations - 1` on top of it (N=1 resolves at
+        // the receipt block itself, handled by the `> 1` fast-path above).
+        if (head - receiptBlock + 1 >= confirmations) break
+        assertNotTimedOut()
+        await sleep(pollingInterval)
+        assertNotTimedOut()
+      }
+    }
+
+    if (throwOnRevert && packed.status === 'reverted')
+      throw new TransactionRevertedError({ hash, receipt: packed })
+
+    return packed
   }
 
-  if (throwOnRevert && packed.status === 'reverted')
-    throw new TransactionRevertedError({ hash, receipt: packed })
-
-  return packed
+  // The deadline is wall-clock: the race rejects on time even while a poll is
+  // in flight (each RPC is itself bounded by the transport timeout). The
+  // in-loop asserts terminate the losing poll — its late rejection is
+  // absorbed by the race's own subscription.
+  let timer: ReturnType<typeof setTimeout> | undefined
+  const deadline = new Promise<never>((_resolve, reject) => {
+    timer = setTimeout(
+      () => reject(new WaitForTransactionReceiptTimeoutError({ hash })),
+      timeout,
+    )
+  })
+  try {
+    return await Promise.race([poll(), deadline])
+  } finally {
+    settled = true
+    clearTimeout(timer)
+    cancelSleep?.()
+  }
 }
