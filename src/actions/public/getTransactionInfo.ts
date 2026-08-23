@@ -13,6 +13,7 @@ import {
   type ToBase58ErrorType,
   toBase58,
 } from '../../utils/address/toBase58.js'
+import { bareHex } from '../../utils/encoding/bareHex.js'
 import { isEmptyResponse } from './getNowBlock.js'
 
 export type GetTransactionInfoParameters = {
@@ -144,9 +145,24 @@ export async function getTransactionInfo(
       { metaMessages: ['Path: gettransactioninfobyid'] },
     )
 
+  // The receipt must identify itself as the requested transaction. The node
+  // is queried BY id, so a found receipt always carries one (proto
+  // `TransactionInfo.id` is the query key); a missing or different id means
+  // the response answers a different question than was asked — the same
+  // echo-verification getTransaction applies to the transaction body, on the
+  // one read that gates confirmations and `throwOnRevert`.
+  const id = response.id
+  if (!id || bareHex(id) !== bareHex(hash))
+    throw new TronRpcError(
+      `The node returned a receipt for ${
+        id ? `transaction "${id}"` : 'an unidentified transaction'
+      }, not the requested "${hash}".`,
+      { metaMessages: ['Path: gettransactioninfobyid'] },
+    )
+
   const receipt = response.receipt ?? {}
   return {
-    id: response.id ?? hash,
+    id,
     blockNumber: BigInt(blockNumber),
     blockTimeStamp: BigInt(response.blockTimeStamp ?? 0),
     status: mapStatus(receipt.result, response.result),
