@@ -223,3 +223,31 @@ describe('zero-length fixed arrays agree on both sides', () => {
     ])
   })
 })
+
+describe('integer values must be safe integers or bigint', () => {
+  test('rejects a number past 2^53 instead of encoding the rounded value', () => {
+    // 2^53+1 is already 2^53 by the time it is a JS number, so BigInt() would
+    // encode a value the caller never wrote.
+    const error = caught(() =>
+      encodeAbiParameters([{ type: 'uint256' }], [Number.MAX_SAFE_INTEGER + 2]),
+    )
+    expect(error?.message).toMatch(/not a safe integer/)
+  })
+
+  test('rejects a fractional / NaN number for an integer type', () => {
+    expect(
+      caught(() => encodeAbiParameters([{ type: 'uint256' }], [1.5]))?.message,
+    ).toMatch(/not a safe integer/)
+    expect(
+      caught(() => encodeAbiParameters([{ type: 'int64' }], [Number.NaN]))
+        ?.message,
+    ).toMatch(/not a safe integer/)
+  })
+
+  test('a safe-integer number and a bigint still encode', () => {
+    expect(() => encodeAbiParameters([{ type: 'uint256' }], [42])).not.toThrow()
+    expect(() =>
+      encodeAbiParameters([{ type: 'uint256' }], [9007199254740993n]),
+    ).not.toThrow()
+  })
+})

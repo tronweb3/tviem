@@ -18,6 +18,7 @@ import {
   InvalidArrayError,
   type InvalidArrayErrorType,
 } from '../../errors/abi.js'
+import { BaseError, type BaseErrorType } from '../../errors/base.js'
 import {
   IntegerOutOfRangeError,
   type IntegerOutOfRangeErrorType,
@@ -130,6 +131,7 @@ export type EncodeAbiParametersReturnType = Hex
 export type EncodeAbiParametersErrorType =
   | AbiEncodingArrayLengthMismatchErrorType
   | AssertHexBytesErrorType
+  | BaseErrorType
   | AbiEncodingBytesSizeMismatchErrorType
   | AbiEncodingLengthMismatchErrorType
   | ToEvmErrorType
@@ -404,6 +406,14 @@ function encodeNumber(
 ): PreparedParam {
   if (typeof value !== 'number' && typeof value !== 'bigint')
     throw new InvalidAbiParameterValueError({ type, value })
+  // A number past 2^53 has already been rounded by IEEE-754 before it got here,
+  // so BigInt() would faithfully encode a value the caller never wrote; a
+  // fraction/NaN would otherwise escape as a raw RangeError. Pass a bigint for
+  // values past 2^53.
+  if (typeof value === 'number' && !Number.isSafeInteger(value))
+    throw new BaseError(
+      `Invalid ${type} value: ${value} is not a safe integer. Pass a bigint for values past 2^53.`,
+    )
   const value_ = BigInt(value)
   const max = signed
     ? (1n << (BigInt(bits) - 1n)) - 1n

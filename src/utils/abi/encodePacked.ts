@@ -12,6 +12,7 @@ import {
   UnsupportedPackedAbiType,
   type UnsupportedPackedAbiTypeErrorType,
 } from '../../errors/abi.js'
+import { BaseError, type BaseErrorType } from '../../errors/base.js'
 import { IntegerOutOfRangeError } from '../../errors/encoding.js'
 import type { ErrorType } from '../../errors/utils.js'
 import type { AddressInput } from '../../types/address.js'
@@ -55,6 +56,7 @@ export type EncodePackedValues<types extends readonly unknown[]> = {
 export type EncodePackedErrorType =
   | AbiEncodingArrayLengthMismatchErrorType
   | AbiEncodingBytesSizeMismatchErrorType
+  | BaseErrorType
   | AssertHexBytesErrorType
   | AbiEncodingLengthMismatchErrorType
   | ToEvmErrorType
@@ -140,6 +142,14 @@ function encode(type: string, value: unknown, isArray = false): Hex {
     const signed = baseType === 'int'
     if (typeof value !== 'number' && typeof value !== 'bigint')
       throw new UnsupportedPackedAbiType(type)
+    // A number past 2^53 has already been rounded by IEEE-754 before it got
+    // here, so BigInt() would faithfully encode a value the caller never wrote;
+    // a fraction/NaN would otherwise escape as a raw RangeError. Pass a bigint
+    // for values past 2^53.
+    if (typeof value === 'number' && !Number.isSafeInteger(value))
+      throw new BaseError(
+        `Invalid ${type} value: ${value} is not a safe integer. Pass a bigint for values past 2^53.`,
+      )
     const byteSize = isArray ? 32 : Number(bits) / 8
     const value_ = BigInt(value)
     const max = signed

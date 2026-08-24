@@ -186,6 +186,29 @@ describe('encodePacked (malformed input)', () => {
     expect(encodePacked(['uint256[]'], [[]])).toBe('0x')
   })
 
+  test('rejects a number past 2^53 instead of encoding the rounded value', () => {
+    // The literal 2^53+1 is already 2^53 by the time it is a JS number, so
+    // BigInt() would encode a value the caller never wrote.
+    const error = caught(() =>
+      encodePacked(['uint256'], [Number.MAX_SAFE_INTEGER + 2]),
+    )
+    expect(error?.message).toMatch(/not a safe integer/)
+  })
+
+  test('rejects a fractional / NaN number for an integer type', () => {
+    expect(caught(() => encodePacked(['uint256'], [1.5]))?.message).toMatch(
+      /not a safe integer/,
+    )
+    expect(
+      caught(() => encodePacked(['int64'], [Number.NaN]))?.message,
+    ).toMatch(/not a safe integer/)
+  })
+
+  test('a safe-integer number and a bigint still encode', () => {
+    expect(() => encodePacked(['uint256'], [42])).not.toThrow()
+    expect(() => encodePacked(['uint256'], [9007199254740993n])).not.toThrow()
+  })
+
   test('well-formed byte values still encode unpadded', () => {
     expect(encodePacked(['bytes1', 'bytes1'], ['0x01', '0xff'])).toBe('0x01ff')
     expect(encodePacked(['bytes', 'uint8'], ['0x01', 1n])).toBe('0x0101')
