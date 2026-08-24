@@ -7,11 +7,7 @@ import {
 import type { ErrorType } from '../../../errors/utils.js'
 import type { ByteArray } from '../../../types/misc.js'
 import { concatBytes } from '../../data/concat.js'
-import {
-  maxUvarint,
-  type WriteUvarintErrorType,
-  writeUvarint,
-} from './varint.js'
+import { type WriteUvarintErrorType, writeUvarint } from './varint.js'
 
 /** Protobuf wire types. */
 export const WireType = {
@@ -25,8 +21,9 @@ export type WireType = (typeof WireType)[keyof typeof WireType]
 /** Maximum protobuf field number (`2^29 - 1`). */
 export const maxFieldNumber = 536870911
 
-/** Minimum value of a two's-complement 64-bit signed integer (`-(2^63)`). */
+/** Bounds of a two's-complement 64-bit signed integer (protobuf `int64`). */
 const minInt64 = -9223372036854775808n
+const maxInt64 = 9223372036854775807n
 /** Bounds of a two's-complement 32-bit signed integer (protobuf `int32`). */
 const minInt32 = -2147483648n
 const maxInt32 = 2147483647n
@@ -102,23 +99,33 @@ export type FIntErrorType =
   | ErrorType
 
 /**
- * Encodes a `VARINT`-typed integer field (`int32`/`int64`/`uint64`).
+ * Encodes a signed `int64` `VARINT`-typed field. Narrower signed varint
+ * fields ({@link fInt32}, enums) layer their own tighter bound on top before
+ * delegating here.
  *
  * Follows proto3 semantics: `0` encodes to an empty byte array (field
  * omitted). Negative values are encoded as 64-bit two's complement
  * (always 10 bytes), matching standard `int64` behavior.
  *
+ * The bound is signed `int64`, not the full unsigned varint range: every
+ * varint field TRON declares is signed `int64`, so a value above `2^63 - 1`
+ * would encode to a varint that decodes back as a negative number — a
+ * round-trip the sender never wrote. (A genuine `uint64` field, were one ever
+ * added, would need its own wider encoder.)
+ *
  * @param fieldNo Field number.
- * @param value Integer value (`-(2^63)` to `2^64 - 1`).
+ * @param value Integer value (`-(2^63)` to `2^63 - 1`).
  * @returns Encoded field bytes.
  */
 export function fInt(fieldNo: number, value: bigint | number): ByteArray {
   const value_ = BigInt(value)
   if (value_ === 0n) return new Uint8Array(0)
-  if (value_ < minInt64 || value_ > maxUvarint)
+  if (value_ < minInt64 || value_ > maxInt64)
     throw new IntegerOutOfRangeError({
-      max: maxUvarint.toString(),
+      max: maxInt64.toString(),
       min: minInt64.toString(),
+      signed: true,
+      size: 8,
       value: value_.toString(),
     })
   const unsigned = value_ < 0n ? value_ + twoPow64 : value_

@@ -87,13 +87,23 @@ test('fInt', () => {
   )
 })
 
+test('fInt: signed int64 boundaries encode', () => {
+  // The bound is signed int64, not the full unsigned varint range: a value
+  // above 2^63-1 would decode back as a negative number the sender never
+  // wrote. Both boundaries are in range and encode.
+  expect(() => fInt(1, 9223372036854775807n)).not.toThrow() // 2^63 - 1
+  expect(() => fInt(1, -9223372036854775808n)).not.toThrow() // -(2^63)
+})
+
 test('fInt: out of range', () => {
-  expect(() => fInt(1, 18446744073709551616n)).toThrow(IntegerOutOfRangeError)
+  // 2^63 (one past the signed max) is the case that used to slip through as a
+  // valid unsigned varint; it must now throw.
+  expect(() => fInt(1, 9223372036854775808n)).toThrow(IntegerOutOfRangeError)
   expect(() => fInt(1, -9223372036854775809n)).toThrow(IntegerOutOfRangeError)
-  expect(() => fInt(1, 18446744073709551616n)).toThrowError(
+  expect(() => fInt(1, 9223372036854775808n)).toThrowError(
     expect.objectContaining({
       name: 'IntegerOutOfRangeError',
-      message: `Number "18446744073709551616" is not in safe integer range (-9223372036854775808 to 18446744073709551615)
+      message: `Number "9223372036854775808" is not in safe 64-bit signed integer range (-9223372036854775808 to 9223372036854775807)
 
 Version: @tronweb3/tviem@${version}`,
     }),

@@ -241,6 +241,32 @@ test('Permission_id is bounded to int32', () => {
   )
 })
 
+test('int64 fields are bounded to signed int64 on the wire', () => {
+  const withFeeLimit = (fee_limit: bigint): RawData => ({
+    ref_block_bytes: '1234',
+    ref_block_hash: '0102030405060708',
+    expiration: 1700000060000n,
+    contract: [
+      {
+        type: ContractType.TransferContract,
+        parameter: {
+          type_url: 'type.googleapis.com/protocol.TransferContract',
+          value: { owner_address: owner, to_address: to, amount: 1000000n },
+        },
+      },
+    ],
+    timestamp: 1700000000000n,
+    fee_limit,
+  })
+
+  // 2^63-1 is the max legal int64; 2^63 would decode back as a negative value
+  // the sender never wrote, so it must be refused at encode.
+  expect(() => toRawDataHex(withFeeLimit(9223372036854775807n))).not.toThrow()
+  expect(() => toRawDataHex(withFeeLimit(9223372036854775808n))).toThrow(
+    IntegerOutOfRangeError,
+  )
+})
+
 test('toRawDataHex is bare lowercase hex (no 0x)', () => {
   const hex = toRawDataHex(decodeRawData(canonical.rawDataHex))
   expect(hex.startsWith('0x')).toBe(false)
