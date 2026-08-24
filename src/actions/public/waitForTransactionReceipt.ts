@@ -35,7 +35,11 @@ export type WaitForTransactionReceiptParameters = {
    * Pass `false` to resolve as soon as the transaction is packed, reading both
    * from the FullNode. That is enough to learn the execution outcome —
    * `status`, the energy and fee actually burned, `contractResult`, `logs` —
-   * but the block it landed in can still be reorganized away. @default true
+   * but the block it landed in can still be reorganized away. With
+   * `confirmations > 1` the inclusion block is read once at packing and the
+   * depth is counted from it without re-reading the receipt, so a reorg after
+   * packing is not re-checked while counting (a SolidityNode receipt cannot
+   * reorg, so `confirmed: true` is unaffected). @default true
    */
   confirmed?: boolean | undefined
   /**
