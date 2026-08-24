@@ -199,3 +199,50 @@ test('confirmed: true reads the receipt from the SolidityNode', async () => {
   await client.getTransactionInfo({ hash: successHash, confirmed: true })
   expect(calls[0]?.node).toBe('solidity')
 })
+
+// The receipt must identify itself as the requested transaction — the same
+// echo verification getTransaction applies to the body, on the one read that
+// gates confirmations and throwOnRevert.
+test('a receipt carrying a different id is refused', async () => {
+  const { transport } = createMockTransport({
+    responses: {
+      gettransactioninfobyid: {
+        response: {
+          ...(rpc('gettransactioninfobyid.success') as Record<string, unknown>),
+          id: 'ab'.repeat(32),
+        },
+      },
+    },
+  })
+  const client = createPublicClient({ transport })
+  await expect(
+    client.getTransactionInfo({ hash: successHash }),
+  ).rejects.toThrow('a receipt for transaction')
+})
+
+test('a non-empty receipt without an id is refused', async () => {
+  const body = {
+    ...(rpc('gettransactioninfobyid.success') as Record<string, unknown>),
+  }
+  body.id = undefined
+  const { transport } = createMockTransport({
+    responses: { gettransactioninfobyid: { response: body } },
+  })
+  const client = createPublicClient({ transport })
+  await expect(
+    client.getTransactionInfo({ hash: successHash }),
+  ).rejects.toThrow('an unidentified transaction')
+})
+
+test('an id differing only in hex case is the same transaction', async () => {
+  const body = {
+    ...(rpc('gettransactioninfobyid.success') as Record<string, unknown>),
+  }
+  body.id = String(body.id).toUpperCase()
+  const { transport } = createMockTransport({
+    responses: { gettransactioninfobyid: { response: body } },
+  })
+  const client = createPublicClient({ transport })
+  const info = await client.getTransactionInfo({ hash: successHash })
+  expect(info).not.toBeNull()
+})

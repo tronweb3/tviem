@@ -369,3 +369,52 @@ describe('waitForTransactionReceipt node selection', () => {
     expect(await promise).toBeInstanceOf(WaitForTransactionReceiptTimeoutError)
   })
 })
+
+// Caller parameters get the same scrutiny the node's numbers do: NaN/negative
+// values used to fail open (a NaN timeout never fired; a NaN confirmations
+// silently skipped the confirmation phase; a negative interval polled hot).
+test('rejects invalid caller parameters up front', async () => {
+  const client = makeClient({})
+
+  await expect(
+    waitForTransactionReceipt(client, { hash: 'dead', timeout: Number.NaN }),
+  ).rejects.toThrow('Invalid timeout')
+  await expect(
+    waitForTransactionReceipt(client, {
+      hash: 'dead',
+      pollingInterval: -1,
+    }),
+  ).rejects.toThrow('Invalid pollingInterval')
+  await expect(
+    waitForTransactionReceipt(client, {
+      hash: 'dead',
+      confirmations: Number.NaN,
+    }),
+  ).rejects.toThrow('Invalid confirmations')
+  await expect(
+    waitForTransactionReceipt(client, { hash: 'dead', confirmations: 0 }),
+  ).rejects.toThrow('Invalid confirmations')
+  await expect(
+    waitForTransactionReceipt(client, { hash: 'dead', confirmations: 1.5 }),
+  ).rejects.toThrow('Invalid confirmations')
+})
+
+// The deadline is wall-clock, not a between-sleeps check: it fires even while
+// a poll is still in flight.
+test('the deadline fires while a receipt poll is still in flight', async () => {
+  vi.useFakeTimers()
+  // A receipt lookup that never settles — no sleep boundary is ever reached.
+  const client = makeClient({
+    getTransactionInfo: () => new Promise(() => {}),
+  })
+
+  const promise = waitForTransactionReceipt(client, {
+    hash: 'dead',
+    timeout: 5000,
+  })
+  const assertion = expect(promise).rejects.toBeInstanceOf(
+    WaitForTransactionReceiptTimeoutError,
+  )
+  await vi.advanceTimersByTimeAsync(6000)
+  await assertion
+})

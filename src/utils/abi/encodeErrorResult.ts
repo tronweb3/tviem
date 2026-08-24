@@ -96,10 +96,16 @@ export function encodeErrorResult<
   const signature = toFunctionSelector(formatAbiItem(abiItem))
 
   let data: Hex = '0x'
-  if (args && args.length > 0) {
-    if (!abiItem.inputs)
-      throw new AbiErrorInputsNotFoundError(abiItem.name, { docsPath })
-    data = encodeAbiParameters(abiItem.inputs, args)
+  // Encode whenever the error DECLARES inputs, not only when args were given:
+  // a required-args error with args omitted would otherwise return the bare
+  // selector — a payload the same ABI cannot decode. The length check inside
+  // encodeAbiParameters then rejects the mismatch (the same shape
+  // encodeDeployData enforces for constructors); zero-input errors still
+  // encode to the selector alone.
+  if (abiItem.inputs && abiItem.inputs.length > 0) {
+    data = encodeAbiParameters(abiItem.inputs, args ?? [])
+  } else if (args && args.length > 0) {
+    throw new AbiErrorInputsNotFoundError(abiItem.name, { docsPath })
   }
 
   return concatHex([signature, data])

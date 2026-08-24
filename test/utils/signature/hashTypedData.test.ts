@@ -199,6 +199,53 @@ describe('hashTypedData', () => {
   })
 })
 
+// A `string` field value must be hashed as UTF-8, never re-read as hex — the
+// bug hashed the 4 bytes of `"0xdeadbeef"` instead of its 10 characters, so a
+// signature could not interoperate with any standard implementation. Digests
+// pinned from viem's `hashTypedData` (offline; the repo does not depend on
+// viem), which UTF-8-encodes strings via `toHex`.
+describe('hashTypedData string fields are UTF-8, not hex', () => {
+  const stringDomain = { name: 'TIP712', version: '1' }
+  const stringTypes = { Doc: [{ name: 'ref', type: 'string' }] } as const
+  const digestOf = (ref: string) =>
+    hashTypedData({
+      domain: stringDomain,
+      types: stringTypes,
+      primaryType: 'Doc',
+      message: { ref },
+    })
+
+  test.each([
+    [
+      'a hex-looking string',
+      '0xdeadbeef',
+      '0x04faca7a3ead59f1191fd44764e4a7ffca543fc1f4e7d7961ae7cc35d6c5cf1c',
+    ],
+    [
+      'a bare "0x"',
+      '0x',
+      '0xcd1890c8b746545f7ab2c444d35e3decde558a202d19ed600666ea18924cfe58',
+    ],
+    [
+      'plain ASCII',
+      'Hello, Bob!',
+      '0xa7e01d6a31b086ddd5674422b31e3f603b795173f5be5780d3a74bbdbbcc3a89',
+    ],
+    [
+      'emoji',
+      '🚀 send',
+      '0x36b600a21013ec6b82e81f5d218b55b65e4837a0cdc5f8b493f982ac4d7cb23e',
+    ],
+    [
+      'the empty string',
+      '',
+      '0xd85716680b8d1c9d8f6c9b7fa870272f310288f91e3c37df764d2e1e5861109b',
+    ],
+  ])('%s matches the viem oracle digest', (_label, ref, expected) => {
+    expect(digestOf(ref)).toBe(expected)
+  })
+})
+
 describe('hashTypedData validation', () => {
   test('rejects an integer beyond its declared width', () => {
     expect(() =>

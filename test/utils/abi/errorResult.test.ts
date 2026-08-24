@@ -3,6 +3,7 @@ import { expect, test } from 'vitest'
 
 import {
   AbiDecodingZeroDataError,
+  AbiEncodingLengthMismatchError,
   AbiErrorInputsNotFoundError,
   AbiErrorNotFoundError,
   AbiErrorSignatureNotFoundError,
@@ -129,4 +130,37 @@ test('encodeErrorResult: address/string ambiguity among later overloads throws',
       args: ['TA5DvvvmYbS75o3DKtgy2ATAGVHhpFkRLe'],
     }),
   ).toThrowError(AbiItemAmbiguityError)
+})
+
+// An error that DECLARES inputs must not encode without them: the bare
+// selector would be a payload the same ABI cannot decode. Zero-input errors
+// keep encoding to the selector alone. Mirrors encodeDeployData's constructor
+// handling.
+test('encodeErrorResult rejects missing required args', () => {
+  const abi = [
+    {
+      type: 'error',
+      name: 'InsufficientBalance',
+      inputs: [{ name: 'available', type: 'uint256' }],
+    },
+  ] as const
+
+  expect(() =>
+    encodeErrorResult({ abi, errorName: 'InsufficientBalance' } as never),
+  ).toThrow(AbiEncodingLengthMismatchError)
+  expect(() =>
+    encodeErrorResult({
+      abi,
+      errorName: 'InsufficientBalance',
+      args: [] as never,
+    } as never),
+  ).toThrow(AbiEncodingLengthMismatchError)
+  // With the arg present the payload round-trips as before.
+  expect(
+    encodeErrorResult({
+      abi,
+      errorName: 'InsufficientBalance',
+      args: [1n],
+    }),
+  ).toMatch(/^0x[0-9a-f]{8}0{63}1$/)
 })

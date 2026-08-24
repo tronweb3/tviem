@@ -1,10 +1,16 @@
 import { BaseError, type BaseErrorType } from '../../errors/base.js'
 import type { ErrorType } from '../../errors/utils.js'
+import type { AddressInput } from '../../types/address.js'
 import type { ByteArray, Hex } from '../../types/misc.js'
+import { type AssertHexBytesErrorType, assertHexBytes } from '../data/isHex.js'
 import { type PadHexErrorType, padHex } from '../data/pad.js'
 import { hexToBytes } from '../encoding/toBytes.js'
 import { type BytesToHexErrorType, bytesToHex } from '../encoding/toHex.js'
 import { type Keccak256ErrorType, keccak256 } from '../hash/keccak256.js'
+import {
+  type NormalizeAddressErrorType,
+  normalizeAddress,
+} from './normalize.js'
 
 /** Normalizes a hex string (bare or `0x`) or byte array to bare hex. */
 function toBareHex(value: string | ByteArray): string {
@@ -13,8 +19,8 @@ function toBareHex(value: string | ByteArray): string {
 }
 
 export type GetCreate2AddressParameters = {
-  /** Creating contract address, TRON form (`41…` hex, bare or `0x`, or bytes). */
-  creatorAddress: string | ByteArray
+  /** Creating contract address (any TRON address form, or 21 raw bytes). */
+  creatorAddress: AddressInput | ByteArray
   /**
    * Salt (bare or `0x` hex, or bytes), left-padded to a 32-byte word; longer
    * values throw.
@@ -34,8 +40,10 @@ export type GetCreate2AddressParameters = {
 )
 
 export type GetCreate2AddressErrorType =
+  | AssertHexBytesErrorType
   | BaseErrorType
   | BytesToHexErrorType
+  | NormalizeAddressErrorType
   | Keccak256ErrorType
   | PadHexErrorType
   | ErrorType
@@ -71,13 +79,20 @@ export function getCreate2Address(
         `Invalid bytecodeHash: ${initCodeHash.length} hex chars. Expected a 32-byte (64 hex char) keccak256 digest of the init code.`,
       )
   } else {
-    initCodeHash = toBareHex(
-      keccak256(hexToBytes(`0x${toBareHex(bytecode!)}` as Hex), 'hex'),
-    )
+    const bytecodeHex = `0x${toBareHex(bytecode!)}` as Hex
+    // Init code is already-serialized bytes: an odd nibble count would be
+    // left-padded into different bytes, hashing to a wrong prediction.
+    assertHexBytes(bytecodeHex)
+    initCodeHash = toBareHex(keccak256(hexToBytes(bytecodeHex), 'hex'))
   }
   const salt32 = toBareHex(padHex(`0x${toBareHex(salt)}` as Hex, { size: 32 }))
+  // The creator is the FIRST component of the 85-byte preimage — the same
+  // shift-everything hazard the bytecodeHash size check above guards against,
+  // only worse. Normalizing pins it to the validated 21-byte `41…` form and
+  // accepts every TRON address form the rest of the SDK does.
+  const creator = toBareHex(normalizeAddress(creatorAddress))
   const hash = keccak256(
-    hexToBytes(`0x${toBareHex(creatorAddress)}${salt32}${initCodeHash}` as Hex),
+    hexToBytes(`0x${creator}${salt32}${initCodeHash}` as Hex),
     'hex',
   )
   return `41${hash.slice(-40)}`

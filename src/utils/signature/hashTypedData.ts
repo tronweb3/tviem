@@ -27,7 +27,7 @@ import { toEvm } from '../address/toEvm.js'
 import { concat } from '../data/concat.js'
 import { pad } from '../data/pad.js'
 import { size } from '../data/size.js'
-import { toBytes } from '../encoding/toBytes.js'
+import { stringToBytes } from '../encoding/toBytes.js'
 import { type NumberToHexErrorType, numberToHex } from '../encoding/toHex.js'
 import { keccak256 } from '../hash/keccak256.js'
 import { bytesRegex, integerRegex } from '../regex.js'
@@ -106,7 +106,7 @@ function encodeType(primaryType: string, types: TypedDataTypes): string {
 
 /** `keccak256` of the encoded type string (the struct's type hash). */
 function hashType(primaryType: string, types: TypedDataTypes): Hex {
-  return keccak256(toBytes(encodeType(primaryType, types)))
+  return keccak256(stringToBytes(encodeType(primaryType, types)))
 }
 
 /** Encodes one field value to its 32-byte EIP-712 word. */
@@ -125,7 +125,11 @@ function encodeField(types: TypedDataTypes, type: string, value: unknown): Hex {
   }
 
   if (type === 'bytes') return keccak256(value as Hex)
-  if (type === 'string') return keccak256(toBytes(value as string))
+  // A `string` value is always UTF-8 (matching EIP-712 / viem's `toHex`): a
+  // hex-detecting encoder would hash the 4 bytes of `"0xdeadbeef"` instead of
+  // its 10 characters, so a signature could not be cross-verified with any
+  // standard implementation.
+  if (type === 'string') return keccak256(stringToBytes(value as string))
   if (type === 'bool') return pad(value ? '0x01' : '0x00')
   if (type === 'address') return pad(toEvm(value as AddressInput), { size: 32 })
   if (type.startsWith('bytes'))
