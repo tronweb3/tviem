@@ -247,6 +247,70 @@ describe('hashTypedData string fields are UTF-8, not hex', () => {
 })
 
 describe('hashTypedData validation', () => {
+  // A `bool` field encodes by truthiness, so a non-boolean value would sign
+  // the opposite of what it spells (`"false"` is truthy). Only a real boolean
+  // is accepted (mirrors the codec's bool guard and viem's encodeBool).
+  test.each([
+    ['the string "false"', 'false'],
+    ['the string "true"', 'true'],
+    ['the number 0', 0],
+    ['the number 1', 1],
+    ['null', null],
+    ['undefined', undefined],
+  ])('rejects %s for a bool field', (_label, flag) => {
+    expect(() =>
+      hashTypedData({
+        domain,
+        types: { X: [{ name: 'flag', type: 'bool' }] },
+        primaryType: 'X',
+        message: { flag },
+      }),
+    ).toThrow(/Invalid bool value/)
+  })
+
+  test('accepts real booleans for a bool field', () => {
+    for (const flag of [true, false])
+      expect(() =>
+        hashTypedData({
+          domain,
+          types: { X: [{ name: 'flag', type: 'bool' }] },
+          primaryType: 'X',
+          message: { flag },
+        }),
+      ).not.toThrow()
+  })
+
+  // A `number` past 2^53 arrives already rounded, so encoding it would sign a
+  // value the caller never wrote; a fraction/NaN would otherwise leak a raw
+  // RangeError. Only safe-integer numbers (or bigint / decimal string) pass.
+  test.each([
+    ['an unsafe integer past 2^53', Number.MAX_SAFE_INTEGER + 2],
+    ['a fraction', 1.5],
+    ['NaN', Number.NaN],
+    ['Infinity', Number.POSITIVE_INFINITY],
+  ])('rejects %s given as a number for a uint256 field', (_label, n) => {
+    expect(() =>
+      hashTypedData({
+        domain,
+        types: { X: [{ name: 'n', type: 'uint256' }] },
+        primaryType: 'X',
+        message: { n },
+      }),
+    ).toThrow(/not a safe integer/)
+  })
+
+  test('accepts a large value past 2^53 as a bigint or decimal string', () => {
+    for (const n of [9007199254740993n, '9007199254740993'])
+      expect(() =>
+        hashTypedData({
+          domain,
+          types: { X: [{ name: 'n', type: 'uint256' }] },
+          primaryType: 'X',
+          message: { n },
+        }),
+      ).not.toThrow()
+  })
+
   test('rejects an integer beyond its declared width', () => {
     expect(() =>
       hashTypedData({
@@ -256,6 +320,34 @@ describe('hashTypedData validation', () => {
         message: { n: 256 },
       }),
     ).toThrow(IntegerOutOfRangeError)
+  })
+
+  // A fixed-size `T[N]` must carry exactly N elements, else the digest is for a
+  // different value than the type declares.
+  test.each([
+    ['too few', [1, 2]],
+    ['too many', [1, 2, 3, 4]],
+    ['a non-array', 5],
+  ])('rejects a uint8[3] with %s', (_label, triple) => {
+    expect(() =>
+      hashTypedData({
+        domain,
+        types: { X: [{ name: 't', type: 'uint8[3]' }] },
+        primaryType: 'X',
+        message: { t: triple },
+      }),
+    ).toThrow(/expected an array of length 3/)
+  })
+
+  test('accepts a uint8[3] of exactly three elements', () => {
+    expect(() =>
+      hashTypedData({
+        domain,
+        types: { X: [{ name: 't', type: 'uint8[3]' }] },
+        primaryType: 'X',
+        message: { t: [1, 2, 3] },
+      }),
+    ).not.toThrow()
   })
 
   test('rejects a signed integer below its declared width', () => {

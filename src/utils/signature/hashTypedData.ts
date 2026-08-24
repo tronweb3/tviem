@@ -206,8 +206,32 @@ function validateField(
 
   if (type.endsWith(']')) {
     const base = type.replace(/\[\d*\]$/, '')
+    // A fixed-size `T[N]` must have exactly `N` elements: `encodeField` hashes
+    // the concatenated element words, so a short/long array silently produces a
+    // digest for a different value than the declared type. (`$` anchors the
+    // outer dimension, so multi-dimensional arrays check each level in turn.)
+    const fixed = type.match(/\[(\d+)\]$/)
+    if (fixed && (!Array.isArray(value) || value.length !== Number(fixed[1])))
+      throw new BaseError(
+        `Invalid ${type} value: expected an array of length ${fixed[1]}, got ${
+          Array.isArray(value) ? value.length : typeof value
+        }.`,
+      )
     if (Array.isArray(value))
       for (const item of value) validateField(types, base, item)
+    return
+  }
+
+  // `bool`: a real boolean only. `encodeField` encodes by truthiness, so a
+  // stringly-typed value would sign the OPPOSITE of what it spells — `"false"`
+  // is truthy and would encode as `true` (a revoked approval as an approval).
+  if (type === 'bool') {
+    if (typeof value !== 'boolean')
+      throw new BaseError(
+        `Invalid bool value: expected a boolean, got ${
+          typeof value === 'string' ? `"${value}"` : String(value)
+        }.`,
+      )
     return
   }
 
@@ -220,6 +244,14 @@ function validateField(
       typeof value === 'bigint' ||
       typeof value === 'string')
   ) {
+    // A `number` past 2^53 has already been rounded by IEEE-754 before it got
+    // here, so `BigInt()` would faithfully encode a value the caller never
+    // wrote; a fraction/NaN would otherwise escape as a raw RangeError. Pass a
+    // bigint (or decimal string) for values past 2^53.
+    if (typeof value === 'number' && !Number.isSafeInteger(value))
+      throw new BaseError(
+        `Invalid ${type} value: ${value} is not a safe integer. Pass a bigint (or decimal string) for values past 2^53.`,
+      )
     const [, base, bits] = integerMatch
     const big = (() => {
       try {
