@@ -71,3 +71,63 @@ test('a value-0 map entry is force-emitted and round-trips', () => {
     { key: 5, value: 0 },
   ])
 })
+
+// This codec is hand-rolled (the map encoding can't reuse encodeMessage), so it
+// must re-establish the same strictness by hand: the sign path byte-verifies
+// its output, and the high-level createProposal action is not the only way in
+// (a foreign raw_data reaches this codec directly through serializeRawData).
+
+test('rejects an unknown top-level field', () => {
+  expect(() =>
+    encodeProposalCreateContract({
+      owner_address: owner,
+      parameters: [{ key: 1n, value: 1n }],
+      extra: 1,
+    } as never),
+  ).toThrow(/Unknown ProposalCreateContract field "extra"/)
+})
+
+test('rejects an unknown map-entry field', () => {
+  expect(() =>
+    encodeProposalCreateContract({
+      owner_address: owner,
+      parameters: [{ key: 1n, value: 1n, note: 2n }],
+    } as never),
+  ).toThrow(/Unknown proposal parameter field "note"/)
+})
+
+test('rejects a duplicate key (including 1 vs 1n)', () => {
+  expect(() =>
+    encodeProposalCreateContract({
+      owner_address: owner,
+      parameters: [
+        { key: 1, value: 1n },
+        { key: 1n, value: 2n },
+      ],
+    }),
+  ).toThrow(/Duplicate proposal parameter key 1/)
+})
+
+test('rejects a non-array parameters', () => {
+  expect(() =>
+    encodeProposalCreateContract({
+      owner_address: owner,
+      parameters: { key: 1n, value: 1n } as never,
+    }),
+  ).toThrow(/parameters must be an array/)
+})
+
+test('rejects a hex-string / unsafe-number key or value', () => {
+  expect(() =>
+    encodeProposalCreateContract({
+      owner_address: owner,
+      parameters: [{ key: '0x10' as never, value: 1n }],
+    }),
+  ).toThrow(/proposal parameter key/)
+  expect(() =>
+    encodeProposalCreateContract({
+      owner_address: owner,
+      parameters: [{ key: 1n, value: Number.MAX_SAFE_INTEGER + 2 }],
+    }),
+  ).toThrow(/proposal parameter value/)
+})

@@ -1,6 +1,8 @@
+import { BaseError, type BaseErrorType } from '../../../errors/base.js'
 import type { ErrorType } from '../../../errors/utils.js'
 import type { ByteArray } from '../../../types/misc.js'
 import { concatBytes } from '../../data/concat.js'
+import { int64InputToBigInt } from '../int64.js'
 import { normalizeAddress } from '../normalize.js'
 import { writeUvarint } from '../protobuf/varint.js'
 import {
@@ -57,29 +59,70 @@ function fIntMapEntry(fieldNo: number, value: bigint): ByteArray {
 export type EncodeProposalCreateContractErrorType =
   | FIntErrorType
   | EncodeMessageErrorType
+  | BaseErrorType
   | ErrorType
 
-/** Encodes a `ProposalCreateContract` (contract type 16) body. */
+/** Throws when `object` carries a defined key outside `allowed`. */
+function assertOnlyKeys(
+  object: Record<string, unknown>,
+  allowed: readonly string[],
+  what: string,
+): void {
+  for (const key of Object.keys(object))
+    if (object[key] !== undefined && !allowed.includes(key))
+      throw new BaseError(`Unknown ${what} field "${key}".`)
+}
+
+/**
+ * Encodes a `ProposalCreateContract` (contract type 16) body.
+ *
+ * Strict like {@link encodeMessage}, which this hand-rolled codec cannot reuse
+ * because of the map encoding: the sign path byte-verifies whatever this emits,
+ * so an unknown field would let the JSON model claim something the signed bytes
+ * do not carry. `parameters` must be an array; each `key`/`value` goes through
+ * the same safe-integer/decimal parsing as every other `int64` input; and a
+ * duplicate key is refused rather than silently collapsed to last-one-wins by
+ * the map parser (which would make the model and the executed value diverge).
+ */
 export function encodeProposalCreateContract(
   message: ProposalCreateContract,
 ): ByteArray {
+  assertOnlyKeys(
+    message,
+    ['owner_address', 'parameters'],
+    'ProposalCreateContract',
+  )
   const parts: ByteArray[] = [
     fBytes(1, normalizeAddress(message.owner_address as ContractAddressInput)),
   ]
+  const parameters = message.parameters ?? []
+  if (!Array.isArray(parameters))
+    throw new BaseError('ProposalCreateContract.parameters must be an array.')
+
+  const seen = new Set<bigint>()
+  const entries = parameters.map((entry) => {
+    assertOnlyKeys(entry, ['key', 'value'], 'proposal parameter')
+    const key = int64InputToBigInt('proposal parameter key', entry.key)
+    const value = int64InputToBigInt('proposal parameter value', entry.value)
+    if (seen.has(key))
+      throw new BaseError(`Duplicate proposal parameter key ${key}.`)
+    seen.add(key)
+    return { key, value }
+  })
   // `parameters` is a `map<int64,int64>`: each entry force-emits key + value.
   // A protobuf map serializes its entries sorted by the STRINGIFIED key in
   // ascending order (`"10" < "2"`), not by numeric key or caller order — so
   // the entries are sorted here to keep raw_data_hex/txID canonical whatever
   // order the caller supplies.
-  const entries = [...(message.parameters ?? [])].sort((a, b) => {
+  entries.sort((a, b) => {
     const ka = String(a.key)
     const kb = String(b.key)
     return ka < kb ? -1 : ka > kb ? 1 : 0
   })
   for (const entry of entries) {
     const body = concatBytes([
-      fIntMapEntry(1, BigInt(entry.key)),
-      fIntMapEntry(2, BigInt(entry.value)),
+      fIntMapEntry(1, entry.key),
+      fIntMapEntry(2, entry.value),
     ])
     parts.push(fMessage(2, body, { emitDefault: true }))
   }
