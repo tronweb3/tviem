@@ -71,6 +71,97 @@ test('deduplicates concurrent identical requests', async () => {
   expect(inner).toHaveBeenCalledTimes(1)
 })
 
+test('honors an HTTP-date Retry-After by waiting until that date', async () => {
+  vi.useFakeTimers()
+  try {
+    vi.setSystemTime(new Date('2026-08-25T00:00:00.000Z'))
+    const headers = new Headers({
+      'Retry-After': new Date(Date.now() + 5000).toUTCString(),
+    })
+    let calls = 0
+    const inner = vi.fn(async () => {
+      calls++
+      if (calls === 1)
+        throw new HttpRequestError({ status: 429, url: 'u', headers })
+      return { ok: true }
+    })
+    const request = buildRequest(inner, {
+      retryCount: 1,
+      retryDelay: 150,
+      uid: 'f',
+    })
+    const promise = request(args)
+    await vi.advanceTimersByTimeAsync(0)
+    expect(inner).toHaveBeenCalledTimes(1)
+    // Just before the date: still waiting.
+    await vi.advanceTimersByTimeAsync(4998)
+    expect(inner).toHaveBeenCalledTimes(1)
+    // Past the date: the retry fires.
+    await vi.advanceTimersByTimeAsync(5001)
+    await expect(promise).resolves.toEqual({ ok: true })
+    expect(inner).toHaveBeenCalledTimes(2)
+  } finally {
+    vi.useRealTimers()
+  }
+})
+
+test('honors a delay-seconds Retry-After', async () => {
+  vi.useFakeTimers()
+  try {
+    const headers = new Headers({ 'Retry-After': '2' })
+    let calls = 0
+    const inner = vi.fn(async () => {
+      calls++
+      if (calls === 1)
+        throw new HttpRequestError({ status: 429, url: 'u', headers })
+      return { ok: true }
+    })
+    const request = buildRequest(inner, {
+      retryCount: 1,
+      retryDelay: 150,
+      uid: 'g',
+    })
+    const promise = request(args)
+    await vi.advanceTimersByTimeAsync(0)
+    expect(inner).toHaveBeenCalledTimes(1)
+    await vi.advanceTimersByTimeAsync(1998)
+    expect(inner).toHaveBeenCalledTimes(1)
+    await vi.advanceTimersByTimeAsync(3)
+    await expect(promise).resolves.toEqual({ ok: true })
+    expect(inner).toHaveBeenCalledTimes(2)
+  } finally {
+    vi.useRealTimers()
+  }
+})
+
+test('falls back to exponential backoff when Retry-After yields no future time', async () => {
+  vi.useFakeTimers()
+  try {
+    const headers = new Headers({ 'Retry-After': 'later-5' })
+    let calls = 0
+    const inner = vi.fn(async () => {
+      calls++
+      if (calls === 1)
+        throw new HttpRequestError({ status: 429, url: 'u', headers })
+      return { ok: true }
+    })
+    const request = buildRequest(inner, {
+      retryCount: 1,
+      retryDelay: 150,
+      uid: 'h',
+    })
+    const promise = request(args)
+    await vi.advanceTimersByTimeAsync(0)
+    // Must not retry with zero delay: the backoff (150ms) applies instead.
+    expect(inner).toHaveBeenCalledTimes(1)
+    await vi.advanceTimersByTimeAsync(150)
+    await expect(promise).resolves.toEqual({ ok: true })
+    expect(inner).toHaveBeenCalledTimes(2)
+  } finally {
+    vi.useRealTimers()
+  }
+})
+
 test('shouldRetryTron: retries transient, refuses logical', () => {
   expect(shouldRetryTron(new HttpRequestError({ status: 403, url: 'u' }))).toBe(
     true,

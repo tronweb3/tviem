@@ -57,14 +57,23 @@ export function buildRequest<
           },
           {
             delay: ({ count, error }) => {
+              const backoff = ~~(1 << count) * retryDelay
               // If we find a Retry-After header, retry after the given time.
+              // RFC 9110 allows two forms: delay-seconds and HTTP-date.
               if (error && error instanceof HttpRequestError) {
-                const retryAfter = error?.headers?.get('Retry-After')
-                if (retryAfter?.match(/\d/))
-                  return Number.parseInt(retryAfter, 10) * 1000
+                const retryAfter = error.headers?.get('Retry-After')
+                if (retryAfter) {
+                  if (/^\s*\d+\s*$/.test(retryAfter))
+                    return Number.parseInt(retryAfter, 10) * 1000
+                  // Backoff is the floor: a past (or garbage-parsed) date must
+                  // not turn into a zero-delay hammer on a rate-limited server.
+                  const date = Date.parse(retryAfter)
+                  if (!Number.isNaN(date))
+                    return Math.max(backoff, date - Date.now())
+                }
               }
               // Otherwise, retry with an exponential backoff.
-              return ~~(1 << count) * retryDelay
+              return backoff
             },
             retryCount,
             signal,
