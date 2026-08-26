@@ -150,3 +150,18 @@ test('defaults feeLimit when omitted; honors an explicit 0n', async () => {
   const zero = await buildDeployContract(client, { ...noFee, feeLimit: 0n })
   expect((zero.raw_data as { fee_limit?: number }).fee_limit).toBeUndefined()
 })
+
+// `CreateSmartContractActuator.validate()` rejects a percent outside
+// [0, 100], so an out-of-range value would sign a doomed deployment.
+test('throws on a consumeUserResourcePercent outside [0, 100]', async () => {
+  const { transport } = buildMock()
+  const client = createWalletClient({ account: pk1, transport })
+  for (const consumeUserResourcePercent of [101n, -1n]) {
+    await expect(
+      buildDeployContract(client, {
+        ...paramsOf(deployValueOf(basic!)),
+        consumeUserResourcePercent,
+      }),
+    ).rejects.toThrow(/Invalid consumeUserResourcePercent/)
+  }
+})

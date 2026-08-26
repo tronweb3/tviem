@@ -1,5 +1,6 @@
 import type { TronAccount } from '../../accounts/types.js'
 import type { Client } from '../../clients/createClient.js'
+import { BaseError, type BaseErrorType } from '../../errors/base.js'
 import {
   AccountNotFoundError,
   type AccountNotFoundErrorType,
@@ -64,6 +65,7 @@ export type UpdateSettingReturnType = BuildAndBroadcastReturnType
 
 export type UpdateSettingErrorType =
   | AccountNotFoundErrorType
+  | BaseErrorType
   | BuildAndBroadcastErrorType
   | ParseAccountErrorType
   | AddressToHexErrorType
@@ -77,6 +79,7 @@ export type BuildUpdateSettingReturnType = BuildTransactionReturnType
 
 export type BuildUpdateSettingErrorType =
   | AccountNotFoundErrorType
+  | BaseErrorType
   | BuildTransactionErrorType
   | ParseAccountErrorType
   | AddressToHexErrorType
@@ -88,6 +91,14 @@ function assemble(
   parameters: UpdateSettingParameters,
 ): { account: TronAccount; contract: RawContract } {
   const { contractAddress, consumeUserResourcePercent } = parameters
+
+  // `UpdateSettingContractActuator.validate()` rejects anything outside
+  // [0, 100] ("percent not in [0, 100]"), so an out-of-range value would
+  // sign a doomed transaction.
+  if (consumeUserResourcePercent < 0n || consumeUserResourcePercent > 100n)
+    throw new BaseError(
+      `Invalid consumeUserResourcePercent: ${consumeUserResourcePercent}. Expected a percentage in [0, 100].`,
+    )
 
   // Resolve the owner/signing account (per-call, else hoisted on the Client).
   const source = parameters.account ?? client.account

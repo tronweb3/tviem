@@ -51,3 +51,18 @@ test('throws AccountNotFoundError when no account is available', async () => {
     }),
   ).rejects.toBeInstanceOf(AccountNotFoundError)
 })
+
+// `UpdateSettingActuator.validate()` rejects a percent outside [0, 100], so
+// an out-of-range value would sign a doomed transaction.
+test('throws on a consumeUserResourcePercent outside [0, 100]', async () => {
+  const client = makeTviemClient()
+  for (const consumeUserResourcePercent of [101n, -1n]) {
+    await expect(
+      client.buildUpdateSetting({
+        contractAddress,
+        consumeUserResourcePercent,
+        blockHeader: tviemHeader,
+      }),
+    ).rejects.toThrow(/Invalid consumeUserResourcePercent/)
+  }
+})
