@@ -373,6 +373,8 @@ export type AssetIssueContract = {
   start_time: Int64
   /** ICO end time, ms (field 10, `int64`). */
   end_time: Int64
+  /** Unused by java-tron; kept for wire compatibility (field 11, `int64`). */
+  order?: Int64 | undefined
   /** Vote score (field 16, `int32`). */
   vote_score?: number | undefined
   /** Token description (field 20, `bytes`, hex). */
@@ -386,6 +388,12 @@ export type AssetIssueContract = {
    * `int64`).
    */
   public_free_asset_net_limit?: Int64 | undefined
+  /** Shared free bandwidth already consumed (field 24, `int64`). */
+  public_free_asset_net_usage?: Int64 | undefined
+  /** Last shared free-bandwidth consumption time, ms (field 25, `int64`). */
+  public_latest_free_net_time?: Int64 | undefined
+  /** Chain-assigned TRC10 token id (field 41, `string`). */
+  id?: string | undefined
 }
 
 /** `UpdateAssetContract` (contract type 15) — update a TRC10 token. */

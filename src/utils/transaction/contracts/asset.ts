@@ -69,11 +69,15 @@ const assetIssueContractSpec: MessageSpec = [
   { no: 8, name: 'num', kind: 'i32' },
   { no: 9, name: 'start_time', kind: 'i64' },
   { no: 10, name: 'end_time', kind: 'i64' },
+  { no: 11, name: 'order', kind: 'i64' },
   { no: 16, name: 'vote_score', kind: 'i32' },
   { no: 20, name: 'description', kind: 'bytes' },
   { no: 21, name: 'url', kind: 'bytes' },
   { no: 22, name: 'free_asset_net_limit', kind: 'i64' },
   { no: 23, name: 'public_free_asset_net_limit', kind: 'i64' },
+  { no: 24, name: 'public_free_asset_net_usage', kind: 'i64' },
+  { no: 25, name: 'public_latest_free_net_time', kind: 'i64' },
+  { no: 41, name: 'id', kind: 'string' },
 ]
 
 export type EncodeAssetIssueContractErrorType =
