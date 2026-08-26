@@ -328,11 +328,17 @@ export function getAmbiguousTypes(
         return isAddressArg(args[parameterIndex as unknown as number])
       if (types.includes('address') && types.includes('bytes'))
         return isAddressArg(args[parameterIndex as unknown as number])
-      // `trcToken` encodes as a 32-byte word, exactly like every `(u)intN`, so
-      // a number/bigint arg cannot pick between a `trcToken` overload and an
-      // integer one — they encode it identically (TRON-specific; the reference
-      // stack has no `trcToken`).
-      if (types.includes('trcToken') && types.every(isIntegerLikeType)) {
+      // Every integer-like type (`(u)intN` at any width, and the TRON
+      // `trcToken`) encodes a number/bigint into the same left-padded 32-byte
+      // word, while differing canonical widths still produce DIFFERENT
+      // selectors — so a numeric arg cannot pick between the overloads, and
+      // resolving one silently would call a different function. Equal
+      // canonical types (`uint` is `uint256` to the selector) encode AND
+      // select identically, so they settle nothing at this position.
+      if (
+        types.every(isIntegerLikeType) &&
+        canonicalIntegerType(types[0]) !== canonicalIntegerType(types[1])
+      ) {
         const arg = args[parameterIndex as unknown as number]
         return typeof arg === 'number' || typeof arg === 'bigint'
       }
@@ -352,4 +358,14 @@ function isAddressArg(arg: unknown): boolean {
 /** Whether a type encodes a number/bigint into a 32-byte word (`(u)intN` or the TRON `trcToken`). */
 function isIntegerLikeType(type: string): boolean {
   return type === 'trcToken' || INTEGER_TYPE.test(type)
+}
+
+/**
+ * Canonical form of an integer-like type: a bare `uint`/`int` is `uint256`/
+ * `int256` in the selector signature (see `normalizeSignature`).
+ */
+function canonicalIntegerType(type: string): string {
+  if (type === 'uint') return 'uint256'
+  if (type === 'int') return 'int256'
+  return type
 }

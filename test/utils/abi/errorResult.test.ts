@@ -98,21 +98,35 @@ test('decodeErrorResult: throws when the selector matches no error', () => {
 })
 
 // Overload resolution (via getAbiItem): among same-name overloads that all
-// structurally accept `args`, the LAST match wins (reference semantics).
+// structurally accept `args` WITHOUT being ambiguous, the LAST match wins
+// (reference semantics). A non-address hex string matches both string and
+// bytes, and no ambiguity rule pairs them.
 test('encodeErrorResult: the last structural overload wins', () => {
   const overloaded = [
-    { type: 'error', name: 'E', inputs: [{ type: 'uint256' }] },
-    { type: 'error', name: 'E', inputs: [{ type: 'int256' }] },
+    { type: 'error', name: 'E', inputs: [{ type: 'string' }] },
+    { type: 'error', name: 'E', inputs: [{ type: 'bytes' }] },
   ] as const satisfies Abi
   expect(
-    encodeErrorResult({ abi: overloaded, errorName: 'E', args: [1n] }),
+    encodeErrorResult({ abi: overloaded, errorName: 'E', args: ['0x1234'] }),
   ).toBe(
     encodeErrorResult({
       abi: [overloaded[1]] as const satisfies Abi,
       errorName: 'E',
-      args: [1n],
+      args: ['0x1234'],
     }),
   )
+})
+
+// Differing integer widths are NOT resolved by last-match-wins: they encode
+// the same 32-byte word under different selectors, so the combination throws.
+test('encodeErrorResult: an integer-width overload pair throws', () => {
+  const overloaded = [
+    { type: 'error', name: 'E', inputs: [{ type: 'uint256' }] },
+    { type: 'error', name: 'E', inputs: [{ type: 'int256' }] },
+  ] as const satisfies Abi
+  expect(() =>
+    encodeErrorResult({ abi: overloaded, errorName: 'E', args: [1n] }),
+  ).toThrowError(AbiItemAmbiguityError)
 })
 
 // A genuine address/string ambiguity between two LATER overloads must be

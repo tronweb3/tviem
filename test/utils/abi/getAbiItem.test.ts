@@ -334,12 +334,73 @@ test('throws on an ambiguous uint256/trcToken overload', () => {
       [5n],
     ),
   ).toEqual(['uint256', 'trcToken'])
-  // …but a non-integer overlap (e.g. uint256 vs uint64) stays unambiguous.
+  // …and so is any pair of differing integer widths (same word, different
+  // selector — see the dedicated test below).
   expect(
     getAmbiguousTypes(
       [{ name: 'x', type: 'uint256' }],
       [{ name: 'x', type: 'uint64' }],
       [5n],
+    ),
+  ).toEqual(['uint256', 'uint64'])
+})
+
+// Every `(u)intN` encodes a number/bigint into the same left-padded 32-byte
+// word, while the widths still produce DIFFERENT selectors — so a numeric arg
+// cannot pick between foo(uint8) and foo(uint256), and letting the last
+// structural match win silently calls a different function.
+const intWidthAbi = [
+  {
+    type: 'function',
+    name: 'foo',
+    inputs: [{ name: 'x', type: 'uint8' }],
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    name: 'foo',
+    inputs: [{ name: 'x', type: 'uint256' }],
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+] as const satisfies Abi
+
+test('throws on an ambiguous integer-width overload', () => {
+  expect(() =>
+    getAbiItem({ abi: intWidthAbi, name: 'foo', args: [1n] }),
+  ).toThrowError(AbiItemAmbiguityError)
+  // Signedness is a width difference too.
+  expect(
+    getAmbiguousTypes(
+      [{ name: 'x', type: 'int256' }],
+      [{ name: 'x', type: 'uint256' }],
+      [5],
+    ),
+  ).toEqual(['int256', 'uint256'])
+  // A bare `uint` is canonically uint256 (normalizeSignature widens it for
+  // the selector), so the overloads are the same function — not ambiguous.
+  expect(
+    getAmbiguousTypes(
+      [{ name: 'x', type: 'uint' }],
+      [{ name: 'x', type: 'uint256' }],
+      [5n],
+    ),
+  ).toBeUndefined()
+  // Identical widths settle nothing at this position; other positions decide.
+  expect(
+    getAmbiguousTypes(
+      [{ name: 'x', type: 'uint256' }],
+      [{ name: 'x', type: 'uint256' }],
+      [5n],
+    ),
+  ).toBeUndefined()
+  // A non-numeric arg never hits the integer rule.
+  expect(
+    getAmbiguousTypes(
+      [{ name: 'x', type: 'uint8' }],
+      [{ name: 'x', type: 'uint256' }],
+      ['5'],
     ),
   ).toBeUndefined()
 })
