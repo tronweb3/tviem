@@ -28,7 +28,11 @@ import { concat } from '../data/concat.js'
 import { pad } from '../data/pad.js'
 import { size } from '../data/size.js'
 import { stringToBytes } from '../encoding/toBytes.js'
-import { type NumberToHexErrorType, numberToHex } from '../encoding/toHex.js'
+import {
+  type NumberToHexErrorType,
+  bytesToHex,
+  numberToHex,
+} from '../encoding/toHex.js'
 import { keccak256 } from '../hash/keccak256.js'
 import { bytesRegex, integerRegex } from '../regex.js'
 
@@ -132,8 +136,13 @@ function encodeField(types: TypedDataTypes, type: string, value: unknown): Hex {
   if (type === 'string') return keccak256(stringToBytes(value as string))
   if (type === 'bool') return pad(value ? '0x01' : '0x00')
   if (type === 'address') return pad(toEvm(value as AddressInput), { size: 32 })
+  // Validation accepts a `Uint8Array` for `bytesN`, but the surrounding words
+  // are hex and `pad` mirrors its input's kind — so convert to hex first.
   if (type.startsWith('bytes'))
-    return pad(value as Hex, { dir: 'right', size: 32 })
+    return pad(value instanceof Uint8Array ? bytesToHex(value) : (value as Hex), {
+      dir: 'right',
+      size: 32,
+    })
   if (type.startsWith('uint') || type.startsWith('int') || type === 'trcToken')
     return numberToHex(BigInt(value as string | number | bigint), {
       signed: type.startsWith('int'),

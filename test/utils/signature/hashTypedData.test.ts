@@ -9,6 +9,7 @@ import { BytesSizeMismatchError } from '../../../src/errors/abi.js'
 import { IntegerOutOfRangeError } from '../../../src/errors/encoding.js'
 import type { AddressInput, EvmAddress } from '../../../src/types/address.js'
 import { concat } from '../../../src/utils/data/concat.js'
+import { hexToBytes } from '../../../src/utils/encoding/toBytes.js'
 import { keccak256 } from '../../../src/utils/hash/keccak256.js'
 import {
   hashDomain,
@@ -146,6 +147,28 @@ describe('hashTypedData', () => {
         message: sink,
       }),
     ).toBe('0x323068fb563c40983e7966ebbe74ad221a0b090a483e143ad682d2e764934a03')
+  })
+
+  // `validateField` accepts a `Uint8Array` for `bytesN` (it size-checks it),
+  // so `encodeField` must encode it too — to the same word as its hex form.
+  test('bytesN form invariance: Uint8Array and hex yield the same digest', () => {
+    const wordHex =
+      '0x00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff'
+    const types = { X: [{ name: 'word', type: 'bytes32' }] } as const
+    const fromHex = hashTypedData({
+      domain,
+      types,
+      primaryType: 'X',
+      message: { word: wordHex },
+    })
+    expect(
+      hashTypedData({
+        domain,
+        types,
+        primaryType: 'X',
+        message: { word: hexToBytes(wordHex) },
+      }),
+    ).toBe(fromHex)
   })
 
   // ---- Case 3: trcToken (TRON-native type; oracle keeps it in encodeType) ---
