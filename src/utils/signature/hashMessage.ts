@@ -1,6 +1,12 @@
+import { BaseError, type BaseErrorType } from '../../errors/base.js'
 import type { ErrorType } from '../../errors/utils.js'
 import type { ByteArray, Hex, SignableMessage } from '../../types/misc.js'
 import { type ConcatErrorType, concat } from '../data/concat.js'
+import {
+  type AssertHexBytesErrorType,
+  assertHexBytes,
+  isHex,
+} from '../data/isHex.js'
 import {
   type HexToBytesErrorType,
   hexToBytes,
@@ -13,6 +19,8 @@ import { type Keccak256ErrorType, keccak256 } from '../hash/keccak256.js'
 export const presignMessagePrefix = '\x19TRON Signed Message:\n'
 
 export type HashMessageErrorType =
+  | AssertHexBytesErrorType
+  | BaseErrorType
   | ConcatErrorType
   | HexToBytesErrorType
   | StringToBytesErrorType
@@ -40,7 +48,19 @@ export function hashMessage<to extends 'hex' | 'bytes' = 'hex'>(
 ): to extends 'bytes' ? ByteArray : Hex {
   const messageBytes = (() => {
     if (typeof message === 'string') return stringToBytes(message)
-    if (typeof message.raw === 'string') return hexToBytes(message.raw)
+    if (typeof message.raw === 'string') {
+      // A raw hex string is bytes, so it must be 0x-prefixed whole bytes:
+      // `hexToBytes` left-pads an odd nibble count ("0x123" would hash
+      // identically to "0x0123") and `slice(2)` drops the leading byte of an
+      // unprefixed string — either digest is over bytes the caller never
+      // wrote, yet is perfectly signable.
+      if (!isHex(message.raw))
+        throw new BaseError(
+          `Invalid raw message: expected a 0x-prefixed hex string, got "${message.raw}".`,
+        )
+      assertHexBytes(message.raw)
+      return hexToBytes(message.raw)
+    }
     return message.raw
   })()
   const prefixBytes = stringToBytes(

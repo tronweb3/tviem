@@ -475,6 +475,67 @@ describe('hashTypedData validation', () => {
     ).toThrow(/Invalid Inner value: expected an object/)
   })
 
+  // Hex bytes values must denote whole bytes and carry the 0x prefix: an odd
+  // nibble count gets a nibble invented by padding (and slips past the bytesN
+  // size check, which rounds UP), while an unprefixed string loses its leading
+  // byte to `slice(2)` — either way the digest is over bytes the caller never
+  // wrote.
+  test.each([
+    ['an odd nibble count', '0x123'],
+    ['a missing 0x prefix', 'deadbeef'],
+  ])('rejects a dynamic bytes value with %s', (_label, b) => {
+    expect(() =>
+      hashTypedData({
+        domain,
+        types: { X: [{ name: 'b', type: 'bytes' }] },
+        primaryType: 'X',
+        message: { b },
+      }),
+    ).toThrow(/Invalid bytes value/)
+  })
+
+  test('rejects a bytesN value with an odd nibble count (size rounds up)', () => {
+    // 63 nibbles: size() rounds up to 32, so only the whole-byte check can
+    // catch it.
+    expect(() =>
+      hashTypedData({
+        domain,
+        types: { X: [{ name: 'b', type: 'bytes32' }] },
+        primaryType: 'X',
+        message: { b: `0x${'1'.repeat(63)}` },
+      }),
+    ).toThrow(/Invalid bytes32 value/)
+    expect(() =>
+      hashTypedData({
+        domain,
+        types: { X: [{ name: 'b', type: 'bytes4' }] },
+        primaryType: 'X',
+        message: { b: '0x1122334' },
+      }),
+    ).toThrow(/Invalid bytes4 value/)
+  })
+
+  test('rejects a bytesN value without the 0x prefix', () => {
+    expect(() =>
+      hashTypedData({
+        domain,
+        types: { X: [{ name: 'b', type: 'bytes4' }] },
+        primaryType: 'X',
+        message: { b: '11223344' },
+      }),
+    ).toThrow(/Invalid bytes4 value/)
+  })
+
+  test('rejects a domain salt with an odd nibble count', () => {
+    expect(() =>
+      hashTypedData({
+        domain: { ...domain, salt: `0x${'a'.repeat(63)}` },
+        types: {},
+        primaryType: 'EIP712Domain',
+      }),
+    ).toThrow(/Invalid bytes32 value/)
+  })
+
   test('rejects a bytesN value of the wrong size', () => {
     // Undersized: 31 bytes for bytes32 (currently right-padded silently).
     expect(() =>

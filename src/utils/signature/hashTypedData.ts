@@ -25,6 +25,7 @@ import type { AddressInput } from '../../types/address.js'
 import type { Hex } from '../../types/misc.js'
 import { toEvm } from '../address/toEvm.js'
 import { concat } from '../data/concat.js'
+import { isHex } from '../data/isHex.js'
 import { pad } from '../data/pad.js'
 import { size } from '../data/size.js'
 import { stringToBytes } from '../encoding/toBytes.js'
@@ -305,17 +306,28 @@ function validateField(
     return
   }
 
-  // `bytesN`: must be exactly `N` bytes (`encodeField` would silently
-  // right-pad a short value into a different digest).
   const bytesMatch = type.match(bytesRegex)
-  if (
-    bytesMatch?.[1] &&
-    (typeof value === 'string' || value instanceof Uint8Array)
-  ) {
-    const expectedSize = Number(bytesMatch[1])
-    const givenSize = size(value as Hex)
-    if (givenSize !== expectedSize)
-      throw new BytesSizeMismatchError({ expectedSize, givenSize })
+  if (bytesMatch) {
+    // A hex `bytes`/`bytesN` value must be 0x-prefixed whole bytes: an odd
+    // nibble count gets a nibble invented by padding (and slips past the
+    // size check below, which rounds UP), while an unprefixed string loses
+    // its leading byte to `slice(2)` in hex decoding — either way the
+    // digest is over bytes the caller never wrote.
+    if (typeof value === 'string' && (!isHex(value) || value.length % 2 !== 0))
+      throw new BaseError(
+        `Invalid ${type} value: expected a 0x-prefixed even-length hex string, got "${value}".`,
+      )
+    // `bytesN`: must be exactly `N` bytes (`encodeField` would silently
+    // right-pad a short value into a different digest).
+    if (
+      bytesMatch[1] &&
+      (typeof value === 'string' || value instanceof Uint8Array)
+    ) {
+      const expectedSize = Number(bytesMatch[1])
+      const givenSize = size(value as Hex)
+      if (givenSize !== expectedSize)
+        throw new BytesSizeMismatchError({ expectedSize, givenSize })
+    }
   }
 }
 

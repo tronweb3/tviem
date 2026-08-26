@@ -58,4 +58,16 @@ describe('hashMessage', () => {
     expect(bytes).toBeInstanceOf(Uint8Array)
     expect(bytes.length).toBe(32)
   })
+
+  // A raw hex string is bytes: `hexToBytes` would left-pad an odd nibble
+  // count ("0x123" hashing identically to "0x0123") and silently drop the
+  // leading byte of an unprefixed string (`slice(2)`), so both are refused —
+  // a digest over bytes the caller never wrote must not be signable.
+  test('rejects a raw hex string with an odd nibble count', () => {
+    expect(() => hashMessage({ raw: '0x123' })).toThrow()
+  })
+
+  test('rejects a raw hex string without the 0x prefix', () => {
+    expect(() => hashMessage({ raw: '010203' as `0x${string}` })).toThrow()
+  })
 })
