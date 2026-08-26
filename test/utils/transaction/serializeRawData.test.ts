@@ -178,11 +178,13 @@ test('int32 fields are bounded to int32; int64 fields are not', () => {
           value: {
             owner_address: owner,
             name: '746f6b656e',
+            abbr: '746b6e',
             total_supply: 1000n,
             trx_num: trxNum,
             num: 1,
             start_time: 1700000000000n,
             end_time: 1700086400000n,
+            url: '68747470',
           },
         },
       },
@@ -328,7 +330,11 @@ test('serializes a 1MB contract bytecode to a txID without a stack overflow (K4)
           type_url: 'type.googleapis.com/protocol.CreateSmartContract',
           value: {
             owner_address: owner,
-            new_contract: { origin_address: owner, bytecode },
+            new_contract: {
+              origin_address: owner,
+              bytecode,
+              origin_energy_limit: 10000000n,
+            },
           },
         },
       },

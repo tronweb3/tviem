@@ -18,7 +18,7 @@ import {
 
 /** Shared schema of the owner-only contract messages. */
 const ownerOnlySpec: MessageSpec = [
-  { no: 1, name: 'owner_address', kind: 'address' },
+  { no: 1, name: 'owner_address', kind: 'address', required: true },
 ]
 
 export type EncodeWithdrawBalanceContractErrorType =
@@ -45,8 +45,8 @@ export function decodeWithdrawBalanceContract(
 
 /** `FreezeBalanceV2Contract` (type 54) field schema. */
 const freezeBalanceV2ContractSpec: MessageSpec = [
-  { no: 1, name: 'owner_address', kind: 'address' },
-  { no: 2, name: 'frozen_balance', kind: 'i64' },
+  { no: 1, name: 'owner_address', kind: 'address', required: true },
+  { no: 2, name: 'frozen_balance', kind: 'i64', required: true },
   { no: 3, name: 'resource', kind: 'enum', names: ResourceCodeName },
 ]
 
@@ -77,8 +77,8 @@ export function decodeFreezeBalanceV2Contract(
 
 /** `UnfreezeBalanceV2Contract` (type 55) field schema. */
 const unfreezeBalanceV2ContractSpec: MessageSpec = [
-  { no: 1, name: 'owner_address', kind: 'address' },
-  { no: 2, name: 'unfreeze_balance', kind: 'i64' },
+  { no: 1, name: 'owner_address', kind: 'address', required: true },
+  { no: 2, name: 'unfreeze_balance', kind: 'i64', required: true },
   { no: 3, name: 'resource', kind: 'enum', names: ResourceCodeName },
 ]
 

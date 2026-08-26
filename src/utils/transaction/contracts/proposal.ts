@@ -35,7 +35,7 @@ const proposalParameterSpec: MessageSpec = [
 
 /** `ProposalCreateContract` (type 16) field schema (decode path). */
 const proposalCreateContractSpec: MessageSpec = [
-  { no: 1, name: 'owner_address', kind: 'address' },
+  { no: 1, name: 'owner_address', kind: 'address', required: true },
   {
     no: 2,
     name: 'parameters',
@@ -92,6 +92,13 @@ export function encodeProposalCreateContract(
     ['owner_address', 'parameters'],
     'ProposalCreateContract',
   )
+  // Hand-rolled, so the spec's `required` flag is re-established by hand.
+  // (`parameters` is chain-required but stays optional: an empty map is
+  // absent from the wire, and gold fixtures carry such cases.)
+  if (message.owner_address === undefined || message.owner_address === null)
+    throw new BaseError(
+      'Missing required field "owner_address" (unset, or set to its proto3 default).',
+    )
   const parts: ByteArray[] = [
     fBytes(1, normalizeAddress(message.owner_address as ContractAddressInput)),
   ]
@@ -145,7 +152,7 @@ export function decodeProposalCreateContract(
 
 /** `ProposalApproveContract` (type 17) field schema. */
 const proposalApproveContractSpec: MessageSpec = [
-  { no: 1, name: 'owner_address', kind: 'address' },
+  { no: 1, name: 'owner_address', kind: 'address', required: true },
   { no: 2, name: 'proposal_id', kind: 'i64' },
   { no: 3, name: 'is_add_approval', kind: 'bool' },
 ]
@@ -177,7 +184,7 @@ export function decodeProposalApproveContract(
 
 /** `ProposalDeleteContract` (type 18) field schema. */
 const proposalDeleteContractSpec: MessageSpec = [
-  { no: 1, name: 'owner_address', kind: 'address' },
+  { no: 1, name: 'owner_address', kind: 'address', required: true },
   { no: 2, name: 'proposal_id', kind: 'i64' },
 ]
 

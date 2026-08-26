@@ -60,14 +60,15 @@ const smartContractAbiSpec: MessageSpec = [
  * `CreateSmartContract` message.
  */
 const smartContractSpec: MessageSpec = [
-  { no: 1, name: 'origin_address', kind: 'address' },
+  { no: 1, name: 'origin_address', kind: 'address', required: true },
   { no: 2, name: 'contract_address', kind: 'address' },
   { no: 3, name: 'abi', kind: 'message', spec: smartContractAbiSpec },
   { no: 4, name: 'bytecode', kind: 'bytes' },
   { no: 5, name: 'call_value', kind: 'i64' },
+  // Not required: 0% is a valid consume_user_resource_percent.
   { no: 6, name: 'consume_user_resource_percent', kind: 'i64' },
   { no: 7, name: 'name', kind: 'string' },
-  { no: 8, name: 'origin_energy_limit', kind: 'i64' },
+  { no: 8, name: 'origin_energy_limit', kind: 'i64', required: true },
   { no: 9, name: 'code_hash', kind: 'bytes' },
   { no: 10, name: 'trx_hash', kind: 'bytes' },
   { no: 11, name: 'version', kind: 'i32' },
@@ -75,8 +76,14 @@ const smartContractSpec: MessageSpec = [
 
 /** `CreateSmartContract` (type 30) field schema. */
 const createSmartContractSpec: MessageSpec = [
-  { no: 1, name: 'owner_address', kind: 'address' },
-  { no: 2, name: 'new_contract', kind: 'message', spec: smartContractSpec },
+  { no: 1, name: 'owner_address', kind: 'address', required: true },
+  {
+    no: 2,
+    name: 'new_contract',
+    kind: 'message',
+    spec: smartContractSpec,
+    required: true,
+  },
   { no: 3, name: 'call_token_value', kind: 'i64' },
   { no: 4, name: 'token_id', kind: 'i64' },
 ]
@@ -105,9 +112,11 @@ export function decodeCreateSmartContract(
 
 /** `TriggerSmartContract` (type 31) field schema. */
 const triggerSmartContractSpec: MessageSpec = [
-  { no: 1, name: 'owner_address', kind: 'address' },
-  { no: 2, name: 'contract_address', kind: 'address' },
+  { no: 1, name: 'owner_address', kind: 'address', required: true },
+  { no: 2, name: 'contract_address', kind: 'address', required: true },
   { no: 3, name: 'call_value', kind: 'i64' },
+  // Not required: empty data triggers the fallback function, which the
+  // chain accepts.
   { no: 4, name: 'data', kind: 'bytes' },
   { no: 5, name: 'call_token_value', kind: 'i64' },
   { no: 6, name: 'token_id', kind: 'i64' },

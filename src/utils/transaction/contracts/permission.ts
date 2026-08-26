@@ -12,8 +12,8 @@ import {
 
 /** `Permission.Key` field schema. */
 const permissionKeySpec: MessageSpec = [
-  { no: 1, name: 'address', kind: 'address' },
-  { no: 2, name: 'weight', kind: 'i64' },
+  { no: 1, name: 'address', kind: 'address', required: true },
+  { no: 2, name: 'weight', kind: 'i64', required: true },
 ]
 
 /**
@@ -24,18 +24,38 @@ const permissionSpec: MessageSpec = [
   { no: 1, name: 'type', kind: 'enum', names: PermissionTypeName },
   { no: 2, name: 'id', kind: 'i32' },
   { no: 3, name: 'permission_name', kind: 'string' },
-  { no: 4, name: 'threshold', kind: 'i64' },
+  { no: 4, name: 'threshold', kind: 'i64', required: true },
   { no: 5, name: 'parent_id', kind: 'i32' },
+  // operations is required for an active permission but FORBIDDEN for the
+  // owner permission; this spec serves both, so it cannot carry the flag.
   { no: 6, name: 'operations', kind: 'bytes' },
-  { no: 7, name: 'keys', kind: 'repeated-message', spec: permissionKeySpec },
+  {
+    no: 7,
+    name: 'keys',
+    kind: 'repeated-message',
+    spec: permissionKeySpec,
+    required: true,
+  },
 ]
 
 /** `AccountPermissionUpdateContract` (type 46) field schema. */
 const accountPermissionUpdateContractSpec: MessageSpec = [
-  { no: 1, name: 'owner_address', kind: 'address' },
-  { no: 2, name: 'owner', kind: 'message', spec: permissionSpec },
+  { no: 1, name: 'owner_address', kind: 'address', required: true },
+  {
+    no: 2,
+    name: 'owner',
+    kind: 'message',
+    spec: permissionSpec,
+    required: true,
+  },
   { no: 3, name: 'witness', kind: 'message', spec: permissionSpec },
-  { no: 4, name: 'actives', kind: 'repeated-message', spec: permissionSpec },
+  {
+    no: 4,
+    name: 'actives',
+    kind: 'repeated-message',
+    spec: permissionSpec,
+    required: true,
+  },
 ]
 
 export type EncodeAccountPermissionUpdateContractErrorType =

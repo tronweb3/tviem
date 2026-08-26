@@ -16,11 +16,11 @@ import {
 
 /** `ExchangeCreateContract` (type 41) field schema. */
 const exchangeCreateContractSpec: MessageSpec = [
-  { no: 1, name: 'owner_address', kind: 'address' },
-  { no: 2, name: 'first_token_id', kind: 'bytes' },
-  { no: 3, name: 'first_token_balance', kind: 'i64' },
-  { no: 4, name: 'second_token_id', kind: 'bytes' },
-  { no: 5, name: 'second_token_balance', kind: 'i64' },
+  { no: 1, name: 'owner_address', kind: 'address', required: true },
+  { no: 2, name: 'first_token_id', kind: 'bytes', required: true },
+  { no: 3, name: 'first_token_balance', kind: 'i64', required: true },
+  { no: 4, name: 'second_token_id', kind: 'bytes', required: true },
+  { no: 5, name: 'second_token_balance', kind: 'i64', required: true },
 ]
 
 export type EncodeExchangeCreateContractErrorType =
@@ -50,10 +50,10 @@ export function decodeExchangeCreateContract(
 
 /** `ExchangeInjectContract` (type 42) field schema. */
 const exchangeInjectContractSpec: MessageSpec = [
-  { no: 1, name: 'owner_address', kind: 'address' },
-  { no: 2, name: 'exchange_id', kind: 'i64' },
-  { no: 3, name: 'token_id', kind: 'bytes' },
-  { no: 4, name: 'quant', kind: 'i64' },
+  { no: 1, name: 'owner_address', kind: 'address', required: true },
+  { no: 2, name: 'exchange_id', kind: 'i64', required: true },
+  { no: 3, name: 'token_id', kind: 'bytes', required: true },
+  { no: 4, name: 'quant', kind: 'i64', required: true },
 ]
 
 export type EncodeExchangeInjectContractErrorType =
@@ -83,10 +83,10 @@ export function decodeExchangeInjectContract(
 
 /** `ExchangeWithdrawContract` (type 43) field schema. */
 const exchangeWithdrawContractSpec: MessageSpec = [
-  { no: 1, name: 'owner_address', kind: 'address' },
-  { no: 2, name: 'exchange_id', kind: 'i64' },
-  { no: 3, name: 'token_id', kind: 'bytes' },
-  { no: 4, name: 'quant', kind: 'i64' },
+  { no: 1, name: 'owner_address', kind: 'address', required: true },
+  { no: 2, name: 'exchange_id', kind: 'i64', required: true },
+  { no: 3, name: 'token_id', kind: 'bytes', required: true },
+  { no: 4, name: 'quant', kind: 'i64', required: true },
 ]
 
 export type EncodeExchangeWithdrawContractErrorType =
@@ -116,11 +116,11 @@ export function decodeExchangeWithdrawContract(
 
 /** `ExchangeTransactionContract` (type 44) field schema. */
 const exchangeTransactionContractSpec: MessageSpec = [
-  { no: 1, name: 'owner_address', kind: 'address' },
-  { no: 2, name: 'exchange_id', kind: 'i64' },
-  { no: 3, name: 'token_id', kind: 'bytes' },
-  { no: 4, name: 'quant', kind: 'i64' },
-  { no: 5, name: 'expected', kind: 'i64' },
+  { no: 1, name: 'owner_address', kind: 'address', required: true },
+  { no: 2, name: 'exchange_id', kind: 'i64', required: true },
+  { no: 3, name: 'token_id', kind: 'bytes', required: true },
+  { no: 4, name: 'quant', kind: 'i64', required: true },
+  { no: 5, name: 'expected', kind: 'i64', required: true },
 ]
 
 export type EncodeExchangeTransactionContractErrorType =

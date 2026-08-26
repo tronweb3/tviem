@@ -1,5 +1,6 @@
 import { expect, test } from 'vitest'
 
+import { hexToBytes } from '../../../../src/utils/encoding/toBytes.js'
 import { bytesToHex } from '../../../../src/utils/encoding/toHex.js'
 import {
   decodeVoteWitnessContract,
@@ -35,9 +36,9 @@ test('encodeVoteWitnessContract: one field-2 entry per vote', () => {
 })
 
 test('decodeVoteWitnessContract: absent fields stay absent (defaults omitted)', () => {
-  const decoded = decodeVoteWitnessContract(
-    encodeVoteWitnessContract({ owner_address: v1 }),
-  )
+  // Hand-built bytes: encode now requires votes, but decode stays a faithful
+  // reading of whatever the wire carries.
+  const decoded = decodeVoteWitnessContract(hexToBytes(`0x0a15${v1}`))
   expect(decoded).toStrictEqual({ owner_address: v1 })
 })
 

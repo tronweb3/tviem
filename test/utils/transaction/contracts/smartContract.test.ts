@@ -1,5 +1,6 @@
 import { expect, test } from 'vitest'
 
+import { hexToBytes } from '../../../../src/utils/encoding/toBytes.js'
 import { bytesToHex } from '../../../../src/utils/encoding/toHex.js'
 import {
   decodeCreateSmartContract,
@@ -67,22 +68,31 @@ test('decode(encode(x)) canonicalizes (TriggerSmartContract)', () => {
 test('encodeCreateSmartContract: call_value lives on SmartContract (field 5)', () => {
   const encoded = encodeCreateSmartContract({
     owner_address: v1,
-    new_contract: { origin_address: v1, call_value: 1_000_000n, name: 'Token' },
+    new_contract: {
+      origin_address: v1,
+      call_value: 1_000_000n,
+      name: 'Token',
+      origin_energy_limit: 9n,
+    },
   })
   expect(bytesToHex(encoded)).toBe(
-    `0x0a15${v1}12220a15${v1}28c0843d3a05546f6b656e`,
+    `0x0a15${v1}12240a15${v1}28c0843d3a05546f6b656e4009`,
   )
 })
 
 test('encodeCreateSmartContract: call_token_value(3) / token_id(4)', () => {
   const encoded = encodeCreateSmartContract({
     owner_address: v1,
+    new_contract: { origin_address: v1, origin_energy_limit: 9n },
     call_token_value: 5n,
     token_id: 1_000_001n,
   })
-  expect(bytesToHex(encoded)).toBe(`0x0a15${v1}180520c1843d`)
-  // Absent message fields stay absent after decode.
-  const decoded = decodeCreateSmartContract(encoded)
+  expect(bytesToHex(encoded)).toBe(`0x0a15${v1}12190a15${v1}4009180520c1843d`)
+  // Absent message fields stay absent after decode (decode is a faithful
+  // reading — required is enforced on encode only).
+  const decoded = decodeCreateSmartContract(
+    hexToBytes(`0x0a15${v1}180520c1843d`),
+  )
   expect('new_contract' in decoded).toBe(false)
 })
 

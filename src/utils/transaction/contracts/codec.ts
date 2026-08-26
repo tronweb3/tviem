@@ -47,7 +47,7 @@ import type { BytesInput, ContractAddressInput, Int64 } from '../types.js'
  * `VARINT` (0); `address`/`bytes`/`string`/`message`/`repeated-message` →
  * `LEN` (2).
  */
-export type FieldSpec =
+export type FieldSpec = (
   | {
       no: number
       name: string
@@ -56,6 +56,18 @@ export type FieldSpec =
   | { no: number; name: string; kind: 'enum'; names: readonly string[] }
   | { no: number; name: string; kind: 'message'; spec: MessageSpec }
   | { no: number; name: string; kind: 'repeated-message'; spec: MessageSpec }
+) & {
+  /**
+   * The field must appear on the wire to encode. Reserved for fields the
+   * java-tron actuator rejects at their proto3 default — since the wire
+   * cannot distinguish an absent field from a default (zero/empty) value, a
+   * message omitting such a field can never be chain-valid, and the marked
+   * set is verified against every gold-fixture case (a field a fixture
+   * omits must not carry this flag). Enforced by `encodeMessage` only;
+   * decoding stays a faithful reading of whatever the wire carries.
+   */
+  required?: true
+}
 
 /** Declarative schema of a contract message (one entry per field). */
 export type MessageSpec = readonly FieldSpec[]
@@ -100,8 +112,15 @@ export function encodeMessage(
   const parts: ByteArray[] = []
   for (const field of [...spec].sort((a, b) => a.no - b.no)) {
     const value = message[field.name]
-    if (value === undefined || value === null) continue
-    parts.push(encodeField(field, value))
+    const encoded =
+      value === undefined || value === null
+        ? new Uint8Array(0)
+        : encodeField(field, value)
+    if (field.required && encoded.length === 0)
+      throw new BaseError(
+        `Missing required field "${field.name}" (unset, or set to its proto3 default).`,
+      )
+    parts.push(encoded)
   }
   return concatBytes(parts)
 }

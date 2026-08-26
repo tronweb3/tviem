@@ -21,10 +21,10 @@ import {
  * `receiver_address`.
  */
 const delegateResourceContractSpec: MessageSpec = [
-  { no: 1, name: 'owner_address', kind: 'address' },
+  { no: 1, name: 'owner_address', kind: 'address', required: true },
   { no: 2, name: 'resource', kind: 'enum', names: ResourceCodeName },
-  { no: 3, name: 'balance', kind: 'i64' },
-  { no: 4, name: 'receiver_address', kind: 'address' },
+  { no: 3, name: 'balance', kind: 'i64', required: true },
+  { no: 4, name: 'receiver_address', kind: 'address', required: true },
   { no: 5, name: 'lock', kind: 'bool' },
   { no: 6, name: 'lock_period', kind: 'i64' },
 ]
@@ -56,10 +56,10 @@ export function decodeDelegateResourceContract(
 
 /** `UnDelegateResourceContract` (type 58) field schema — same order. */
 const unDelegateResourceContractSpec: MessageSpec = [
-  { no: 1, name: 'owner_address', kind: 'address' },
+  { no: 1, name: 'owner_address', kind: 'address', required: true },
   { no: 2, name: 'resource', kind: 'enum', names: ResourceCodeName },
-  { no: 3, name: 'balance', kind: 'i64' },
-  { no: 4, name: 'receiver_address', kind: 'address' },
+  { no: 3, name: 'balance', kind: 'i64', required: true },
+  { no: 4, name: 'receiver_address', kind: 'address', required: true },
 ]
 
 export type EncodeUnDelegateResourceContractErrorType =

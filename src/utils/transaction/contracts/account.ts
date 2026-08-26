@@ -16,8 +16,8 @@ import {
 
 /** `AccountCreateContract` (type 0) field schema. */
 const accountCreateContractSpec: MessageSpec = [
-  { no: 1, name: 'owner_address', kind: 'address' },
-  { no: 2, name: 'account_address', kind: 'address' },
+  { no: 1, name: 'owner_address', kind: 'address', required: true },
+  { no: 2, name: 'account_address', kind: 'address', required: true },
   { no: 3, name: 'type', kind: 'enum', names: AccountTypeName },
 ]
 
@@ -48,8 +48,8 @@ export function decodeAccountCreateContract(
 
 /** `AccountUpdateContract` (type 10) field schema. */
 const accountUpdateContractSpec: MessageSpec = [
-  { no: 1, name: 'account_name', kind: 'bytes' },
-  { no: 2, name: 'owner_address', kind: 'address' },
+  { no: 1, name: 'account_name', kind: 'bytes', required: true },
+  { no: 2, name: 'owner_address', kind: 'address', required: true },
 ]
 
 export type EncodeAccountUpdateContractErrorType =
@@ -79,8 +79,8 @@ export function decodeAccountUpdateContract(
 
 /** `SetAccountIdContract` (type 19) field schema. */
 const setAccountIdContractSpec: MessageSpec = [
-  { no: 1, name: 'account_id', kind: 'bytes' },
-  { no: 2, name: 'owner_address', kind: 'address' },
+  { no: 1, name: 'account_id', kind: 'bytes', required: true },
+  { no: 2, name: 'owner_address', kind: 'address', required: true },
 ]
 
 export type EncodeSetAccountIdContractErrorType =

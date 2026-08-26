@@ -95,6 +95,48 @@ test('decodeMessage: empty input decodes to an empty message (defaults omitted)'
   expect(decoded).toStrictEqual({})
 })
 
+// `required` marks fields java-tron rejects at their proto3 default. Since the
+// wire cannot distinguish an absent field from a default value (zero / empty),
+// both refuse to encode — a message omitting them can never be chain-valid.
+const requiredSpec: MessageSpec = [
+  { no: 1, name: 'owner', kind: 'address', required: true },
+  { no: 2, name: 'amount', kind: 'i64', required: true },
+  { no: 3, name: 'payload', kind: 'bytes', required: true },
+  {
+    no: 4,
+    name: 'items',
+    kind: 'repeated-message',
+    spec: [{ no: 1, name: 'n', kind: 'i64' }],
+    required: true,
+  },
+]
+const requiredOk = {
+  owner: v1,
+  amount: 1n,
+  payload: 'dead',
+  items: [{ n: 1n }],
+}
+
+test('encodeMessage: a required field present and non-default encodes', () => {
+  expect(() => encodeMessage(requiredSpec, requiredOk)).not.toThrow()
+})
+
+test.each([
+  ['absent', { ...requiredOk, amount: undefined }, 'amount'],
+  ['null', { ...requiredOk, amount: null }, 'amount'],
+  ['zero (the proto3 default)', { ...requiredOk, amount: 0n }, 'amount'],
+  ['empty bytes', { ...requiredOk, payload: '0x' }, 'payload'],
+  ['an empty repeated list', { ...requiredOk, items: [] }, 'items'],
+])('encodeMessage: a required field %s throws', (_label, message, name) => {
+  expect(() => encodeMessage(requiredSpec, message)).toThrow(
+    `Missing required field "${name}"`,
+  )
+})
+
+test('decodeMessage: required is not enforced on decode (faithful reading)', () => {
+  expect(decodeMessage(requiredSpec, new Uint8Array(0))).toStrictEqual({})
+})
+
 test('decodeMessage: canonical output — number int64, name enum, bare-hex bytes', () => {
   const encoded = encodeMessage(spec, {
     count: 3,

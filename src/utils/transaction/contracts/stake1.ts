@@ -22,9 +22,9 @@ import {
  * deployment default of 0.
  */
 const freezeBalanceContractSpec: MessageSpec = [
-  { no: 1, name: 'owner_address', kind: 'address' },
-  { no: 2, name: 'frozen_balance', kind: 'i64' },
-  { no: 3, name: 'frozen_duration', kind: 'i64' },
+  { no: 1, name: 'owner_address', kind: 'address', required: true },
+  { no: 2, name: 'frozen_balance', kind: 'i64', required: true },
+  { no: 3, name: 'frozen_duration', kind: 'i64', required: true },
   { no: 10, name: 'resource', kind: 'enum', names: ResourceCodeName },
   { no: 15, name: 'receiver_address', kind: 'address' },
 ]
@@ -56,7 +56,7 @@ export function decodeFreezeBalanceContract(
 
 /** `UnfreezeBalanceContract` (type 12, Stake 1.0) field schema. */
 const unfreezeBalanceContractSpec: MessageSpec = [
-  { no: 1, name: 'owner_address', kind: 'address' },
+  { no: 1, name: 'owner_address', kind: 'address', required: true },
   { no: 10, name: 'resource', kind: 'enum', names: ResourceCodeName },
   { no: 15, name: 'receiver_address', kind: 'address' },
 ]

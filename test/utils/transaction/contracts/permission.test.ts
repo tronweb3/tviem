@@ -1,5 +1,6 @@
 import { expect, test } from 'vitest'
 
+import { hexToBytes } from '../../../../src/utils/encoding/toBytes.js'
 import { bytesToHex } from '../../../../src/utils/encoding/toHex.js'
 import {
   decodeAccountPermissionUpdateContract,
@@ -87,15 +88,20 @@ test('encodeAccountPermissionUpdateContract: owner/witness/actives + 32-byte ope
   })
 })
 
-test('empty nested Permission encodes as an empty message and decodes empty', () => {
-  const encoded = encodeAccountPermissionUpdateContract({
-    owner_address: v1,
-    owner: {},
-  })
-  expect(bytesToHex(encoded)).toBe(`0x0a15${v1}1200`)
-  const decoded = decodeAccountPermissionUpdateContract(encoded)
-  // Defaults are omitted (JsonFormat prints only set fields); the empty
-  // nested message itself survives as {}.
+test('an empty nested Permission is refused on encode but decodes faithfully', () => {
+  // A set permission must be valid: the actuator rejects one without a
+  // threshold (or keys), so encode refuses an empty Permission message.
+  expect(() =>
+    encodeAccountPermissionUpdateContract({
+      owner_address: v1,
+      owner: {},
+    } as never),
+  ).toThrow('Missing required field "threshold"')
+  // Decode stays a faithful reading: the empty nested message survives as {}
+  // and absent fields stay absent (JsonFormat prints only set fields).
+  const decoded = decodeAccountPermissionUpdateContract(
+    hexToBytes(`0x0a15${v1}1200`),
+  )
   expect(decoded).toStrictEqual({ owner_address: v1, owner: {} })
   expect('witness' in decoded).toBe(false)
 })

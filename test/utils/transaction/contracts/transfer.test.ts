@@ -62,13 +62,16 @@ test('encodeTransferContract: every owner address form encodes identically', () 
   ).toBe(expected)
 })
 
-test('encodeTransferContract: zero amount is omitted (proto3 default)', () => {
-  const encoded = encodeTransferContract({
-    owner_address: v1,
-    to_address: to,
-    amount: 0n,
-  })
-  expect(bytesToHex(encoded)).toBe(`0x0a15${v1}1215${to}`)
+test('encodeTransferContract: zero amount is refused (required, default = absent)', () => {
+  // A zero amount is a proto3 default — absent from the wire — and the chain
+  // rejects a transfer without an amount, so encoding refuses it up front.
+  expect(() =>
+    encodeTransferContract({
+      owner_address: v1,
+      to_address: to,
+      amount: 0n,
+    }),
+  ).toThrow('Missing required field "amount"')
 })
 
 test('decode(encode(x)) canonicalizes to the node-JSON form', () => {
@@ -84,14 +87,12 @@ test('decode(encode(x)) canonicalizes to the node-JSON form', () => {
     amount: 1_000_000,
   })
 
-  // A zero amount is a proto3 default: omitted on the wire AND in the
-  // decoded JSON (java-tron's JsonFormat prints only set fields).
-  const zero: TransferContract = {
-    owner_address: v1,
-    to_address: to,
-    amount: 0n,
-  }
-  expect(decodeTransferContract(encodeTransferContract(zero))).toStrictEqual({
+  // A zero amount is a proto3 default: absent from the wire AND from the
+  // decoded JSON (java-tron's JsonFormat prints only set fields). Decode
+  // stays a faithful reading — required is enforced on encode only.
+  expect(
+    decodeTransferContract(hexToBytes(`0x0a15${v1}1215${to}`)),
+  ).toStrictEqual({
     owner_address: v1,
     to_address: to,
   })
