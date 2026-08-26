@@ -190,14 +190,30 @@ function assertStructNotShadowing(type: string): void {
     throw new InvalidStructTypeError({ type })
 }
 
+/** Human name of a value's kind, for validation error messages. */
+function kindOf(value: unknown): string {
+  if (value === null) return 'null'
+  if (Array.isArray(value)) return 'an array'
+  return typeof value
+}
+
 /** Validates every field of a struct value against its declared types. */
 function validateStruct(
   types: TypedDataTypes,
   type: string,
   data: Record<string, unknown>,
 ): void {
-  for (const field of types[type] ?? [])
-    validateField(types, field.type, data?.[field.name])
+  for (const field of types[type] ?? []) {
+    // EIP-712 has no optional fields: every declared field must be present. A
+    // missing `string` field would otherwise hash as "" (TextEncoder coerces
+    // undefined to the empty string) — a plausible digest for a value the
+    // caller never wrote.
+    if (data?.[field.name] === undefined)
+      throw new BaseError(
+        `Missing ${type}.${field.name} value (declared as "${field.type}").`,
+      )
+    validateField(types, field.type, data[field.name])
+  }
 }
 
 /** Validates one value against its declared field type (recursing into
@@ -209,6 +225,13 @@ function validateField(
 ): void {
   if (types[type]) {
     assertStructNotShadowing(type)
+    // A non-object struct value would slip through the per-field checks (its
+    // fields all read as `undefined`) and only surface as a raw TypeError —
+    // or a wrong digest — deep inside encoding.
+    if (typeof value !== 'object' || value === null || Array.isArray(value))
+      throw new BaseError(
+        `Invalid ${type} value: expected an object, got ${kindOf(value)}.`,
+      )
     validateStruct(types, type, value as Record<string, unknown>)
     return
   }
@@ -226,8 +249,13 @@ function validateField(
           Array.isArray(value) ? value.length : typeof value
         }.`,
       )
-    if (Array.isArray(value))
-      for (const item of value) validateField(types, base, item)
+    // A dynamic `T[]` must still be an array — anything else would escape as a
+    // raw `.map is not a function` TypeError in `encodeField`.
+    if (!Array.isArray(value))
+      throw new BaseError(
+        `Invalid ${type} value: expected an array, got ${kindOf(value)}.`,
+      )
+    for (const item of value) validateField(types, base, item)
     return
   }
 

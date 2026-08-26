@@ -274,13 +274,15 @@ describe('hashTypedData validation', () => {
   // the opposite of what it spells (`"false"` is truthy). Only a real boolean
   // is accepted (mirrors the codec's bool guard and viem's encodeBool).
   test.each([
-    ['the string "false"', 'false'],
-    ['the string "true"', 'true'],
-    ['the number 0', 0],
-    ['the number 1', 1],
-    ['null', null],
-    ['undefined', undefined],
-  ])('rejects %s for a bool field', (_label, flag) => {
+    ['the string "false"', 'false', /Invalid bool value/],
+    ['the string "true"', 'true', /Invalid bool value/],
+    ['the number 0', 0, /Invalid bool value/],
+    ['the number 1', 1, /Invalid bool value/],
+    ['null', null, /Invalid bool value/],
+    // An undefined field is caught by the missing-field check before the
+    // bool guard sees it.
+    ['undefined', undefined, /Missing X.flag value/],
+  ])('rejects %s for a bool field', (_label, flag, error) => {
     expect(() =>
       hashTypedData({
         domain,
@@ -288,7 +290,7 @@ describe('hashTypedData validation', () => {
         primaryType: 'X',
         message: { flag },
       }),
-    ).toThrow(/Invalid bool value/)
+    ).toThrow(error)
   })
 
   test('accepts real booleans for a bool field', () => {
@@ -418,6 +420,59 @@ describe('hashTypedData validation', () => {
         message: { inner: { n: 300 } },
       }),
     ).toThrow(IntegerOutOfRangeError)
+  })
+
+  // EIP-712 has no optional fields: every declared field must be present. A
+  // missing `string` field would otherwise hash as "" (TextEncoder coerces
+  // undefined to the empty string) — a plausible digest for a value the caller
+  // never wrote.
+  test.each([
+    ['an absent', {}],
+    ['an explicitly undefined', { a: undefined }],
+  ])('rejects %s value for a declared struct field', (_label, message) => {
+    expect(() =>
+      hashTypedData({
+        domain,
+        types: { X: [{ name: 'a', type: 'string' }] },
+        primaryType: 'X',
+        message,
+      }),
+    ).toThrow(/Missing X.a value/)
+  })
+
+  test.each([
+    ['a number', 5],
+    ['a string', 'nope'],
+    ['null', null],
+    ['an object', {}],
+  ])('rejects %s for a dynamic uint8[] field', (_label, t) => {
+    expect(() =>
+      hashTypedData({
+        domain,
+        types: { X: [{ name: 't', type: 'uint8[]' }] },
+        primaryType: 'X',
+        message: { t },
+      }),
+    ).toThrow(/Invalid uint8\[\] value: expected an array/)
+  })
+
+  test.each([
+    ['a string', 'nope'],
+    ['a number', 7],
+    ['null', null],
+    ['an array', [1, 2]],
+  ])('rejects %s for a nested struct field', (_label, inner) => {
+    expect(() =>
+      hashTypedData({
+        domain,
+        types: {
+          Inner: [{ name: 'n', type: 'uint8' }],
+          X: [{ name: 'inner', type: 'Inner' }],
+        },
+        primaryType: 'X',
+        message: { inner },
+      }),
+    ).toThrow(/Invalid Inner value: expected an object/)
   })
 
   test('rejects a bytesN value of the wrong size', () => {
