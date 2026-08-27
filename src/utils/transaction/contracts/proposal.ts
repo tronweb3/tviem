@@ -83,6 +83,15 @@ function assertOnlyKeys(
  * the same safe-integer/decimal parsing as every other `int64` input; and a
  * duplicate key is refused rather than silently collapsed to last-one-wins by
  * the map parser (which would make the model and the executed value diverge).
+ *
+ * Entries serialize in MODEL order. Protobuf leaves map wire order
+ * unspecified, and java-tron both emits and re-parses `parameters` in the
+ * order given (measured on `/wallet/proposalcreate` and on the broadcast
+ * JSON-to-protobuf rebuild), so a transaction built elsewhere carries its own
+ * order in `raw_data_hex` — re-ordering here would make every such
+ * self-consistent triple fail the byte verification. The canonical order for
+ * transactions built by THIS SDK is applied where the model is assembled
+ * (the createProposal action), not here.
  */
 export function encodeProposalCreateContract(
   message: ProposalCreateContract,
@@ -107,30 +116,16 @@ export function encodeProposalCreateContract(
     throw new BaseError('ProposalCreateContract.parameters must be an array.')
 
   const seen = new Set<bigint>()
-  const entries = parameters.map((entry) => {
+  for (const entry of parameters) {
     assertOnlyKeys(entry, ['key', 'value'], 'proposal parameter')
     const key = int64InputToBigInt('proposal parameter key', entry.key)
     const value = int64InputToBigInt('proposal parameter value', entry.value)
     if (seen.has(key))
       throw new BaseError(`Duplicate proposal parameter key ${key}.`)
     seen.add(key)
-    return { key, value }
-  })
-  // `parameters` is a `map<int64,int64>`: each entry force-emits key + value.
-  // A protobuf map serializes its entries sorted by the STRINGIFIED key in
-  // ascending order (`"10" < "2"`), not by numeric key or caller order — so
-  // the entries are sorted here to keep raw_data_hex/txID canonical whatever
-  // order the caller supplies.
-  entries.sort((a, b) => {
-    const ka = String(a.key)
-    const kb = String(b.key)
-    return ka < kb ? -1 : ka > kb ? 1 : 0
-  })
-  for (const entry of entries) {
-    const body = concatBytes([
-      fIntMapEntry(1, entry.key),
-      fIntMapEntry(2, entry.value),
-    ])
+    // Each map entry force-emits BOTH fields, key and value, even at their
+    // proto3 defaults (see fIntMapEntry).
+    const body = concatBytes([fIntMapEntry(1, key), fIntMapEntry(2, value)])
     parts.push(fMessage(2, body, { emitDefault: true }))
   }
   return concatBytes(parts)

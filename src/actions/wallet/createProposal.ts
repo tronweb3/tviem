@@ -98,7 +98,14 @@ export type BuildCreateProposalErrorType =
   | AddressToHexErrorType
   | ErrorType
 
-/** Normalizes proposal parameters to ascending-key `{ key, value }` bigints. */
+/**
+ * Normalizes proposal parameters to `{ key, value }` bigints in the canonical
+ * order this SDK emits: ascending by STRINGIFIED key (`"10" < "2"`). The wire
+ * accepts any entry order (the codec serializes the model as given); sorting
+ * at assembly makes the built bytes and txID independent of the caller's
+ * argument order, and matches the entry order jspb-based builders emit for the
+ * same map.
+ */
 function normalizeParameters(
   input: ProposalParametersInput,
 ): { key: bigint; value: bigint }[] {
@@ -107,13 +114,10 @@ function normalizeParameters(
         key: BigInt(entry.key),
         value: BigInt(entry.value),
       }))
-    : Object.keys(input)
-        .map(Number)
-        .sort((a, b) => a - b)
-        .map((key) => ({
-          key: BigInt(key),
-          value: BigInt(input[key] as number),
-        }))
+    : Object.keys(input).map((key) => ({
+        key: BigInt(key),
+        value: BigInt(input[key as unknown as number] as number),
+      }))
   // `parameters` is a proto3 `map<int64,int64>`: a parser keeps only the LAST
   // entry per key, so a duplicate would silently drop the earlier value
   // on-chain while the txID still commits to both entries. Refuse instead.
@@ -125,6 +129,11 @@ function normalizeParameters(
       )
     seen.add(key)
   }
+  entries.sort((a, b) => {
+    const ka = String(a.key)
+    const kb = String(b.key)
+    return ka < kb ? -1 : ka > kb ? 1 : 0
+  })
   return entries
 }
 

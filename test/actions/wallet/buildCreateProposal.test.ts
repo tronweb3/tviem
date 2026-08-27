@@ -18,6 +18,41 @@ test('builds ProposalCreateContract offline', async () => {
   expect(tviemTx.signature).toBeUndefined()
 })
 
+// The canonical entry order for this SDK's own builds lives HERE (the codec
+// serializes the model as given): ascending by stringified key ("10" < "2"),
+// independent of the caller's argument order — so the same parameters always
+// yield the same bytes and txID.
+test('built parameters are ordered by stringified key, whatever the input order', async () => {
+  const client = makeTviemClient()
+  const parametersOf = (tx: { raw_data: { contract: unknown[] } }) =>
+    (
+      tx.raw_data.contract[0] as {
+        parameter: { value: { parameters: { key: number }[] } }
+      }
+    ).parameter.value.parameters.map((p) => p.key)
+
+  const ascending = await client.buildCreateProposal({
+    parameters: [
+      { key: 2, value: 1 },
+      { key: 10, value: 1 },
+    ],
+    blockHeader: tviemHeader,
+  })
+  const descending = await client.buildCreateProposal({
+    parameters: [
+      { key: 10, value: 1 },
+      { key: 2, value: 1 },
+    ],
+    blockHeader: tviemHeader,
+  })
+
+  // "10" sorts before "2" lexicographically.
+  expect(parametersOf(ascending)).toEqual([10, 2])
+  expect(parametersOf(descending)).toEqual([10, 2])
+  expect(descending.raw_data_hex).toBe(ascending.raw_data_hex)
+  expect(descending.txID).toBe(ascending.txID)
+})
+
 test('permissionId is baked in as Permission_id', async () => {
   const client = makeTviemClient()
 
