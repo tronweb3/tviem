@@ -45,6 +45,7 @@ test('genContractAddress rejects a non-hex txID', () => {
 
 test('genContractAddress rejects an invalid owner address', () => {
   const txID = createFixtures[0]!.txID
+  // @ts-expect-error deliberately invalid owner address
   expect(() => genContractAddress(txID, '2')).toThrow(InvalidAddressError)
   expect(() => genContractAddress(txID, `${owner}00`)).toThrow(
     InvalidAddressError,

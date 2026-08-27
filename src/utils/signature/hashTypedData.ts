@@ -30,8 +30,8 @@ import { pad } from '../data/pad.js'
 import { size } from '../data/size.js'
 import { stringToBytes } from '../encoding/toBytes.js'
 import {
-  type NumberToHexErrorType,
   bytesToHex,
+  type NumberToHexErrorType,
   numberToHex,
 } from '../encoding/toHex.js'
 import { keccak256 } from '../hash/keccak256.js'
@@ -140,10 +140,13 @@ function encodeField(types: TypedDataTypes, type: string, value: unknown): Hex {
   // Validation accepts a `Uint8Array` for `bytesN`, but the surrounding words
   // are hex and `pad` mirrors its input's kind — so convert to hex first.
   if (type.startsWith('bytes'))
-    return pad(value instanceof Uint8Array ? bytesToHex(value) : (value as Hex), {
-      dir: 'right',
-      size: 32,
-    })
+    return pad(
+      value instanceof Uint8Array ? bytesToHex(value) : (value as Hex),
+      {
+        dir: 'right',
+        size: 32,
+      },
+    )
   if (type.startsWith('uint') || type.startsWith('int') || type === 'trcToken')
     return numberToHex(BigInt(value as string | number | bigint), {
       signed: type.startsWith('int'),
