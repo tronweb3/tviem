@@ -30,6 +30,7 @@ import {
   ContractType,
   type ContractTypeName,
   contractTypeNameOf,
+  getContractCodecByType,
   getContractCodecByTypeUrl,
 } from './registry.js'
 import type { ContractMessage, Int64 } from './types.js'
@@ -47,8 +48,12 @@ export type RawContract = {
   parameter: {
     /** `Any.type_url`. */
     type_url: string
-    /** Decoded contract message. */
-    value: ContractMessage
+    /**
+     * Decoded contract message — or, for a type without a registered codec
+     * (decode side only), the undecoded body as bare hex. A bare-hex body
+     * never serializes: without a codec there is no byte verification.
+     */
+    value: ContractMessage | string
   }
   /** Multi-sig permission id (`Transaction.Contract.Permission_id`). */
   Permission_id?: number | undefined
@@ -137,6 +142,17 @@ function serializeContract(contract: RawContract): ByteArray {
   // `UnknownContractTypeError` — which names the type and is what the decode
   // path throws for the same condition — is the more useful of the two.
   const typeInt = contractTypeOf(contract.type)
+  // A type in java-tron's enum but without a registered codec decodes (to a
+  // bare-hex body) but never serializes: there is no codec to byte-verify a
+  // body this SDK cannot model, so the sign path must refuse it whole.
+  if (getContractCodecByType(typeInt) === undefined)
+    throw new UnknownContractTypeError({ type: contract.type })
+  if (typeof value === 'string')
+    throw new BaseError(
+      `Contract parameter for ${
+        typeof contract.type === 'string' ? `"${contract.type}"` : contract.type
+      } is an undecoded body (bare hex); it cannot be serialized.`,
+    )
   const codec = getContractCodecByTypeUrl(type_url)
   if (!codec)
     throw new BaseError(`No contract codec registered for "${type_url}".`)

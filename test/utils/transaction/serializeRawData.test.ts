@@ -63,7 +63,8 @@ test('an unsupported contract throws UnknownContractTypeError, not a bare BaseEr
   const rawData: RawData = {
     contract: [
       {
-        // @ts-expect-error a java-tron contract type tviem does not support
+        // In java-tron's enum (so the name resolves) but codec-less: the
+        // encode path must still refuse it with the same typed error.
         type: 'MarketSellAssetContract',
         parameter: {
           type_url: 'type.googleapis.com/protocol.MarketSellAssetContract',

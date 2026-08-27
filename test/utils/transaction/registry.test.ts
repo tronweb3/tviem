@@ -6,6 +6,7 @@ import { bytesToHex } from '../../../src/utils/encoding/toHex.js'
 import {
   ContractType,
   contractCodecs,
+  contractTypeNameOf,
   contractTypeUrlPrefix,
   decodeContractParameter,
   getContractCodecByType,
@@ -33,15 +34,22 @@ test('ContractType: §6 integers', () => {
     ExchangeInjectContract: 42,
     ExchangeWithdrawContract: 43,
     ExchangeTransactionContract: 44,
+    VoteAssetContract: 3,
     AccountUpdateContract: 10,
     FreezeBalanceContract: 11,
     UnfreezeBalanceContract: 12,
     WithdrawBalanceContract: 13,
+    UnfreezeAssetContract: 14,
     UpdateAssetContract: 15,
     SetAccountIdContract: 19,
+    CustomContract: 20,
     CreateSmartContract: 30,
     TriggerSmartContract: 31,
+    GetContract: 32,
     UpdateSettingContract: 33,
+    ShieldedTransferContract: 51,
+    MarketSellAssetContract: 52,
+    MarketCancelOrderContract: 53,
     UpdateEnergyLimitContract: 45,
     AccountPermissionUpdateContract: 46,
     ClearABIContract: 48,
@@ -55,9 +63,21 @@ test('ContractType: §6 integers', () => {
   })
 })
 
+// Six enum types are deliberately codec-less: they decode to a bare-hex body
+// and never serialize.
+const codecless = {
+  VoteAssetContract: 3,
+  CustomContract: 20,
+  GetContract: 32,
+  ShieldedTransferContract: 51,
+  MarketSellAssetContract: 52,
+  MarketCancelOrderContract: 53,
+} as const
+
 test('bidirectional lookup: typeUrl ↔ codec ↔ type integer', () => {
-  expect(contractCodecs).toHaveLength(34)
+  expect(contractCodecs).toHaveLength(35)
   for (const [name, type] of Object.entries(ContractType)) {
+    if (name in codecless) continue
     const typeUrl = `${contractTypeUrlPrefix}${name}`
     const codec = getContractCodecByTypeUrl(typeUrl)
     expect(codec).toBeDefined()
@@ -68,12 +88,22 @@ test('bidirectional lookup: typeUrl ↔ codec ↔ type integer', () => {
   }
 })
 
+test('codec-less enum types resolve a name but no codec', () => {
+  for (const [name, type] of Object.entries(codecless)) {
+    expect(ContractType[name as keyof typeof ContractType]).toBe(type)
+    expect(contractTypeNameOf(type)).toBe(name)
+    expect(getContractCodecByType(type)).toBeUndefined()
+    expect(
+      getContractCodecByTypeUrl(`${contractTypeUrlPrefix}${name}`),
+    ).toBeUndefined()
+  }
+})
+
 test('unregistered lookups return undefined', () => {
-  expect(
-    getContractCodecByTypeUrl('type.googleapis.com/protocol.VoteAssetContract'),
-  ).toBeUndefined()
-  expect(getContractCodecByType(3)).toBeUndefined()
   expect(getContractCodecByType(99)).toBeUndefined()
+  expect(
+    getContractCodecByTypeUrl('type.googleapis.com/protocol.FooBarContract'),
+  ).toBeUndefined()
 })
 
 test('decodeContractParameter: registered type URL decodes the message', () => {

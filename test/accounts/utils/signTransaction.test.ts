@@ -70,7 +70,10 @@ function withOwner(rawData: RawData, owner: string): RawData {
         ...first!,
         parameter: {
           ...first!.parameter,
-          value: { ...first!.parameter.value, owner_address: owner } as never,
+          value: {
+            ...(first!.parameter.value as Record<string, unknown>),
+            owner_address: owner,
+          } as never,
         },
       },
       ...rawData.contract.slice(1),

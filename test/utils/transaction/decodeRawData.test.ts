@@ -1,7 +1,13 @@
 import { expect, test } from 'vitest'
+import { UnknownContractTypeError } from '../../../src/errors/transaction.js'
 import { concatBytes } from '../../../src/utils/data/concat.js'
-import { hexToBytes } from '../../../src/utils/encoding/toBytes.js'
+import { bareHex } from '../../../src/utils/encoding/bareHex.js'
+import {
+  hexToBytes,
+  stringToBytes,
+} from '../../../src/utils/encoding/toBytes.js'
 import { bytesToHex } from '../../../src/utils/encoding/toHex.js'
+import { sha256 } from '../../../src/utils/hash/sha256.js'
 import { decodeRawData } from '../../../src/utils/transaction/decodeRawData.js'
 import {
   fBytes,
@@ -10,6 +16,7 @@ import {
 } from '../../../src/utils/transaction/protobuf/writer.js'
 import { contractTypeNameOf } from '../../../src/utils/transaction/registry.js'
 import { toRawDataHex } from '../../../src/utils/transaction/serializeRawData.js'
+import { txCheck } from '../../../src/utils/transaction/txCheck.js'
 import { loadTxFixtures } from '../../fixtures/tx/loader.js'
 
 const canonical = loadTxFixtures().find(
@@ -213,4 +220,66 @@ test('a negative Permission_id decodes as int32, not as a huge positive', () => 
 
   // Read as a raw unsigned varint this would surface as ~1.8e19.
   expect(decodeRawData(raw).contract[0]!.Permission_id).toBe(-1)
+})
+
+// ---- codec-less enum types: readable, never serializable ------------------
+
+/** Assembles a raw_data carrying one contract of `type` with opaque bytes. */
+function codeclessRawHex(type: number, typeUrl: string): string {
+  const body = hexToBytes('0x0a15417e5f4552091a69125d5dfcb7b8c2659029395bdf')
+  const any = concatBytes([fBytes(1, stringToBytes(typeUrl)), fBytes(2, body)])
+  const contract = concatBytes([
+    fInt(1, type),
+    fBytes(2, any, { emitDefault: true }),
+  ])
+  const raw = concatBytes([
+    fBytes(1, hexToBytes('0x1234')),
+    fBytes(4, hexToBytes('0x0102030405060708')),
+    fMessage(11, contract, { emitDefault: true }),
+  ])
+  return bytesToHex(raw).slice(2)
+}
+
+test('a codec-less enum type decodes with a bare-hex body', () => {
+  const hex = codeclessRawHex(
+    52,
+    'type.googleapis.com/protocol.MarketSellAssetContract',
+  )
+  const decoded = decodeRawData(hex)
+  expect(decoded.contract[0]).toStrictEqual({
+    type: 'MarketSellAssetContract',
+    parameter: {
+      type_url: 'type.googleapis.com/protocol.MarketSellAssetContract',
+      value: '0a15417e5f4552091a69125d5dfcb7b8c2659029395bdf',
+    },
+  })
+})
+
+test('a codec-less contract never re-serializes, so it can never sign', () => {
+  const hex = codeclessRawHex(
+    52,
+    'type.googleapis.com/protocol.MarketSellAssetContract',
+  )
+  const decoded = decodeRawData(hex)
+  expect(() => toRawDataHex(decoded)).toThrow(UnknownContractTypeError)
+  // The full triple — even with the CORRECT id for these bytes — fails the
+  // integrity check, because the model cannot be byte-verified.
+  const txID = bareHex(sha256(hexToBytes(`0x${hex}`)))
+  expect(txCheck({ txID, raw_data: decoded, raw_data_hex: hex })).toBe(false)
+})
+
+test('a codec-less type with a mismatched type URL still throws', () => {
+  expect(() =>
+    decodeRawData(
+      codeclessRawHex(52, 'type.googleapis.com/protocol.TransferContract'),
+    ),
+  ).toThrow(
+    'Contract type "MarketSellAssetContract" does not match its parameter type URL',
+  )
+})
+
+test('a type integer outside the enum still throws', () => {
+  expect(() =>
+    decodeRawData(codeclessRawHex(99, 'type.googleapis.com/protocol.Foo')),
+  ).toThrow(UnknownContractTypeError)
 })

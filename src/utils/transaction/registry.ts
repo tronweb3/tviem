@@ -16,9 +16,11 @@ import {
 import {
   decodeAssetIssueContract,
   decodeParticipateAssetIssueContract,
+  decodeUnfreezeAssetContract,
   decodeUpdateAssetContract,
   encodeAssetIssueContract,
   encodeParticipateAssetIssueContract,
+  encodeUnfreezeAssetContract,
   encodeUpdateAssetContract,
 } from './contracts/asset.js'
 import {
@@ -102,11 +104,20 @@ import {
 } from './contracts/witness.js'
 import type { ContractMessage } from './types.js'
 
-/** `Transaction.Contract.ContractType` integers (v0.1 contract set). */
+/**
+ * `Transaction.Contract.ContractType` integers, matching java-tron's enum.
+ * Most types carry a registered codec (encode + decode). The ones that do not
+ * (`getContractCodecByType` returns `undefined` — `VoteAssetContract`,
+ * `CustomContract`, `GetContract`, `ShieldedTransferContract`,
+ * `MarketSellAssetContract`, `MarketCancelOrderContract`) decode to a
+ * bare-hex parameter body and never serialize (see `decodeRawData` /
+ * `serializeRawData`).
+ */
 export const ContractType = {
   AccountCreateContract: 0,
   TransferContract: 1,
   TransferAssetContract: 2,
+  VoteAssetContract: 3,
   VoteWitnessContract: 4,
   WitnessCreateContract: 5,
   AssetIssueContract: 6,
@@ -123,11 +134,17 @@ export const ContractType = {
   FreezeBalanceContract: 11,
   UnfreezeBalanceContract: 12,
   WithdrawBalanceContract: 13,
+  UnfreezeAssetContract: 14,
   UpdateAssetContract: 15,
   SetAccountIdContract: 19,
+  CustomContract: 20,
   CreateSmartContract: 30,
   TriggerSmartContract: 31,
+  GetContract: 32,
   UpdateSettingContract: 33,
+  ShieldedTransferContract: 51,
+  MarketSellAssetContract: 52,
+  MarketCancelOrderContract: 53,
   UpdateEnergyLimitContract: 45,
   AccountPermissionUpdateContract: 46,
   ClearABIContract: 48,
@@ -240,6 +257,12 @@ export const contractCodecs: readonly ContractCodec[] = [
     'ParticipateAssetIssueContract',
     encodeParticipateAssetIssueContract,
     decodeParticipateAssetIssueContract,
+  ),
+  defineContractCodec(
+    ContractType.UnfreezeAssetContract,
+    'UnfreezeAssetContract',
+    encodeUnfreezeAssetContract,
+    decodeUnfreezeAssetContract,
   ),
   defineContractCodec(
     ContractType.UpdateAssetContract,

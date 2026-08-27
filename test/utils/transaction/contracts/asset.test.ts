@@ -3,7 +3,9 @@ import { hexToBytes } from '../../../../src/utils/encoding/toBytes.js'
 import { bytesToHex } from '../../../../src/utils/encoding/toHex.js'
 import {
   decodeAssetIssueContract,
+  decodeUnfreezeAssetContract,
   encodeAssetIssueContract,
+  encodeUnfreezeAssetContract,
 } from '../../../../src/utils/transaction/contracts/asset.js'
 
 const owner = '417e5f4552091a69125d5dfcb7b8c2659029395bdf' as const
@@ -53,4 +55,18 @@ test('order / public usage / id fields round-trip through decode', () => {
     public_latest_free_net_time: 5,
     id: '1000001',
   })
+})
+
+test('UnfreezeAssetContract round-trips (single owner field)', () => {
+  const encoded = encodeUnfreezeAssetContract({ owner_address: owner })
+  expect(bytesToHex(encoded)).toBe(`0x0a15${owner}`)
+  expect(decodeUnfreezeAssetContract(encoded)).toStrictEqual({
+    owner_address: owner,
+  })
+})
+
+test('UnfreezeAssetContract requires owner_address', () => {
+  expect(() => encodeUnfreezeAssetContract({} as never)).toThrow(
+    /owner_address/,
+  )
 })

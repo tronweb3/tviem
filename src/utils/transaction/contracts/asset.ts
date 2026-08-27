@@ -3,6 +3,7 @@ import type { ByteArray } from '../../../types/misc.js'
 import type {
   AssetIssueContract,
   ParticipateAssetIssueContract,
+  UnfreezeAssetContract,
   UpdateAssetContract,
 } from '../types.js'
 import {
@@ -131,4 +132,34 @@ export function decodeUpdateAssetContract(
   bytes: ByteArray,
 ): UpdateAssetContract {
   return decodeMessage(updateAssetContractSpec, bytes) as UpdateAssetContract
+}
+
+/** `UnfreezeAssetContract` (type 14) field schema. */
+const unfreezeAssetContractSpec: MessageSpec = [
+  { no: 1, name: 'owner_address', kind: 'address', required: true },
+]
+
+export type EncodeUnfreezeAssetContractErrorType =
+  | EncodeMessageErrorType
+  | ErrorType
+
+/** Encodes an `UnfreezeAssetContract` (contract type 14) body. */
+export function encodeUnfreezeAssetContract(
+  message: UnfreezeAssetContract,
+): ByteArray {
+  return encodeMessage(unfreezeAssetContractSpec, message)
+}
+
+export type DecodeUnfreezeAssetContractErrorType =
+  | DecodeMessageErrorType
+  | ErrorType
+
+/** Decodes an `UnfreezeAssetContract` body. */
+export function decodeUnfreezeAssetContract(
+  bytes: ByteArray,
+): UnfreezeAssetContract {
+  return decodeMessage(
+    unfreezeAssetContractSpec,
+    bytes,
+  ) as UnfreezeAssetContract
 }

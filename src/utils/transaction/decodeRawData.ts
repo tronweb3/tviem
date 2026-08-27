@@ -16,7 +16,9 @@ import {
 } from './protobuf/reader.js'
 import {
   contractTypeNameOf,
+  contractTypeUrlPrefix,
   decodeContractParameter,
+  getContractCodecByType,
   getContractCodecByTypeUrl,
 } from './registry.js'
 import type { RawContract, RawData } from './serializeRawData.js'
@@ -51,9 +53,10 @@ function decodeAny(bytes: ByteArray): {
  * Decodes one `Transaction.Contract` into the canonical (node JSON) shape:
  * the contract `type` as its enum name, `parameter.type_url`, and
  * `Permission_id`. The `provider` (field 3) and `ContractName` (field 4)
- * fields are tolerated (ignored) rather than decoded. Strict by design: an
- * unregistered contract type (type integer or `Any` type URL) throws
- * {@link UnknownContractTypeError}.
+ * fields are tolerated (ignored) rather than decoded. A type integer outside
+ * java-tron's enum throws {@link UnknownContractTypeError}; a type in the
+ * enum but without a registered codec decodes with its parameter body as
+ * bare hex (readable, never serializable).
  */
 function decodeContract(bytes: ByteArray): RawContract {
   let type = 0
@@ -82,6 +85,26 @@ function decodeContract(bytes: ByteArray): RawContract {
   }
   const typeName = contractTypeNameOf(type)
   if (typeName === undefined) throw new UnknownContractTypeError({ type })
+  if (getContractCodecByType(type) === undefined) {
+    // A type java-tron defines but this SDK carries no codec for. The outer
+    // layers are type-agnostic protobuf and decode normally; the contract
+    // body stays as its bare-hex bytes — faithful to the (id-verified) wire,
+    // just uninterpreted. Such a contract can be read; it never re-serializes
+    // (no codec means no byte verification), so it cannot be signed.
+    if (typeUrl !== `${contractTypeUrlPrefix}${typeName}`)
+      throw new BaseError(
+        `Contract type "${typeName}" does not match its parameter type URL "${typeUrl}".`,
+      )
+    const contract: RawContract = {
+      type: typeName,
+      parameter: {
+        type_url: typeUrl,
+        value: bareHex(valueBytes),
+      },
+    }
+    if (permissionId !== undefined) contract.Permission_id = permissionId
+    return contract
+  }
   const value = decodeContractParameter(typeUrl, valueBytes)
   // The type integer and the Any type URL must denote the same contract — a
   // model whose label misrepresents its payload must never decode.

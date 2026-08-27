@@ -397,6 +397,12 @@ export type AssetIssueContract = {
 }
 
 /** `UpdateAssetContract` (contract type 15) — update a TRC10 token. */
+/** `UnfreezeAssetContract` (type 14) — unfreeze an issued TRC10 asset. */
+export type UnfreezeAssetContract = {
+  /** Issuer address (field 1). */
+  owner_address: ContractAddressInput
+}
+
 export type UpdateAssetContract = {
   /** Issuer address (field 1). */
   owner_address: ContractAddressInput
@@ -638,6 +644,7 @@ export type ContractMessage =
   | UnfreezeBalanceContract
   | ParticipateAssetIssueContract
   | AssetIssueContract
+  | UnfreezeAssetContract
   | UpdateAssetContract
   | WithdrawBalanceContract
   | CreateSmartContract
