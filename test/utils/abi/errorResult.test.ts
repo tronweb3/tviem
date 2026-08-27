@@ -65,6 +65,68 @@ test('encodeErrorResult: throws when args are given but the error has no inputs 
   ).toThrowError(AbiErrorInputsNotFoundError)
 })
 
+// Encode-side mirror of decode's built-in handling: the Solidity `Error` /
+// `Panic` reverts encode without any ABI, and still resolve when an ABI is
+// given that doesn't declare them.
+test('encodeErrorResult: encodes the built-in Error(string) without an ABI', () => {
+  const encoded = encodeErrorResult({ errorName: 'Error', args: ['reverted'] })
+  expect(encoded).toBe(
+    concatHex([
+      '0x08c379a0',
+      encodeAbiParameters([{ type: 'string' }], ['reverted']),
+    ]),
+  )
+  expect(decodeErrorResult({ data: encoded }).args).toEqual(['reverted'])
+})
+
+test('encodeErrorResult: encodes the built-in Panic(uint256) without an ABI', () => {
+  const encoded = encodeErrorResult({ errorName: 'Panic', args: [17n] })
+  expect(encoded).toBe(
+    concatHex([
+      '0x4e487b71',
+      encodeAbiParameters([{ type: 'uint256' }], [17n]),
+    ]),
+  )
+  expect(decodeErrorResult({ data: encoded }).args).toEqual([17n])
+})
+
+test('encodeErrorResult: built-ins resolve alongside an ABI that lacks them', () => {
+  expect(
+    encodeErrorResult({ abi, errorName: 'Error', args: ['reverted'] }),
+  ).toBe(encodeErrorResult({ errorName: 'Error', args: ['reverted'] }))
+})
+
+// A user-declared error named `Error` wins over the built-in — the same
+// precedence decodeErrorResult gives the user's ABI on selector conflicts.
+test('encodeErrorResult: a user-declared Error shadows the built-in', () => {
+  const shadowing = [
+    { type: 'error', name: 'Error', inputs: [{ type: 'uint256' }] },
+  ] as const satisfies Abi
+  const encoded = encodeErrorResult({
+    abi: shadowing,
+    errorName: 'Error',
+    args: [1n],
+  })
+  expect(encoded.slice(0, 10)).not.toBe('0x08c379a0')
+  expect(decodeErrorResult({ abi: shadowing, data: encoded }).args).toEqual([
+    1n,
+  ])
+})
+
+// With no ABI there are two built-in candidates, so omitting errorName is
+// ambiguous and must throw rather than silently pick one.
+test('encodeErrorResult: no ABI and no errorName throws', () => {
+  expect(() => encodeErrorResult({ args: ['x'] } as never)).toThrowError(
+    AbiErrorNotFoundError,
+  )
+})
+
+test('encodeErrorResult: unknown errorName without an ABI throws', () => {
+  expect(() =>
+    encodeErrorResult({ errorName: 'DoesNotExist' } as never),
+  ).toThrowError(AbiErrorNotFoundError)
+})
+
 test('decodeErrorResult: recognises the built-in Error(string) revert', () => {
   const data = concatHex([
     '0x08c379a0',

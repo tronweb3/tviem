@@ -24,6 +24,23 @@ test('encodeErrorResult: returns a revert payload (Hex)', () => {
   encodeErrorResult({ abi, errorName: 'Nope', args: [1n] })
 })
 
+test('encodeErrorResult: built-ins encode without an abi', () => {
+  expectTypeOf(
+    encodeErrorResult({ errorName: 'Error', args: ['oops'] }),
+  ).toEqualTypeOf<Hex>()
+  expectTypeOf(
+    encodeErrorResult({ errorName: 'Panic', args: [17n] }),
+  ).toEqualTypeOf<Hex>()
+
+  // @ts-expect-error `Nope` is not a built-in error
+  encodeErrorResult({ errorName: 'Nope' })
+
+  // Built-ins stay valid alongside an ABI that doesn't declare them.
+  expectTypeOf(
+    encodeErrorResult({ abi, errorName: 'Error', args: ['oops'] }),
+  ).toEqualTypeOf<Hex>()
+})
+
 test('decodeErrorResult: errorName union includes the Solidity built-ins', () => {
   const result = decodeErrorResult({ abi, data: '0x00000000' })
   expectTypeOf(result.errorName).toEqualTypeOf<
