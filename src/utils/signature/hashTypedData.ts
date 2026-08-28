@@ -51,9 +51,17 @@ export type TypedDataDomain = Omit<AbiTypedDataDomain, 'verifyingContract'> & {
 }
 
 export type HashTypedDataParameters = {
-  /** The signing domain (its present fields form the `EIP712Domain` struct). */
-  domain?: TypedDataDomain | undefined
-  /** The struct type definitions (excluding `EIP712Domain`). */
+  /**
+   * The signing domain. Without a `types.EIP712Domain` declaration its present
+   * canonical fields form the `EIP712Domain` struct; with one, it may carry
+   * exactly the declared fields (custom fields included).
+   */
+  domain?: (TypedDataDomain & Record<string, unknown>) | undefined
+  /**
+   * The struct type definitions. `EIP712Domain` may be declared to override
+   * the canonical domain struct (custom fields, order, or types); when
+   * omitted it is derived from the domain value's present canonical fields.
+   */
   types: TypedData | TypedDataTypes
   /** The struct being signed (or `'EIP712Domain'` for a domain-only signature). */
   primaryType: string
@@ -78,6 +86,23 @@ const DOMAIN_FIELDS: readonly { name: string; type: string }[] = [
   { name: 'verifyingContract', type: 'address' },
   { name: 'salt', type: 'bytes32' },
 ]
+
+/**
+ * The effective `EIP712Domain` struct: the caller's `types.EIP712Domain`
+ * declaration when present (declared fields, order, and types), else the
+ * canonical fields the domain value carries.
+ */
+function effectiveDomainFields(
+  domain: TypedDataDomain | undefined,
+  types: TypedDataTypes | undefined,
+): readonly TypedDataParameter[] {
+  return (
+    types?.EIP712Domain ??
+    DOMAIN_FIELDS.filter(
+      (f) => (domain as Record<string, unknown> | undefined)?.[f.name] != null,
+    )
+  )
+}
 
 /** Collects every struct type transitively referenced by `primaryType`. */
 function findDependencies(
@@ -337,10 +362,10 @@ function validateField(
 /**
  * Validates typed-data parameters before any hashing: `primaryType` must be
  * a defined struct (or `EIP712Domain`) and must not shadow a primitive type,
- * the domain must be an object whose present fields match the canonical
- * domain types, integer values must fit their declared width, and `bytesN`
- * values must be exactly `N` bytes — so malformed input fails loudly instead
- * of producing a silently wrong digest.
+ * the domain must be an object whose fields all belong to the effective
+ * `EIP712Domain` struct and match its types, integer values must fit their
+ * declared width, and `bytesN` values must be exactly `N` bytes — so
+ * malformed input fails loudly instead of producing a silently wrong digest.
  */
 function validateTypedData(parameters: HashTypedDataParameters): void {
   const { domain, types, primaryType, message } = parameters
@@ -352,8 +377,33 @@ function validateTypedData(parameters: HashTypedDataParameters): void {
   if (domain !== undefined) {
     if (typeof domain !== 'object' || domain === null || Array.isArray(domain))
       throw new InvalidDomainError({ domain })
-    // The domain is encoded against the fixed `DOMAIN_FIELDS` types (never
-    // against `types`), so its fields are validated as bare primitives.
+    // Every present domain field must have a slot in the `EIP712Domain`
+    // struct — a field the struct does not carry would vanish from the hash
+    // without a trace, so the caller would sign less than they wrote.
+    const declared = new Set(
+      effectiveDomainFields(domain, types_).map((f) => f.name),
+    )
+    for (const key of Object.keys(domain))
+      if (
+        (domain as Record<string, unknown>)[key] != null &&
+        !declared.has(key)
+      )
+        throw new BaseError(
+          `Unknown domain field "${key}": it has no slot in the EIP712Domain struct, so it would be silently dropped from the hash. Declare it in \`types.EIP712Domain\` or remove it.`,
+        )
+  }
+
+  if (types_.EIP712Domain) {
+    // A declared domain struct is validated like any other struct: every
+    // declared field must be present and match its declared type.
+    validateStruct(
+      types_,
+      'EIP712Domain',
+      (domain ?? {}) as Record<string, unknown>,
+    )
+  } else if (domain !== undefined) {
+    // The derived domain is encoded against the fixed `DOMAIN_FIELDS` types
+    // (never against `types`), so its fields are validated as bare primitives.
     for (const field of DOMAIN_FIELDS) {
       const value = (domain as Record<string, unknown>)[field.name]
       if (value != null) validateField({}, field.type, value)
@@ -366,14 +416,19 @@ function validateTypedData(parameters: HashTypedDataParameters): void {
   }
 }
 
-/** Hashes the domain as an `EIP712Domain` struct over its present fields. */
-export function hashDomain(domain: TypedDataDomain): Hex {
-  const present = DOMAIN_FIELDS.filter(
-    (f) => (domain as Record<string, unknown>)[f.name] != null,
-  )
+/**
+ * Hashes the domain as an `EIP712Domain` struct. The struct is the caller's
+ * `types.EIP712Domain` declaration when one is present in `types`, else the
+ * canonical fields present on the domain value.
+ */
+export function hashDomain(
+  domain: TypedDataDomain & Record<string, unknown>,
+  types?: TypedDataTypes | undefined,
+): Hex {
+  // Spread `types` too, so a declared domain field may reference a struct.
   return hashStruct(
     'EIP712Domain',
-    { EIP712Domain: present },
+    { ...types, EIP712Domain: effectiveDomainFields(domain, types) },
     domain as Record<string, unknown>,
   )
 }
@@ -387,6 +442,12 @@ export function hashDomain(domain: TypedDataDomain): Hex {
  * any TRON address form and are encoded as their 20-byte EVM form, left-padded
  * to 32 bytes. When `primaryType` is `EIP712Domain`, only the domain is hashed.
  *
+ * The domain struct is derived from the domain value's present canonical
+ * fields, unless `types.EIP712Domain` declares it explicitly — the declaration
+ * then wins (custom fields, order, and types). Either way, a domain field
+ * without a slot in the struct throws rather than silently dropping out of
+ * the hash.
+ *
  * Parameters are validated before hashing (unknown `primaryType`, primitive-
  * shadowing struct names, malformed domain, out-of-width integers, wrong-size
  * `bytesN` values), so bad input throws instead of yielding a wrong digest.
@@ -398,7 +459,7 @@ export function hashTypedData(parameters: HashTypedDataParameters): Hex {
   validateTypedData(parameters)
   const { domain = {}, types, primaryType, message = {} } = parameters
   const parts: Hex[] = ['0x1901']
-  parts.push(hashDomain(domain))
+  parts.push(hashDomain(domain, types as TypedDataTypes))
   if (primaryType !== 'EIP712Domain')
     parts.push(hashStruct(primaryType, types as TypedDataTypes, message))
   return keccak256(concat(parts))

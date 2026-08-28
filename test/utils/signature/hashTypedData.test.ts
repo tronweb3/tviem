@@ -222,6 +222,109 @@ describe('hashTypedData', () => {
   })
 })
 
+// ---- Case 4: caller-supplied `types.EIP712Domain` ---------------------------
+// A declared `EIP712Domain` overrides the canonical derivation: its fields are
+// hashed in DECLARED order with their DECLARED types, so a protocol whose
+// domain differs from the canonical five is expressible. Digests pinned from
+// viem's `hashTypedData` / `hashDomain` (offline; the repo does not depend on
+// viem), which honor the declaration the same way.
+describe('caller-supplied EIP712Domain types', () => {
+  // Non-canonical field order plus a custom `app` field — neither is
+  // expressible through the canonical derivation.
+  const customDomain = {
+    verifyingContract: PK2,
+    name: 'Example TIP-712',
+    app: 'tviem',
+  }
+  const customDomainType = [
+    { name: 'verifyingContract', type: 'address' },
+    { name: 'name', type: 'string' },
+    { name: 'app', type: 'string' },
+  ] as const
+
+  test('an explicit canonical declaration matches the derived digest', () => {
+    expect(
+      hashTypedData({
+        domain,
+        types: {
+          EIP712Domain: [
+            { name: 'name', type: 'string' },
+            { name: 'version', type: 'string' },
+            { name: 'chainId', type: 'uint256' },
+            { name: 'verifyingContract', type: 'address' },
+          ],
+          ...mailTypes,
+        },
+        primaryType: 'Mail',
+        message: mail,
+      }),
+    ).toBe(mailDigest)
+  })
+
+  test('hashDomain hashes the declared fields in declared order', () => {
+    expect(hashDomain(customDomain, { EIP712Domain: customDomainType })).toBe(
+      '0xf1f80082a6dc4d1d48a0a2b53f22892fba7972a57ed2bbc21ef511a7c1ed0e9f',
+    )
+  })
+
+  test('matches the viem oracle digest for a custom domain (domain-only)', () => {
+    expect(
+      hashTypedData({
+        domain: customDomain,
+        types: { EIP712Domain: customDomainType },
+        primaryType: 'EIP712Domain',
+      }),
+    ).toBe('0x8c9a8ec5c5664129be0769ee24fff2f5f8f6d5315c7e0e483f3cdb352912e023')
+  })
+
+  test('matches the viem oracle digest for a custom domain (Mail)', () => {
+    expect(
+      hashTypedData({
+        domain: customDomain,
+        types: { EIP712Domain: customDomainType, ...mailTypes },
+        primaryType: 'Mail',
+        message: mail,
+      }),
+    ).toBe('0x3d9133e3e38d2c8adf6b71897c757d94dda203d6635c59f34710bce8bc3bb8c2')
+  })
+
+  test('a declared domain field must be present', () => {
+    expect(() =>
+      hashTypedData({
+        domain: { verifyingContract: PK2, name: 'Example TIP-712' },
+        types: { EIP712Domain: customDomainType },
+        primaryType: 'EIP712Domain',
+      }),
+    ).toThrow(/Missing EIP712Domain\.app value/)
+  })
+
+  test('rejects a domain field outside the declared type', () => {
+    // `version` is canonical but NOT declared — hashing would drop it.
+    expect(() =>
+      hashTypedData({
+        domain: { ...customDomain, version: '1' },
+        types: { EIP712Domain: customDomainType },
+        primaryType: 'EIP712Domain',
+      }),
+    ).toThrow(/Unknown domain field "version"/)
+  })
+
+  test('validates declared domain values against their declared types', () => {
+    expect(() =>
+      hashTypedData({
+        domain: { ...customDomain, app: 300 },
+        types: {
+          EIP712Domain: [
+            ...customDomainType.slice(0, 2),
+            { name: 'app', type: 'uint8' },
+          ],
+        },
+        primaryType: 'EIP712Domain',
+      }),
+    ).toThrow(IntegerOutOfRangeError)
+  })
+})
+
 // A `string` field value must be hashed as UTF-8, never re-read as hex — the
 // bug hashed the 4 bytes of `"0xdeadbeef"` instead of its 10 characters, so a
 // signature could not interoperate with any standard implementation. Digests
@@ -618,6 +721,20 @@ describe('hashTypedData validation', () => {
         message: mail,
       }),
     ).toThrow('Invalid domain')
+  })
+
+  // An unknown domain field has no slot in the `EIP712Domain` struct, so it
+  // would vanish from the hash without a trace — the caller signs less than
+  // they wrote. (The oracle throws `invalid typed-data domain key` here too.)
+  test('rejects an unknown domain field with no EIP712Domain declaration', () => {
+    expect(() =>
+      hashTypedData({
+        domain: { ...domain, app: 'tviem' },
+        types: mailTypes,
+        primaryType: 'Mail',
+        message: mail,
+      }),
+    ).toThrow(/Unknown domain field "app"/)
   })
 
   test('rejects a domain salt of the wrong size', () => {
