@@ -151,10 +151,9 @@ more.
 
 ## Contributing
 
-Contributions are welcome. Please [open an issue](https://github.com/tronweb3/tviem/issues/new) or a pull request. or a pull request.
+Contributions are welcome. Please [open an issue](https://github.com/tronweb3/tviem/issues/new) or a pull request.
 
 ## License
 
 [MIT](./LICENSE) License. This package adapts portions of MIT-licensed
-third-party code — see the **Third-party notices** section in
-[`LICENSE`](./LICENSE).
+third-party code — see [`THIRD-PARTY-NOTICES`](./THIRD-PARTY-NOTICES).
