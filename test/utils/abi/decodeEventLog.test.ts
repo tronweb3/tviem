@@ -170,9 +170,10 @@ describe('strict: false decodes leniently', () => {
     ).toThrow(DecodeLogTopicsMismatch)
   })
 
-  test('a recovered indexed parameter precedes the non-indexed data', () => {
-    // `data` carries the recovered indexed parameter FIRST, then the
-    // non-indexed ones — a swapped order would silently cross-assign values.
+  test('a recovered indexed parameter declared first is read first', () => {
+    // `a` is declared before `b`, so the emitter that skipped indexing laid
+    // out `data` as [a, b] — declaration order, which here puts the recovered
+    // parameter first.
     const abi = [
       {
         type: 'event',
@@ -191,6 +192,33 @@ describe('strict: false decodes leniently', () => {
       strict: false,
     })
     expect(args).toEqual({ a: 111n, b: 222n })
+  })
+
+  test('a recovered indexed parameter is read at its declaration position', () => {
+    // The emitter declared `trader` non-indexed, so its value sits in `data`
+    // in DECLARATION order: amount first, then trader. Hoisting the recovered
+    // parameter to the front would decode the amount word as `trader` (a
+    // plausible-looking address) and the trader word as `amount`.
+    const abi = [
+      {
+        type: 'event',
+        name: 'OrderFilled',
+        inputs: [
+          { indexed: false, name: 'amount', type: 'uint256' },
+          { indexed: true, name: 'trader', type: 'address' },
+        ],
+      },
+    ] as unknown as Abi
+    const word = (n: number) => n.toString(16).padStart(64, '0')
+    // The transfer fixture's `from` topic doubles as the trader's data word.
+    const traderWord = transfer.topics[1]!.slice(2)
+    const { args } = decodeEventLog({
+      abi,
+      topics: [toEventSelector('OrderFilled(uint256,address)')],
+      data: `0x${word(1_000_000)}${traderWord}`,
+      strict: false,
+    })
+    expect(args).toEqual({ amount: 1000000n, trader: fromAddress })
   })
 })
 

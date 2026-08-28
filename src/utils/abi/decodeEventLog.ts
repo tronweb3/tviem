@@ -143,33 +143,32 @@ export function decodeEventLog(
     setArg(input, i, decodeTopic(input, topic))
   }
 
-  // Non-indexed parameters come from `data` — preceded, in lenient mode, by
-  // the indexed parameters whose topics were missing.
-  const nonIndexedInputs = inputs.filter(
-    (input) => !('indexed' in input && input.indexed),
-  )
-  const inputsToDecode = strict
-    ? nonIndexedInputs
-    : [...missingIndexed.map(([input]) => input), ...nonIndexedInputs]
+  // Non-indexed parameters come from `data`, joined — in lenient mode — by
+  // the indexed parameters whose topics were missing. An emitter that did not
+  // actually index them laid their values out in `data` at their DECLARATION
+  // positions, so the merge must preserve declaration order.
+  const missingIndexedAt = new Set(missingIndexed.map(([, i]) => i))
+  const inputsToDecode: (readonly [AbiParameter, number])[] = []
+  for (let i = 0; i < inputs.length; i++) {
+    const input = inputs[i]!
+    if ('indexed' in input && input.indexed && !missingIndexedAt.has(i))
+      continue
+    inputsToDecode.push([input, i])
+  }
+  const paramsToDecode = inputsToDecode.map(([input]) => input)
   if (inputsToDecode.length > 0) {
     if (data && data !== '0x') {
       try {
         const decoded = decodeAbiParameters(
-          inputsToDecode,
+          paramsToDecode,
           data,
         ) as readonly unknown[]
-        let dataIndex = 0
-        for (const [input, i] of missingIndexed)
-          setArg(input, i, decoded[dataIndex++])
         // Consume the decoded values in order, like `topicIndex` above. An
-        // identity lookup (`nonIndexedInputs.indexOf(input)`) would resolve
+        // identity lookup (`paramsToDecode.indexOf(input)`) would resolve
         // every occurrence of a reused parameter object to its first slot.
-        for (let i = 0; i < inputs.length; i++) {
-          const input = inputs[i]!
-          if ('indexed' in input && input.indexed) continue
-          setArg(input, i, decoded[dataIndex])
-          dataIndex++
-        }
+        let dataIndex = 0
+        for (const [input, i] of inputsToDecode)
+          setArg(input, i, decoded[dataIndex++])
       } catch (err) {
         if (strict) {
           if (
@@ -179,10 +178,10 @@ export function decodeEventLog(
             throw new DecodeLogDataMismatch({
               abiItem,
               data,
-              formattedParams: formatAbiParams(inputsToDecode, {
+              formattedParams: formatAbiParams(paramsToDecode, {
                 includeName: true,
               }),
-              params: inputsToDecode,
+              params: paramsToDecode,
               size: size(data),
             })
           throw err
@@ -193,10 +192,10 @@ export function decodeEventLog(
       throw new DecodeLogDataMismatch({
         abiItem,
         data: data ?? '0x',
-        formattedParams: formatAbiParams(inputsToDecode, {
+        formattedParams: formatAbiParams(paramsToDecode, {
           includeName: true,
         }),
-        params: inputsToDecode,
+        params: paramsToDecode,
         size: data ? size(data) : 0,
       })
     }
