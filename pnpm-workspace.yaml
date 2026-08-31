@@ -1,17 +1,14 @@
-# Future home of the pnpm settings (pnpm >= 10 reads overrides from here and
-# warns that the package.json `pnpm` field is ignored). The pinned toolchain
-# (packageManager: pnpm@9.15.0) still reads `pnpm.overrides` from
-# package.json — verified: with only this file present, a frozen install
-# fails ERR_PNPM_LOCKFILE_CONFIG_MISMATCH. The two copies MUST stay
-# identical; pnpm validates whichever it reads against the lockfile.
+# pnpm settings (pnpm >= 10; the toolchain is pinned by `packageManager` in
+# package.json).
 
 # Single-package repo: only the root is a workspace member.
 packages:
   - '.'
 
 # Security floors for transitive dependencies; the resolved versions are
-# pinned in pnpm-lock.yaml. Keep in sync with `pnpm.overrides` in
-# package.json.
+# pinned in pnpm-lock.yaml. pnpm validates these against the lockfile, so a
+# drifted copy fails `pnpm install --frozen-lockfile` instead of resolving
+# without the floors.
 overrides:
   postcss@<8.5.18: '>=8.5.18 <9'
   brace-expansion@<2.1.3: '>=2.1.3 <3'
