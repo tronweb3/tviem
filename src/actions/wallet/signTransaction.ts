@@ -1,4 +1,8 @@
-import type { SignableTransaction, TronAccount } from '../../accounts/types.js'
+import type {
+  AccountKey,
+  SignableTransaction,
+  TronAccount,
+} from '../../accounts/types.js'
 import type { SignTransactionErrorType as SignTransactionErrorType_account } from '../../accounts/utils/signTransaction.js'
 import type { Client } from '../../clients/createClient.js'
 import {
@@ -10,7 +14,6 @@ import {
   type ParseAccountErrorType,
   parseAccount,
 } from '../../types/account.js'
-import type { Hex } from '../../types/misc.js'
 
 export type SignTransactionParameters = {
   /**
@@ -19,7 +22,7 @@ export type SignTransactionParameters = {
    */
   transaction: SignableTransaction
   /** The signing account (falls back to `client.account`). */
-  account?: TronAccount | Hex | undefined
+  account?: TronAccount | AccountKey | undefined
 }
 export type SignTransactionReturnType = SignableTransaction
 

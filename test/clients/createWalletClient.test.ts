@@ -31,6 +31,12 @@ test('defaults to the wallet key/name and hoists the account', () => {
   expect(client.account?.address).toBe('TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC')
 })
 
+test('hoists a bare (non-0x) private key to the same account', () => {
+  const client = createWalletClient({ account: pk1.slice(2), transport })
+  expect(client.account?.type).toBe('local')
+  expect(client.account?.address).toBe('TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC')
+})
+
 test('exposes the wallet action set', () => {
   const client = createWalletClient({ account: pk1, transport })
   for (const name of [

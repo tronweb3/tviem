@@ -1,4 +1,4 @@
-import type { TronAccount } from '../../accounts/types.js'
+import type { AccountKey, TronAccount } from '../../accounts/types.js'
 import type { Client } from '../../clients/createClient.js'
 import {
   AccountNotFoundError,
@@ -10,7 +10,6 @@ import {
   parseAccount,
 } from '../../types/account.js'
 import type { Address } from '../../types/address.js'
-import type { Hex } from '../../types/misc.js'
 import {
   type AddressToHexErrorType,
   addressToHex,
@@ -43,7 +42,7 @@ export type DelegateResource = 'BANDWIDTH' | 'ENERGY'
 
 export type DelegateResourceParameters = {
   /** The signing (delegator) account (falls back to `client.account`). */
-  account?: TronAccount | Hex | undefined
+  account?: TronAccount | AccountKey | undefined
   /** Recipient of the delegated resource. */
   receiverAddress: Address
   /** Amount to delegate, in SUN. */

@@ -1,4 +1,4 @@
-import type { TronAccount } from '../../accounts/types.js'
+import type { AccountKey, TronAccount } from '../../accounts/types.js'
 import type { Client } from '../../clients/createClient.js'
 import {
   AccountNotFoundError,
@@ -9,7 +9,6 @@ import {
   type ParseAccountErrorType,
   parseAccount,
 } from '../../types/account.js'
-import type { Hex } from '../../types/misc.js'
 import {
   type AddressToHexErrorType,
   addressToHex,
@@ -40,7 +39,7 @@ import {
 
 export type ExchangeWithdrawParameters = {
   /** The signing (owner) account (falls back to `client.account`). */
-  account?: TronAccount | Hex | undefined
+  account?: TronAccount | AccountKey | undefined
   /** Id of the exchange to withdraw liquidity from. */
   exchangeId: bigint | number
   /**

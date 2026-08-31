@@ -1,4 +1,4 @@
-import type { TronAccount } from '../../accounts/types.js'
+import type { AccountKey, TronAccount } from '../../accounts/types.js'
 import type { Client } from '../../clients/createClient.js'
 import {
   AccountNotFoundError,
@@ -9,7 +9,6 @@ import {
   type ParseAccountErrorType,
   parseAccount,
 } from '../../types/account.js'
-import type { Hex } from '../../types/misc.js'
 import {
   type AddressToHexErrorType,
   addressToHex,
@@ -40,7 +39,7 @@ import {
 
 export type ExchangeCreateParameters = {
   /** The signing (creator) account (falls back to `client.account`). */
-  account?: TronAccount | Hex | undefined
+  account?: TronAccount | AccountKey | undefined
   /**
    * First token id (`first_token_id`) — TRC10 id like `'1000001'`, or `'_'`
    * for TRX. Dual-form ("flex"): plain text is UTF-8 encoded; a

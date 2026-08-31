@@ -1,4 +1,4 @@
-import type { TronAccount } from '../../accounts/types.js'
+import type { AccountKey, TronAccount } from '../../accounts/types.js'
 import type { Client } from '../../clients/createClient.js'
 import {
   AccountNotFoundError,
@@ -9,7 +9,6 @@ import {
   type ParseAccountErrorType,
   parseAccount,
 } from '../../types/account.js'
-import type { Hex } from '../../types/misc.js'
 import {
   type AddressToHexErrorType,
   addressToHex,
@@ -41,7 +40,7 @@ export type StakeResource = 'BANDWIDTH' | 'ENERGY'
 
 export type FreezeBalanceV2Parameters = {
   /** The signing account (falls back to `client.account`). */
-  account?: TronAccount | Hex | undefined
+  account?: TronAccount | AccountKey | undefined
   /** Amount to freeze, in SUN. */
   frozenBalance: bigint
   /** Resource obtained by freezing. */

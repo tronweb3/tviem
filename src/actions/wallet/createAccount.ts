@@ -1,4 +1,4 @@
-import type { TronAccount } from '../../accounts/types.js'
+import type { AccountKey, TronAccount } from '../../accounts/types.js'
 import type { Client } from '../../clients/createClient.js'
 import {
   AccountNotFoundError,
@@ -10,7 +10,6 @@ import {
   parseAccount,
 } from '../../types/account.js'
 import type { Address } from '../../types/address.js'
-import type { Hex } from '../../types/misc.js'
 import {
   type AddressToHexErrorType,
   addressToHex,
@@ -36,7 +35,7 @@ import {
 
 export type CreateAccountParameters = {
   /** The signing (creator/payer) account (falls back to `client.account`). */
-  account?: TronAccount | Hex | undefined
+  account?: TronAccount | AccountKey | undefined
   /** Address of the account to create. */
   accountAddress: Address
   /**

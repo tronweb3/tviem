@@ -1,5 +1,5 @@
 import type { Abi } from 'abitype'
-import type { TronAccount } from '../../accounts/types.js'
+import type { AccountKey, TronAccount } from '../../accounts/types.js'
 import {
   type AccountPermissionUpdateParameters,
   type AccountPermissionUpdateReturnType,
@@ -296,7 +296,6 @@ import {
 } from '../../actions/wallet/writeContract.js'
 import { AccountNotFoundError } from '../../errors/rpc.js'
 import type { ContractFunctionName } from '../../types/contract.js'
-import type { Hex } from '../../types/misc.js'
 import { getAction } from '../../utils/getAction.js'
 import type { Client } from '../createClient.js'
 
@@ -595,11 +594,11 @@ export type WalletActions = {
  * neither is present, and returns `args` with the resolved `account` injected.
  */
 function requireAccount<
-  parameters extends { account?: TronAccount | Hex | undefined },
+  parameters extends { account?: TronAccount | AccountKey | undefined },
 >(
   client: Client,
   parameters: parameters,
-): parameters & { account: TronAccount | Hex } {
+): parameters & { account: TronAccount | AccountKey } {
   const account = parameters.account ?? client.account
   if (!account) throw new AccountNotFoundError()
   return { ...parameters, account }

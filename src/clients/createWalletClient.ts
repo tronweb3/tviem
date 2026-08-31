@@ -1,8 +1,7 @@
-import type { TronAccount } from '../accounts/types.js'
+import type { AccountKey, TronAccount } from '../accounts/types.js'
 import type { ErrorType } from '../errors/utils.js'
 import type { ParseAccount } from '../types/account.js'
 import type { Chain } from '../types/chain.js'
-import type { Hex } from '../types/misc.js'
 import type { Prettify } from '../types/utils.js'
 import {
   type Client,
@@ -16,13 +15,13 @@ import type { Transport } from './transports/createTransport.js'
 export type WalletClientConfig<
   transport extends Transport = Transport,
   chain extends Chain | undefined = Chain | undefined,
-  accountOrAddress extends TronAccount | Hex | undefined =
+  accountOrKey extends TronAccount | AccountKey | undefined =
     | TronAccount
-    | Hex
+    | AccountKey
     | undefined,
 > = Prettify<
   Pick<
-    ClientConfig<transport, chain, accountOrAddress>,
+    ClientConfig<transport, chain, accountOrKey>,
     | 'account'
     | 'cacheTime'
     | 'chain'
@@ -43,17 +42,18 @@ export type CreateWalletClientErrorType = CreateClientErrorType | ErrorType
 
 /**
  * Creates a Wallet Client with a given transport, configured for a chain. The
- * `account` (a local private-key account) is hoisted onto the Client so write
- * actions can omit it. A Wallet Client exposes the TRON write actions
+ * `account` — a built account, or a private key (`0x`-prefixed or bare hex)
+ * resolved to a local account — is hoisted onto the Client so write actions
+ * can omit it. A Wallet Client exposes the TRON write actions
  * (`sendTrx`, `writeContract`, `broadcastTransaction`).
  */
 export function createWalletClient<
   transport extends Transport,
   chain extends Chain | undefined = undefined,
-  accountOrAddress extends TronAccount | Hex | undefined = undefined,
+  accountOrKey extends TronAccount | AccountKey | undefined = undefined,
 >(
-  parameters: WalletClientConfig<transport, chain, accountOrAddress>,
-): WalletClient<transport, chain, ParseAccount<accountOrAddress>> {
+  parameters: WalletClientConfig<transport, chain, accountOrKey>,
+): WalletClient<transport, chain, ParseAccount<accountOrKey>> {
   const { key = 'wallet', name = 'Wallet Client', transport } = parameters
   const client = createClient({
     ...parameters,
@@ -65,6 +65,6 @@ export function createWalletClient<
   return client.extend(walletActions) as WalletClient<
     transport,
     chain,
-    ParseAccount<accountOrAddress>
+    ParseAccount<accountOrKey>
   >
 }

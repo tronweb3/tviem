@@ -1,4 +1,4 @@
-import type { TronAccount } from '../../accounts/types.js'
+import type { AccountKey, TronAccount } from '../../accounts/types.js'
 import type { Client } from '../../clients/createClient.js'
 import {
   maxAccountIdLength,
@@ -14,7 +14,6 @@ import {
   type ParseAccountErrorType,
   parseAccount,
 } from '../../types/account.js'
-import type { Hex } from '../../types/misc.js'
 import {
   type AddressToHexErrorType,
   addressToHex,
@@ -45,7 +44,7 @@ import {
 
 export type SetAccountIdParameters = {
   /** The signing account (falls back to `client.account`). */
-  account?: TronAccount | Hex | undefined
+  account?: TronAccount | AccountKey | undefined
   /**
    * Account id to set (`account_id`). Dual-form ("flex"): plain text/id
    * (e.g. `'omniaaa'`) is UTF-8 encoded; a `0x`-prefixed value is hex.

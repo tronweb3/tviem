@@ -1,4 +1,4 @@
-import type { TronAccount } from '../../accounts/types.js'
+import type { AccountKey, TronAccount } from '../../accounts/types.js'
 import type { Client } from '../../clients/createClient.js'
 import {
   AccountNotFoundError,
@@ -9,7 +9,6 @@ import {
   type ParseAccountErrorType,
   parseAccount,
 } from '../../types/account.js'
-import type { Hex } from '../../types/misc.js'
 import {
   type AddressToHexErrorType,
   addressToHex,
@@ -39,7 +38,7 @@ import {
 
 export type AccountPermissionUpdateParameters = {
   /** The account whose permissions are being updated (falls back to `client.account`). */
-  account?: TronAccount | Hex | undefined
+  account?: TronAccount | AccountKey | undefined
   /** The new owner permission (its `type` is forced to `OWNER`). */
   owner?: Permission | undefined
   /** The new witness/SR permission (its `type` is forced to `WITNESS`). */
