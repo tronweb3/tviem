@@ -2,7 +2,7 @@ import { expect, test } from 'vitest'
 import { broadcastHex } from '../../../src/actions/wallet/broadcastHex.js'
 import { createClient } from '../../../src/clients/createClient.js'
 import { BaseError } from '../../../src/errors/base.js'
-import { TronBroadcastError } from '../../../src/errors/node.js'
+import { TronBroadcastError, TronNodeError } from '../../../src/errors/node.js'
 import {
   TransactionExpiredError,
   TronRpcError,
@@ -225,9 +225,16 @@ test('maps an expiration rejection to TransactionExpiredError', async () => {
     },
   })
   const client = createClient({ transport })
-  await expect(
-    broadcastHex(client, { transaction: BROADCAST_HEX }),
-  ).rejects.toBeInstanceOf(TransactionExpiredError)
+  const error = await broadcastHex(client, {
+    transaction: BROADCAST_HEX,
+  }).catch((caught) => caught)
+  expect(error).toBeInstanceOf(TransactionExpiredError)
+  // The node's own rejection survives as `cause` (as on broadcastTransaction):
+  // re-surfacing the expiry must not discard why the node said no.
+  expect(error.cause).toBeInstanceOf(TronNodeError)
+  expect((error.cause as TronNodeError).code).toBe(
+    'TRANSACTION_EXPIRATION_ERROR',
+  )
 })
 
 test('refuses an empty acknowledgement body instead of resolving', async () => {

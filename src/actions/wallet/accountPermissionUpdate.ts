@@ -154,7 +154,7 @@ export async function buildAccountPermissionUpdate(
  * (§ type 46) — the multi-sig setup step. Each permission's `type` is set from
  * the slot it is passed in (`owner` → OWNER, `witness` → WITNESS, `actives` →
  * ACTIVE), so callers only supply `threshold`, `keys` (`{ address, weight }`),
- * an optional `permissionName`, and — for active permissions — the 32-byte
+ * an optional `permission_name`, and — for active permissions — the 32-byte
  * `operations` bitmap of allowed contract types.
  *
  * @param client The Client to use.

@@ -115,7 +115,7 @@ const expirationCodes = new Set(['TRANSACTION_EXPIRATION_ERROR', 'TAPOS_ERROR'])
  * {@link assertRpcSuccess}, and a body carrying no acknowledgement at all
  * (`{}` from an LB stub / warming node) is refused rather than resolved. A
  * rejection whose code indicates the reference block expired is re-surfaced
- * as a {@link TransactionExpiredError}.
+ * as a {@link TransactionExpiredError}, with the node rejection as `cause`.
  *
  * @param client The Client to use.
  * @param parameters The signed transaction hex to broadcast.
@@ -193,7 +193,7 @@ export async function broadcastHex(
       error.code !== undefined &&
       expirationCodes.has(error.code)
     )
-      throw new TransactionExpiredError({ hash: txid })
+      throw new TransactionExpiredError({ hash: txid, cause: error })
     throw error
   }
 
