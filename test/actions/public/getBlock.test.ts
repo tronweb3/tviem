@@ -98,6 +98,28 @@ test('getBlock rejects negative, fractional, NaN and infinite block numbers', as
   expect(calls).toEqual([])
 })
 
+test('getBlock rejects block numbers above MAX_SAFE_INTEGER without calling the node', async () => {
+  const { transport, calls } = createMockTransport({
+    responses: { getblockbynum: { response: rpc('getblockbynum') } },
+  })
+  const client = createPublicClient({ transport })
+
+  for (const blockNumber of [
+    // The smallest bigint `Number()` silently rounds (2^53 + 1 -> 2^53).
+    9_007_199_254_740_993n,
+    2n ** 53n,
+    2n ** 64n,
+    9_007_199_254_740_992,
+  ]) {
+    await expect(
+      client.getBlock({ blockNumber }),
+      `blockNumber: ${blockNumber}`,
+    ).rejects.toThrow('Invalid blockNumber')
+  }
+  // Nothing ever reached the node.
+  expect(calls).toEqual([])
+})
+
 test('getBlock throws BlockNotFoundError on an empty ({}) body', async () => {
   const { transport } = createMockTransport({
     responses: { getblockbynum: { response: {} } },

@@ -11,7 +11,7 @@ import type { ToBase58ErrorType } from '../../utils/address/toBase58.js'
 import { formatBlock, isEmptyResponse, type RawBlock } from './getNowBlock.js'
 
 export type GetBlockParameters = {
-  /** The block number to fetch. */
+  /** The block number to fetch (a non-negative integer ≤ 2^53 - 1). */
   blockNumber: bigint | number
   /**
    * Read solidified state from the SolidityNode instead of the FullNode's
@@ -43,11 +43,14 @@ export async function getBlock(
   { blockNumber, confirmed }: GetBlockParameters,
 ): Promise<GetBlockReturnType> {
   // `Number()` folds bigints in, so one check rejects negatives, fractions,
-  // `NaN` and infinities before anything reaches the node.
+  // `NaN` and infinities before anything reaches the node. `isSafeInteger`
+  // (not `isInteger`) also rejects anything past 2^53 - 1, where `Number()`
+  // rounds — a bigint that loses precision always lands on an unsafe integer,
+  // so the node can never be asked for a different height than the caller gave.
   const num = Number(blockNumber)
-  if (!Number.isInteger(num) || num < 0)
+  if (!Number.isSafeInteger(num) || num < 0)
     throw new BaseError(
-      `Invalid blockNumber: ${blockNumber}. Expected a non-negative integer block height.`,
+      `Invalid blockNumber: ${blockNumber}. Expected a non-negative safe-integer block height.`,
     )
   const response = await client.request<RawBlock>({
     node: confirmed ? 'solidity' : 'full',
