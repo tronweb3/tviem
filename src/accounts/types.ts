@@ -151,3 +151,17 @@ export type TronCustomAccount = TronCustomSource & {
  * caller-supplied {@link TronCustomAccount}.
  */
 export type TronAccount = TronLocalAccount | TronHDAccount | TronCustomAccount
+
+/**
+ * A private key in either accepted string form — `0x`-prefixed or bare
+ * 64-char hex. In this version every string `account` source is a private key
+ * (Base58 watch-only sources are reserved for v0.1c), so this is the string
+ * half of every `account` parameter: `TronAccount | AccountKey`. Length, hex
+ * shape and secp256k1 range are enforced at runtime by `privateKeyToAccount`
+ * — this type only widens the compile-time contract to what the runtime
+ * already accepts.
+ *
+ * The `string & {}` member keeps the union from collapsing to plain `string`,
+ * so `0x` completions survive in editors.
+ */
+export type AccountKey = Hex | (string & {})
