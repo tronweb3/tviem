@@ -1,5 +1,6 @@
 import { expect, test } from 'vitest'
 
+import { BaseError } from '../../../src/errors/base.js'
 import {
   deriveRefBlockParams,
   fillBlockHeader,
@@ -25,6 +26,47 @@ test('deriveRefBlockParams: ref_block_bytes is the low 2 bytes, left-padded', ()
 test('deriveRefBlockParams: accepts a 0x-prefixed block id', () => {
   expect(deriveRefBlockParams(0x1234, `0x${blockID}`).ref_block_hash).toBe(
     '0102030405060708',
+  )
+})
+
+test('deriveRefBlockParams: bare and 0x-prefixed block ids agree', () => {
+  expect(deriveRefBlockParams(1, `0x${blockID}`)).toEqual(
+    deriveRefBlockParams(1, blockID),
+  )
+})
+
+test('deriveRefBlockParams: a bigint past 2^64 still takes the low 2 bytes', () => {
+  expect(
+    deriveRefBlockParams(2n ** 64n + 0xabcdn, blockID).ref_block_bytes,
+  ).toBe('abcd')
+})
+
+// A malformed id used to be laundered into shape-valid TaPoS fields — e.g. the
+// 16-byte id yielded a full-width all-zero ref_block_hash — that the node only
+// rejects at broadcast, after signatures were collected.
+test.each([
+  ['16-byte', '0'.repeat(32)],
+  ['odd-nibble (63 chars)', 'a'.repeat(63)],
+  ['long (65 chars)', 'a'.repeat(65)],
+  ['non-hex', 'z'.repeat(64)],
+  ['empty', ''],
+])('deriveRefBlockParams: rejects an invalid blockID (%s)', (_, id) => {
+  expect(() => deriveRefBlockParams(1n, id)).toThrow(BaseError)
+  expect(() => deriveRefBlockParams(1n, id)).toThrow(/Invalid blockID/)
+})
+
+test.each([
+  ['negative bigint', -1n],
+  ['negative number', -1],
+  ['fractional', 1.5],
+  ['NaN', Number.NaN],
+  ['Infinity', Number.POSITIVE_INFINITY],
+  ['-Infinity', Number.NEGATIVE_INFINITY],
+  ['unsafe (2^53)', 2 ** 53],
+])('deriveRefBlockParams: rejects an invalid blockNumber (%s)', (_, blockNumber) => {
+  expect(() => deriveRefBlockParams(blockNumber, blockID)).toThrow(BaseError)
+  expect(() => deriveRefBlockParams(blockNumber, blockID)).toThrow(
+    /Invalid blockNumber/,
   )
 })
 

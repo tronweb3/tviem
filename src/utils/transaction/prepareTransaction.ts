@@ -37,23 +37,51 @@ export type RefBlockParams = {
   ref_block_hash: string
 }
 
-export type DeriveRefBlockParamsErrorType = ErrorType
+export type DeriveRefBlockParamsErrorType = BaseErrorType | ErrorType
+
+const blockIdRegex = /^[0-9a-fA-F]{64}$/
 
 /**
  * Derives the TaPoS reference fields from a block. `ref_block_bytes` is the
  * low 2 bytes of the block number (its hex, last 4 chars, left-padded to 4);
  * `ref_block_hash` is bytes 8..16 of the block id (its hex chars 16..32).
  *
- * @param blockNumber Block number.
- * @param blockID Block id hash hex (bare or `0x`-prefixed).
+ * Both fields enter the transaction's `raw_data` — and so its txID and
+ * signature bytes — which is why an invalid source is rejected here instead
+ * of being laundered into shape-valid output (a 16-byte id would otherwise
+ * still yield a full-width `ref_block_hash`) that the node only rejects at
+ * broadcast, after signatures were collected.
+ *
+ * @param blockNumber Block number: a non-negative `bigint`, or a non-negative
+ *   safe-integer `number`.
+ * @param blockID Block id: a 32-byte hash hex (bare or `0x`-prefixed).
  * @returns Reference block parameters.
+ * @throws {BaseError} If `blockNumber` or `blockID` is invalid.
  */
 export function deriveRefBlockParams(
   blockNumber: bigint | number,
   blockID: string,
 ): RefBlockParams {
-  const refBlockBytes = blockNumber.toString(16).slice(-4).padStart(4, '0')
+  // Only the low 2 bytes are read, so a bigint needs no upper bound — but a
+  // `number` past 2^53 - 1 no longer holds every integer, and a fractional or
+  // non-finite one would slice its decimal form into nonsense.
+  if (
+    typeof blockNumber === 'number' &&
+    (!Number.isSafeInteger(blockNumber) || blockNumber < 0)
+  )
+    throw new BaseError(
+      `Invalid blockNumber: ${blockNumber}. Expected a non-negative safe-integer block height.`,
+    )
+  if (typeof blockNumber === 'bigint' && blockNumber < 0n)
+    throw new BaseError(
+      `Invalid blockNumber: ${blockNumber}. Expected a non-negative block height.`,
+    )
   const id = blockID.startsWith('0x') ? blockID.slice(2) : blockID
+  if (!blockIdRegex.test(id))
+    throw new BaseError(
+      `Invalid blockID: ${blockID}. Expected a 32-byte block hash (64 hex characters, with an optional 0x prefix).`,
+    )
+  const refBlockBytes = blockNumber.toString(16).slice(-4).padStart(4, '0')
   return { ref_block_bytes: refBlockBytes, ref_block_hash: id.slice(16, 32) }
 }
 
@@ -61,8 +89,6 @@ export type FillBlockHeaderErrorType =
   | BaseErrorType
   | DeriveRefBlockParamsErrorType
   | ErrorType
-
-const blockIdRegex = /^[0-9a-fA-F]{64}$/
 
 /**
  * Fills the TaPoS reference fields plus the `timestamp` and `expiration` of a
