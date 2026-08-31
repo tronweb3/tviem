@@ -1,6 +1,10 @@
 import { expect, test } from 'vitest'
 import { createPublicClient } from '../../../src/clients/createPublicClient.js'
-import { BlockNotFoundError, TronRpcError } from '../../../src/errors/rpc.js'
+import {
+  BlockNotFoundError,
+  BlockTamperedError,
+  TronRpcError,
+} from '../../../src/errors/rpc.js'
 import {
   type BlockRef,
   deriveRefBlockParams,
@@ -165,6 +169,17 @@ test('getBlock surfaces a typed error, not a raw RangeError, for a fractional he
   const client = createPublicClient({ transport })
   await expect(client.getBlock({ blockNumber: 4660n })).rejects.toThrow(
     'Malformed getblockbynum response',
+  )
+})
+
+test('getBlock rejects a block at a different height than the requested one', async () => {
+  const { transport } = createMockTransport({
+    // Fixture block 4660 answering a request for block 99.
+    responses: { getblockbynum: { response: rpc('getblockbynum') } },
+  })
+  const client = createPublicClient({ transport })
+  await expect(client.getBlock({ blockNumber: 99n })).rejects.toBeInstanceOf(
+    BlockTamperedError,
   )
 })
 
