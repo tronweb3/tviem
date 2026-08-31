@@ -138,6 +138,7 @@ exports[`package exports surface (freeze guard) > root + subpath export names ar
     "AccountTypeName",
     "BaseError",
     "BlockNotFoundError",
+    "BlockTamperedError",
     "BytesSizeMismatchError",
     "CallExecutionError",
     "ContractFunctionRevertedError",

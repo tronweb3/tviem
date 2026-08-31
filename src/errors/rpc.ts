@@ -43,6 +43,47 @@ export class BlockNotFoundError extends BaseError {
   }
 }
 
+/**
+ * Thrown by `getBlock` when the node answers with a block at a different
+ * height than the one requested. The node-supplied block is discarded and the
+ * mismatch surfaced here. This can indicate block substitution by a
+ * misbehaving or man-in-the-middled node.
+ */
+export type BlockTamperedErrorType = BlockTamperedError & {
+  name: 'BlockTamperedError'
+}
+export class BlockTamperedError extends BaseError {
+  constructor({
+    path,
+    requestedBlockNumber,
+    returnedBlockNumber,
+  }: {
+    path?: string | undefined
+    requestedBlockNumber?: bigint | number | undefined
+    returnedBlockNumber?: bigint | number | undefined
+  } = {}) {
+    super(
+      [
+        'The node returned a block at a different height than the one requested.',
+        'This can indicate block substitution by a malicious or man-in-the-middled node.',
+        'The node-supplied block was not accepted.',
+      ].join('\n'),
+      {
+        name: 'BlockTamperedError',
+        metaMessages: [
+          requestedBlockNumber !== undefined
+            ? `Requested block: ${requestedBlockNumber}`
+            : undefined,
+          returnedBlockNumber !== undefined
+            ? `Returned block:  ${returnedBlockNumber}`
+            : undefined,
+          path ? `Path: ${path}` : undefined,
+        ].filter((m): m is string => Boolean(m)),
+      },
+    )
+  }
+}
+
 // --- Reserved action-level error shells (fleshed out by T4/T5). ---------------
 // These are minimal, functional `BaseError` subclasses so that the read/write
 // action modules (RD-6 / WR-*) have stable import targets. T4/T5 own their

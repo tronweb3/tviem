@@ -706,6 +706,8 @@ export {
   type AccountNotFoundErrorType,
   BlockNotFoundError,
   type BlockNotFoundErrorType,
+  BlockTamperedError,
+  type BlockTamperedErrorType,
   CallExecutionError,
   type CallExecutionErrorType,
   ContractFunctionRevertedError,
