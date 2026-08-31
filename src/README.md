@@ -1,7 +1,7 @@
 <br/>
 
 <p align="center">
-  <a href="https://walletadapter.org/viem">
+  <a href="https://walletadapter.org/tviem">
     <img alt="tviem" src="https://img.shields.io/badge/@tronweb3%2Ftviem-c23631?style=for-the-badge" height="34">
   </a>
 </p>
@@ -33,7 +33,7 @@
 - TRON-native protocol layer: Base58Check (`T…`) addresses, `SUN` (6-decimal) units, energy/bandwidth accounting, protobuf serialization with `sha256` transaction IDs
 - Browser-native [BigInt](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigInt) — no BigNumber libraries
 - Utilities for working with ABIs (encoding / decoding / inspection), including TRON's `trcToken` type
-- TypeScript-ready: [infer types](https://walletadapter.org/viem) straight from ABIs and TIP-712 typed data via [`abitype`](https://abitype.dev)
+- TypeScript-ready: infer types straight from ABIs and TIP-712 typed data via [`abitype`](https://abitype.dev)
 - Tree-shakable ESM + CJS, `sideEffects: false`, and a tiny audited dependency set ([`@noble`](https://paulmillr.com/noble/) / [`@scure`](https://paulmillr.com/noble/) cryptography, [`abitype`](https://abitype.dev))
 
 ... and a lot more.
@@ -146,7 +146,7 @@ Subpath exports, ESM + CJS, `sideEffects: false`:
 
 ## Documentation
 
-Head to the [documentation](https://walletadapter.org/viem) to read and learn
+Head to the [documentation](https://walletadapter.org/tviem) to read and learn
 more.
 
 ## Contributing
