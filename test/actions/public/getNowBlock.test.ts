@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest'
 import { createPublicClient } from '../../../src/clients/createPublicClient.js'
-import { BlockNotFoundError } from '../../../src/errors/rpc.js'
+import { BlockNotFoundError, TronRpcError } from '../../../src/errors/rpc.js'
 import { createMockTransport } from '../../mock/createMockTransport.js'
 
 const rawBlock = {
@@ -33,6 +33,32 @@ test('an empty {} body throws BlockNotFoundError', async () => {
   })
   const client = createPublicClient({ transport })
   await expect(client.getNowBlock()).rejects.toBeInstanceOf(BlockNotFoundError)
+})
+
+// A non-empty but structurally invalid body is a malformed response, not a
+// block whose every field defaulted to zero.
+test('a malformed body throws TronRpcError instead of a zero-value block', async () => {
+  const bodies: Record<string, unknown>[] = [
+    { unexpected: true },
+    // Missing blockID.
+    { block_header: { raw_data: { number: 100, timestamp: 1700000000000 } } },
+    // Missing block_header.raw_data.
+    { blockID: 'aa'.repeat(32) },
+  ]
+  for (const response of bodies) {
+    const { transport } = createMockTransport({
+      responses: { getnowblock: { response } },
+    })
+    const client = createPublicClient({ transport })
+    await expect(
+      client.getNowBlock(),
+      `body: ${JSON.stringify(response)}`,
+    ).rejects.toThrow(TronRpcError)
+    await expect(
+      client.getNowBlock(),
+      `body: ${JSON.stringify(response)}`,
+    ).rejects.toThrow('Malformed getnowblock response')
+  }
 })
 
 // A block missing witness_address omits the field instead of fabricating

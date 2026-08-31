@@ -4,11 +4,17 @@ import { BaseError, type BaseErrorType } from '../../errors/base.js'
 import {
   BlockNotFoundError,
   type BlockNotFoundErrorType,
+  type TronRpcErrorType,
 } from '../../errors/rpc.js'
 import type { ErrorType } from '../../errors/utils.js'
 import type { Block } from '../../types/block.js'
 import type { ToBase58ErrorType } from '../../utils/address/toBase58.js'
-import { formatBlock, isEmptyResponse, type RawBlock } from './getNowBlock.js'
+import {
+  assertBlockResponse,
+  formatBlock,
+  isEmptyResponse,
+  type RawBlock,
+} from './getNowBlock.js'
 
 export type GetBlockParameters = {
   /** The block number to fetch (a non-negative integer ≤ 2^53 - 1). */
@@ -27,6 +33,7 @@ export type GetBlockErrorType =
   | BlockNotFoundErrorType
   | RequestErrorType
   | ToBase58ErrorType
+  | TronRpcErrorType
   | ErrorType
 
 /**
@@ -37,6 +44,7 @@ export type GetBlockErrorType =
  * @param parameters `blockNumber` — the block number to fetch.
  * @returns The formatted block.
  * @throws {BlockNotFoundError} If the node returns an empty body (unknown block).
+ * @throws {TronRpcError} If the node returns a malformed block body.
  */
 export async function getBlock(
   client: Client,
@@ -59,5 +67,6 @@ export async function getBlock(
     body: { num },
   })
   if (isEmptyResponse(response)) throw new BlockNotFoundError({ blockNumber })
+  assertBlockResponse(response, 'getblockbynum')
   return formatBlock(response)
 }

@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest'
 import { createPublicClient } from '../../../src/clients/createPublicClient.js'
-import { BlockNotFoundError } from '../../../src/errors/rpc.js'
+import { BlockNotFoundError, TronRpcError } from '../../../src/errors/rpc.js'
 import {
   type BlockRef,
   deriveRefBlockParams,
@@ -118,6 +118,79 @@ test('getBlock rejects block numbers above MAX_SAFE_INTEGER without calling the 
   }
   // Nothing ever reached the node.
   expect(calls).toEqual([])
+})
+
+test('getBlock rejects malformed block bodies instead of minting a zero-value Block', async () => {
+  const bodies: Record<string, unknown>[] = [
+    { unexpected: true },
+    // Missing block_header.raw_data.
+    { blockID: 'aa'.repeat(32) },
+    // Missing blockID.
+    { block_header: { raw_data: { number: 4660, timestamp: 1700000000000 } } },
+    // Non-hex blockID.
+    { blockID: 'zz'.repeat(32), block_header: { raw_data: { number: 4660 } } },
+    // Truncated (16-byte) blockID.
+    { blockID: 'aa'.repeat(16), block_header: { raw_data: { number: 4660 } } },
+  ]
+  for (const response of bodies) {
+    const { transport } = createMockTransport({
+      responses: { getblockbynum: { response } },
+    })
+    const client = createPublicClient({ transport })
+    await expect(
+      client.getBlock({ blockNumber: 4660n }),
+      `body: ${JSON.stringify(response)}`,
+    ).rejects.toThrow(TronRpcError)
+    await expect(
+      client.getBlock({ blockNumber: 4660n }),
+      `body: ${JSON.stringify(response)}`,
+    ).rejects.toThrow('Malformed getblockbynum response')
+  }
+})
+
+test('getBlock surfaces a typed error, not a raw RangeError, for a fractional header number', async () => {
+  const { transport } = createMockTransport({
+    responses: {
+      getblockbynum: {
+        response: {
+          blockID:
+            '00000000000012340102030405060708090a0b0c0d0e0f101112131415161718',
+          block_header: {
+            raw_data: { number: 4660.5, timestamp: 1700000000000 },
+          },
+        },
+      },
+    },
+  })
+  const client = createPublicClient({ transport })
+  await expect(client.getBlock({ blockNumber: 4660n })).rejects.toThrow(
+    'Malformed getblockbynum response',
+  )
+})
+
+test('getBlock accepts the genesis block (proto3-omitted number and timestamp decode as 0)', async () => {
+  const { transport } = createMockTransport({
+    responses: {
+      getblockbynum: {
+        response: {
+          blockID:
+            '00000000000000001ebf88508a03865c71d452e25f4d51194196a1d22b6653dc',
+          block_header: {
+            raw_data: {
+              txTrieRoot:
+                '0000000000000000000000000000000000000000000000000000000000000000',
+              parentHash:
+                '0000000000000000000000000000000000000000000000000000000000000000',
+            },
+          },
+        },
+      },
+    },
+  })
+  const client = createPublicClient({ transport })
+  const block = await client.getBlock({ blockNumber: 0 })
+  expect(block.number).toBe(0n)
+  expect(block.timestamp).toBe(0n)
 })
 
 test('getBlock throws BlockNotFoundError on an empty ({}) body', async () => {
