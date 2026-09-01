@@ -5,6 +5,10 @@
 packages:
   - '.'
 
+autoInstallPeers: false
+enablePrePostScripts: true
+strictPeerDependencies: false
+
 # Security floors for transitive dependencies; the resolved versions are
 # pinned in pnpm-lock.yaml. pnpm validates these against the lockfile, so a
 # drifted copy fails `pnpm install --frozen-lockfile` instead of resolving
