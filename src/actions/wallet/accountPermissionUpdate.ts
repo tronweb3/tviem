@@ -1,5 +1,6 @@
 import type { AccountKey, TronAccount } from '../../accounts/types.js'
 import type { Client } from '../../clients/createClient.js'
+import { BaseError, type BaseErrorType } from '../../errors/base.js'
 import {
   AccountNotFoundError,
   type AccountNotFoundErrorType,
@@ -20,7 +21,10 @@ import {
 import type { RawContract } from '../../utils/transaction/serializeRawData.js'
 import {
   type AccountPermissionUpdateContract,
+  type BytesInput,
+  type Int64,
   type Permission,
+  type PermissionKey,
   PermissionType,
 } from '../../utils/transaction/types.js'
 import {
@@ -36,15 +40,45 @@ import {
   type TransactionHeader,
 } from './utils/buildTransaction.js'
 
+/**
+ * A permission granted to a set of signer keys — the input shape for the
+ * `owner` and `witness` slots. The permission `type` is forced from the slot
+ * the value is passed in, and ids are chain-assigned (owner = 0, witness = 1),
+ * so neither can be supplied.
+ */
+export type PermissionInput = {
+  /** Permission name (informational, e.g. `'owner'`). */
+  permission_name?: string | undefined
+  /** Combined signature weight required to authorize an operation (`int64`). */
+  threshold: Int64
+  /** Signer keys and their weights (`{ address, weight }`) — at least one. */
+  keys: PermissionKey[]
+}
+
+/**
+ * An active permission — a {@link PermissionInput} that additionally carries
+ * the mandatory `operations` bitmap: 32 bytes whose bit `n` (little-endian
+ * within each byte) allows contract type `n`.
+ */
+export type ActivePermissionInput = PermissionInput & {
+  /** Permission id (the chain assigns ids from 2 upward when omitted). */
+  id?: number | undefined
+  /** Allowed contract types, as a 32-byte bitmap (hex or raw bytes). */
+  operations: BytesInput
+}
+
 export type AccountPermissionUpdateParameters = {
   /** The account whose permissions are being updated (falls back to `client.account`). */
   account?: TronAccount | AccountKey | undefined
-  /** The new owner permission (its `type` is forced to `OWNER`). */
-  owner?: Permission | undefined
-  /** The new witness/SR permission (its `type` is forced to `WITNESS`). */
-  witness?: Permission | undefined
-  /** The new active permissions (each `type` is forced to `ACTIVE`). */
-  actives?: Permission[] | undefined
+  /**
+   * The new owner permission. Required: the update replaces the account's
+   * whole permission set, so java-tron rejects a contract without it.
+   */
+  owner: PermissionInput
+  /** The new witness/SR permission (only meaningful for SR accounts). */
+  witness?: PermissionInput | undefined
+  /** The new active permissions. Required: at least one must be supplied. */
+  actives: ActivePermissionInput[]
   /**
    * A pre-derived TaPoS + timing header. When supplied the transaction is built
    * fully offline against it; otherwise it is derived from the latest block.
@@ -68,6 +102,7 @@ export type AccountPermissionUpdateReturnType = BuildAndBroadcastReturnType
 
 export type AccountPermissionUpdateErrorType =
   | AccountNotFoundErrorType
+  | BaseErrorType
   | BuildAndBroadcastErrorType
   | ParseAccountErrorType
   | AddressToHexErrorType
@@ -82,10 +117,67 @@ export type BuildAccountPermissionUpdateReturnType = BuildTransactionReturnType
 
 export type BuildAccountPermissionUpdateErrorType =
   | AccountNotFoundErrorType
+  | BaseErrorType
   | BuildTransactionErrorType
   | ParseAccountErrorType
   | AddressToHexErrorType
   | ErrorType
+
+/**
+ * Validates a permission input and assembles the codec model for its slot.
+ * Fields are picked explicitly: stray model fields on the caller's object
+ * (`type`, `parent_id`, or `operations` on an owner/witness permission, which
+ * java-tron forbids) must not ride into the signed bytes.
+ */
+function toPermission(
+  input: PermissionInput,
+  slot: string,
+  type: PermissionType,
+): Permission {
+  if (input.threshold === undefined || input.threshold === null)
+    throw new BaseError(`Invalid ${slot} permission: missing \`threshold\`.`)
+  if (!Array.isArray(input.keys) || input.keys.length === 0)
+    throw new BaseError(
+      `Invalid ${slot} permission: \`keys\` must carry at least one signer.`,
+    )
+  return {
+    type,
+    ...(input.permission_name !== undefined
+      ? { permission_name: input.permission_name }
+      : {}),
+    threshold: input.threshold,
+    keys: input.keys.map(({ address, weight }) => ({ address, weight })),
+  }
+}
+
+/** {@link toPermission} plus the active-only `id` and 32-byte `operations`. */
+function toActivePermission(
+  input: ActivePermissionInput,
+  slot: string,
+): Permission {
+  const permission = toPermission(input, slot, PermissionType.ACTIVE)
+  const { id, operations } = input
+  if (operations === undefined || operations === null)
+    throw new BaseError(
+      `Invalid ${slot} permission: missing \`operations\` (the 32-byte bitmap of allowed contract types).`,
+    )
+  // java-tron rejects any other size; whole-byte hex only, since the codec
+  // refuses odd-nibble strings anyway.
+  const is32Bytes =
+    operations instanceof Uint8Array
+      ? operations.length === 32
+      : typeof operations === 'string' &&
+        /^(?:0x)?[0-9a-fA-F]{64}$/.test(operations)
+  if (!is32Bytes)
+    throw new BaseError(
+      `Invalid ${slot} permission: \`operations\` must be a 32-byte bitmap (64 hex chars or a 32-byte Uint8Array).`,
+    )
+  return {
+    ...permission,
+    ...(id !== undefined ? { id } : {}),
+    operations,
+  }
+}
 
 /** The signing account plus the assembled `AccountPermissionUpdateContract` and `fee_limit`. */
 function assemble(
@@ -99,16 +191,31 @@ function assemble(
   if (!source) throw new AccountNotFoundError()
   const account = parseAccount(source)
 
+  // The contract replaces the account's WHOLE permission set — a missing slot
+  // is not "keep the current one". java-tron requires the full owner
+  // permission and at least one active permission on every update, so refuse
+  // locally (TypeScript already does; these guards catch plain-JS callers and
+  // empty arrays) with an error that names the parameter, before the codec's
+  // opaque required-field guard or the node does.
+  if (!owner)
+    throw new BaseError(
+      'Missing owner permission: an account permission update replaces the whole permission set, so `owner` is required.',
+    )
+  if (!actives?.length)
+    throw new BaseError(
+      'Missing active permissions: an account permission update replaces the whole permission set, so `actives` must carry at least one permission.',
+    )
+
   // Each permission's `type` is forced from the slot it was passed in.
   const value: AccountPermissionUpdateContract = {
     owner_address: addressToHex(account.address),
-    ...(owner ? { owner: { ...owner, type: PermissionType.OWNER } } : {}),
+    owner: toPermission(owner, 'owner', PermissionType.OWNER),
     ...(witness
-      ? { witness: { ...witness, type: PermissionType.WITNESS } }
+      ? { witness: toPermission(witness, 'witness', PermissionType.WITNESS) }
       : {}),
-    ...(actives
-      ? { actives: actives.map((a) => ({ ...a, type: PermissionType.ACTIVE })) }
-      : {}),
+    actives: actives.map((active, i) =>
+      toActivePermission(active, `actives[${i}]`),
+    ),
   }
 
   const contract: RawContract = {
@@ -151,11 +258,13 @@ export async function buildAccountPermissionUpdate(
 /**
  * Updates an account's owner / witness / active permissions by locally
  * building, signing and broadcasting an `AccountPermissionUpdateContract`
- * (§ type 46) — the multi-sig setup step. Each permission's `type` is set from
- * the slot it is passed in (`owner` → OWNER, `witness` → WITNESS, `actives` →
- * ACTIVE), so callers only supply `threshold`, `keys` (`{ address, weight }`),
- * an optional `permission_name`, and — for active permissions — the 32-byte
- * `operations` bitmap of allowed contract types.
+ * (§ type 46) — the multi-sig setup step. The contract replaces the account's
+ * whole permission set, so `owner` and at least one active permission are
+ * required. Each permission's `type` is set from the slot it is passed in
+ * (`owner` → OWNER, `witness` → WITNESS, `actives` → ACTIVE), so callers only
+ * supply `threshold`, `keys` (`{ address, weight }`), an optional
+ * `permission_name`, and — for active permissions — the 32-byte `operations`
+ * bitmap of allowed contract types.
  *
  * @param client The Client to use.
  * @param parameters The new permission set, optional account/blockHeader.

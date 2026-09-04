@@ -127,13 +127,14 @@ test('refuses an operations bitmap that is not whole-byte hex', async () => {
   // `hexToBytes` does with an odd nibble count — would restore a 32-byte value,
   // the exact length java-tron demands, so the chain would accept it. But every
   // set bit has shifted half a byte, granting a different set of contract types
-  // than the caller wrote. Refuse it instead of guessing at the missing nibble.
+  // than the caller wrote. The action's own 32-byte guard (64 whole hex chars)
+  // refuses it instead of guessing at the missing nibble.
   await expect(
     buildAccountPermissionUpdate(client, {
       ...params,
       actives: [{ ...active, operations: active.operations.slice(0, -1) }],
     }),
-  ).rejects.toThrow('is an odd length')
+  ).rejects.toThrow('`operations` must be a 32-byte bitmap')
 
   // Raw bytes are unambiguous and stay accepted.
   const tx = await buildAccountPermissionUpdate(client, {
@@ -147,8 +148,6 @@ test('throws AccountNotFoundError when no account is available (bare action)', a
   const { transport } = buildMock()
   const client = createPublicClient({ transport })
   await expect(
-    buildAccountPermissionUpdate(client, {
-      actives: [{ threshold: 1n, keys: [] }],
-    }),
+    buildAccountPermissionUpdate(client, params),
   ).rejects.toBeInstanceOf(AccountNotFoundError)
 })

@@ -174,11 +174,13 @@ export {
   type AccountPermissionUpdateErrorType,
   type AccountPermissionUpdateParameters,
   type AccountPermissionUpdateReturnType,
+  type ActivePermissionInput,
   accountPermissionUpdate,
   type BuildAccountPermissionUpdateErrorType,
   type BuildAccountPermissionUpdateParameters,
   type BuildAccountPermissionUpdateReturnType,
   buildAccountPermissionUpdate,
+  type PermissionInput,
 } from './actions/wallet/accountPermissionUpdate.js'
 export {
   type ApplyForSrErrorType,
