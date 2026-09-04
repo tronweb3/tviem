@@ -298,6 +298,10 @@ export {
   verifyTypedData,
 } from './signature/verifyTypedData.js'
 export {
+  type CloneTransactionErrorType,
+  cloneTransaction,
+} from './transaction/cloneTransaction.js'
+export {
   type DecodeRawDataErrorType,
   decodeRawData,
 } from './transaction/decodeRawData.js'

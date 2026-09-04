@@ -2,6 +2,10 @@ import { BaseError, type BaseErrorType } from '../../errors/base.js'
 import type { ErrorType } from '../../errors/utils.js'
 import type { Hex } from '../../types/misc.js'
 import { getTransactionId, toRawDataHex } from '../../utils/index.js'
+import {
+  type CloneTransactionErrorType,
+  cloneTransaction,
+} from '../../utils/transaction/cloneTransaction.js'
 import { txCheck } from '../../utils/transaction/txCheck.js'
 import type { SignableTransaction } from '../types.js'
 import {
@@ -24,6 +28,7 @@ export type MultiSignTransactionParameters = {
 }
 
 export type MultiSignTransactionErrorType =
+  | CloneTransactionErrorType
   | SignTransactionErrorType
   | BaseErrorType
   | ErrorType
@@ -34,6 +39,12 @@ export type MultiSignTransactionErrorType =
  * local, synchronous and deterministic — the bytes signed are exactly the
  * triple the caller passes in. This is the core behind both an account's
  * `multiSign` method and the `multiSign` wallet action.
+ *
+ * Before anything else the transaction is snapshotted into plain data
+ * ({@link cloneTransaction}), each property read exactly once — so a getter
+ * or `Proxy` on the caller's object cannot show `txCheck` an honest model
+ * and hand the recompute below a different one (check-versus-use). All
+ * guards and the recompute run on that copy.
  *
  * The multi-sig guards AND the bind live here; the transaction must arrive
  * as a self-consistent `txID` + `raw_data` + `raw_data_hex` triple (it is
@@ -71,7 +82,13 @@ export type MultiSignTransactionErrorType =
 export function multiSignTransaction(
   parameters: MultiSignTransactionParameters,
 ): SignableTransaction {
-  const { transaction, privateKey } = parameters
+  const { privateKey } = parameters
+  // Snapshot before ANY read is trusted: a getter/Proxy on the caller's
+  // object could otherwise answer txCheck with an honest model and hand the
+  // recompute below a different one (check-versus-use) — yielding a valid
+  // signature over bytes that were never checked. Every guard and the
+  // recompute run on this plain copy.
+  const transaction = cloneTransaction(parameters.transaction)
 
   if (!txCheck(transaction))
     throw new BaseError('The transaction failed its integrity check (txCheck).')

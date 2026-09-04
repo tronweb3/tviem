@@ -13,6 +13,10 @@ import {
 import { bareHex } from '../../utils/index.js'
 import { type SignErrorType, sign } from '../../utils/signature/sign.js'
 import {
+  type CloneTransactionErrorType,
+  cloneTransaction,
+} from '../../utils/transaction/cloneTransaction.js'
+import {
   type GetTransactionIdErrorType,
   getTransactionId,
 } from '../../utils/transaction/getTransactionId.js'
@@ -46,6 +50,7 @@ export type SignTransactionParameters = {
 
 export type SignTransactionErrorType =
   | PrivateKeyToAddressErrorType
+  | CloneTransactionErrorType
   | GetTransactionIdErrorType
   | TxCheckErrorType
   | IsAddressEqualErrorType
@@ -58,6 +63,13 @@ export type SignTransactionErrorType =
  * Signs a transaction locally with a secp256k1 private key and appends the
  * signature to its `signature` list — the input is never mutated. Signing is
  * synchronous and deterministic (RFC 6979, low-`s`, no extra entropy).
+ *
+ * Before anything else the transaction is snapshotted into plain data
+ * ({@link cloneTransaction}), each property read exactly once — so a getter
+ * or `Proxy` on the caller's object cannot show the integrity check one
+ * value and the signing read another (check-versus-use). All guards below
+ * run on that copy, and the returned transaction shares no references with
+ * the input.
  *
  * `raw_data` is java-tron's HTTP JSON shape — the one and
  * only dialect, whether built by this SDK, returned by
@@ -91,7 +103,12 @@ export type SignTransactionErrorType =
 export function signTransaction(
   parameters: SignTransactionParameters,
 ): SignableTransaction {
-  const { transaction, privateKey } = parameters
+  const { privateKey } = parameters
+  // Snapshot before ANY read is trusted: a getter/Proxy on the caller's
+  // object could otherwise answer txCheck with honest values and the signing
+  // read with different ones (check-versus-use), turning the guarded path
+  // into blind signing. Every guard below runs on this plain copy.
+  const transaction = cloneTransaction(parameters.transaction)
   const address = parameters.address ?? privateKeyToAddress(privateKey)
 
   if (!txCheck(transaction))

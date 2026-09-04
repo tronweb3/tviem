@@ -281,18 +281,79 @@ describe('signTransaction', () => {
   })
 
   test('passes txID, raw_data and raw_data_hex through unchanged', () => {
-    // No recompute, no re-dialecting: the verified triple is returned as-is
-    // (raw_data by reference) with only the signature appended.
+    // No recompute, no re-dialecting: the verified triple's values come back
+    // untouched — but as a defensive deep copy, so the result never shares
+    // references with (or re-reads getters on) the caller's object.
     const transaction = triple(canonicalRawData)
     const signed = signTransaction({ transaction, privateKey: pk1 })
     expect(signed.txID).toBe(transaction.txID)
-    expect(signed.raw_data).toBe(transaction.raw_data)
+    expect(signed.raw_data).not.toBe(transaction.raw_data)
+    expect(signed.raw_data).toEqual(transaction.raw_data)
     expect(signed.raw_data_hex).toBe(transaction.raw_data_hex)
     const rawData = signed.raw_data as unknown as Record<string, unknown>
     expect(rawData.ref_block_bytes).toBeDefined()
     expect(
       (rawData as { contract: { type: string }[] }).contract[0]!.type,
     ).toBe('TransferContract')
+  })
+
+  test('defuses a getter that swaps txID between check and sign (TOCTOU)', () => {
+    // A malicious transaction can pass txCheck with an honest txID and then
+    // hand a different digest to the actual signing read — unless the
+    // transaction is snapshotted (cloned) before any check. The signature
+    // must cover the checked digest, never the swapped one.
+    const honest = triple(canonicalRawData)
+    let reads = 0
+    const evil = {
+      raw_data: honest.raw_data,
+      raw_data_hex: honest.raw_data_hex,
+      get txID() {
+        reads++
+        return reads === 1 ? honest.txID : 'deadbeef'.repeat(8)
+      },
+    } as unknown as SignableTransaction
+    const signed = signTransaction({ transaction: evil, privateKey: pk1 })
+    expect(signed.txID).toBe(canonicalTxID)
+    expect(signed.signature).toEqual([canonicalSig])
+  })
+
+  test('defuses a getter that swaps owner_address after the owner guard', () => {
+    // The owner guard and the serializer must see the same owner_address; a
+    // getter returning the honest owner only on its first read would
+    // otherwise split the two. With the pre-check snapshot, whichever value
+    // the single read captures is the one both checked and signed.
+    const honest = triple(canonicalRawData)
+    const value = honest.raw_data.contract[0]!.parameter.value as Record<
+      string,
+      unknown
+    >
+    const honestOwner = value.owner_address
+    let reads = 0
+    const evilValue = Object.defineProperty({ ...value }, 'owner_address', {
+      enumerable: true,
+      get() {
+        reads++
+        return reads === 1 ? honestOwner : pk2HexAddress
+      },
+    })
+    const evil = {
+      ...honest,
+      raw_data: {
+        ...honest.raw_data,
+        contract: [
+          {
+            ...honest.raw_data.contract[0]!,
+            parameter: {
+              ...honest.raw_data.contract[0]!.parameter,
+              value: evilValue as never,
+            },
+          },
+        ],
+      },
+    }
+    const signed = signTransaction({ transaction: evil, privateKey: pk1 })
+    expect(signed.txID).toBe(canonicalTxID)
+    expect(signed.signature).toEqual([canonicalSig])
   })
 
   test('de-duplicates a repeated signature by the same key (guard ③)', () => {

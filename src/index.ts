@@ -1152,6 +1152,10 @@ export {
   verifyTypedData,
 } from './utils/signature/verifyTypedData.js'
 export {
+  type CloneTransactionErrorType,
+  cloneTransaction,
+} from './utils/transaction/cloneTransaction.js'
+export {
   type DecodeRawDataErrorType,
   decodeRawData,
 } from './utils/transaction/decodeRawData.js'
