@@ -42,3 +42,31 @@ test('throws AccountNotFoundError when no account is available', async () => {
     buildDeleteProposal(client, { proposalId: 1, blockHeader: tviemHeader }),
   ).rejects.toBeInstanceOf(AccountNotFoundError)
 })
+
+// IEEE-754 has already rounded any number past 2^53
+// (Number('9007199254740993') === 9007199254740992), so building would sign a
+// value the caller never wrote. Refuse before building.
+test('rejects an unsafe-integer number proposalId', async () => {
+  const client = makeTviemClient()
+
+  await expect(
+    client.buildDeleteProposal({
+      proposalId: Number('9007199254740993'),
+      blockHeader: tviemHeader,
+    }),
+  ).rejects.toThrow(/is not a safe integer/)
+})
+
+test('builds the exact value for a bigint proposalId past 2^53', async () => {
+  const client = makeTviemClient()
+
+  const tviemTx = await client.buildDeleteProposal({
+    proposalId: 9007199254740993n,
+    blockHeader: tviemHeader,
+  })
+
+  const contract = tviemTx.raw_data.contract[0] as {
+    parameter: { value: { proposal_id: unknown } }
+  }
+  expect(contract.parameter.value.proposal_id).toBe('9007199254740993')
+})

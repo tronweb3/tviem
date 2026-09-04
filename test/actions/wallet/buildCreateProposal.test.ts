@@ -111,3 +111,55 @@ test('throws AccountNotFoundError when no account is available', async () => {
     }),
   ).rejects.toBeInstanceOf(AccountNotFoundError)
 })
+
+// IEEE-754 has already rounded any number past 2^53
+// (Number('9007199254740993') === 9007199254740992), so building would sign a
+// value the caller never wrote. Refuse before building.
+test('rejects an unsafe-integer number parameter key', async () => {
+  const client = makeTviemClient()
+
+  await expect(
+    client.buildCreateProposal({
+      parameters: [{ key: Number('9007199254740993'), value: 1 }],
+      blockHeader: tviemHeader,
+    }),
+  ).rejects.toThrow(/is not a safe integer/)
+})
+
+test('rejects an unsafe-integer number parameter value', async () => {
+  const client = makeTviemClient()
+
+  await expect(
+    client.buildCreateProposal({
+      parameters: [{ key: 9, value: Number('9007199254740993') }],
+      blockHeader: tviemHeader,
+    }),
+  ).rejects.toThrow(/is not a safe integer/)
+})
+
+test('rejects an unsafe-integer number value in record form', async () => {
+  const client = makeTviemClient()
+
+  await expect(
+    client.buildCreateProposal({
+      parameters: { 9: Number('9007199254740993') },
+      blockHeader: tviemHeader,
+    }),
+  ).rejects.toThrow(/is not a safe integer/)
+})
+
+test('builds the exact value for a bigint past 2^53', async () => {
+  const client = makeTviemClient()
+
+  const tviemTx = await client.buildCreateProposal({
+    parameters: [{ key: 9, value: 9007199254740993n }],
+    blockHeader: tviemHeader,
+  })
+
+  const { parameters } = (
+    tviemTx.raw_data.contract[0] as {
+      parameter: { value: { parameters: { key: number; value: unknown }[] } }
+    }
+  ).parameter.value
+  expect(parameters).toEqual([{ key: 9, value: '9007199254740993' }])
+})

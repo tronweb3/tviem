@@ -13,6 +13,7 @@ import {
   type AddressToHexErrorType,
   addressToHex,
 } from '../../utils/address/addressToHex.js'
+import { int64InputToBigInt } from '../../utils/transaction/int64.js'
 import {
   ContractType,
   contractTypeUrlPrefix,
@@ -92,7 +93,7 @@ function assemble(
 
   const value: ProposalDeleteContract = {
     owner_address: addressToHex(account.address),
-    proposal_id: BigInt(proposalId),
+    proposal_id: int64InputToBigInt('proposalId', proposalId),
   }
 
   const contract: RawContract = {

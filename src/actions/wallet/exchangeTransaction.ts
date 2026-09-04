@@ -13,6 +13,7 @@ import {
   type AddressToHexErrorType,
   addressToHex,
 } from '../../utils/address/addressToHex.js'
+import { int64InputToBigInt } from '../../utils/transaction/int64.js'
 import {
   type FlexErrorType,
   type FlexInput,
@@ -109,7 +110,7 @@ function assemble(
 
   const value: ExchangeTransactionContract = {
     owner_address: addressToHex(account.address),
-    exchange_id: BigInt(exchangeId),
+    exchange_id: int64InputToBigInt('exchangeId', exchangeId),
     token_id: flexToHex(tokenId),
     quant,
     expected,

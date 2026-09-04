@@ -51,3 +51,35 @@ test('throws AccountNotFoundError when no account is available', async () => {
     }),
   ).rejects.toBeInstanceOf(AccountNotFoundError)
 })
+
+// IEEE-754 has already rounded any number past 2^53
+// (Number('9007199254740993') === 9007199254740992), so building would sign a
+// value the caller never wrote. Refuse before building.
+test('rejects an unsafe-integer number exchangeId', async () => {
+  const client = makeTviemClient()
+
+  await expect(
+    client.buildExchangeWithdraw({
+      exchangeId: Number('9007199254740993'),
+      tokenId: '1000001',
+      quant: 1_000_000n,
+      blockHeader: tviemHeader,
+    }),
+  ).rejects.toThrow(/is not a safe integer/)
+})
+
+test('builds the exact value for a bigint exchangeId past 2^53', async () => {
+  const client = makeTviemClient()
+
+  const tviemTx = await client.buildExchangeWithdraw({
+    exchangeId: 9007199254740993n,
+    tokenId: '1000001',
+    quant: 1_000_000n,
+    blockHeader: tviemHeader,
+  })
+
+  const contract = tviemTx.raw_data.contract[0] as {
+    parameter: { value: { exchange_id: unknown } }
+  }
+  expect(contract.parameter.value.exchange_id).toBe('9007199254740993')
+})

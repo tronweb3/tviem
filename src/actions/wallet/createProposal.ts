@@ -14,6 +14,7 @@ import {
   type AddressToHexErrorType,
   addressToHex,
 } from '../../utils/address/addressToHex.js'
+import { int64InputToBigInt } from '../../utils/transaction/int64.js'
 import {
   ContractType,
   contractTypeUrlPrefix,
@@ -110,12 +111,15 @@ function normalizeParameters(
 ): { key: bigint; value: bigint }[] {
   const entries = Array.isArray(input)
     ? input.map((entry) => ({
-        key: BigInt(entry.key),
-        value: BigInt(entry.value),
+        key: int64InputToBigInt('proposal parameter key', entry.key),
+        value: int64InputToBigInt('proposal parameter value', entry.value),
       }))
     : Object.keys(input).map((key) => ({
-        key: BigInt(key),
-        value: BigInt(input[key as unknown as number] as number),
+        key: int64InputToBigInt('proposal parameter key', key),
+        value: int64InputToBigInt(
+          'proposal parameter value',
+          input[key as unknown as number] as number | bigint,
+        ),
       }))
   // `parameters` is a proto3 `map<int64,int64>`: a parser keeps only the LAST
   // entry per key, so a duplicate would silently drop the earlier value
