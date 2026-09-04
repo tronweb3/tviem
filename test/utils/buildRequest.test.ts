@@ -2,6 +2,7 @@ import { expect, test, vi } from 'vitest'
 
 import { TronValidationError, UnknownNodeError } from '../../src/errors/node.js'
 import { HttpRequestError, TimeoutError } from '../../src/errors/request.js'
+import { getAbortError } from '../../src/errors/utils.js'
 import { buildRequest, shouldRetryTron } from '../../src/utils/buildRequest.js'
 
 const args = {
@@ -68,6 +69,52 @@ test('deduplicates concurrent identical requests', async () => {
   const p2 = request(args, { dedupe: true })
   resolve({ ok: 1 })
   await Promise.all([p1, p2])
+  expect(inner).toHaveBeenCalledTimes(1)
+})
+
+test('dedupe: aborting the second caller rejects only that caller', async () => {
+  let resolve: (v: unknown) => void = () => {}
+  const inner = vi.fn(
+    (_args: unknown, options?: { signal?: AbortSignal | undefined }) =>
+      new Promise((res, rej) => {
+        resolve = res as (v: unknown) => void
+        options?.signal?.addEventListener('abort', () =>
+          rej(getAbortError(options.signal)),
+        )
+      }),
+  )
+  const request = buildRequest(inner, { retryDelay: 0, uid: 'i' })
+  const controllerA = new AbortController()
+  const controllerB = new AbortController()
+  const p1 = request(args, { dedupe: true, signal: controllerA.signal })
+  const p2 = request(args, { dedupe: true, signal: controllerB.signal })
+  controllerB.abort()
+  resolve({ ok: 1 })
+  await expect(p2).rejects.toMatchObject({ name: 'AbortError' })
+  await expect(p1).resolves.toEqual({ ok: 1 })
+  expect(inner).toHaveBeenCalledTimes(1)
+})
+
+test('dedupe: aborting the first caller does not cancel other waiters', async () => {
+  let resolve: (v: unknown) => void = () => {}
+  const inner = vi.fn(
+    (_args: unknown, options?: { signal?: AbortSignal | undefined }) =>
+      new Promise((res, rej) => {
+        resolve = res as (v: unknown) => void
+        options?.signal?.addEventListener('abort', () =>
+          rej(getAbortError(options.signal)),
+        )
+      }),
+  )
+  const request = buildRequest(inner, { retryDelay: 0, uid: 'j' })
+  const controllerA = new AbortController()
+  const controllerB = new AbortController()
+  const p1 = request(args, { dedupe: true, signal: controllerA.signal })
+  const p2 = request(args, { dedupe: true, signal: controllerB.signal })
+  controllerA.abort()
+  resolve({ ok: 1 })
+  await expect(p1).rejects.toMatchObject({ name: 'AbortError' })
+  await expect(p2).resolves.toEqual({ ok: 1 })
   expect(inner).toHaveBeenCalledTimes(1)
 })
 

@@ -41,14 +41,22 @@ export function buildRequest<
       ? hashString(`${uid}.${stringify(args)}`)
       : undefined
 
+    // A deduplicated request is shared by every concurrent caller, so it must
+    // not be tied to any single caller's signal: each caller instead races its
+    // own signal against the shared promise inside `withDedupe`.
+    const sharedSignal = requestId ? undefined : signal
+
     return withDedupe(
       () =>
         withRetry(
           async () => {
             try {
-              return await request(args, signal ? { signal } : undefined)
+              return await request(
+                args,
+                sharedSignal ? { signal: sharedSignal } : undefined,
+              )
             } catch (err_) {
-              if (signal?.aborted) throw getAbortError(signal)
+              if (sharedSignal?.aborted) throw getAbortError(sharedSignal)
               if (isAbortError(err_)) throw err_
               // Errors are already normalized at the `config.request` layer.
               if (err_ instanceof BaseError) throw err_
@@ -76,11 +84,11 @@ export function buildRequest<
               return backoff
             },
             retryCount,
-            signal,
+            signal: sharedSignal,
             shouldRetry: ({ error }) => shouldRetryTron(error),
           },
         ),
-      { enabled: dedupe, id: requestId },
+      { enabled: dedupe, id: requestId, signal },
     )
   }
 }
