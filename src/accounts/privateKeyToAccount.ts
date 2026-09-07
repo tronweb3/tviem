@@ -16,6 +16,10 @@ import {
   type SignTypedDataErrorType,
   signTypedData,
 } from '../utils/signature/signTypedData.js'
+import {
+  type CloneTransactionErrorType,
+  cloneTransaction,
+} from '../utils/transaction/cloneTransaction.js'
 import type {
   AccountMultiSignOptions,
   SignableTransaction,
@@ -37,6 +41,7 @@ import {
 export type PrivateKeyToAccountErrorType =
   | PrivateKeyToAddressErrorType
   | BytesToHexErrorType
+  | CloneTransactionErrorType
   | SignMessageErrorType
   | SignTypedDataErrorType
   | SignTransactionErrorType
@@ -88,14 +93,25 @@ export function privateKeyToAccount(
     signTransaction: (
       transaction: SignableTransaction,
     ): SignableTransaction => {
+      // Snapshot before the guard reads anything: this check and the signer
+      // must see the SAME `signature` list. Reading the caller's object here
+      // and letting the signer take its own snapshot afterwards leaves one
+      // read between them — enough for an accessor to show this guard an
+      // empty list and still hand the signer a foreign signature to carry
+      // into the result.
+      const snapshot = cloneTransaction(transaction)
       // Single-signature flow: an existing signature — this key's or a
       // foreign one — means the caller double-signed by mistake; collecting
       // signatures is multiSign's business.
-      if (transaction.signature?.length)
+      if (snapshot.signature?.length)
         throw new BaseError(
-          `The transaction is already signed (${transaction.signature.length} signature(s)) — co-signing a multi-signature transaction goes through multiSign.`,
+          `The transaction is already signed (${snapshot.signature.length} signature(s)) — co-signing a multi-signature transaction goes through multiSign.`,
         )
-      return signTransaction({ transaction, privateKey: keyHex, address })
+      return signTransaction({
+        transaction: snapshot,
+        privateKey: keyHex,
+        address,
+      })
     },
     multiSign: (
       transaction: SignableTransaction,

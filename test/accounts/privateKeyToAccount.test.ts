@@ -101,6 +101,28 @@ describe('privateKeyToAccount', () => {
     )
   })
 
+  test('signTransaction refuses a signature getter that hides itself from the guard', () => {
+    // The guard and the signer must read the same `signature` list. A getter
+    // answering the guard with an empty list and the signer with a foreign
+    // signature would otherwise smuggle that signature into the result.
+    const account = privateKeyToAccount(pk1)
+    let reads = 0
+    const transaction = Object.defineProperty(
+      canonicalTransaction(),
+      'signature',
+      {
+        enumerable: true,
+        get() {
+          reads++
+          return reads === 1 ? [] : ['deadbeef']
+        },
+      },
+    )
+    const signed = account.signTransaction(transaction)
+    expect(signed.signature).not.toContain('deadbeef')
+    expect(signed.signature).toHaveLength(1)
+  })
+
   test('signTransaction refuses to re-sign its own signed output', () => {
     const account = privateKeyToAccount(pk1)
     const signed = account.signTransaction(canonicalTransaction())
