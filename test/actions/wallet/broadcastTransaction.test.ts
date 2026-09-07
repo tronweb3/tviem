@@ -244,3 +244,59 @@ test('never retries the broadcast, even when the transport retries', async () =>
   ).rejects.toThrow()
   expect(attempts).toBe(1)
 })
+
+test('defuses a nested getter that swaps the body after the integrity check', async () => {
+  // The four-field pick alone leaves `raw_data` shared with the caller, so a
+  // nested accessor could satisfy txCheck on one read and hand the request
+  // body — which the node rebuilds the transaction from — a different value
+  // on the next. The snapshot is deep, so the checked model IS the sent one.
+  const honest = decodeRawData(RAW_DATA_HEX)
+  const value = honest.contract[0]!.parameter.value as Record<string, unknown>
+  const honestAmount = value.amount
+  let reads = 0
+  const evilValue = Object.defineProperty({ ...value }, 'amount', {
+    enumerable: true,
+    get() {
+      reads++
+      // reads 1-4 = the two txCheck traversals; read 5 = the request body.
+      return reads <= 4 ? honestAmount : 1_000_000_000
+    },
+  })
+  const evil = {
+    txID: TX_ID,
+    raw_data_hex: RAW_DATA_HEX,
+    signature: [SIG],
+    raw_data: {
+      ...honest,
+      contract: [
+        {
+          ...honest.contract[0]!,
+          parameter: {
+            ...honest.contract[0]!.parameter,
+            value: evilValue,
+          },
+        },
+      ],
+    },
+  }
+
+  const { transport, bodyOf } = createMockTransport({
+    responses: {
+      broadcasttransaction: { response: rpc('broadcasttransaction.ok') },
+    },
+  })
+  const client = createClient({ transport })
+
+  const response = await broadcastTransaction(client, {
+    signedTransaction: evil as typeof signedTransaction,
+  })
+
+  const sent = bodyOf('broadcasttransaction') as typeof signedTransaction
+  expect(sent.raw_data.contract[0]!.parameter.value).toEqual(
+    honest.contract[0]!.parameter.value,
+  )
+  expect(response.transaction.raw_data.contract[0]!.parameter.value).toEqual(
+    honest.contract[0]!.parameter.value,
+  )
+  expect(response.txid).toBe(TX_ID)
+})

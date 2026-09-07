@@ -15,6 +15,10 @@ import {
 import type { ErrorType } from '../../errors/utils.js'
 import { bareHex } from '../../utils/encoding/bareHex.js'
 import {
+  type CloneTransactionErrorType,
+  cloneTransaction,
+} from '../../utils/transaction/cloneTransaction.js'
+import {
   type TxCheckErrorType,
   txCheck,
 } from '../../utils/transaction/txCheck.js'
@@ -57,6 +61,7 @@ type RawBroadcastResponse = {
 
 export type BroadcastTransactionErrorType =
   | AssertRpcSuccessErrorType
+  | CloneTransactionErrorType
   | RequestErrorType
   | TransactionExpiredErrorType
   | TronRpcErrorType
@@ -110,11 +115,18 @@ export async function broadcastTransaction(
   parameters: BroadcastTransactionParameters,
 ): Promise<BroadcastTransactionReturnType> {
   // Snapshot the fields once, so the values integrity-checked below are the
-  // same ones serialized into the wire body (a getter-backed object cannot
-  // hand txCheck one set of bytes and the request another).
-  const { txID, raw_data, raw_data_hex, signature } =
-    parameters.signedTransaction
-  const signedTransaction = { txID, raw_data, raw_data_hex, signature }
+  // same ones serialized into the wire body. The copy has to be DEEP: picking
+  // the four fields still shares `raw_data` with the caller, leaving every
+  // nested accessor live to answer txCheck one way and the request body —
+  // which the node rebuilds the transaction from — another.
+  const source = parameters.signedTransaction
+  const signedTransaction = cloneTransaction({
+    txID: source.txID,
+    raw_data: source.raw_data,
+    raw_data_hex: source.raw_data_hex,
+    signature: source.signature,
+  })
+  const { txID, signature } = signedTransaction
 
   // Pre-condition: never broadcast an unsigned transaction.
   if (!signature || signature.length === 0)
