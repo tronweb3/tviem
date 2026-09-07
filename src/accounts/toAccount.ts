@@ -45,10 +45,14 @@ export function toAccount(
 ): TronLocalAccount | TronCustomAccount {
   if (typeof source === 'string') return privateKeyToAccount(source)
 
-  if (!source || typeof source.address !== 'string')
+  // Read `address` once and pin that value into the account: the spread
+  // below re-reads every own property, so a second read could hand the
+  // account an address the type check never saw.
+  const address = source?.address
+  if (!source || typeof address !== 'string')
     throw new BaseError(
       'Invalid account source: expected a hex private key or a custom source with an `address`.',
     )
 
-  return { ...source, source: 'custom', type: 'local' }
+  return { ...source, address, source: 'custom', type: 'local' }
 }

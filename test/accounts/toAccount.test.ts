@@ -81,3 +81,20 @@ describe('toAccount', () => {
     expect(() => toAccount({} as never)).toThrow()
   })
 })
+
+test('pins the address it type-checked, not a later read', () => {
+  // The spread that builds the account re-reads every own property, so an
+  // accessor could hand the account an address the guard never saw.
+  let reads = 0
+  const source = {
+    get address() {
+      reads++
+      return reads === 1 ? 'TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC' : 12345
+    },
+    signMessage: (() => {}) as never,
+    signTypedData: (() => {}) as never,
+    signTransaction: (() => {}) as never,
+  } as unknown as TronCustomSource
+  const account = toAccount(source)
+  expect(account.address).toBe('TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC')
+})
