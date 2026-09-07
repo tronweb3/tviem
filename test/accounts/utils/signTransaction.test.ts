@@ -317,6 +317,41 @@ describe('signTransaction', () => {
     expect(signed.signature).toEqual([canonicalSig])
   })
 
+  test('signs a contract carrying a Uint8Array bytes field', () => {
+    // The pre-check snapshot must not change what the bytes fields ARE:
+    // `bytes` accepts raw bytes on the encode side, and a snapshot that
+    // turned a Uint8Array into a plain object would serialize to something
+    // else entirely — the transaction would fail its own integrity check.
+    const raw_data: RawData = {
+      ...canonicalRawData,
+      contract: [
+        {
+          type: 'AccountUpdateContract',
+          parameter: {
+            type_url: 'type.googleapis.com/protocol.AccountUpdateContract',
+            value: {
+              owner_address: (
+                canonicalRawData.contract[0]!.parameter.value as Record<
+                  string,
+                  unknown
+                >
+              ).owner_address,
+              account_name: new Uint8Array([0xde, 0xad, 0xbe, 0xef]),
+            },
+          },
+        },
+      ],
+    } as RawData
+    const signed = signTransaction({
+      transaction: triple(raw_data),
+      privateKey: pk1,
+    })
+    expect(signed.signature).toHaveLength(1)
+    expect(decodeRawData(signed.raw_data_hex!)).toEqual(
+      decodeRawData(toRawDataHex(raw_data)),
+    )
+  })
+
   test('defuses a getter that swaps owner_address after the owner guard', () => {
     // The owner guard and the serializer must see the same owner_address; a
     // getter returning the honest owner only on its first read would

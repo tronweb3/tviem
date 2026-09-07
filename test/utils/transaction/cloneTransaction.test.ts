@@ -138,6 +138,18 @@ describe('cloneTransaction', () => {
     expect(() => cloneTransaction(input)).toThrow(/function/)
   })
 
+  test('copies a Uint8Array as a Uint8Array, not as a plain object', () => {
+    // Contract `bytes` fields accept raw bytes on the encode side. A
+    // plain-object copy (`{0:…,1:…}`) reaches the serializer as something it
+    // cannot encode, so the snapshot would serialize to different bytes than
+    // the caller supplied — or fail outright.
+    const bytes = new Uint8Array([0xde, 0xad, 0xbe, 0xef])
+    const clone = cloneTransaction({ account_name: bytes })
+    expect(clone.account_name).toBeInstanceOf(Uint8Array)
+    expect(clone.account_name).toEqual(bytes)
+    expect(clone.account_name).not.toBe(bytes)
+  })
+
   test('throws past the nesting-depth limit instead of overflowing', () => {
     // A getter can mint a fresh object on every read, so cycle detection
     // alone cannot bound recursion — the depth cap does.

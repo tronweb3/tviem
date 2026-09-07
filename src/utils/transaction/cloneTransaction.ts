@@ -26,8 +26,10 @@ const maxDepth = 64
  * - an own `__proto__` key is copied as an ordinary data property (via
  *   `Object.defineProperty`), never as the clone's prototype;
  * - primitives (`string`, `number`, `bigint`, `boolean`, `null`,
- *   `undefined`) pass through; arrays stay arrays; every other object is
- *   snapshotted into a plain object;
+ *   `undefined`) pass through; arrays stay arrays; a `Uint8Array` is copied
+ *   as a `Uint8Array` (contract `bytes` fields accept raw bytes, and a
+ *   plain-object copy would serialize to different bytes than the caller
+ *   supplied); every other object is snapshotted into a plain object;
  * - a `function` or `symbol` value throws — a signable transaction is data
  *   only, and live code must not ride along into the signed result;
  * - a circular reference throws, and nesting past a fixed depth cap throws
@@ -56,6 +58,11 @@ function cloneValue(
       )
     return value
   }
+
+  // Raw bytes are a leaf, not a container: copy the bytes once and keep the
+  // type. Snapshotting into a plain object would hand the serializer
+  // `{0:…,1:…}` for a `bytes` field the caller passed as a `Uint8Array`.
+  if (value instanceof Uint8Array) return new Uint8Array(value)
 
   if (depth >= maxDepth)
     throw new BaseError(
