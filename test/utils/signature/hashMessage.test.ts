@@ -71,3 +71,17 @@ describe('hashMessage', () => {
     expect(() => hashMessage({ raw: '010203' as `0x${string}` })).toThrow()
   })
 })
+
+test('reads a raw message once: the validated bytes are the hashed bytes', () => {
+  // The hex guards exist to keep the digest over the caller's exact bytes.
+  // An accessor answering the guards with one string and the decode with
+  // another would produce a signable digest nothing validated.
+  let reads = 0
+  const message = {
+    get raw() {
+      reads++
+      return reads <= 3 ? '0x1111' : '0x2222'
+    },
+  } as { raw: `0x${string}` }
+  expect(hashMessage(message)).toBe(hashMessage({ raw: '0x1111' }))
+})

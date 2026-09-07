@@ -48,20 +48,25 @@ export function hashMessage<to extends 'hex' | 'bytes' = 'hex'>(
 ): to extends 'bytes' ? ByteArray : Hex {
   const messageBytes = (() => {
     if (typeof message === 'string') return stringToBytes(message)
-    if (typeof message.raw === 'string') {
+    // Read `raw` ONCE. The guards below exist to keep the digest over the
+    // caller's exact bytes; re-reading the property would let an accessor
+    // (or a value mutated in between) pass those guards as one string and be
+    // hashed as another — the digest would cover bytes nothing validated.
+    const raw = message.raw
+    if (typeof raw === 'string') {
       // A raw hex string is bytes, so it must be 0x-prefixed whole bytes:
       // `hexToBytes` left-pads an odd nibble count ("0x123" would hash
       // identically to "0x0123") and `slice(2)` drops the leading byte of an
       // unprefixed string — either digest is over bytes the caller never
       // wrote, yet is perfectly signable.
-      if (!isHex(message.raw))
+      if (!isHex(raw))
         throw new BaseError(
-          `Invalid raw message: expected a 0x-prefixed hex string, got "${message.raw}".`,
+          `Invalid raw message: expected a 0x-prefixed hex string, got "${raw}".`,
         )
-      assertHexBytes(message.raw)
-      return hexToBytes(message.raw)
+      assertHexBytes(raw)
+      return hexToBytes(raw)
     }
-    return message.raw
+    return raw
   })()
   const prefixBytes = stringToBytes(
     `${presignMessagePrefix}${messageBytes.length}`,
