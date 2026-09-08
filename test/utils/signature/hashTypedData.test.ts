@@ -759,3 +759,89 @@ describe('hashTypedData validation', () => {
     ).toThrow(IntegerOutOfRangeError)
   })
 })
+
+// ---- Getter/object-value hardening ------------------------------------------
+
+describe('input hardening', () => {
+  const mailTypes = {
+    Mail: [{ name: 'amount', type: 'uint256' }],
+  }
+
+  test('reads each message field once: the validated value is the hashed value', () => {
+    // Validation and hashing are two traversals; without the entry snapshot a
+    // getter could show the validator one value and hash another — and the
+    // digest is what gets signed.
+    let reads = 0
+    const digest = hashTypedData({
+      domain,
+      types: mailTypes,
+      primaryType: 'Mail',
+      message: {
+        get amount() {
+          reads++
+          return reads === 1 ? 1n : 1_000_000_000n
+        },
+      },
+    })
+    expect(digest).toBe(
+      hashTypedData({
+        domain,
+        types: mailTypes,
+        primaryType: 'Mail',
+        message: { amount: 1n },
+      }),
+    )
+  })
+
+  test('rejects a BigNumber-style object as an integer value', () => {
+    // Objects convert through toString/valueOf — two different conversions,
+    // so they are refused outright (by decision) rather than coerced.
+    // Faithful to bignumber.js: own data fields, methods on the prototype
+    // (the entry snapshot strips the prototype, so the clear rejection below
+    // must come from the field validation, not from the clone).
+    class FakeBigNumber {
+      s = 1
+      e = 0
+      c = [1]
+      toString() {
+        return '1'
+      }
+      valueOf() {
+        return '1'
+      }
+    }
+    expect(() =>
+      hashTypedData({
+        domain,
+        types: mailTypes,
+        primaryType: 'Mail',
+        message: { amount: new FakeBigNumber() },
+      }),
+    ).toThrow(
+      'Invalid uint256 value: expected a bigint, number or decimal string, got object',
+    )
+    // An own conversion method is live code and dies even earlier, in the
+    // snapshot itself.
+    expect(() =>
+      hashTypedData({
+        domain,
+        types: mailTypes,
+        primaryType: 'Mail',
+        message: { amount: { toString: () => '1', valueOf: () => 2n } },
+      }),
+    ).toThrow('must be plain data')
+  })
+
+  test('rejects an object value for trcToken', () => {
+    expect(() =>
+      hashTypedData({
+        domain,
+        types: { Order: [{ name: 'token', type: 'trcToken' }] },
+        primaryType: 'Order',
+        message: { token: new Number(1002000) },
+      }),
+    ).toThrow(
+      'Invalid trcToken value: expected a bigint, number or decimal string',
+    )
+  })
+})

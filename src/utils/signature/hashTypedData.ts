@@ -36,6 +36,10 @@ import {
 } from '../encoding/toHex.js'
 import { keccak256 } from '../hash/keccak256.js'
 import { bytesRegex, integerRegex } from '../regex.js'
+import {
+  type CloneTransactionErrorType,
+  cloneTransaction,
+} from '../transaction/cloneTransaction.js'
 
 /** A map of struct name → its ordered fields. */
 export type TypedDataTypes = Record<string, readonly TypedDataParameter[]>
@@ -72,6 +76,7 @@ export type HashTypedDataParameters = {
 export type HashTypedDataErrorType =
   | BaseErrorType
   | BytesSizeMismatchErrorType
+  | CloneTransactionErrorType
   | InvalidDomainErrorType
   | InvalidPrimaryTypeErrorType
   | InvalidStructTypeErrorType
@@ -301,15 +306,23 @@ function validateField(
     return
   }
 
-  // `(u)intN`: the value must fit the declared width. `encodeField` always
-  // encodes a full 32-byte word, so narrower widths are only enforced here.
+  // `(u)intN` / `trcToken`: the value must fit the declared width.
+  // `encodeField` always encodes a full 32-byte word, so narrower widths are
+  // only enforced here.
   const integerMatch = type.match(integerRegex)
-  if (
-    integerMatch &&
-    (typeof value === 'number' ||
-      typeof value === 'bigint' ||
-      typeof value === 'string')
-  ) {
+  if (integerMatch || type === 'trcToken') {
+    // Primitives only. A BigNumber-style object converts through
+    // `toString`/`valueOf` — two different conversions, so the value the
+    // checks here see need not be the value `encodeField` hashes. Rejected
+    // by decision, not worked around: convert explicitly before signing.
+    if (
+      typeof value !== 'number' &&
+      typeof value !== 'bigint' &&
+      typeof value !== 'string'
+    )
+      throw new BaseError(
+        `Invalid ${type} value: expected a bigint, number or decimal string, got ${kindOf(value)}. Convert BigNumber-style objects explicitly (e.g. \`BigInt(value.toString())\`).`,
+      )
     // A `number` past 2^53 has already been rounded by IEEE-754 before it got
     // here, so `BigInt()` would faithfully encode a value the caller never
     // wrote; a fraction/NaN would otherwise escape as a raw RangeError. Pass a
@@ -318,6 +331,7 @@ function validateField(
       throw new BaseError(
         `Invalid ${type} value: ${value} is not a safe integer. Pass a bigint (or decimal string) for values past 2^53.`,
       )
+    if (!integerMatch) return // trcToken: no declared width to enforce
     const [, base, bits] = integerMatch
     const big = (() => {
       try {
@@ -455,7 +469,14 @@ export function hashDomain(
  * @param parameters `domain`, `types`, `primaryType`, `message`.
  * @returns The `0x`-prefixed 32-byte digest.
  */
-export function hashTypedData(parameters: HashTypedDataParameters): Hex {
+export function hashTypedData(parameters_: HashTypedDataParameters): Hex {
+  // Snapshot before ANY read is trusted, exactly like the transaction sign
+  // paths: validation below and the hash walk are two separate traversals of
+  // the caller's object graph, so a getter or `Proxy` could otherwise show
+  // the validator one value and hash another — the digest is what gets
+  // signed, so the divergence would be signed. The snapshot reads each
+  // property once; both traversals then run on plain data.
+  const parameters = cloneTransaction(parameters_)
   validateTypedData(parameters)
   const { domain = {}, types, primaryType, message = {} } = parameters
   const parts: Hex[] = ['0x1901']
