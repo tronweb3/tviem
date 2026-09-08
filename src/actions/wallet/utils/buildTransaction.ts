@@ -13,6 +13,7 @@ import {
   type DecodeRawDataErrorType,
   decodeRawData,
 } from '../../../utils/transaction/decodeRawData.js'
+import { int64InputToBigInt } from '../../../utils/transaction/int64.js'
 import {
   type DeriveRefBlockParamsErrorType,
   fillBlockHeader,
@@ -33,8 +34,9 @@ import {
  * keys are the raw_data keys (TronWeb's `blockHeader` option is the same
  * shape). When supplied to {@link buildTransaction} it is used in place of
  * the latest block: the values are format-checked and written verbatim.
- * Lets a caller build (and diff) transactions fully offline against a
- * pinned block.
+ * Exactly these four fields are read — anything else on the object is
+ * ignored. Lets a caller build (and diff) transactions fully offline
+ * against a pinned block.
  */
 export type TransactionHeader = {
   /** Low 2 bytes of the block number (bare hex). */
@@ -191,30 +193,61 @@ export async function buildTransaction(
   if (blockHeader) {
     // Hold the override to the same postcondition the derived path meets:
     // sized TaPoS fields and positive timing, before anything can be signed.
+    // Each field is read ONCE into a local here; everything below — the
+    // guards and the write into `rawData` — uses the locals, never the
+    // caller's object again, so a value cannot change between being checked
+    // and being signed.
     const { ref_block_bytes, ref_block_hash, expiration, timestamp } =
       blockHeader
-    if (!/^[0-9a-fA-F]{4}$/.test(ref_block_bytes))
+    // The hex fields must be primitive strings: a non-string re-converts
+    // through `toString` on every read, so the regex would vet one rendering
+    // and the wire could carry another — of any length, since the byte
+    // encoder checks characters, not size.
+    if (
+      typeof ref_block_bytes !== 'string' ||
+      !/^[0-9a-fA-F]{4}$/.test(ref_block_bytes)
+    )
       throw new BaseError(
-        `Invalid blockHeader.ref_block_bytes: expected 2 bytes of bare hex, got "${ref_block_bytes}".`,
+        `Invalid blockHeader.ref_block_bytes: expected 2 bytes of bare hex, got ${
+          typeof ref_block_bytes === 'string'
+            ? `"${ref_block_bytes}"`
+            : typeof ref_block_bytes
+        }.`,
       )
-    if (!/^[0-9a-fA-F]{16}$/.test(ref_block_hash))
+    if (
+      typeof ref_block_hash !== 'string' ||
+      !/^[0-9a-fA-F]{16}$/.test(ref_block_hash)
+    )
       throw new BaseError(
-        `Invalid blockHeader.ref_block_hash: expected 8 bytes of bare hex, got "${ref_block_hash}".`,
+        `Invalid blockHeader.ref_block_hash: expected 8 bytes of bare hex, got ${
+          typeof ref_block_hash === 'string'
+            ? `"${ref_block_hash}"`
+            : typeof ref_block_hash
+        }.`,
       )
     for (const [name, value] of [
       ['timestamp', timestamp],
       ['expiration', expiration],
     ] as const) {
-      if (typeof value === 'number' && !Number.isInteger(value))
-        throw new BaseError(
-          `Invalid blockHeader.${name}: ${value}. Expected an integer timestamp in ms.`,
-        )
-      if (BigInt(value) <= 0n)
+      // Primitive-pinned int64 parsing: object values are refused here with
+      // a field-named error instead of surfacing one from deep inside the
+      // serializer.
+      if (int64InputToBigInt(`blockHeader.${name}`, value) <= 0n)
         throw new BaseError(
           `Invalid blockHeader.${name}: ${value}. Expected a positive timestamp in ms.`,
         )
     }
-    rawData = { ...rawData, ...blockHeader }
+    // Exactly the four declared fields, from the vetted locals. Spreading the
+    // caller's object instead would both re-read it and let any extra
+    // raw_data-shaped keys (contract, fee_limit, data) clobber what was just
+    // built.
+    rawData = {
+      ...rawData,
+      ref_block_bytes,
+      ref_block_hash,
+      expiration,
+      timestamp,
+    }
   } else {
     // Explicitly the chain head, never solidified state: `expiration` is
     // derived from the reference block's own timestamp, so a solidified block

@@ -131,6 +131,101 @@ test('format-checks a blockHeader override before signing', async () => {
   expect(calls.filter((c) => c.path === 'getnowblock')).toHaveLength(0)
 })
 
+const goodHeader = {
+  ref_block_bytes: '1234',
+  ref_block_hash: '0102030405060708',
+  expiration: 1700000060000n,
+  timestamp: 1700000000000n,
+} as const
+
+test('a blockHeader override contributes only its four declared fields', async () => {
+  const { transport } = buildMock()
+  const client = createPublicClient({ transport })
+
+  // A caller reusing a raw_data-shaped object as the header must not have its
+  // extra keys clobber the built transaction: `contract` would swap the whole
+  // transfer being signed, `fee_limit` raise the fee ceiling, `data` inject a
+  // memo — all silently, since each is a legitimate raw_data key.
+  const smuggling = {
+    ...goodHeader,
+    contract: [],
+    fee_limit: 999999999n,
+    data: '0xdeadbeef',
+  } as unknown as TransactionHeader
+  const tx = await buildTransaction(client, {
+    contract: freezeContract(),
+    blockHeader: smuggling,
+  })
+  const clean = await buildTransaction(client, {
+    contract: freezeContract(),
+    blockHeader: goodHeader,
+  })
+  expect(tx).toEqual(clean)
+  expect(tx.raw_data.contract).toHaveLength(1)
+  expect(tx.raw_data).not.toHaveProperty('fee_limit')
+  expect(tx.raw_data).not.toHaveProperty('data')
+})
+
+test('blockHeader fields must be primitives', async () => {
+  const { transport } = buildMock()
+  const client = createPublicClient({ transport })
+  const build = (blockHeader: TransactionHeader) =>
+    buildTransaction(client, { contract: freezeContract(), blockHeader })
+
+  // A non-string hex field converts through `toString` on every read: this
+  // one renders valid hex for the validating read and different bytes — of a
+  // different length — for any later one. Refused on type, not rendering.
+  const renders = ['0102030405060708', 'ffffffffffffffff']
+  let shiftyReads = 0
+  const shifty = {
+    startsWith: () => false,
+    toString: () => renders[Math.min(renders.length - 1, shiftyReads++)],
+  }
+  await expect(
+    build({ ...goodHeader, ref_block_hash: shifty as unknown as string }),
+  ).rejects.toThrow('Invalid blockHeader.ref_block_hash')
+  await expect(
+    build({
+      ...goodHeader,
+      ref_block_bytes: new String('1234') as unknown as string,
+    }),
+  ).rejects.toThrow('Invalid blockHeader.ref_block_bytes')
+
+  // An object timestamp passes a naive `BigInt()` positivity check via its
+  // own `valueOf`; it must be refused here with a field-named error instead
+  // of one surfacing from inside the serializer.
+  await expect(
+    build({
+      ...goodHeader,
+      timestamp: { valueOf: () => 5 } as unknown as number,
+    }),
+  ).rejects.toThrow('Invalid blockHeader.timestamp')
+})
+
+test('each blockHeader field is read once and carried into the transaction', async () => {
+  const { transport } = buildMock()
+  const client = createPublicClient({ transport })
+
+  // One read per field: what the guards vet IS what gets signed, so a getter
+  // cannot show the validator one value and the wire another. The accessor
+  // being non-enumerable also proves the header is not spread — a spread
+  // would drop the field and silently build a TaPoS-less transaction.
+  let reads = 0
+  const header = { ...goodHeader }
+  Object.defineProperty(header, 'ref_block_hash', {
+    get: () => {
+      reads++
+      return '0102030405060708'
+    },
+  })
+  const tx = await buildTransaction(client, {
+    contract: freezeContract(),
+    blockHeader: header,
+  })
+  expect(reads).toBe(1)
+  expect(tx.raw_data.ref_block_hash).toBe('0102030405060708')
+})
+
 test('leaves a large permission id to the node', async () => {
   const { transport } = buildMock()
   const client = createPublicClient({ transport })
