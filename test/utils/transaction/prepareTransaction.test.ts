@@ -63,10 +63,28 @@ test.each([
   ['Infinity', Number.POSITIVE_INFINITY],
   ['-Infinity', Number.NEGATIVE_INFINITY],
   ['unsafe (2^53)', 2 ** 53],
+  // An object skips both typed range guards, and its own `toString(16)`
+  // would then mint arbitrary hex straight into ref_block_bytes.
+  ['object with a toString', { toString: () => '1234' } as unknown as number],
+  ['null', null as unknown as number],
 ])('deriveRefBlockParams: rejects an invalid blockNumber (%s)', (_, blockNumber) => {
   expect(() => deriveRefBlockParams(blockNumber, blockID)).toThrow(BaseError)
   expect(() => deriveRefBlockParams(blockNumber, blockID)).toThrow(
     /Invalid blockNumber/,
+  )
+})
+
+test('deriveRefBlockParams: rejects a non-string blockID', () => {
+  // A String-like object re-converts on every read: the regex could vet one
+  // rendering while `slice` cuts the wire fields from another.
+  const impostor = {
+    startsWith: () => false,
+    toString: () => blockID,
+    slice: () => 'ffffffffffffffff',
+  } as unknown as string
+  expect(() => deriveRefBlockParams(1n, impostor)).toThrow(/Invalid blockID/)
+  expect(() => deriveRefBlockParams(1n, null as unknown as string)).toThrow(
+    /Invalid blockID/,
   )
 })
 

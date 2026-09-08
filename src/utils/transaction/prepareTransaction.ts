@@ -62,6 +62,22 @@ export function deriveRefBlockParams(
   blockNumber: bigint | number,
   blockID: string,
 ): RefBlockParams {
+  // Primitives only, before anything else: an object would slip past both
+  // typed range guards below untouched and reach `toString(16)` / the regex
+  // with its own conversions — one rendering vetted, another sliced into the
+  // wire. A primitive cannot change between the check and the use.
+  if (typeof blockNumber !== 'number' && typeof blockNumber !== 'bigint')
+    throw new BaseError(
+      `Invalid blockNumber: expected a number or bigint block height, got ${
+        blockNumber === null ? 'null' : typeof blockNumber
+      }.`,
+    )
+  if (typeof blockID !== 'string')
+    throw new BaseError(
+      `Invalid blockID: expected a block hash hex string, got ${
+        blockID === null ? 'null' : typeof blockID
+      }.`,
+    )
   // Only the low 2 bytes are read, so a bigint needs no upper bound — but a
   // `number` past 2^53 - 1 no longer holds every integer, and a fractional or
   // non-finite one would slice its decimal form into nonsense.
