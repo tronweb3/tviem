@@ -268,7 +268,7 @@ test('enum contract fields refuse object values', () => {
           value: {
             owner_address: owner,
             frozen_balance: 1000000n,
-            resource: { valueOf: () => 1 } as unknown as Int64,
+            resource: { valueOf: () => 1 } as unknown as number,
           },
         },
       },
