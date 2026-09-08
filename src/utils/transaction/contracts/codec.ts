@@ -139,8 +139,12 @@ function encodeField(field: FieldSpec, value: unknown): ByteArray {
     case 'i32':
       return fInt32(field.no, int64InputToBigInt(field.name, value as Int64))
     case 'enum': {
-      // Enums are `int32` on the wire, so they carry the same bound.
-      if (typeof value !== 'string') return fInt32(field.no, value as number)
+      // Enums are `int32` on the wire, so they carry the same bound. A
+      // non-string variant goes through the int64 parser like every other
+      // varint field, so only primitives reach the writer (an object would
+      // convert via `valueOf` into bytes nothing validated).
+      if (typeof value !== 'string')
+        return fInt32(field.no, int64InputToBigInt(field.name, value as Int64))
       const index = field.names.indexOf(value)
       if (index === -1)
         throw new BaseError(`Unknown ${field.name} enum name "${value}".`)

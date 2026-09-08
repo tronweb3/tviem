@@ -21,7 +21,14 @@ export function int64ToJson(value: bigint | number): number | string {
  *   past `2^53`, so `BigInt()` would faithfully convert a value the caller
  *   never wrote (and a fraction would escape as a raw `RangeError`);
  * - a `string` must be a plain decimal integer — anything else would escape
- *   `BigInt()` as a raw `SyntaxError`.
+ *   `BigInt()` as a raw `SyntaxError`;
+ * - anything else — a BigNumber-style object, a boxed `Number`/`String` —
+ *   is refused outright. Such values convert through `toString`/`valueOf`,
+ *   and those are two DIFFERENT conversions: the regex above sees
+ *   `String(value)` while `BigInt(value)` consults `valueOf`, so an object
+ *   could pass validation as one number and encode — into the signed
+ *   bytes — as another. Only primitives, whose value is immutable between
+ *   the two reads, are accepted.
  *
  * @param name Field name for the error message.
  * @param value The caller's input.
@@ -39,6 +46,12 @@ export function int64InputToBigInt(
       )
     return BigInt(value)
   }
+  if (typeof value !== 'string')
+    throw new BaseError(
+      `Invalid ${name}: expected a bigint, number or decimal string, got ${
+        value === null ? 'null' : typeof value
+      }. Convert BigNumber-style objects explicitly (e.g. \`BigInt(value.toString())\`).`,
+    )
   if (!/^-?\d+$/.test(value))
     throw new BaseError(
       `Invalid ${name}: "${value}" is not a decimal integer string.`,

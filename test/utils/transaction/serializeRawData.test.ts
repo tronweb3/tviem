@@ -242,6 +242,42 @@ test('Permission_id is bounded to int32', () => {
   expect(() => toRawDataHex(withPermission(2147483648))).toThrow(
     IntegerOutOfRangeError,
   )
+
+  // Primitives only: an object Permission_id would pass the truthiness read
+  // and then convert via `valueOf` into the signed bytes — a second,
+  // different read of the same field.
+  expect(() =>
+    toRawDataHex(withPermission({ valueOf: () => 2 } as unknown as number)),
+  ).toThrow(
+    'Invalid Permission_id: expected a bigint, number or decimal string',
+  )
+})
+
+test('enum contract fields refuse object values', () => {
+  // `resource` is an enum: a non-string variant must be a primitive number,
+  // never an object that converts through `valueOf` behind the validation.
+  const rawData: RawData = {
+    ref_block_bytes: '1234',
+    ref_block_hash: '0102030405060708',
+    expiration: 1700000060000n,
+    contract: [
+      {
+        type: ContractType.FreezeBalanceV2Contract,
+        parameter: {
+          type_url: 'type.googleapis.com/protocol.FreezeBalanceV2Contract',
+          value: {
+            owner_address: owner,
+            frozen_balance: 1000000n,
+            resource: { valueOf: () => 1 } as unknown as Int64,
+          },
+        },
+      },
+    ],
+    timestamp: 1700000000000n,
+  }
+  expect(() => toRawDataHex(rawData)).toThrow(
+    'Invalid resource: expected a bigint, number or decimal string',
+  )
 })
 
 test('int64 fields are bounded to signed int64 on the wire', () => {
