@@ -138,6 +138,31 @@ describe('cloneTransaction', () => {
     expect(() => cloneTransaction(input)).toThrow(/function/)
   })
 
+  test('recognizes a Uint8Array from another realm', async () => {
+    // `instanceof Uint8Array` is false for bytes created in another realm
+    // (iframe, `node:vm`), which used to drop them into the plain-object
+    // branch — the same `{0:…}` mangling as an unrecognized Uint8Array.
+    const vm = await import('node:vm')
+    const foreign = vm.runInNewContext(
+      'new Uint8Array([0xde, 0xad, 0xbe, 0xef])',
+    ) as Uint8Array
+    expect(foreign instanceof Uint8Array).toBe(false) // the trap being tested
+    const clone = cloneTransaction({ account_name: foreign })
+    expect(clone.account_name).toBeInstanceOf(Uint8Array)
+    expect([...clone.account_name]).toEqual([0xde, 0xad, 0xbe, 0xef])
+  })
+
+  test('refuses non-Uint8Array binary views instead of mangling them', () => {
+    // An Int8Array or DataView is not transaction data; snapshotting it into
+    // a plain object would hand the serializer a shape it misreads.
+    expect(() => cloneTransaction({ x: new Int8Array([1]) })).toThrow(
+      'binary data must be a Uint8Array',
+    )
+    expect(() =>
+      cloneTransaction({ x: new DataView(new ArrayBuffer(2)) }),
+    ).toThrow('binary data must be a Uint8Array')
+  })
+
   test('copies a Uint8Array as a Uint8Array, not as a plain object', () => {
     // Contract `bytes` fields accept raw bytes on the encode side. A
     // plain-object copy (`{0:…,1:…}`) reaches the serializer as something it

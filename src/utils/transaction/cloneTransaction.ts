@@ -62,7 +62,20 @@ function cloneValue(
   // Raw bytes are a leaf, not a container: copy the bytes once and keep the
   // type. Snapshotting into a plain object would hand the serializer
   // `{0:…,1:…}` for a `bytes` field the caller passed as a `Uint8Array`.
-  if (value instanceof Uint8Array) return new Uint8Array(value)
+  // Realm-safe on purpose: `instanceof Uint8Array` is false for bytes
+  // created in another realm (iframe, `node:vm`), which would fall through
+  // to the plain-object branch and mangle them the same way —
+  // `ArrayBuffer.isView` reads the internal typed-array slot instead, so it
+  // holds across realms. Any other view (`Int8Array`, `DataView`, …) is not
+  // transaction data and is refused here, loudly, rather than snapshotted
+  // into a shape the serializer would misread.
+  if (ArrayBuffer.isView(value)) {
+    const tagged = Object.prototype.toString.call(value).slice(8, -1)
+    if (tagged === 'Uint8Array') return new Uint8Array(value as Uint8Array)
+    throw new BaseError(
+      `Cannot clone the transaction: \`${path}\` is a ${tagged}; binary data must be a Uint8Array.`,
+    )
+  }
 
   if (depth >= maxDepth)
     throw new BaseError(
