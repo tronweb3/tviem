@@ -175,6 +175,17 @@ export function numberToHex(
 ): Hex {
   const { signed, size } = opts
 
+  // A number past ±(2^53 − 1) has already been rounded by IEEE-754 (and a
+  // fraction would escape BigInt() as a raw RangeError), so refuse it before
+  // conversion — regardless of `size` — instead of encoding a value the
+  // caller never wrote.
+  if (typeof value_ === 'number' && !Number.isSafeInteger(value_))
+    throw new IntegerOutOfRangeError({
+      max: `${Number.MAX_SAFE_INTEGER}`,
+      min: `${Number.MIN_SAFE_INTEGER}`,
+      value: `${value_}`,
+    })
+
   const value = BigInt(value_)
 
   let maxValue: bigint | number | undefined

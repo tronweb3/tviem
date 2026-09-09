@@ -27,7 +27,7 @@ describe('converts numbers to hex', () => {
     ).toThrowError(
       expect.objectContaining({
         name: 'IntegerOutOfRangeError',
-        message: `Number "4.2018273891273126e+26" is not in safe integer range (0 to 9007199254740991)
+        message: `Number "4.2018273891273126e+26" is not in safe integer range (-9007199254740991 to 9007199254740991)
 
 Version: @tronweb3/tviem@${version}`,
       }),
@@ -73,6 +73,59 @@ Version: @tronweb3/tviem@${version}`,
 
 Version: @tronweb3/tviem@${version}`,
       }),
+    )
+  })
+
+  test('rejects unsafe-integer numbers before BigInt conversion', () => {
+    // with size: previously encoded the IEEE-754-rounded value silently
+    expect(() => numberToHex(2 ** 53, { size: 32 })).toThrowError(
+      expect.objectContaining({
+        name: 'IntegerOutOfRangeError',
+        message: `Number "9007199254740992" is not in safe integer range (-9007199254740991 to 9007199254740991)
+
+Version: @tronweb3/tviem@${version}`,
+      }),
+    )
+    expect(() =>
+      numberToHex(-(2 ** 53), { size: 32, signed: true }),
+    ).toThrowError(
+      expect.objectContaining({
+        name: 'IntegerOutOfRangeError',
+        message: `Number "-9007199254740992" is not in safe integer range (-9007199254740991 to 9007199254740991)
+
+Version: @tronweb3/tviem@${version}`,
+      }),
+    )
+
+    // fractional and non-finite numbers: previously a raw RangeError from BigInt()
+    expect(() => numberToHex(1.5)).toThrowError(
+      expect.objectContaining({
+        name: 'IntegerOutOfRangeError',
+        message: `Number "1.5" is not in safe integer range (-9007199254740991 to 9007199254740991)
+
+Version: @tronweb3/tviem@${version}`,
+      }),
+    )
+    expect(() => numberToHex(1.5, { size: 1 })).toThrowError(
+      expect.objectContaining({
+        name: 'IntegerOutOfRangeError',
+        message: `Number "1.5" is not in safe integer range (-9007199254740991 to 9007199254740991)
+
+Version: @tronweb3/tviem@${version}`,
+      }),
+    )
+    expect(() => numberToHex(Number.NaN, { size: 32 })).toThrowError(
+      expect.objectContaining({
+        name: 'IntegerOutOfRangeError',
+        message: `Number "NaN" is not in safe integer range (-9007199254740991 to 9007199254740991)
+
+Version: @tronweb3/tviem@${version}`,
+      }),
+    )
+
+    // bigint inputs past 2^53 are exact and stay accepted
+    expect(numberToHex(2n ** 53n, { size: 32 })).toBe(
+      '0x0000000000000000000000000000000000000000000000000020000000000000',
     )
   })
 
