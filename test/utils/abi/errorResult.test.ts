@@ -161,22 +161,35 @@ test('decodeErrorResult: throws when the selector matches no error', () => {
 
 // Overload resolution (via getAbiItem): among same-name overloads that all
 // structurally accept `args` WITHOUT being ambiguous, the LAST match wins
-// (reference semantics). A non-address hex string matches both string and
-// bytes, and no ambiguity rule pairs them.
+// (reference semantics). An empty array matches string[] and bytes[] alike,
+// and the empty-array ambiguity probe deliberately leaves arg-dependent
+// pairs like string/bytes unambiguous — no element exists to overlap on.
 test('encodeErrorResult: the last structural overload wins', () => {
   const overloaded = [
-    { type: 'error', name: 'E', inputs: [{ type: 'string' }] },
-    { type: 'error', name: 'E', inputs: [{ type: 'bytes' }] },
+    { type: 'error', name: 'E', inputs: [{ type: 'string[]' }] },
+    { type: 'error', name: 'E', inputs: [{ type: 'bytes[]' }] },
   ] as const satisfies Abi
   expect(
-    encodeErrorResult({ abi: overloaded, errorName: 'E', args: ['0x1234'] }),
+    encodeErrorResult({ abi: overloaded, errorName: 'E', args: [[]] }),
   ).toBe(
     encodeErrorResult({
       abi: [overloaded[1]] as const satisfies Abi,
       errorName: 'E',
-      args: ['0x1234'],
+      args: [[]],
     }),
   )
+})
+
+// string/bytes overloads are NOT resolved by last-match-wins: a string arg
+// matches both while the selectors differ, so the combination throws.
+test('encodeErrorResult: a string/bytes overload pair throws', () => {
+  const overloaded = [
+    { type: 'error', name: 'E', inputs: [{ type: 'string' }] },
+    { type: 'error', name: 'E', inputs: [{ type: 'bytes' }] },
+  ] as const satisfies Abi
+  expect(() =>
+    encodeErrorResult({ abi: overloaded, errorName: 'E', args: ['0x1234'] }),
+  ).toThrowError(AbiItemAmbiguityError)
 })
 
 // Differing integer widths are NOT resolved by last-match-wins: they encode

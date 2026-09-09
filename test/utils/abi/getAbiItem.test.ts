@@ -405,6 +405,107 @@ test('throws on an ambiguous integer-width overload', () => {
   ).toBeUndefined()
 })
 
+// Every `bytes`/`bytesN` accepts the same string / Uint8Array arguments while
+// differing widths still produce DIFFERENT selectors — so such an arg cannot
+// pick between foo(bytes20) and foo(bytes32), and letting the last structural
+// match win silently calls a different function.
+const bytesWidthAbi = [
+  {
+    type: 'function',
+    name: 'foo',
+    inputs: [{ name: 'x', type: 'bytes20' }],
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    name: 'foo',
+    inputs: [{ name: 'x', type: 'bytes32' }],
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+] as const satisfies Abi
+
+test('throws on an ambiguous bytes-width overload', () => {
+  expect(() =>
+    getAbiItem({ abi: bytesWidthAbi, name: 'foo', args: ['0xdead'] }),
+  ).toThrowError(AbiItemAmbiguityError)
+  // A Uint8Array arg matches every bytes width just the same.
+  expect(
+    getAmbiguousTypes(
+      [{ name: 'x', type: 'bytes20' }],
+      [{ name: 'x', type: 'bytes32' }],
+      [new Uint8Array([1, 2, 3])],
+    ),
+  ).toEqual(['bytes20', 'bytes32'])
+  // Dynamic `bytes` versus a fixed width is a differing pair too.
+  expect(
+    getAmbiguousTypes(
+      [{ name: 'x', type: 'bytes' }],
+      [{ name: 'x', type: 'bytes32' }],
+      ['0xdead'],
+    ),
+  ).toEqual(['bytes', 'bytes32'])
+  // Identical widths settle nothing at this position.
+  expect(
+    getAmbiguousTypes(
+      [{ name: 'x', type: 'bytes32' }],
+      [{ name: 'x', type: 'bytes32' }],
+      ['0xdead'],
+    ),
+  ).toBeUndefined()
+  // The rule is arg-dependent: the empty-array probe (no element to inspect)
+  // stays unambiguous, like address/string and the integer rule.
+  expect(
+    getAmbiguousTypes(
+      [{ name: 'x', type: 'bytes20' }],
+      [{ name: 'x', type: 'bytes32' }],
+      [undefined],
+    ),
+  ).toBeUndefined()
+})
+
+// `string` overlaps the bytes family the same way: a string arg matches
+// foo(string) and foo(bytes) alike, and the selectors differ.
+const stringVsBytesAbi = [
+  {
+    type: 'function',
+    name: 'foo',
+    inputs: [{ name: 'x', type: 'string' }],
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    name: 'foo',
+    inputs: [{ name: 'x', type: 'bytes' }],
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+] as const satisfies Abi
+
+test('throws on an ambiguous string/bytes overload', () => {
+  expect(() =>
+    getAbiItem({ abi: stringVsBytesAbi, name: 'foo', args: ['hello'] }),
+  ).toThrowError(AbiItemAmbiguityError)
+  // Fixed widths overlap with string the same way.
+  expect(
+    getAmbiguousTypes(
+      [{ name: 'x', type: 'string' }],
+      [{ name: 'x', type: 'bytes32' }],
+      ['hello'],
+    ),
+  ).toEqual(['string', 'bytes32'])
+  // A Uint8Array can only be bytes, never a string — not ambiguous.
+  expect(
+    getAmbiguousTypes(
+      [{ name: 'x', type: 'string' }],
+      [{ name: 'x', type: 'bytes' }],
+      [new Uint8Array([1])],
+    ),
+  ).toBeUndefined()
+})
+
 // Two overloads whose tuples differ only in component count. `isArgOfType`'s
 // tuple branch checked that every declared component had a value but never
 // that the counts matched, so a 2-value arg "matched" the 1-component overload

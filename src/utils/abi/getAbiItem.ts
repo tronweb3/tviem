@@ -45,6 +45,9 @@ export type GetAbiItemErrorType = AbiItemAmbiguityErrorType | ErrorType
 const INTEGER_TYPE =
   /^u?int(8|16|24|32|40|48|56|64|72|80|88|96|104|112|120|128|136|144|152|160|168|176|184|192|200|208|216|224|232|240|248|256)?$/
 
+/** Matches the dynamic `bytes` or any fixed-width `bytesN` (1 ≤ N ≤ 32). */
+const BYTES_TYPE = /^bytes([1-9]|1[0-9]|2[0-9]|3[0-2])?$/
+
 /**
  * Matches the trailing `[]` / `[M]` of an array type — stripping it yields
  * the element type, and the capture holds `M` (empty for dynamic arrays).
@@ -206,7 +209,7 @@ export function isArgOfType(arg: unknown, abiParameter: AbiParameter): boolean {
         return argType === 'number' || argType === 'bigint'
 
       // `bytes`, `bytesN`
-      if (/^bytes([1-9]|1[0-9]|2[0-9]|3[0-2])?$/.test(abiParameterType))
+      if (BYTES_TYPE.test(abiParameterType))
         return argType === 'string' || arg instanceof Uint8Array
 
       // arrays of any of the above; detected by the bare suffix so element
@@ -238,7 +241,10 @@ export function isArgOfType(arg: unknown, abiParameter: AbiParameter): boolean {
  * element-wise; an empty array still compares the element types once, so
  * arg-independent pairs (`address`/`bytes20`) stay ambiguous. On TRON,
  * `address` is ambiguous with `bytes20`, and with `string`/`bytes` when the
- * argument is a valid address.
+ * argument is a valid address. `string` is ambiguous with any `bytes`/`bytesN`
+ * for a string argument, and differing bytes widths are ambiguous with each
+ * other for a string/Uint8Array argument — like differing integer widths,
+ * they accept the same arguments but select different functions.
  */
 export function getAmbiguousTypes(
   sourceParameters: readonly AbiParameter[],
@@ -328,6 +334,17 @@ export function getAmbiguousTypes(
         return isAddressArg(args[parameterIndex as unknown as number])
       if (types.includes('address') && types.includes('bytes'))
         return isAddressArg(args[parameterIndex as unknown as number])
+      // `string` and every `bytes`/`bytesN` all accept a string argument
+      // while producing different selectors, so a string arg cannot pick
+      // between the overloads.
+      if (types.includes('string') && types.some(isBytesLikeType))
+        return typeof args[parameterIndex as unknown as number] === 'string'
+      // Differing bytes widths (`bytes` included) likewise all accept the
+      // same string / Uint8Array arguments but select different functions.
+      if (types.every(isBytesLikeType) && types[0] !== types[1]) {
+        const arg = args[parameterIndex as unknown as number]
+        return typeof arg === 'string' || arg instanceof Uint8Array
+      }
       // Every integer-like type (`(u)intN` at any width, and the TRON
       // `trcToken`) encodes a number/bigint into the same left-padded 32-byte
       // word, while differing canonical widths still produce DIFFERENT
@@ -358,6 +375,11 @@ function isAddressArg(arg: unknown): boolean {
 /** Whether a type encodes a number/bigint into a 32-byte word (`(u)intN` or the TRON `trcToken`). */
 function isIntegerLikeType(type: string): boolean {
   return type === 'trcToken' || INTEGER_TYPE.test(type)
+}
+
+/** Whether a type is the dynamic `bytes` or any fixed-width `bytesN`. */
+function isBytesLikeType(type: string): boolean {
+  return BYTES_TYPE.test(type)
 }
 
 /**
