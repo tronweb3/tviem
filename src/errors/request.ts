@@ -41,7 +41,10 @@ export class HttpRequestError extends BaseError {
     this.body = body
     this.headers = headers
     this.status = status
-    this.url = url
+    // Store the credential-stripped form: error objects routinely get
+    // forwarded to logs/telemetry, so the instance must not retain the
+    // `user:pass@` part any more than the message does.
+    this.url = getUrl(url)
   }
 }
 
@@ -63,6 +66,7 @@ export class TimeoutError extends BaseError {
       metaMessages: [`URL: ${getUrl(url)}`, `Request body: ${stringify(body)}`],
       name: 'TimeoutError',
     })
-    this.url = url
+    // Same as HttpRequestError: never retain basic-auth credentials.
+    this.url = getUrl(url)
   }
 }

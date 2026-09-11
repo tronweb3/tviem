@@ -26,13 +26,14 @@ test('HttpRequestError carries body / headers / status / url', () => {
   expect(err.message).toContain('Request body: {"address":"4112"}')
 })
 
-test('HttpRequestError strips basic-auth credentials from the URL in metaMessages', () => {
+test('HttpRequestError strips basic-auth credentials from the URL in metaMessages and on the instance', () => {
   const err = new HttpRequestError({
     url: 'https://user:pass@node.example/wallet/getaccount',
   })
-  // The raw url is retained verbatim on the instance…
-  expect(err.url).toBe('https://user:pass@node.example/wallet/getaccount')
-  // …but the rendered message never leaks the `user:pass@` credentials.
+  // The public `url` property must not leak credentials either — it is easy
+  // to forward an error object into logs/telemetry wholesale.
+  expect(err.url).toBe('https://node.example/wallet/getaccount')
+  // The rendered message never leaks the `user:pass@` credentials.
   expect(err.message).toContain('URL: https://node.example/wallet/getaccount')
   expect(err.message).not.toContain('user:pass')
   expect(err.message).not.toContain('pass@')
@@ -56,7 +57,7 @@ test('TimeoutError reports the (credential-stripped) url and a timeout detail', 
   })
   expect(err).toBeInstanceOf(BaseError)
   expect(err.name).toBe('TimeoutError')
-  expect(err.url).toBe('https://user:pass@node.example/wallet/getnowblock')
+  expect(err.url).toBe('https://node.example/wallet/getnowblock')
   expect(err.details).toBe('The request timed out.')
   expect(err.shortMessage).toBe('The request took too long to respond.')
   expect(err.message).toContain('URL: https://node.example/wallet/getnowblock')
