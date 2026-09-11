@@ -65,7 +65,7 @@ test('InvalidAbiDecodingTypeError', () => {
   expect(
     new InvalidAbiDecodingTypeError('lol', { docsPath: '/lol' }),
   ).toMatchObject({
-    name: 'InvalidAbiDecodingType',
+    name: 'InvalidAbiDecodingTypeError',
     message: `Type "lol" is not a valid decoding type.
 Please provide a valid ABI type.
 
@@ -227,7 +227,7 @@ test('InvalidAbiEncodingTypeError', () => {
   expect(
     new InvalidAbiEncodingTypeError('lol', { docsPath: '/lol' }),
   ).toMatchObject({
-    name: 'InvalidAbiEncodingType',
+    name: 'InvalidAbiEncodingTypeError',
     message: `Type "lol" is not a valid encoding type.
 Please provide a valid ABI type.
 

@@ -506,7 +506,7 @@ export class InvalidAbiEncodingTypeError extends BaseError {
         `Type "${type}" is not a valid encoding type.`,
         'Please provide a valid ABI type.',
       ].join('\n'),
-      { docsPath, name: 'InvalidAbiEncodingType' },
+      { docsPath, name: 'InvalidAbiEncodingTypeError' },
     )
   }
 }
@@ -521,7 +521,7 @@ export class InvalidAbiDecodingTypeError extends BaseError {
         `Type "${type}" is not a valid decoding type.`,
         'Please provide a valid ABI type.',
       ].join('\n'),
-      { docsPath, name: 'InvalidAbiDecodingType' },
+      { docsPath, name: 'InvalidAbiDecodingTypeError' },
     )
   }
 }
