@@ -6,7 +6,7 @@ import {
 } from '../../errors/encoding.js'
 import type { ErrorType } from '../../errors/utils.js'
 import type { ByteArray, Hex } from '../../types/misc.js'
-import { type AssertSizeErrorType, assertSize } from '../data/size.js'
+import { type AssertSizeErrorType, assertSize, size } from '../data/size.js'
 import { type TrimErrorType, trim } from '../data/trim.js'
 
 import { type HexToBytesErrorType, hexToBytes } from './toBytes.js'
@@ -114,11 +114,16 @@ export function hexToBigInt(hex: Hex, opts: HexToBigIntOpts = {}): bigint {
   const value = BigInt(hex)
   if (!signed) return value
 
-  const size = (hex.length - 2) / 2
-  const max = (1n << (BigInt(size) * 8n - 1n)) - 1n
+  // The two's-complement width is the value's size in WHOLE bytes — `size()`
+  // rounds an odd nibble count up. Dividing the length by two without
+  // rounding gave `0x1a4` a width of 1.5, and `BigInt(1.5)` escaped as a raw
+  // RangeError. Rounded up, an odd count reads as a whole-byte value with a
+  // zero leading nibble, so its sign bit is clear.
+  const width = size(hex)
+  const max = (1n << (BigInt(width) * 8n - 1n)) - 1n
   if (value <= max) return value
 
-  return value - BigInt(`0x${'f'.padStart(size * 2, 'f')}`) - 1n
+  return value - BigInt(`0x${'f'.padStart(width * 2, 'f')}`) - 1n
 }
 
 export type HexToBoolOpts = {

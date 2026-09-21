@@ -54,6 +54,12 @@ describe('converts hex to number', () => {
     )
   })
 
+  // Delegates to hexToBigInt, so it shared the raw RangeError.
+  test('args: signed, odd nibble count', () => {
+    expect(hexToNumber('0x1a4', { signed: true })).toBe(420)
+    expect(hexToNumber('0xfff', { signed: true })).toBe(4095)
+  })
+
   test('args: size', () => {
     expect(
       fromHex(numberToHex(69420, { size: 32 }), { size: 32, to: 'number' }),
@@ -142,6 +148,30 @@ describe('converts hex to bigint', () => {
         { signed: true },
       ),
     ).toBe(-12312312312312312412n)
+  })
+
+  // The two's-complement width is the value's size in WHOLE bytes. It was
+  // computed as `(length - 2) / 2` with no rounding, so an odd nibble count
+  // gave a fractional width and `BigInt(1.5)` escaped as a raw RangeError —
+  // on the very call this function's own JSDoc example makes.
+  test('args: signed, odd nibble count', () => {
+    expect(hexToBigInt('0x1a4', { signed: true })).toBe(420n)
+    // An odd count is a whole-byte value with a zero leading nibble, so its
+    // sign bit is clear: it reads the same signed as unsigned.
+    expect(hexToBigInt('0xfff', { signed: true })).toBe(4095n)
+    expect(hexToBigInt('0xf', { signed: true })).toBe(15n)
+    expect(hexToBigInt('0x8', { signed: true })).toBe(8n)
+    for (const hex of ['0x1a4', '0xfff', '0xf', '0x8'] as const)
+      expect(hexToBigInt(hex, { signed: true })).toBe(hexToBigInt(hex))
+    // The whole-byte spelling of the same values is unchanged.
+    expect(hexToBigInt('0x01a4', { signed: true })).toBe(420n)
+    expect(hexToBigInt('0x0fff', { signed: true })).toBe(4095n)
+
+    // `size` bounds the value; it does not rescue or alter the width.
+    expect(hexToBigInt('0x1a4', { signed: true, size: 2 })).toBe(420n)
+    expect(() => hexToBigInt('0x1a4', { signed: true, size: 1 })).toThrow(
+      'Size cannot exceed 1 bytes. Given size: 2 bytes.',
+    )
   })
 
   test('args: size', () => {
