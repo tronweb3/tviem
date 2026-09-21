@@ -442,6 +442,124 @@ describe('getContract', () => {
     })
   })
 
+  // The facade binds `abi` / `address` (and, per call, `functionName` /
+  // `args`). The option types `Omit` those keys, but `Omit` is structural:
+  // tsc only flags a fresh object literal, so an options bag held in a
+  // variable — merged defaults, a spread config, parsed JSON — sails through,
+  // and a plain-JS caller is not checked at all. Spread last, such a bag
+  // re-pointed a contract bound to A at B: read it, estimate against it, even
+  // sign and broadcast a transfer to it.
+  describe('bound fields cannot be overridden per call', () => {
+    const other = 'TDvSsdrNM5eeXNL3czpa6AxLDHZA9nwe9K' as Address
+
+    /** A client whose contract actions only record what they were handed. */
+    function recordingClient() {
+      const captured: Record<string, unknown> = {}
+      const { transport } = createMockTransport({ responses: {} })
+      const client = createWalletClient({ transport, account }).extend(() => ({
+        readContract: async (parameters: unknown) => {
+          captured.read = parameters
+          return 7n
+        },
+        writeContract: async (parameters: unknown) => {
+          captured.write = parameters
+          return { txID: 'deadbeef' }
+        },
+        estimateEnergy: async (parameters: unknown) => {
+          captured.estimateEnergy = parameters
+          return 1n
+        },
+        getLogs: async (parameters: unknown) => {
+          captured.getEvents = parameters
+          return []
+        },
+      }))
+      const contract = getContract({
+        abi: trc20Abi,
+        address: contractAddress,
+        client,
+      })
+      return { captured, contract }
+    }
+
+    const overrides: Record<string, unknown> = {
+      abi: [],
+      address: other,
+      functionName: 'totalSupply',
+      args: [other, 1n],
+    }
+
+    test.each(
+      Object.keys(overrides),
+    )('read / write / estimateEnergy refuse `%s` in options', async (key) => {
+      const { captured, contract } = recordingClient()
+      // Held in a variable, as a programmatically assembled bag would be.
+      const bag = { [key]: overrides[key] } as {}
+
+      await expect(contract.read.balanceOf([holder], bag)).rejects.toThrow(
+        `\`${key}\` is bound by the contract instance`,
+      )
+      await expect(
+        contract.write.transfer([holder, 1000n], bag),
+      ).rejects.toThrow(`\`${key}\` is bound by the contract instance`)
+      await expect(
+        contract.estimateEnergy.transfer([holder, 1000n], bag),
+      ).rejects.toThrow(`\`${key}\` is bound by the contract instance`)
+      expect(captured).toEqual({})
+    })
+
+    test.each([
+      'address',
+      'event',
+      'events',
+      'topics',
+    ])('getEvents refuses `%s` in options', async (key) => {
+      const { captured, contract } = recordingClient()
+      const bag = { [key]: key === 'address' ? other : [] } as {}
+
+      await expect(contract.getEvents.Transfer(bag)).rejects.toThrow(
+        `\`${key}\` is bound by the contract instance`,
+      )
+      expect(captured).toEqual({})
+    })
+
+    test('a bound key that is present but undefined is not an override', async () => {
+      const { captured, contract } = recordingClient()
+      const bag = { address: undefined, account: holder } as {}
+
+      await contract.read.balanceOf([holder], bag)
+
+      expect(captured.read).toMatchObject({
+        abi: trc20Abi,
+        address: contractAddress,
+        functionName: 'balanceOf',
+        args: [holder],
+        account: holder,
+      })
+    })
+
+    test('a write re-pointed through options is never signed or broadcast', async () => {
+      const { transport, calls } = createMockTransport({
+        responses: {
+          getnowblock: { response: rpc('getnowblock.fixed') },
+          broadcasttransaction: { response: { result: true } },
+        },
+      })
+      const client = createWalletClient({ transport, account })
+      const contract = getContract({
+        abi: trc20Abi,
+        address: contractAddress,
+        client,
+      })
+      const bag = { address: other } as {}
+
+      await expect(
+        contract.write.transfer([holder, 1000n], bag),
+      ).rejects.toThrow('`address` is bound by the contract instance')
+      expect(calls).toHaveLength(0)
+    })
+  })
+
   describe('getFunctionParameters', () => {
     test('array first value is treated as args', () => {
       expect(getFunctionParameters([[holder], { account: holder }])).toEqual({

@@ -9,6 +9,7 @@ import type {
 
 import type { Client } from '../clients/createClient.js'
 import { AbiEventNotFoundError, AbiEventOverloadError } from '../errors/abi.js'
+import { BaseError } from '../errors/base.js'
 import type { ErrorType } from '../errors/utils.js'
 import type { Address } from '../types/address.js'
 import type { ContractFunctionName } from '../types/contract.js'
@@ -260,6 +261,11 @@ export type GetContractErrorType = ErrorType
  * `estimateEnergy` only when it exposes `writeContract`. `getEvents.<Event>` is
  * always mounted and reads that event's logs via `getLogs` (`eth_getLogs`).
  *
+ * What the instance binds stays bound: per-call options that name `abi`,
+ * `address`, `functionName` or `args` (for `getEvents`: `address`, `event`,
+ * `events`, `topics`) are refused, so an options bag assembled elsewhere can
+ * never re-point a call at another contract or function.
+ *
  * @example
  * const contract = getContract({
  *   address: 'T...',
@@ -303,23 +309,28 @@ export function getContract<
       {},
       {
         get(_, functionName: string) {
-          return (
+          return async (
             ...parameters: [
               args?: readonly unknown[] | undefined,
               options?: ReadOptions | undefined,
             ]
           ) => {
             const { args, options } = getFunctionParameters(parameters)
+            assertNoBoundOptions(
+              options,
+              functionFields,
+              `read.${functionName}`,
+            )
             return getAction(
               client,
               readContract,
               'readContract',
             )({
+              ...options,
               abi,
               address,
               functionName,
               args,
-              ...options,
             } as ReadContractParameters)
           }
         },
@@ -331,23 +342,28 @@ export function getContract<
       {},
       {
         get(_, functionName: string) {
-          return (
+          return async (
             ...parameters: [
               args?: readonly unknown[] | undefined,
               options?: WriteOptions | undefined,
             ]
           ) => {
             const { args, options } = getFunctionParameters(parameters)
+            assertNoBoundOptions(
+              options,
+              functionFields,
+              `write.${functionName}`,
+            )
             return getAction(
               client,
               writeContract,
               'writeContract',
             )({
+              ...options,
               abi,
               address,
               functionName,
               args,
-              ...options,
             } as WriteContractParameters)
           }
         },
@@ -358,23 +374,28 @@ export function getContract<
       {},
       {
         get(_, functionName: string) {
-          return (
+          return async (
             ...parameters: [
               args?: readonly unknown[] | undefined,
               options?: EstimateOptions | undefined,
             ]
           ) => {
             const { args, options } = getFunctionParameters(parameters)
+            assertNoBoundOptions(
+              options,
+              functionFields,
+              `estimateEnergy.${functionName}`,
+            )
             return getAction(
               client,
               estimateEnergy,
               'estimateEnergy',
             )({
+              ...options,
               abi,
               address,
               functionName,
               args,
-              ...options,
             } as EstimateEnergyParameters)
           }
         },
@@ -400,14 +421,19 @@ export function getContract<
               eventName,
               matches.map((item) => formatAbiItem(item)),
             )
+          assertNoBoundOptions(
+            options ?? {},
+            eventFields,
+            `getEvents.${eventName}`,
+          )
           return getAction(
             client,
             getLogs,
             'getLogs',
           )({
+            ...options,
             address,
             event,
-            ...options,
           } as GetLogsParameters)
         }
       },
@@ -415,6 +441,36 @@ export function getContract<
   )
 
   return contract as unknown as GetContractReturnType<abi, client, address>
+}
+
+/** What `read` / `write` / `estimateEnergy` bind: the instance, and the call. */
+const functionFields = ['abi', 'address', 'functionName', 'args'] as const
+/** What `getEvents` binds — the contract and every way of naming the filter. */
+const eventFields = ['address', 'event', 'events', 'topics'] as const
+
+/**
+ * Refuses per-call options that name a field the facade binds. The option
+ * types already `Omit` these keys, but `Omit` is structural: tsc only flags a
+ * fresh object literal, so an options bag held in a variable — merged defaults,
+ * a spread config, parsed JSON — passes, and a plain-JS caller is not checked
+ * at all. Such a bag used to win (it was spread last), re-pointing a contract
+ * bound to A at B for a read, an estimate, or a signed and broadcast write.
+ *
+ * The call sites also spread `options` FIRST, so the bound values win by
+ * construction; this check is what makes the attempt loud rather than
+ * silently dropped — a caller who wrote `address: B` did not mean A. A key
+ * that is present but `undefined` names nothing and is let through.
+ */
+function assertNoBoundOptions(
+  options: object,
+  fields: readonly string[],
+  method: string,
+): void {
+  for (const field of fields)
+    if ((options as Record<string, unknown>)[field] !== undefined)
+      throw new BaseError(
+        `Invalid \`${field}\` option for \`${method}\`: \`${field}\` is bound by the contract instance and cannot be overridden per call.`,
+      )
 }
 
 /**
