@@ -200,6 +200,33 @@ test('sends the canonical node-JSON model for a `visible: true` rendering, and r
   })
 })
 
+test('an honest bare-hex echo of a `0x`-spelled transaction is not tampering', async () => {
+  // Signing accepts — and returns — `txID` / `raw_data_hex` in the caller's
+  // `0x`-prefixed, upper-case spelling; the node echoes its own bare rendering.
+  const spelled = {
+    ...tx,
+    txID: `0x${tx.txID.toUpperCase()}`,
+    raw_data_hex: `0x${tx.raw_data_hex.toUpperCase()}`,
+  }
+  const { transport } = createMockTransport({
+    responses: {
+      getapprovedlist: {
+        response: {
+          approved_list: ['TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC'],
+          transaction: {
+            transaction: { txID: tx.txID, raw_data_hex: tx.raw_data_hex },
+          },
+        },
+      },
+    },
+  })
+  const client = createPublicClient({ transport })
+
+  const result = await getApprovedList(client, { transaction: spelled })
+
+  expect(result.approvedList).toEqual(['TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC'])
+})
+
 test('refuses a raw_data model that does not serialize to raw_data_hex, before any request', async () => {
   const { transport, calls } = createMockTransport({ responses: {} })
   const client = createPublicClient({ transport })
