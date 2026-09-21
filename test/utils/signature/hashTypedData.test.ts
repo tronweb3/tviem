@@ -449,6 +449,57 @@ describe('hashTypedData validation', () => {
       ).not.toThrow()
   })
 
+  // A string integer must be a plain decimal. `BigInt()` coerces far more
+  // than that — `BigInt('')` and `BigInt('   ')` are 0n, and it reads hex,
+  // binary, octal and padded strings — so the width check ran on the coerced
+  // value and passed. An integer field arriving as `''` (an unfilled form
+  // input, `String(x ?? '')`) was signed as a valid 0: harmless for an amount,
+  // but for `minAmountOut` / `deadline` / `nonce` zero switches off the very
+  // limit the signer believes they set.
+  test.each([
+    ['the empty string', ''],
+    ['whitespace', '   '],
+    ['a padded decimal', ' 42 '],
+    ['hex', '0x2a'],
+    ['binary', '0b101010'],
+    ['octal', '0o52'],
+    ['an explicit plus sign', '+42'],
+    ['a fraction', '4.2'],
+    ['exponent notation', '1e3'],
+    ['a non-numeric string', 'abc'],
+  ])('rejects %s as an integer value', (_, n) => {
+    for (const type of ['uint256', 'uint8', 'int256', 'trcToken'])
+      expect(() =>
+        hashTypedData({
+          domain,
+          types: { X: [{ name: 'n', type }] },
+          primaryType: 'X',
+          message: { n },
+        }),
+      ).toThrow(
+        `Invalid ${type} value: "${n}" is not a decimal integer string.`,
+      )
+  })
+
+  test('a decimal string still signs the value it spells', () => {
+    const hash = (type: string, n: unknown) =>
+      hashTypedData({
+        domain,
+        types: { X: [{ name: 'n', type }] },
+        primaryType: 'X',
+        message: { n },
+      } as never)
+
+    expect(hash('uint256', '42')).toBe(hash('uint256', 42n))
+    expect(hash('uint256', '0')).toBe(hash('uint256', 0n))
+    expect(hash('uint256', '007')).toBe(hash('uint256', 7n))
+    expect(hash('int256', '-42')).toBe(hash('int256', -42n))
+    expect(hash('trcToken', '1000001')).toBe(hash('trcToken', 1000001n))
+    // A well-formed decimal is still held to the declared width.
+    expect(() => hash('uint8', '256')).toThrow(IntegerOutOfRangeError)
+    expect(() => hash('uint8', '-1')).toThrow(IntegerOutOfRangeError)
+  })
+
   test('rejects an integer beyond its declared width', () => {
     expect(() =>
       hashTypedData({

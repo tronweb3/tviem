@@ -339,20 +339,26 @@ function validateField(
       throw new BaseError(
         `Invalid ${type} value: ${value} is not a safe integer. Pass a bigint (or decimal string) for values past 2^53.`,
       )
+    // A string must be a plain decimal integer — the same rule the
+    // transaction path's `int64InputToBigInt` applies. `BigInt()` coerces far
+    // more than that: `BigInt('')` and `BigInt('   ')` are 0n, and it reads
+    // hex / binary / octal and padded strings, so the width check below would
+    // run on the coerced value and pass. An integer field arriving as `''` (an
+    // unfilled form input) would be signed as a valid 0 — and for a
+    // `minAmountOut` / `deadline` / `nonce`, zero switches off the very limit
+    // the signer believes they set. Anything else non-numeric would escape
+    // `encodeField` as a raw SyntaxError.
+    if (typeof value === 'string' && !/^-?\d+$/.test(value))
+      throw new BaseError(
+        `Invalid ${type} value: "${value}" is not a decimal integer string.`,
+      )
     if (!integerMatch) return // trcToken: no declared width to enforce
     const [, base, bits] = integerMatch
-    const big = (() => {
-      try {
-        return BigInt(value)
-      } catch {
-        return undefined // not numeric — encodeField reports the conversion
-      }
-    })()
-    if (big !== undefined)
-      numberToHex(big, {
-        signed: base === 'int',
-        size: (bits ? Number(bits) : 256) / 8,
-      })
+    // Cannot throw: a safe-integer number, a bigint or a decimal string.
+    numberToHex(BigInt(value), {
+      signed: base === 'int',
+      size: (bits ? Number(bits) : 256) / 8,
+    })
     return
   }
 
