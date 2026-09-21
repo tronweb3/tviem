@@ -77,14 +77,79 @@ describe('toAccount', () => {
     expect(signed.signature).toEqual([canonicalSig])
   })
 
+  test('a class-instance source keeps the signing methods on its prototype', () => {
+    // The natural shape of a wallet adapter: state on the instance (here a
+    // private field), signing methods on the prototype, reaching that state
+    // through `this`. Copying only own properties drops every method; copying
+    // the bare functions would call them with the wrong `this`.
+    class Signer {
+      readonly #inner = privateKeyToAccount(pk1)
+      readonly address = this.#inner.address
+      readonly publicKey = this.#inner.publicKey
+      signMessage(parameters: Parameters<TronCustomSource['signMessage']>[0]) {
+        return this.#inner.signMessage(parameters)
+      }
+      signTypedData(
+        parameters: Parameters<TronCustomSource['signTypedData']>[0],
+      ) {
+        return this.#inner.signTypedData(parameters)
+      }
+      signTransaction(
+        transaction: Parameters<TronCustomSource['signTransaction']>[0],
+      ) {
+        return this.#inner.signTransaction(transaction)
+      }
+      multiSign(
+        ...args: Parameters<NonNullable<TronCustomSource['multiSign']>>
+      ) {
+        return this.#inner.multiSign(...args)
+      }
+    }
+
+    const account = toAccount(new Signer())
+
+    expect(account.address).toBe(pk1Address)
+    expect(account.signMessage({ message: 'hello world' }).serialized).toBe(
+      helloWorldSig,
+    )
+    expect(account.signTransaction(canonicalTransaction()).signature).toEqual([
+      canonicalSig,
+    ])
+    expect(account.multiSign).toBeTypeOf('function')
+  })
+
+  test("carries exactly the account surface, not the source's other properties", () => {
+    const base = privateKeyToAccount(pk1)
+    const account = toAccount({
+      address: base.address,
+      publicKey: base.publicKey,
+      signMessage: base.signMessage,
+      signTypedData: base.signTypedData,
+      signTransaction: base.signTransaction,
+      // Not part of `TronCustomSource`: a signer's private state must not
+      // ride along into an object that gets passed around as "the account".
+      privateKey: pk1,
+    } as TronCustomSource)
+
+    expect(Object.keys(account).sort()).toEqual([
+      'address',
+      'publicKey',
+      'signMessage',
+      'signTransaction',
+      'signTypedData',
+      'source',
+      'type',
+    ])
+  })
+
   test('throws on an invalid source (no address)', () => {
     expect(() => toAccount({} as never)).toThrow()
   })
 })
 
 test('pins the address it type-checked, not a later read', () => {
-  // The spread that builds the account re-reads every own property, so an
-  // accessor could hand the account an address the guard never saw.
+  // `address` is read once: a second read while building the account would
+  // let an accessor hand it an address the guard never saw.
   let reads = 0
   const source = {
     get address() {
