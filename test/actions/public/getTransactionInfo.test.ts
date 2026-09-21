@@ -234,6 +234,44 @@ test('a non-empty receipt without an id is refused', async () => {
   ).rejects.toThrow('an unidentified transaction')
 })
 
+// `signTransaction` hands back the caller's `txID` spelling, so a `0x`-prefixed
+// or upper-case id reaches this action straight from a signed transaction.
+// `getTransaction` normalizes it; the receipt read must ask for the same id.
+test.each([
+  ['with a 0x prefix', `0x${successHash}`],
+  ['in upper case', successHash.toUpperCase()],
+  ['with a 0x prefix, in upper case', `0x${successHash.toUpperCase()}`],
+])('a hash spelled %s is normalized to the bare-hex node dialect', async (_, hash) => {
+  const { transport, bodyOf } = createMockTransport({
+    responses: {
+      gettransactioninfobyid: {
+        response: rpc('gettransactioninfobyid.success'),
+      },
+    },
+  })
+  const client = createPublicClient({ transport })
+
+  const info = await client.getTransactionInfo({ hash })
+
+  expect(bodyOf('gettransactioninfobyid')).toEqual({ value: successHash })
+  expect(info?.id).toBe(successHash)
+})
+
+test("the returned id is the canonical requested id, not the node's spelling", async () => {
+  const body = {
+    ...(rpc('gettransactioninfobyid.success') as Record<string, unknown>),
+  }
+  body.id = `0x${String(body.id).toUpperCase()}`
+  const { transport } = createMockTransport({
+    responses: { gettransactioninfobyid: { response: body } },
+  })
+  const client = createPublicClient({ transport })
+
+  const info = await client.getTransactionInfo({ hash: successHash })
+
+  expect(info?.id).toBe(successHash)
+})
+
 test('an id differing only in hex case is the same transaction', async () => {
   const body = {
     ...(rpc('gettransactioninfobyid.success') as Record<string, unknown>),

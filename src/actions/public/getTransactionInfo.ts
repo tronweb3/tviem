@@ -17,7 +17,10 @@ import { bareHex } from '../../utils/encoding/bareHex.js'
 import { isEmptyResponse } from './getNowBlock.js'
 
 export type GetTransactionInfoParameters = {
-  /** The transaction id (64 hex chars, no `0x` prefix). */
+  /**
+   * The transaction id (64 hex chars). Bare lowercase hex is canonical; a `0x`
+   * prefix and upper-case digits are normalized away.
+   */
   hash: string
   /**
    * Read the receipt from the SolidityNode, which only carries solidified
@@ -106,6 +109,11 @@ function formatLog(log: RawLog): TransactionLog {
  * bare hex) are converted back to Base58Check; `topics`/`data` are
  * `0x`-prefixed.
  *
+ * The `hash` is normalized to bare lowercase hex before the request — a `0x`
+ * prefix or upper-case digits are accepted, as in {@link getTransaction} — and
+ * the returned `id` is that canonical form, verified against the node's echo
+ * rather than adopted from it.
+ *
  * @param client The Client to use.
  * @param parameters `hash` — the transaction id.
  * @returns The formatted receipt, or `null` if the transaction is not yet
@@ -117,11 +125,17 @@ export async function getTransactionInfo(
   client: Client,
   { confirmed, hash }: GetTransactionInfoParameters,
 ): Promise<GetTransactionInfoReturnType> {
+  // The node dialect is bare lowercase hex, as `getTransaction` sends it. The
+  // sign paths accept — and `signTransaction` hands back — a `0x`-prefixed or
+  // upper-case `txID`, so that spelling arrives here straight from a signed
+  // transaction; asking under it risks a "not found" for a transaction that
+  // was packed, and a caller polling for the receipt until it times out.
+  const id = bareHex(hash)
   const response = await client.request<RawTransactionInfo>({
     node: confirmed ? 'solidity' : 'full',
     path: 'gettransactioninfobyid',
     method: 'POST',
-    body: { value: hash },
+    body: { value: id },
   })
   if (isEmptyResponse(response)) return null
 
@@ -151,11 +165,11 @@ export async function getTransactionInfo(
   // the response answers a different question than was asked — the same
   // echo-verification getTransaction applies to the transaction body, on the
   // one read that gates confirmations and `throwOnRevert`.
-  const id = response.id
-  if (!id || bareHex(id) !== bareHex(hash))
+  const echoedId = response.id
+  if (!echoedId || bareHex(echoedId) !== id)
     throw new TronRpcError(
       `The node returned a receipt for ${
-        id ? `transaction "${id}"` : 'an unidentified transaction'
+        echoedId ? `transaction "${echoedId}"` : 'an unidentified transaction'
       }, not the requested "${hash}".`,
       { metaMessages: ['Path: gettransactioninfobyid'] },
     )
