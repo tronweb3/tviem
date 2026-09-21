@@ -4,7 +4,11 @@ import {
   type NormalizeAddressErrorType,
   normalizeAddress,
 } from '../address/normalize.js'
-import { isHex } from '../data/isHex.js'
+import {
+  type AssertHexBytesErrorType,
+  assertHexBytes,
+  isHex,
+} from '../data/isHex.js'
 import { bareHex } from '../encoding/bareHex.js'
 import {
   type HexToBytesErrorType,
@@ -28,6 +32,7 @@ export type { NormalizeAddressErrorType }
 export { normalizeAddress }
 
 export type FlexErrorType =
+  | AssertHexBytesErrorType
   | HexToBytesErrorType
   | StringToBytesErrorType
   | ErrorType
@@ -45,6 +50,9 @@ export type FlexErrorType =
  * `Uint8Array` input is passed through (as a fresh copy) regardless of
  * `visible`.
  *
+ * Hex must denote a whole number of bytes: an odd nibble count throws
+ * `InvalidHexValueError` rather than being padded, in both hex modes.
+ *
  * @param value Value to normalize.
  * @param visible Interpretation of string input (see above).
  * @returns Normalized bytes.
@@ -55,10 +63,16 @@ export function flex(
 ): ByteArray {
   if (value instanceof Uint8Array) return Uint8Array.from(value)
   if (visible === true) return stringToBytes(value)
-  if (visible === false)
-    return hexToBytes((value.startsWith('0x') ? value : `0x${value}`) as Hex)
-  if (isHex(value)) return hexToBytes(value)
-  return stringToBytes(value)
+  // Auto mode: only a `0x`-prefixed hex string is hex.
+  if (visible !== false && !isHex(value)) return stringToBytes(value)
+  const hex = (value.startsWith('0x') ? value : `0x${value}`) as Hex
+  // Whole-byte hex only. `hexToBytes` left-pads an odd nibble count, which
+  // silently rewrites the caller's bytes: a truncated paste or an unpadded
+  // `toString(16)` comes back with a nibble invented and every byte after it
+  // shifted — and these bytes are serialized, hashed into the txID and signed.
+  // A write-once account id that lost a nibble would still measure 8 bytes.
+  assertHexBytes(hex)
+  return hexToBytes(hex)
 }
 
 /**

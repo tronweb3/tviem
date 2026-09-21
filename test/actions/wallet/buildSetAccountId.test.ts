@@ -2,6 +2,7 @@ import { expect, test } from 'vitest'
 
 import { buildSetAccountId } from '../../../src/actions/wallet/setAccountId.js'
 import { createPublicClient } from '../../../src/clients/createPublicClient.js'
+import { InvalidHexValueError } from '../../../src/errors/encoding.js'
 import { AccountNotFoundError } from '../../../src/errors/rpc.js'
 import { createMockTransport } from '../../mock/createMockTransport.js'
 import { makeTviemClient, tviemHeader } from './_buildTestHelpers.js'
@@ -99,6 +100,20 @@ test('measures the bound in bytes, not in input characters', async () => {
     'Invalid account id: 4 bytes', // 8 hex characters, only 4 bytes
   )
   expect(accountIdOf(await build(`0x${'61'.repeat(17)}`))).toHaveLength(34)
+})
+
+test('refuses an odd-nibble hex id instead of padding it into a different id', async () => {
+  const client = makeTviemClient()
+
+  // The 8-byte id above with its last nibble lost. Left-padded it is still
+  // 8 bytes — `06 f6 d6 e6 96 16 16 16`, every byte shifted — so it would pass
+  // the length bound and be signed, and the id is write-once.
+  await expect(
+    client.buildSetAccountId({
+      accountId: accountId.slice(0, -1),
+      blockHeader: tviemHeader,
+    }),
+  ).rejects.toThrow(InvalidHexValueError)
 })
 
 test('throws AccountNotFoundError when no account is available', async () => {

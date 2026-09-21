@@ -1,6 +1,7 @@
 import { expect, test } from 'vitest'
 
 import { InvalidAddressError } from '../../../src/errors/address.js'
+import { InvalidHexValueError } from '../../../src/errors/encoding.js'
 import type { AddressInput } from '../../../src/types/address.js'
 import {
   hexToBytes,
@@ -8,6 +9,7 @@ import {
 } from '../../../src/utils/encoding/toBytes.js'
 import {
   flex,
+  flexToHex,
   normalizeAddress,
 } from '../../../src/utils/transaction/normalize.js'
 
@@ -57,6 +59,23 @@ test('flex: visible=false forces hex (0x prefix optional)', () => {
     hexToBytes('0x31303030303031'),
   )
   expect(() => flex('zz', false)).toThrow()
+})
+
+// `hexToBytes` left-pads an odd nibble count: it invents a nibble and shifts
+// every one after it, so `0x123` comes back as the bytes `01 23`. A flex value
+// goes straight into the signed raw_data — a truncated paste, or an unpadded
+// `toString(16)`, would be signed as a value the caller never wrote.
+test('flex: refuses hex that is not a whole number of bytes, in both hex modes', () => {
+  expect(() => flex('0x123')).toThrow(InvalidHexValueError)
+  expect(() => flex('0x123', false)).toThrow(InvalidHexValueError)
+  expect(() => flex('123', false)).toThrow(InvalidHexValueError)
+  expect(() => flexToHex('0x123')).toThrow(InvalidHexValueError)
+  expect(() => flexToHex('123', false)).toThrow(InvalidHexValueError)
+  // Only hex has nibbles to lose — an odd-length string is fine as text.
+  expect(flex('0x123', true)).toStrictEqual(stringToBytes('0x123'))
+  expect(flex('123')).toStrictEqual(stringToBytes('123'))
+  // The empty value is zero whole bytes.
+  expect(flex('0x')).toStrictEqual(new Uint8Array(0))
 })
 
 test('flex: Uint8Array passes through as a fresh copy', () => {

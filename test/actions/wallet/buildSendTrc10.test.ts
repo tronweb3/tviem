@@ -2,6 +2,7 @@ import { expect, test } from 'vitest'
 import { buildSendTrc10 } from '../../../src/actions/wallet/sendTrc10.js'
 import { createPublicClient } from '../../../src/clients/createPublicClient.js'
 import { createWalletClient } from '../../../src/clients/createWalletClient.js'
+import { InvalidHexValueError } from '../../../src/errors/encoding.js'
 import { AccountNotFoundError } from '../../../src/errors/rpc.js'
 import type { Address } from '../../../src/types/address.js'
 import { rpc } from '../../fixtures/rpc/loader.js'
@@ -146,6 +147,22 @@ test('accepts the hex asset_name form and yields the identical bytes', async () 
 
   expect(tx.txID).toBe(hexForm?.txID)
   expect(tx.raw_data_hex).toBe(hexForm?.rawDataHex)
+})
+
+test('refuses an odd-nibble hex asset_name instead of padding it into another asset', async () => {
+  const { transport, calls } = buildMock()
+  const client = createWalletClient({ account: pk1, transport })
+
+  // The hex form above with its last nibble lost. Left-padded it would be
+  // signed as `03 13 03 03 03 23 03 03` — a different asset id entirely.
+  await expect(
+    buildSendTrc10(client, {
+      to,
+      assetName: '0x3130303230303',
+      amount: 1000n,
+    }),
+  ).rejects.toThrow(InvalidHexValueError)
+  expect(calls).toHaveLength(0)
 })
 
 test('throws AccountNotFoundError when no account is available (bare action)', async () => {
