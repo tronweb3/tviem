@@ -1,9 +1,14 @@
 import { expect, test } from 'vitest'
+import { mnemonicToAccount } from '../../../src/accounts/mnemonicToAccount.js'
+import { privateKeyToAccount } from '../../../src/accounts/privateKeyToAccount.js'
+import { toAccount } from '../../../src/accounts/toAccount.js'
 import type { SignableTransaction } from '../../../src/accounts/types.js'
 import { signTransaction } from '../../../src/accounts/utils/signTransaction.js'
 import { multiSign } from '../../../src/actions/wallet/multiSign.js'
 import { createPublicClient } from '../../../src/clients/createPublicClient.js'
+import { createWalletClient } from '../../../src/clients/createWalletClient.js'
 import { BaseError } from '../../../src/errors/base.js'
+import { AccountNotFoundError } from '../../../src/errors/rpc.js'
 import { decodeRawData } from '../../../src/utils/transaction/decodeRawData.js'
 import { getTransactionId } from '../../../src/utils/transaction/getTransactionId.js'
 import { toRawDataHex } from '../../../src/utils/transaction/serializeRawData.js'
@@ -234,4 +239,157 @@ test('a contract-less shell is refused with a clean integrity error', async () =
       permissionId: 2,
     }),
   ).rejects.toThrow('The transaction failed its integrity check (txCheck).')
+})
+
+// ---- The `account` calling convention --------------------------------------
+// The sibling sign actions (`signTransaction` / `signMessage` /
+// `signTypedData`) take an `account` that falls back to the Client's hoisted
+// one. `multiSign` took only a raw key, so a client with an account could not
+// co-sign through it, and an HD or custom (key-less) account had no path
+// through the action at all.
+
+test('co-signs with an `account`, byte-identical to the raw-key path', async () => {
+  const { client, calls } = silentClient()
+  const viaKey = await multiSign(client, {
+    transaction: unboundTriple(),
+    privateKey: pk2,
+    permissionId: 2,
+  })
+
+  // An account object, and the key string every `account` parameter accepts.
+  for (const account of [privateKeyToAccount(pk2), pk2])
+    expect(
+      await multiSign(client, {
+        transaction: unboundTriple(),
+        account,
+        permissionId: 2,
+      }),
+    ).toEqual(viaKey)
+  expect(calls).toHaveLength(0)
+})
+
+test('falls back to the account hoisted on the Client', async () => {
+  const { transport } = createMockTransport({ responses: {} })
+  const client = createWalletClient({ account: pk2, transport })
+  const viaKey = await multiSign(client, {
+    transaction: unboundTriple(),
+    privateKey: pk2,
+    permissionId: 2,
+  })
+
+  expect(
+    await multiSign(client, { transaction: unboundTriple(), permissionId: 2 }),
+  ).toEqual(viaKey)
+  // …and through the decorator, which is how a wallet client is used.
+  expect(
+    await client.multiSign({ transaction: unboundTriple(), permissionId: 2 }),
+  ).toEqual(viaKey)
+})
+
+test('an explicit privateKey still wins over the hoisted account', async () => {
+  // The original calling convention: a wallet client (its own account
+  // hoisted) co-signing with ANOTHER party's key. The hoisted account is only
+  // a fallback — it must not displace a signer the caller named.
+  const { transport } = createMockTransport({ responses: {} })
+  const client = createWalletClient({ account: pk1, transport })
+  const pk2Signed = await multiSign(silentClient().client, {
+    transaction: unboundTriple(),
+    privateKey: pk2,
+    permissionId: 2,
+  })
+
+  expect(
+    await client.multiSign({
+      transaction: unboundTriple(),
+      privateKey: pk2,
+      permissionId: 2,
+    }),
+  ).toEqual(pk2Signed)
+})
+
+test('co-signs with an HD account without extracting its key', async () => {
+  const { client } = silentClient()
+  const account = mnemonicToAccount(
+    'test test test test test test test test test test test junk',
+  )
+
+  const signed = await multiSign(client, {
+    transaction: unboundTriple(),
+    account,
+    permissionId: 2,
+  })
+
+  expect(signed).toEqual(
+    await account.multiSign(unboundTriple(), { permissionId: 2 }),
+  )
+  expect(signed.signature).toHaveLength(1)
+})
+
+test("delegates to a custom account's own multiSign", async () => {
+  // A key-less account (a remote / hardware signer) that implements
+  // `multiSign` itself: the action must consult it rather than need a key.
+  const { client } = silentClient()
+  const inner = privateKeyToAccount(pk2)
+  const seen: unknown[] = []
+  const account = toAccount({
+    address: inner.address,
+    publicKey: inner.publicKey,
+    signMessage: inner.signMessage,
+    signTypedData: inner.signTypedData,
+    signTransaction: inner.signTransaction,
+    multiSign: (transaction, options) => {
+      seen.push(options)
+      return inner.multiSign(transaction, options)
+    },
+  })
+
+  const signed = await multiSign(client, {
+    transaction: unboundTriple(),
+    account,
+    permissionId: 2,
+  })
+
+  expect(seen).toEqual([{ permissionId: 2 }])
+  expect(signed.txID).toBe(transferBound!.txID)
+  expect(signed.signature).toHaveLength(1)
+})
+
+test('refuses a custom account that does not implement multiSign', async () => {
+  const { client } = silentClient()
+  const inner = privateKeyToAccount(pk2)
+  const account = toAccount({
+    address: inner.address,
+    publicKey: inner.publicKey,
+    signMessage: inner.signMessage,
+    signTypedData: inner.signTypedData,
+    signTransaction: inner.signTransaction,
+  })
+
+  const err = (await multiSign(client, {
+    transaction: unboundTriple(),
+    account,
+    permissionId: 2,
+  }).catch((e) => e)) as BaseError
+  expect(err).toBeInstanceOf(BaseError)
+  expect(err.message).toContain('does not implement `multiSign`')
+})
+
+test('refuses an `account` and a `privateKey` together — two named signers', async () => {
+  const { client } = silentClient()
+
+  const err = (await multiSign(client, {
+    transaction: unboundTriple(),
+    account: pk1,
+    privateKey: pk2,
+    permissionId: 2,
+  }).catch((e) => e)) as BaseError
+  expect(err).toBeInstanceOf(BaseError)
+  expect(err.message).toContain('either `account` or `privateKey`, not both')
+})
+
+test('throws AccountNotFoundError when no signer is available', async () => {
+  const { client } = silentClient()
+  await expect(
+    multiSign(client, { transaction: unboundTriple(), permissionId: 2 }),
+  ).rejects.toBeInstanceOf(AccountNotFoundError)
 })

@@ -336,7 +336,10 @@ export type WalletActions = {
   buildAccountPermissionUpdate: (
     parameters: BuildAccountPermissionUpdateParameters,
   ) => Promise<BuildAccountPermissionUpdateReturnType>
-  /** Co-signs a multi-sig transaction under a permission id (signs locally). */
+  /**
+   * Co-signs a multi-sig transaction under a permission id (signs locally)
+   * with the resolved account, or with a raw `privateKey` when one is given.
+   */
   multiSign: (parameters: MultiSignParameters) => Promise<MultiSignReturnType>
   /** Signs a built transaction with the resolved account (guards included). */
   signTransaction: (
@@ -674,7 +677,9 @@ export function walletActions(client: Client): WalletActions {
         buildAccountPermissionUpdate,
         'buildAccountPermissionUpdate',
       )(requireAccount(client, parameters)),
-    // Takes a raw `privateKey` (not an account), so it bypasses `requireAccount`.
+    // Not wrapped in `requireAccount`: an explicit `privateKey` names the
+    // signer by itself and needs no account. The action resolves `account` /
+    // `client.account` on its own when no key is given.
     multiSign: (parameters) =>
       getAction(client, multiSign, 'multiSign')(parameters),
     signTransaction: async (parameters) =>
