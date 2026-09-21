@@ -1,10 +1,14 @@
 import { expectTypeOf, test } from 'vitest'
 import type { SignableTransaction } from '../../src/accounts/types.js'
-import { getContract } from '../../src/actions/getContract.js'
+import {
+  type GetEventsOptions,
+  getContract,
+} from '../../src/actions/getContract.js'
 import type { Client } from '../../src/clients/createClient.js'
 import type { PublicClient } from '../../src/clients/createPublicClient.js'
 import type { WalletClient } from '../../src/clients/createWalletClient.js'
 import type { AddressInput } from '../../src/types/address.js'
+import type { Hex } from '../../src/types/misc.js'
 
 const trc20Abi = [
   {
@@ -108,4 +112,44 @@ test('getEvents is always present', () => {
   const client = {} as Client
   const contract = getContract({ abi: trc20Abi, address, client })
   expectTypeOf(contract).toHaveProperty('getEvents')
+})
+
+// `getLogs` types its block selectors as mutually exclusive — a range, or one
+// block by hash — and refuses the combination at runtime. The facade's options
+// were a flat object with all three independently optional, so it compiled a
+// call the action it feeds rejects, deferring a typo-level mistake to runtime.
+test('getEvents block selectors are mutually exclusive, as in getLogs', () => {
+  const client = {} as Client
+  const contract = getContract({ abi: trc20Abi, address, client })
+  type Options = NonNullable<Parameters<typeof contract.getEvents.Transfer>[0]>
+
+  // A range, or a single block by hash — each with the shared filters.
+  expectTypeOf<{ fromBlock: bigint; toBlock: 'latest' }>().toExtend<Options>()
+  expectTypeOf<{ blockHash: Hex }>().toExtend<Options>()
+  expectTypeOf<{
+    blockHash: Hex
+    args: { from: AddressInput }
+    strict: boolean
+  }>().toExtend<Options>()
+  expectTypeOf<{
+    fromBlock: bigint
+    args: readonly unknown[]
+    strict: boolean
+  }>().toExtend<Options>()
+
+  // Never both.
+  expectTypeOf<{ blockHash: Hex; fromBlock: bigint }>().not.toExtend<Options>()
+  expectTypeOf<{ blockHash: Hex; toBlock: bigint }>().not.toExtend<Options>()
+  expectTypeOf<{
+    blockHash: Hex
+    fromBlock: bigint
+  }>().not.toExtend<GetEventsOptions>()
+
+  // Forwarding an unset selector as `undefined` stays legal on either side
+  // (`exactOptionalPropertyTypes`): a wrapper holds `Hex | undefined`.
+  expectTypeOf<{
+    blockHash: undefined
+    fromBlock: bigint
+  }>().toExtend<Options>()
+  expectTypeOf<{ blockHash: Hex; fromBlock: undefined }>().toExtend<Options>()
 })

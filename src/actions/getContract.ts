@@ -131,7 +131,10 @@ type GetEstimateFunction<
 ) => Promise<bigint>
 
 /** Facade `getEvents.<Event>(options?)` filters — everything `getLogs` takes
- * except `address` / `event` / `events` / `topics` (which the facade binds). */
+ * except `address` / `event` / `events` / `topics` (which the facade binds).
+ * The block selectors are the same union `getLogs` declares — a range, or one
+ * block by hash, never both — so the combination it refuses at runtime does
+ * not compile here either. */
 export type GetEventsOptions = {
   /**
    * Indexed argument filter, positional over the indexed inputs or keyed by
@@ -140,13 +143,21 @@ export type GetEventsOptions = {
   args?: readonly unknown[] | Record<string, unknown> | undefined
   /** Drop logs that do not decode against the event ABI. @default false */
   strict?: boolean | undefined
-  /** Inclusive lower block bound. @default 'latest' (node default) */
-  fromBlock?: bigint | number | BlockTag | undefined
-  /** Inclusive upper block bound. @default 'latest' (node default) */
-  toBlock?: bigint | number | BlockTag | undefined
-  /** Restrict to the single block with this hash (excludes `fromBlock`/`toBlock`). */
-  blockHash?: Hex | undefined
-}
+} & (
+  | {
+      /** Inclusive lower block bound. @default 'latest' (node default) */
+      fromBlock?: bigint | number | BlockTag | undefined
+      /** Inclusive upper block bound. @default 'latest' (node default) */
+      toBlock?: bigint | number | BlockTag | undefined
+      blockHash?: undefined
+    }
+  | {
+      fromBlock?: undefined
+      toBlock?: undefined
+      /** Restrict to the single block with this hash. */
+      blockHash?: Hex | undefined
+    }
+)
 
 /** `getEvents.<Event>(options?)` → the decoded logs matching that event. */
 type GetEventsGroup<_eventNames extends string> =
