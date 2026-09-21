@@ -17,7 +17,11 @@ import {
   type ParseAccountErrorType,
   parseAccount,
 } from '../../types/account.js'
-import type { Address, AddressInput } from '../../types/address.js'
+import type {
+  Address,
+  AddressInput,
+  TronHexAddress,
+} from '../../types/address.js'
 import type { ContractConstructorArgs } from '../../types/contract.js'
 import type { Hex } from '../../types/misc.js'
 import {
@@ -228,7 +232,10 @@ export type BuildDeployContractErrorType =
   | AddressToHexErrorType
   | ErrorType
 
-/** The signing account plus the assembled `CreateSmartContract` and fee limit. */
+/**
+ * The signing account plus the assembled `CreateSmartContract` and fee limit,
+ * and the deployer address exactly as it was written into that contract.
+ */
 function assemble(
   client: Client,
   parameters: DeployContractParameters<Abi>,
@@ -236,6 +243,7 @@ function assemble(
   account: TronAccount
   contract: RawContract
   feeLimit: bigint
+  ownerAddress: TronHexAddress
 } {
   const { abi, bytecode, args, name, callValue, callTokenValue, tokenId } =
     parameters
@@ -293,7 +301,7 @@ function assemble(
     },
   }
 
-  return { account, contract, feeLimit }
+  return { account, contract, feeLimit, ownerAddress }
 }
 
 /**
@@ -352,7 +360,7 @@ export async function deployContract<
   client: Client,
   parameters: DeployContractParameters<abi>,
 ): Promise<DeployContractReturnType> {
-  const { account, contract, feeLimit } = assemble(
+  const { account, contract, feeLimit, ownerAddress } = assemble(
     client,
     parameters as DeployContractParameters<Abi>,
   )
@@ -366,8 +374,12 @@ export async function deployContract<
     memo: parameters.memo,
   })
 
+  // Derived from the deployer the signed bytes carry — the one the chain
+  // derives from — never from a second read of `account.address`: a custom
+  // account may answer differently by now, and the caller would be handed an
+  // address the contract was not deployed to.
   const contractAddress = toBase58(
-    genContractAddress(txID, addressToHex(account.address)) as AddressInput,
+    genContractAddress(txID, ownerAddress) as AddressInput,
   )
   return { txID, ...acknowledgement, contractAddress }
 }

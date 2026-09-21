@@ -1,5 +1,6 @@
 import type { Abi } from 'abitype'
 import { expect, test } from 'vitest'
+import { privateKeyToAccount } from '../../../src/accounts/privateKeyToAccount.js'
 import { deployContract } from '../../../src/actions/wallet/deployContract.js'
 import { createPublicClient } from '../../../src/clients/createPublicClient.js'
 import { createWalletClient } from '../../../src/clients/createWalletClient.js'
@@ -143,6 +144,47 @@ test('resolves the per-call account when the client hoists none', async () => {
     feeLimit: 1000000000n,
   })
   expect(txID).toBe(basic?.txID)
+})
+
+test('derives the contract address from the deployer that was signed, not a later read of the account', async () => {
+  const value = deployValueOf(basic!)
+
+  // A custom account (e.g. a wallet adapter) may expose whichever address is
+  // currently selected. It changes here while the broadcast is in flight —
+  // after the deployer was written into the signed bytes. The returned
+  // contract address must still be the one the chain will derive: from the
+  // transaction id and the `owner_address` that transaction actually carries.
+  const account = { ...privateKeyToAccount(pk1) }
+  const { transport, bodyOf } = createMockTransport({
+    responses: {
+      getnowblock: { response: rpc('getnowblock.fixed') },
+      broadcasttransaction: {
+        fn: () => {
+          account.address = 'TDvSsdrNM5eeXNL3czpa6AxLDHZA9nwe9K'
+          return rpc('broadcasttransaction.ok')
+        },
+      },
+    },
+  })
+  const client = createWalletClient({ transport })
+
+  const { contractAddress } = await deployContract(client, {
+    account,
+    abi: value.abi,
+    bytecode: `0x${value.bytecode}` as Hex,
+    name: value.name,
+    consumeUserResourcePercent: BigInt(value.consume_user_resource_percent),
+    originEnergyLimit: BigInt(value.origin_energy_limit),
+    feeLimit: 1000000000n,
+  })
+
+  // The signed transaction is the gold vector (deployer = pk1's address)…
+  const body = parseBroadcast(bodyOf('broadcasttransaction')) as {
+    raw_data_hex: string
+  }
+  expect(body.raw_data_hex).toBe(basic?.rawDataHex)
+  // …so the address is the gold vector's, whatever the account reads as now.
+  expect(addressToHex(contractAddress)).toBe(basic?.contractAddress)
 })
 
 test('throws AccountNotFoundError when no account is available', async () => {
