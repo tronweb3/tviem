@@ -167,9 +167,17 @@ function encodeField(types: TypedDataTypes, type: string, value: unknown): Hex {
   if (type === 'string') return keccak256(stringToBytes(value as string))
   if (type === 'bool') return pad(value ? '0x01' : '0x00')
   if (type === 'address') return pad(toEvm(value as AddressInput), { size: 32 })
+  // The primitive families dispatch on the same regexes `validateField`
+  // checks them with — never on a name prefix. A prefix also claims types
+  // that do not exist (`bytes33`, `bytesfoo`, `uint7`, `int300`): validation
+  // has no branch for those, so they would be encoded unchecked — a `bytes33`
+  // right-padded into one word, where distinct short values share a digest —
+  // and never reach the guard below. `hashDomain` encodes without the
+  // validation pass, so the refusal has to live here.
+  //
   // Validation accepts a `Uint8Array` for `bytesN`, but the surrounding words
   // are hex and `pad` mirrors its input's kind — so convert to hex first.
-  if (type.startsWith('bytes'))
+  if (bytesRegex.test(type))
     return pad(
       value instanceof Uint8Array ? bytesToHex(value) : (value as Hex),
       {
@@ -177,7 +185,7 @@ function encodeField(types: TypedDataTypes, type: string, value: unknown): Hex {
         size: 32,
       },
     )
-  if (type.startsWith('uint') || type.startsWith('int') || type === 'trcToken')
+  if (integerRegex.test(type) || type === 'trcToken')
     return numberToHex(BigInt(value as string | number | bigint), {
       signed: type.startsWith('int'),
       size: 32,
@@ -350,6 +358,17 @@ function validateField(
 
   const bytesMatch = type.match(bytesRegex)
   if (bytesMatch) {
+    // A `bytes`/`bytesN` value is a hex string or a `Uint8Array` — nothing
+    // else. The checks below only know those two kinds, so any other would
+    // pass them untouched: in scalar position it surfaces as a raw TypeError
+    // deep inside encoding, and as an ARRAY element it is swallowed by byte
+    // padding (`length` is undefined, so the overflow check is skipped and
+    // every index reads as 0) and hashed as 32 zero bytes — `[1234]` and
+    // `[true]` both signing the digest of `[0x00…00]`.
+    if (typeof value !== 'string' && !(value instanceof Uint8Array))
+      throw new BaseError(
+        `Invalid ${type} value: expected a 0x-prefixed hex string or a Uint8Array, got ${kindOf(value)}.`,
+      )
     // A hex `bytes`/`bytesN` value must be 0x-prefixed whole bytes: an odd
     // nibble count gets a nibble invented by padding (and slips past the
     // size check below, which rounds UP), while an unprefixed string loses
@@ -361,12 +380,9 @@ function validateField(
       )
     // `bytesN`: must be exactly `N` bytes (`encodeField` would silently
     // right-pad a short value into a different digest).
-    if (
-      bytesMatch[1] &&
-      (typeof value === 'string' || value instanceof Uint8Array)
-    ) {
+    if (bytesMatch[1]) {
       const expectedSize = Number(bytesMatch[1])
-      const givenSize = size(value as Hex)
+      const givenSize = size(value as Hex | Uint8Array)
       if (givenSize !== expectedSize)
         throw new BytesSizeMismatchError({ expectedSize, givenSize })
     }
@@ -378,9 +394,10 @@ function validateField(
  * a defined struct (or `EIP712Domain`), no declared struct — referenced or
  * not — may shadow a primitive type, the domain must be an object whose
  * fields all belong to the effective `EIP712Domain` struct and match its
- * types, integer values must fit their declared width, and `bytesN` values
- * must be exactly `N` bytes — so malformed input fails loudly instead of
- * producing a silently wrong digest.
+ * types, integer values must fit their declared width, and `bytes`/`bytesN`
+ * values must be whole-byte hex or a `Uint8Array` — a `bytesN` exactly `N`
+ * bytes — so malformed input fails loudly instead of producing a silently
+ * wrong digest.
  */
 function validateTypedData(parameters: HashTypedDataParameters): void {
   const { domain, types, primaryType, message } = parameters

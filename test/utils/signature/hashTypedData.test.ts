@@ -672,6 +672,90 @@ describe('hashTypedData validation', () => {
     ).toThrow(BytesSizeMismatchError)
   })
 
+  // Only `bytes` and `bytes1`..`bytes32` exist. A misspelt or out-of-range
+  // width used to be encoded anyway — right-padded into one 32-byte word — so
+  // it skipped every bytes check, and a `bytes33` could never hold 33 bytes:
+  // distinct short values folded into the same word, hence the same digest.
+  test.each([
+    'bytes0',
+    'bytes33',
+    'bytes100',
+    'bytes032',
+    'bytesfoo',
+  ])('rejects the non-existent bytes type %s', (type) => {
+    expect(() =>
+      hashTypedData({
+        domain,
+        types: { X: [{ name: 'b', type }] },
+        primaryType: 'X',
+        message: { b: '0x1234' },
+      }),
+    ).toThrow(`Unsupported TIP-712 field type: "${type}".`)
+  })
+
+  // The integer branch dispatched by prefix the same way.
+  test.each([
+    'uint7',
+    'int300',
+    'uint0',
+    'uintfoo',
+    'integer',
+  ])('rejects the non-existent integer type %s', (type) => {
+    expect(() =>
+      hashTypedData({
+        domain,
+        types: { X: [{ name: 'n', type }] },
+        primaryType: 'X',
+        message: { n: 5 },
+      }),
+    ).toThrow(`Unsupported TIP-712 field type: "${type}".`)
+  })
+
+  test('hashDomain rejects a non-existent type in a declared EIP712Domain', () => {
+    // `hashDomain` is public and hashes without the validation pass, so the
+    // encoder itself must refuse the type.
+    expect(() =>
+      hashDomain(
+        { name: 'x', salt: '0x1234' },
+        {
+          EIP712Domain: [
+            { name: 'name', type: 'string' },
+            { name: 'salt', type: 'bytes33' },
+          ],
+        },
+      ),
+    ).toThrow('Unsupported TIP-712 field type: "bytes33".')
+  })
+
+  // A bytes value is a hex string or a `Uint8Array`, nothing else. The hex
+  // checks were gated on `typeof value === 'string'`, so any other kind passed
+  // validation untouched. As an array element it was then swallowed by byte
+  // padding (`length` undefined skips the overflow check, every index reads
+  // `undefined` → 0) and hashed as 32 zero bytes — `[1234]`, `[5678]` and
+  // `[true]` all signing the digest of `[0x00…00]`.
+  test.each([
+    ['a number', 1234],
+    ['a bigint', 1234n],
+    ['a boolean', true],
+    ['null', null],
+    ['an object', {}],
+    ['an array', [1, 2]],
+  ])('rejects %s as a bytes value, in every position', (_, value) => {
+    const hash = (type: string, b: unknown) =>
+      hashTypedData({
+        domain,
+        types: { X: [{ name: 'b', type }] },
+        primaryType: 'X',
+        message: { b },
+      } as never)
+
+    expect(() => hash('bytes32', value)).toThrow(/Invalid bytes32 value/)
+    expect(() => hash('bytes', value)).toThrow(/Invalid bytes value/)
+    expect(() => hash('bytes32[]', [value])).toThrow(/Invalid bytes32 value/)
+    expect(() => hash('bytes32[1]', [value])).toThrow(/Invalid bytes32 value/)
+    expect(() => hash('bytes[]', [value])).toThrow(/Invalid bytes value/)
+  })
+
   test('rejects a primaryType missing from types', () => {
     expect(() =>
       hashTypedData({
