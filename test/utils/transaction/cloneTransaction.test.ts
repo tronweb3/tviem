@@ -1,6 +1,8 @@
 import { describe, expect, test } from 'vitest'
 import { cloneTransaction } from '../../../src/utils/transaction/cloneTransaction.js'
 
+const LEVELS = 60
+
 /** A realistic signable-transaction literal (values are stand-ins). */
 function sample() {
   return {
@@ -125,6 +127,34 @@ describe('cloneTransaction', () => {
     expect(clone.a).toEqual(shared)
     expect(clone.b).toEqual(shared)
     expect(clone.a).not.toBe(clone.b)
+  })
+
+  test('fails loudly on a DAG whose duplicated expansion is exponential', () => {
+    // Shared references are duplicated by design (see the diamond test), so
+    // a chain of levels that each point at the next one TWICE — 60 objects in
+    // all, no cycle, well inside the depth cap — expands to 2^60 copies. It
+    // must be refused like the other hostile shapes, not cloned until the
+    // process runs out of memory.
+    let node: Record<string, unknown> = { leaf: 1 }
+    for (let i = 0; i < LEVELS; i++) node = { a: node, b: node }
+    expect(() => cloneTransaction(node)).toThrow(/too large/)
+  })
+
+  test('the size cap leaves a large but plausible transaction alone', () => {
+    // A deployment carrying a 3000-entry ABI — far past any real contract —
+    // is ~51k values. The cap exists for exponential shapes, not big inputs.
+    const abi = Array.from({ length: 3000 }, (_, i) => ({
+      type: 'Function',
+      name: `f${i}`,
+      stateMutability: 'Nonpayable',
+      inputs: [
+        { name: 'a', type: 'address' },
+        { name: 'b', type: 'uint256' },
+        { name: 'c', type: 'bytes32' },
+      ],
+      outputs: [{ type: 'bool' }],
+    }))
+    expect(cloneTransaction({ abi })).toEqual({ abi })
   })
 
   test('throws on a circular reference', () => {
