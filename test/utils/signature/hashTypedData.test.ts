@@ -66,6 +66,16 @@ describe('hashDomain', () => {
       hashDomain({ ...partial, verifyingContract: undefined }),
     )
   })
+
+  test('a derived domain is hashed as bare primitives, never against `types`', () => {
+    // Without a `types.EIP712Domain` declaration the domain struct is the
+    // canonical one, so its `string` / `address` fields are primitives by
+    // definition. Structs that merely share those names must not capture them:
+    // an empty `string()` struct hashes to a constant, which would drop the
+    // domain's `name` — and `address()` its `verifyingContract` — out of the
+    // hash entirely, making every domain hash alike.
+    expect(hashDomain(domain, { string: [], address: [] })).toBe(mailDomainHash)
+  })
 })
 
 describe('hashTypedData', () => {
@@ -685,6 +695,23 @@ describe('hashTypedData validation', () => {
         message: { n: { value: 'hijacked' } },
       }),
     ).toThrow('Struct type "uint256" is invalid')
+  })
+
+  test('rejects a primitive-shadowing struct that no message field references', () => {
+    // Reachability from `primaryType` is not the whole story: the derived
+    // domain also has `string` / `address` fields, so a shadowing struct that
+    // the message tree never touches is still refused rather than ignored.
+    expect(() =>
+      hashTypedData({
+        domain,
+        types: {
+          string: [],
+          X: [{ name: 'n', type: 'uint256' }],
+        },
+        primaryType: 'X',
+        message: { n: 1n },
+      }),
+    ).toThrow('Struct type "string" is invalid')
   })
 
   test('rejects a primaryType that shadows a primitive type', () => {

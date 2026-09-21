@@ -375,11 +375,12 @@ function validateField(
 
 /**
  * Validates typed-data parameters before any hashing: `primaryType` must be
- * a defined struct (or `EIP712Domain`) and must not shadow a primitive type,
- * the domain must be an object whose fields all belong to the effective
- * `EIP712Domain` struct and match its types, integer values must fit their
- * declared width, and `bytesN` values must be exactly `N` bytes — so
- * malformed input fails loudly instead of producing a silently wrong digest.
+ * a defined struct (or `EIP712Domain`), no declared struct — referenced or
+ * not — may shadow a primitive type, the domain must be an object whose
+ * fields all belong to the effective `EIP712Domain` struct and match its
+ * types, integer values must fit their declared width, and `bytesN` values
+ * must be exactly `N` bytes — so malformed input fails loudly instead of
+ * producing a silently wrong digest.
  */
 function validateTypedData(parameters: HashTypedDataParameters): void {
   const { domain, types, primaryType, message } = parameters
@@ -387,6 +388,12 @@ function validateTypedData(parameters: HashTypedDataParameters): void {
 
   if (primaryType !== 'EIP712Domain' && !types_[primaryType])
     throw new InvalidPrimaryTypeError({ primaryType, types: types_ })
+
+  // Every declared struct name, not only those the walk from `primaryType`
+  // reaches: the derived domain has `string` / `uint256` / `address` /
+  // `bytes32` fields of its own, so a shadowing struct the message tree never
+  // touches would go unseen here and still be in scope when hashing.
+  for (const type of Object.keys(types_)) assertStructNotShadowing(type)
 
   if (domain !== undefined) {
     if (typeof domain !== 'object' || domain === null || Array.isArray(domain))
@@ -439,10 +446,16 @@ export function hashDomain(
   domain: TypedDataDomain & Record<string, unknown>,
   types?: TypedDataTypes | undefined,
 ): Hex {
-  // Spread `types` too, so a declared domain field may reference a struct.
+  // A declared domain struct is hashed against the caller's `types`, so its
+  // fields may reference a struct. A derived one is the canonical struct of
+  // bare primitives and is hashed against nothing else — exactly as it is
+  // validated — so a struct that merely shares a primitive's name cannot
+  // capture `name` / `verifyingContract` and drop their values from the hash.
   return hashStruct(
     'EIP712Domain',
-    { ...types, EIP712Domain: effectiveDomainFields(domain, types) },
+    types?.EIP712Domain
+      ? types
+      : { EIP712Domain: effectiveDomainFields(domain, types) },
     domain as Record<string, unknown>,
   )
 }
