@@ -4,7 +4,6 @@ import {
   decodeNodeMessage,
   type RequestErrorType,
 } from '../../clients/transports/http.js'
-import { BaseError } from '../../errors/base.js'
 import { TronNodeError } from '../../errors/node.js'
 import {
   TransactionExpiredError,
@@ -19,9 +18,9 @@ import {
   cloneTransaction,
 } from '../../utils/transaction/cloneTransaction.js'
 import {
-  type TxCheckErrorType,
-  txCheck,
-} from '../../utils/transaction/txCheck.js'
+  type CanonicalizeTransactionErrorType,
+  canonicalizeTransaction,
+} from '../utils/canonicalizeTransaction.js'
 import {
   type AssertRpcSuccessErrorType,
   assertRpcSuccess,
@@ -46,7 +45,8 @@ export type BroadcastTransactionReturnType = {
   /**
    * The signed transaction that was broadcast — the four-field snapshot
    * (`txID`, `raw_data`, `raw_data_hex`, `signature`) that passed the
-   * integrity check and was sent as the request body.
+   * integrity check and was sent as the request body, its `raw_data` in the
+   * canonical node-JSON shape whatever spelling the caller passed.
    */
   transaction: SignableTransaction
 }
@@ -61,11 +61,11 @@ type RawBroadcastResponse = {
 
 export type BroadcastTransactionErrorType =
   | AssertRpcSuccessErrorType
+  | CanonicalizeTransactionErrorType
   | CloneTransactionErrorType
   | RequestErrorType
   | TransactionExpiredErrorType
   | TronRpcErrorType
-  | TxCheckErrorType
   | ErrorType
 
 /**
@@ -96,6 +96,16 @@ const expirationCodes = new Set(['TRANSACTION_EXPIRATION_ERROR', 'TAPOS_ERROR'])
  * so bytes carrying wire fields the model layer does not represent are
  * refused here the same way they would be at signing.
  *
+ * What is relayed is the canonical rendering of the checked bytes, not the
+ * caller's spelling of them. The check runs the SDK's serializer, which
+ * accepts more than the node reads — Base58 `T…`, `0x` EVM 20-byte and
+ * `Uint8Array` addresses, `bigint` amounts — so a `visible: true` rendering
+ * (a node's, TronLink's, TronWeb's) passes it byte-for-byte; sent verbatim,
+ * the node would fail to parse it, or parse it to other bytes. `raw_data` is
+ * therefore re-derived from the checked `raw_data_hex` (see
+ * {@link canonicalizeTransaction}) — java-tron's `visible: false` form by
+ * construction, which is what the body's absent `visible` key declares.
+ *
  * The transport's error normalization already throws for the documented
  * rejection bodies (`{ result: false, code }` → `TronBroadcastError`, etc.); a
  * `{ result: false }` rejection without a `code` is caught here by
@@ -120,13 +130,13 @@ export async function broadcastTransaction(
   // nested accessor live to answer txCheck one way and the request body —
   // which the node rebuilds the transaction from — another.
   const source = parameters.signedTransaction
-  const signedTransaction = cloneTransaction({
+  const snapshot = cloneTransaction({
     txID: source.txID,
     raw_data: source.raw_data,
     raw_data_hex: source.raw_data_hex,
     signature: source.signature,
   })
-  const { txID, signature } = signedTransaction
+  const { txID, signature } = snapshot
 
   // Pre-condition: never broadcast an unsigned transaction.
   if (!signature || signature.length === 0)
@@ -138,9 +148,11 @@ export async function broadcastTransaction(
   // Pre-condition: the triple must be self-consistent (see the JSDoc). The
   // SDK's own sign paths have already passed this; it is the transaction
   // handed over from elsewhere (TronWeb, another co-signer, disk) whose
-  // `txID` has never been checked against the bytes until here.
-  if (!txCheck(signedTransaction))
-    throw new BaseError('The transaction failed its integrity check (txCheck).')
+  // `txID` has never been checked against the bytes until here. What goes out
+  // is the canonical rendering of those checked bytes, not the caller's
+  // spelling of them: the node reads `raw_data` as `visible: false` JSON, and
+  // the check accepts spellings (Base58, `0x` EVM, raw bytes) it does not.
+  const signedTransaction = canonicalizeTransaction({ ...snapshot, signature })
 
   let response: unknown
   try {

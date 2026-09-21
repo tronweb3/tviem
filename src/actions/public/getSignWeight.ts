@@ -15,6 +15,10 @@ import {
   cloneTransaction,
 } from '../../utils/transaction/cloneTransaction.js'
 import { assertUnchangedTransaction } from '../utils/assertUnchangedTransaction.js'
+import {
+  type CanonicalizeTransactionErrorType,
+  canonicalizeTransaction,
+} from '../utils/canonicalizeTransaction.js'
 import { recoverEchoedResultBody } from '../utils/recoverMultisigResult.js'
 
 /** The permission a multi-sig transaction is being evaluated against. */
@@ -45,13 +49,15 @@ export type GetSignWeightReturnType = {
     | undefined
   /**
    * The **local** transaction — a snapshot taken on entry, which is what was
-   * sent and what the node's echoed copy was verified against.
+   * sent and what the node's echoed copy was verified against. Its `raw_data`
+   * is in the canonical node-JSON shape, whatever spelling the caller passed.
    */
   transaction: SignableTransaction
 }
 
 export type GetSignWeightErrorType =
   | BaseErrorType
+  | CanonicalizeTransactionErrorType
   | CloneTransactionErrorType
   | RequestErrorType
   | ToBase58ErrorType
@@ -122,6 +128,13 @@ export function formatPermission(
  * {@link TransactionTamperedError} on any mismatch — and always returns the
  * **local** transaction, never the node's copy.
  *
+ * The node rebuilds the transaction from the `raw_data` JSON, read as
+ * java-tron's `visible: false` rendering, so the triple is integrity-checked
+ * first and `raw_data` is sent as the canonical rendering of the checked bytes
+ * (see {@link canonicalizeTransaction}) — a `visible: true` rendering, which
+ * signing accepts, is weighed like any other, and an inconsistent triple is
+ * refused before any request.
+ *
  * @param client The Client to use.
  * @param parameters `transaction` — the built transaction to weigh.
  * @returns `{ currentWeight, approvedList, permission, result, transaction }`.
@@ -136,12 +149,20 @@ export async function getSignWeight(
   // assertion would compare the node's echo against whatever the object says
   // by then rather than against what was sent — accusing an honest node, or
   // passing a forged echo the object has come to match.
-  const transaction = cloneTransaction(parameters.transaction)
+  const snapshot = cloneTransaction(parameters.transaction)
 
-  if (!transaction.raw_data_hex || !transaction.txID)
+  if (!snapshot.raw_data_hex || !snapshot.txID)
     throw new BaseError(
       'getSignWeight requires a built transaction carrying `raw_data_hex` and `txID` (sign or multiSign it first).',
     )
+
+  // The same relay boundary as broadcast: the node rebuilds the transaction
+  // from `raw_data`, read as `visible: false` JSON. The triple is checked and
+  // `raw_data` re-derived from the checked bytes, so a spelling the signing
+  // paths accept but the node does not (Base58, `0x` EVM, raw bytes) is never
+  // sent verbatim — and a drifted model is refused here rather than weighed
+  // by the node and reported back as a tampered echo.
+  const transaction = canonicalizeTransaction(snapshot)
 
   // A `NOT_ENOUGH_PERMISSION` result is a normal collecting state that the
   // generic normalizer rejects; recover the body when that happens.

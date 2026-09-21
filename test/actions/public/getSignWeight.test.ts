@@ -5,6 +5,8 @@ import { getSignWeight } from '../../../src/actions/public/getSignWeight.js'
 import { createPublicClient } from '../../../src/clients/createPublicClient.js'
 import { BaseError } from '../../../src/errors/base.js'
 import { TransactionTamperedError } from '../../../src/errors/rpc.js'
+import type { TronHexAddress } from '../../../src/types/address.js'
+import { toBase58 } from '../../../src/utils/address/toBase58.js'
 import { decodeRawData } from '../../../src/utils/transaction/decodeRawData.js'
 import { getTransactionId } from '../../../src/utils/transaction/getTransactionId.js'
 import { toRawDataHex } from '../../../src/utils/transaction/serializeRawData.js'
@@ -168,6 +170,86 @@ test('flags a tampered echo even when the caller object has changed to match it'
   await expect(
     getSignWeight(client, { transaction: local }),
   ).rejects.toBeInstanceOf(TransactionTamperedError)
+})
+
+// Signing accepts any address spelling the serializer does (it is the same
+// bytes), and hands the caller's spelling back — so a transaction rendered
+// `visible: true` reaches this boundary signed and intact. The node reads
+// `raw_data` as `visible: false` JSON, so what is sent is the canonical
+// rendering of the checked bytes.
+const visibleRawData = {
+  ...boundRawData,
+  contract: boundRawData.contract.map((contract) => {
+    const value = contract.parameter.value as {
+      owner_address: TronHexAddress
+      to_address: TronHexAddress
+    }
+    return {
+      ...contract,
+      parameter: {
+        ...contract.parameter,
+        value: {
+          ...value,
+          owner_address: toBase58(value.owner_address),
+          to_address: toBase58(value.to_address),
+        },
+      },
+    }
+  }),
+}
+
+test('sends the canonical node-JSON model for a `visible: true` rendering, and returns that', async () => {
+  const { transport, bodyOf } = createMockTransport({
+    responses: {
+      getsignweight: {
+        response: {
+          permission,
+          approved_list: ['TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC'],
+          current_weight: 1,
+          transaction: {
+            transaction: { txID: tx.txID, raw_data_hex: tx.raw_data_hex },
+          },
+        },
+      },
+    },
+  })
+  const client = createPublicClient({ transport })
+
+  const result = await getSignWeight(client, {
+    transaction: {
+      ...tx,
+      raw_data: visibleRawData,
+      visible: true,
+    } as SignableTransaction,
+  })
+
+  expect((bodyOf('getsignweight') as SignableTransaction).raw_data).toEqual(
+    decodeRawData(tx.raw_data_hex),
+  )
+  // The returned transaction is what was sent — hex addresses, so it must
+  // not still claim to be the `visible: true` form.
+  expect(result.transaction).toEqual({
+    ...tx,
+    raw_data: decodeRawData(tx.raw_data_hex),
+    visible: false,
+  })
+})
+
+test('refuses a raw_data model that does not serialize to raw_data_hex, before any request', async () => {
+  const { transport, calls } = createMockTransport({ responses: {} })
+  const client = createPublicClient({ transport })
+
+  const err = (await getSignWeight(client, {
+    transaction: {
+      ...tx,
+      // A drifted model: the bytes (and signatures) say something else, and
+      // the node would weigh the model.
+      raw_data: { ...tx.raw_data, fee_limit: 1_000_000n },
+    },
+  }).catch((e) => e)) as BaseError
+  expect(err).toBeInstanceOf(BaseError)
+  expect(err.message).toContain('integrity check (txCheck)')
+  expect(calls).toHaveLength(0)
 })
 
 test('throws when the transaction has not been built (no raw_data_hex/txID)', async () => {

@@ -7,6 +7,9 @@ import {
   TransactionExpiredError,
   TronRpcError,
 } from '../../../src/errors/rpc.js'
+import type { TronHexAddress } from '../../../src/types/address.js'
+import { toBase58 } from '../../../src/utils/address/toBase58.js'
+import { hexToBytes } from '../../../src/utils/encoding/toBytes.js'
 import { decodeRawData } from '../../../src/utils/transaction/decodeRawData.js'
 import { rpc } from '../../fixtures/rpc/loader.js'
 import { createMockTransport } from '../../mock/createMockTransport.js'
@@ -92,6 +95,78 @@ test('returns the snapshot it broadcast, not the caller object', async () => {
   expect(response.transaction).toEqual(signedTransaction)
   expect(response.transaction).not.toHaveProperty('visible')
   expect(response.transaction).toEqual(bodyOf('broadcasttransaction'))
+})
+
+// txCheck runs the SDK's deliberately lenient serializer, so a model spelling
+// its addresses any accepted way passes it byte-for-byte — but the node parses
+// `raw_data` as `visible: false` JSON and reads only `41…` hex. What is relayed
+// must be the canonical rendering of the checked bytes, never the caller's
+// spelling of them.
+const canonicalValue = signedTransaction.raw_data.contract[0]!.parameter
+  .value as {
+  owner_address: TronHexAddress
+  to_address: TronHexAddress
+  amount: number
+}
+
+function respell(value: Record<string, unknown>) {
+  return {
+    ...signedTransaction,
+    raw_data: {
+      ...signedTransaction.raw_data,
+      contract: [
+        {
+          ...signedTransaction.raw_data.contract[0]!,
+          parameter: {
+            ...signedTransaction.raw_data.contract[0]!.parameter,
+            value: { ...canonicalValue, ...value },
+          },
+        },
+      ],
+    },
+  } as typeof signedTransaction
+}
+
+test.each([
+  [
+    'Base58 (a `visible: true` rendering)',
+    {
+      owner_address: toBase58(canonicalValue.owner_address),
+      to_address: toBase58(canonicalValue.to_address),
+    },
+  ],
+  [
+    '0x EVM 20-byte',
+    {
+      owner_address: `0x${canonicalValue.owner_address.slice(2)}`,
+      to_address: `0x${canonicalValue.to_address.slice(2)}`,
+    },
+  ],
+  [
+    'Uint8Array',
+    {
+      owner_address: hexToBytes(`0x${canonicalValue.owner_address}`),
+      to_address: hexToBytes(`0x${canonicalValue.to_address}`),
+    },
+  ],
+  ['bigint amount', { amount: BigInt(canonicalValue.amount) }],
+])('relays the canonical node-JSON model for a %s spelling', async (_, value) => {
+  const { transport, bodyOf } = createMockTransport({
+    responses: {
+      broadcasttransaction: { response: rpc('broadcasttransaction.ok') },
+    },
+  })
+  const client = createClient({ transport })
+
+  const response = await broadcastTransaction(client, {
+    signedTransaction: respell(value),
+  })
+
+  // The same bytes, so the same transaction — sent in the one form the node
+  // reads, and handed back as exactly what was sent.
+  expect(bodyOf('broadcasttransaction')).toEqual(signedTransaction)
+  expect(response.transaction).toEqual(signedTransaction)
+  expect(response.txid).toBe(TX_ID)
 })
 
 test('throws TronRpcError when the transaction carries no signature', async () => {
