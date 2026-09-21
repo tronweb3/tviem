@@ -9,6 +9,10 @@ import {
   type ToBase58ErrorType,
   toBase58,
 } from '../../utils/address/toBase58.js'
+import {
+  type CloneTransactionErrorType,
+  cloneTransaction,
+} from '../../utils/transaction/cloneTransaction.js'
 import { assertUnchangedTransaction } from '../utils/assertUnchangedTransaction.js'
 import { recoverEchoedResultBody } from '../utils/recoverMultisigResult.js'
 
@@ -24,12 +28,16 @@ export type GetApprovedListReturnType = {
   result?:
     | { code?: string | undefined; message?: string | undefined }
     | undefined
-  /** The **local** transaction, re-verified against the node's echoed copy. */
+  /**
+   * The **local** transaction — a snapshot taken on entry, which is what was
+   * sent and what the node's echoed copy was verified against.
+   */
   transaction: SignableTransaction
 }
 
 export type GetApprovedListErrorType =
   | BaseErrorType
+  | CloneTransactionErrorType
   | RequestErrorType
   | ToBase58ErrorType
   | TransactionTamperedErrorType
@@ -60,8 +68,16 @@ type RawApprovedList = {
  */
 export async function getApprovedList(
   client: Client,
-  { transaction }: GetApprovedListParameters,
+  parameters: GetApprovedListParameters,
 ): Promise<GetApprovedListReturnType> {
+  // Snapshot once, like the sign and broadcast paths: the guard below, the
+  // request body and the echo assertion are three separate reads of the
+  // caller's object with an `await` between the last two. Read live, the
+  // assertion would compare the node's echo against whatever the object says
+  // by then rather than against what was sent — accusing an honest node, or
+  // passing a forged echo the object has come to match.
+  const transaction = cloneTransaction(parameters.transaction)
+
   if (!transaction.raw_data_hex || !transaction.txID)
     throw new BaseError(
       'getApprovedList requires a built transaction carrying `raw_data_hex` and `txID` (sign or multiSign it first).',

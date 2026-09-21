@@ -50,7 +50,10 @@ test('returns the approved list (Base58) and the LOCAL transaction', async () =>
 
   const result = await getApprovedList(client, { transaction: tx })
   expect(result.approvedList).toEqual(['TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC'])
-  expect(result.transaction).toBe(tx)
+  // The local transaction, never the node's two-field echo — as the snapshot
+  // the echo was checked against, not the caller's live object.
+  expect(result.transaction).toEqual(tx)
+  expect(result.transaction).not.toBe(tx)
 })
 
 test('throws TransactionTamperedError when the node echoes a different txID', async () => {
@@ -72,5 +75,62 @@ test('throws TransactionTamperedError when the node echoes a different txID', as
   const client = createPublicClient({ transport })
   await expect(
     getApprovedList(client, { transaction: tx }),
+  ).rejects.toBeInstanceOf(TransactionTamperedError)
+})
+
+test('checks the echo against the transaction that was sent, not a later read of the caller object', async () => {
+  // The caller's object changes while the request is in flight. The node is
+  // honest — it echoes exactly the bytes it was sent — so this is not
+  // tampering, and the transaction handed back is the one that was inspected.
+  const local = { ...tx }
+  const { transport } = createMockTransport({
+    responses: {
+      getapprovedlist: {
+        fn: ({ body }) => {
+          const sent = body as { txID: string; raw_data_hex: string }
+          local.raw_data_hex = '0a02deadbeefcafe'
+          return {
+            approved_list: ['TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC'],
+            transaction: {
+              transaction: { txID: sent.txID, raw_data_hex: sent.raw_data_hex },
+            },
+          }
+        },
+      },
+    },
+  })
+  const client = createPublicClient({ transport })
+
+  const result = await getApprovedList(client, { transaction: local })
+
+  expect(result.approvedList).toEqual(['TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC'])
+  expect(result.transaction.raw_data_hex).toBe(tx.raw_data_hex)
+})
+
+test('flags a tampered echo even when the caller object has changed to match it', async () => {
+  // The reverse swap: the node echoes bytes it was never sent, and by the
+  // time the response lands the caller's object reads as those same bytes. A
+  // check against a fresh read would pass and bless the forged transaction.
+  const forged = '0a02deadbeefcafe'
+  const local = { ...tx }
+  const { transport } = createMockTransport({
+    responses: {
+      getapprovedlist: {
+        fn: () => {
+          local.raw_data_hex = forged
+          return {
+            approved_list: [],
+            transaction: {
+              transaction: { txID: tx.txID, raw_data_hex: forged },
+            },
+          }
+        },
+      },
+    },
+  })
+  const client = createPublicClient({ transport })
+
+  await expect(
+    getApprovedList(client, { transaction: local }),
   ).rejects.toBeInstanceOf(TransactionTamperedError)
 })
