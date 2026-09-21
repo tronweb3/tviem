@@ -240,7 +240,8 @@ export function isArgOfType(arg: unknown, abiParameter: AbiParameter): boolean {
  * lists are unambiguous. Tuples recurse component-wise and arrays
  * element-wise; an empty array still compares the element types once, so
  * arg-independent pairs (`address`/`bytes20`) stay ambiguous. On TRON,
- * `address` is ambiguous with `bytes20`, and with `string`/`bytes` when the
+ * `address` is ambiguous with `bytes20` and `bytes21` — the widths of the EVM
+ * and the `41…` address forms — and with `string`/`bytes` when the
  * argument is a valid address. `string` is ambiguous with any `bytes`/`bytesN`
  * for a string argument, and differing bytes widths are ambiguous with each
  * other for a string/Uint8Array argument — like differing integer widths,
@@ -329,7 +330,15 @@ export function getAmbiguousTypes(
     ]
 
     const ambiguous = (() => {
-      if (types.includes('address') && types.includes('bytes20')) return true
+      // `address` overlaps every fixed bytes width an accepted address form
+      // fits: `bytes20` (the EVM form) and, because `address` matching is
+      // TRON-aware, `bytes21` (the `41…` form) — the one width where a
+      // `0x41…` arg also ENCODES under the bytes overload, to a different
+      // selector and word layout, so the last structural match would
+      // silently pick the function by ABI order. No address is a valid value
+      // of any other width; those pairs fail at encoding instead.
+      if (types.includes('address') && types.some(isAddressWidthBytesType))
+        return true
       if (types.includes('address') && types.includes('string'))
         return isAddressArg(args[parameterIndex as unknown as number])
       if (types.includes('address') && types.includes('bytes'))
@@ -370,6 +379,14 @@ export function getAmbiguousTypes(
 
 function isAddressArg(arg: unknown): boolean {
   return typeof arg === 'string' && isAddress(arg, { strict: false })
+}
+
+/**
+ * Whether a type is a fixed bytes width that an accepted address form fits:
+ * `bytes20` (EVM hex) or `bytes21` (TRON `41…` hex).
+ */
+function isAddressWidthBytesType(type: string): boolean {
+  return type === 'bytes20' || type === 'bytes21'
 }
 
 /** Whether a type encodes a number/bigint into a 32-byte word (`(u)intN` or the TRON `trcToken`). */

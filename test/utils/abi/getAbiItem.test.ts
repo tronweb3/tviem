@@ -973,6 +973,66 @@ test('throws on an ambiguous address[]/bytes20[] overload', () => {
   ).toThrowError(AbiItemAmbiguityError)
 })
 
+// `address` is TRON-aware: it accepts the 21-byte `41…` form as well as the
+// 20-byte EVM one, while every `bytesN` accepts any hex string. So `bytes21`
+// overlaps `address` here exactly the way `bytes20` does on the EVM — a
+// `0x41…` arg encodes under either overload, to a different selector AND a
+// different word layout (right-padded bytes vs a left-padded address), and
+// letting the last structural match win picks between them by ABI order.
+const addressVsBytes21Abi = [
+  {
+    type: 'function',
+    name: 'set',
+    inputs: [{ name: 'x', type: 'address' }],
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    name: 'set',
+    inputs: [{ name: 'x', type: 'bytes21' }],
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+] as const satisfies Abi
+
+test('throws on an ambiguous address/bytes21 overload, in either ABI order', () => {
+  const tronHex = '0x41e1ab8145f7e55dc933d51a18c793f901a3a0b276'
+  for (const abi of [
+    addressVsBytes21Abi,
+    [...addressVsBytes21Abi].reverse(),
+  ] as Abi[])
+    expect(() =>
+      encodeFunctionData({ abi, functionName: 'set', args: [tronHex] }),
+    ).toThrowError(AbiItemAmbiguityError)
+
+  expect(
+    getAmbiguousTypes(
+      [{ name: 'x', type: 'address' }],
+      [{ name: 'x', type: 'bytes21' }] as never,
+      [tronHex],
+    ),
+  ).toEqual(['address', 'bytes21'])
+  // Arg-independent, like address/bytes20: an empty array matches both
+  // overloads and encodes identically under each — only the selector differs.
+  expect(
+    getAmbiguousTypes(
+      [{ name: 'xs', type: 'address[]' }],
+      [{ name: 'xs', type: 'bytes21[]' }] as never,
+      [[]],
+    ),
+  ).toEqual(['address', 'bytes21'])
+  // Only the widths an accepted address form fits (20, 21) overlap: no
+  // address is a valid bytes32, so that pair settles nothing here.
+  expect(
+    getAmbiguousTypes(
+      [{ name: 'x', type: 'address' }],
+      [{ name: 'x', type: 'bytes32' }] as never,
+      [tronHex],
+    ),
+  ).toBeUndefined()
+})
+
 test('a tuple whose own components are ambiguous still reports the inner pair', () => {
   expect(
     getAmbiguousTypes(
