@@ -3,6 +3,7 @@ import { buildAccountPermissionUpdate } from '../../../src/actions/wallet/accoun
 import { createPublicClient } from '../../../src/clients/createPublicClient.js'
 import { createWalletClient } from '../../../src/clients/createWalletClient.js'
 import { AccountNotFoundError } from '../../../src/errors/rpc.js'
+import { addressToHex } from '../../../src/utils/address/addressToHex.js'
 import { hexToBytes } from '../../../src/utils/encoding/toBytes.js'
 import { rpc } from '../../fixtures/rpc/loader.js'
 import { loadTxFixtureFile } from '../../fixtures/tx/loader.js'
@@ -142,6 +143,44 @@ test('refuses an operations bitmap that is not whole-byte hex', async () => {
     actives: [{ ...active, operations: hexToBytes(active.operations) }],
   })
   expect(tx.txID).toBe(fixture?.txID)
+})
+
+test('caller bytes are snapshotted at call time, not read after the block fetch', async () => {
+  const active = params.actives[0]!
+  const operations = hexToBytes(active.operations)
+  const signer = hexToBytes(
+    `0x${addressToHex('TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC')}`,
+  )
+
+  // The caller reuses its buffers while the action is suspended on the block
+  // fetch — the only await between validation and serialization. The built
+  // transaction must still carry the bytes that were passed in (and checked),
+  // not whatever the buffers hold by the time the codec runs.
+  const { transport } = createMockTransport({
+    responses: {
+      getnowblock: {
+        fn: () => {
+          operations.fill(0xff)
+          signer.fill(0x41)
+          return rpc('getnowblock.fixed')
+        },
+      },
+    },
+  })
+  const client = createWalletClient({ account: pk1, transport })
+
+  const tx = await buildAccountPermissionUpdate(client, {
+    owner: {
+      ...params.owner,
+      keys: [{ address: signer, weight: 1n }, params.owner.keys[1]!],
+    },
+    actives: [
+      { ...active, operations, keys: [{ address: signer, weight: 1n }] },
+    ],
+  })
+
+  expect(tx.txID).toBe(fixture?.txID)
+  expect(tx.raw_data_hex).toBe(fixture?.rawDataHex)
 })
 
 test('throws AccountNotFoundError when no account is available (bare action)', async () => {

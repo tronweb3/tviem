@@ -14,6 +14,7 @@ import {
   type AddressToHexErrorType,
   addressToHex,
 } from '../../utils/address/addressToHex.js'
+import { bareHex } from '../../utils/encoding/bareHex.js'
 import {
   ContractType,
   contractTypeUrlPrefix,
@@ -146,7 +147,13 @@ function toPermission(
       ? { permission_name: input.permission_name }
       : {}),
     threshold: input.threshold,
-    keys: input.keys.map(({ address, weight }) => ({ address, weight })),
+    // Pinned to hex here, synchronously: the codec first reads the model after
+    // the block fetch, so a caller-owned `Uint8Array` carried by reference
+    // could change between this check and the bytes that get signed.
+    keys: input.keys.map(({ address, weight }) => ({
+      address: addressToHex(address),
+      weight,
+    })),
   }
 }
 
@@ -175,7 +182,8 @@ function toActivePermission(
   return {
     ...permission,
     ...(id !== undefined ? { id } : {}),
-    operations,
+    // Snapshot of the bytes that passed the guard above (see `keys`).
+    operations: bareHex(operations),
   }
 }
 
