@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest'
 import { version } from '../../../src/errors/version.js'
-
+import { numberToBytes } from '../../../src/utils/encoding/toBytes.js'
 import {
   boolToHex,
   bytesToHex,
@@ -290,6 +290,59 @@ Version: @tronweb3/tviem@${version}`,
 Version: @tronweb3/tviem@${version}`,
       }),
     )
+  })
+})
+
+// `size: 0` is a size. It was tested by truthiness, so `0` read as "no size
+// given": the range check lost its upper bound (a bigint had none at all, a
+// number fell back to MAX_SAFE_INTEGER), the value came back unpadded at
+// whatever width it needed, and the signed branch computed `1n << 0n` and
+// turned -1 into `0x0`. Every sibling encoder refuses `size: 0`.
+describe('numberToHex with size: 0', () => {
+  test('holds the value to the zero-byte range like any other width', () => {
+    expect(() => numberToHex(255n, { size: 0 })).toThrowError(
+      expect.objectContaining({
+        name: 'IntegerOutOfRangeError',
+        message: `Number "255n" is not in safe 0-bit unsigned integer range (0n to 0n)
+
+Version: @tronweb3/tviem@${version}`,
+      }),
+    )
+    expect(() => numberToHex(255, { size: 0 })).toThrowError(
+      expect.objectContaining({ name: 'IntegerOutOfRangeError' }),
+    )
+    expect(() => numberToHex(2n ** 300n, { size: 0 })).toThrowError(
+      expect.objectContaining({ name: 'IntegerOutOfRangeError' }),
+    )
+  })
+
+  test('signed: no value fits zero bits, negative or not', () => {
+    for (const value of [-1, -1n, 0, 1n])
+      expect(() => numberToHex(value, { size: 0, signed: true })).toThrowError(
+        expect.objectContaining({ name: 'IntegerOutOfRangeError' }),
+      )
+  })
+
+  test('zero is in range but still cannot be padded into zero bytes', () => {
+    // As `boolToHex(false, { size: 0 })` throws: `0x0` is one byte.
+    expect(() => numberToHex(0, { size: 0 })).toThrowError(
+      expect.objectContaining({ name: 'SizeExceedsPaddingSizeError' }),
+    )
+  })
+
+  test('the delegating encoders refuse it too', () => {
+    expect(() => toHex(255, { size: 0 })).toThrowError(
+      expect.objectContaining({ name: 'IntegerOutOfRangeError' }),
+    )
+    expect(() => numberToBytes(255, { size: 0 })).toThrowError(
+      expect.objectContaining({ name: 'IntegerOutOfRangeError' }),
+    )
+  })
+
+  test('an omitted size is still unbounded and unpadded', () => {
+    expect(numberToHex(255n)).toBe('0xff')
+    expect(numberToHex(2n ** 300n)).toBe(`0x1${'0'.repeat(75)}`)
+    expect(numberToHex(255n, { size: undefined })).toBe('0xff')
   })
 })
 

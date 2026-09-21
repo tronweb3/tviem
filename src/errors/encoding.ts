@@ -21,7 +21,10 @@ export class IntegerOutOfRangeError extends BaseError {
   }) {
     super(
       `Number "${value}" is not in safe ${
-        size ? `${size * 8}-bit ${signed ? 'signed' : 'unsigned'} ` : ''
+        // `size: 0` is a size: name the width, or "(0 to 0)" explains nothing.
+        size !== undefined
+          ? `${size * 8}-bit ${signed ? 'signed' : 'unsigned'} `
+          : ''
       }integer range ${max ? `(${min} to ${max})` : `(above ${min})`}`,
       { name: 'IntegerOutOfRangeError' },
     )

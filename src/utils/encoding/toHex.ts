@@ -188,20 +188,28 @@ export function numberToHex(
 
   const value = BigInt(value_)
 
-  let maxValue: bigint | number | undefined
-  if (size) {
+  // `size: 0` is a size, not the absence of one — `typeof`, as the sibling
+  // encoders test it, never truthiness. Read as "no size given" it dropped the
+  // upper bound (a bigint had none at all, a number fell back to
+  // MAX_SAFE_INTEGER), skipped the padding, and sent a signed negative through
+  // `1n << 0n`, turning -1 into `0x0`. The same goes for `maxValue` below: at
+  // size 0 it is `0n`, which a truthiness test would again read as "unset".
+  const sized = typeof size === 'number'
+
+  let maxValue: bigint | undefined
+  if (sized) {
     if (signed) maxValue = (1n << (BigInt(size) * 8n - 1n)) - 1n
     else maxValue = 2n ** (BigInt(size) * 8n) - 1n
   } else if (typeof value_ === 'number') {
     maxValue = BigInt(Number.MAX_SAFE_INTEGER)
   }
 
-  const minValue = typeof maxValue === 'bigint' && signed ? -maxValue - 1n : 0
+  const minValue = maxValue !== undefined && signed ? -maxValue - 1n : 0
 
-  if ((maxValue && value > maxValue) || value < minValue) {
+  if ((maxValue !== undefined && value > maxValue) || value < minValue) {
     const suffix = typeof value_ === 'bigint' ? 'n' : ''
     throw new IntegerOutOfRangeError({
-      max: maxValue ? `${maxValue}${suffix}` : undefined,
+      max: maxValue !== undefined ? `${maxValue}${suffix}` : undefined,
       min: `${minValue}${suffix}`,
       signed,
       size,
@@ -212,7 +220,7 @@ export function numberToHex(
   const hex = `0x${(
     signed && value < 0 ? (1n << BigInt(size * 8)) + BigInt(value) : value
   ).toString(16)}` as Hex
-  if (size) return pad(hex, { size }) as Hex
+  if (sized) return pad(hex, { size }) as Hex
   return hex
 }
 
