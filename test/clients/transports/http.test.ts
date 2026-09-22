@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, expect, test, vi } from 'vitest'
+import { defineChain } from '../../../src/chains/defineChain.js'
 import {
   http,
   normalizeTronError,
@@ -221,16 +222,75 @@ test('value exposes fullUrl / solidityUrl / fetchOptions', () => {
   ).toBe(API_KEY)
 })
 
-test('solidityUrl defaults to the full url', () => {
+/** A chain whose three node roles live on distinct hosts. */
+const chain = defineChain({
+  id: 1,
+  name: 'Test',
+  nativeCurrency: { name: 'TRON', symbol: 'TRX', decimals: 6 },
+  rpcUrls: {
+    default: {
+      full: { http: ['https://full.chain'] },
+      solidity: { http: ['https://solidity.chain'] },
+      event: { http: ['https://event.chain'] },
+    },
+  },
+})
+
+/** The same chain with no event host configured. */
+const chainWithoutEvent = defineChain({
+  ...chain,
+  rpcUrls: {
+    default: {
+      full: { http: ['https://full.chain'] },
+      solidity: { http: ['https://solidity.chain'] },
+    },
+  },
+})
+
+test('solidityUrl: config wins over an explicit url and the chain', () => {
+  const t = http(HOST, { solidityUrl: 'https://solidity.example' })({ chain })
+  expect(t.value?.solidityUrl).toBe('https://solidity.example')
+})
+
+test('solidityUrl: an explicit url wins over the chain solidity host', () => {
+  const t = http(HOST)({ chain })
+  expect(t.value?.solidityUrl).toBe(HOST)
+})
+
+test('solidityUrl: without an explicit url, the chain solidity host is used', () => {
+  const t = http()({ chain })
+  expect(t.value?.fullUrl).toBe('https://full.chain')
+  expect(t.value?.solidityUrl).toBe('https://solidity.chain')
+})
+
+test('solidityUrl: without a chain, defaults to the full url', () => {
   const t = http(HOST)({})
   expect(t.value?.solidityUrl).toBe(HOST)
 })
 
-test('eventUrl comes from config, else defaults to the full url', () => {
-  expect(
-    http(HOST, { eventUrl: 'https://event.example' })({}).value?.eventUrl,
-  ).toBe('https://event.example')
-  expect(http(HOST)({}).value?.eventUrl).toBe(HOST)
+test('eventUrl: config wins over an explicit url and the chain', () => {
+  const t = http(HOST, { eventUrl: 'https://event.example' })({ chain })
+  expect(t.value?.eventUrl).toBe('https://event.example')
+})
+
+test('eventUrl: an explicit url wins over the chain event host', () => {
+  const t = http(HOST)({ chain })
+  expect(t.value?.eventUrl).toBe(HOST)
+})
+
+test('eventUrl: without an explicit url, the chain event host is used', () => {
+  const t = http()({ chain })
+  expect(t.value?.eventUrl).toBe('https://event.chain')
+})
+
+test('eventUrl: without an explicit url or a chain event host, the chain full host is used', () => {
+  const t = http()({ chain: chainWithoutEvent })
+  expect(t.value?.eventUrl).toBe('https://full.chain')
+})
+
+test('eventUrl: without a chain, defaults to the full url', () => {
+  const t = http(HOST)({})
+  expect(t.value?.eventUrl).toBe(HOST)
 })
 
 test('normalizeTronError returns non-object bodies unchanged', () => {

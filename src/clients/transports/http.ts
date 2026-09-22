@@ -44,8 +44,9 @@ export type HttpTransportConfig = {
   /** The name of the HTTP transport. */
   name?: TransportConfig['name'] | undefined
   /**
-   * Event index (TronGrid `/v1/*`) base URL. Defaults to the chain's `event`
-   * host, else `url` (public TronGrid hosts serve `/wallet` and `/v1` alike).
+   * Event index (TronGrid `/v1/*`) base URL. Defaults to the explicit `url`
+   * when one is given, else the chain's `event` host, else the full host
+   * (public TronGrid hosts serve `/wallet` and `/v1` alike).
    */
   eventUrl?: string | undefined
   /** Return the raw node body without error normalization. */
@@ -54,7 +55,10 @@ export type HttpTransportConfig = {
   retryCount?: TransportConfig['retryCount'] | undefined
   /** The base delay (in ms) between retries. */
   retryDelay?: TransportConfig['retryDelay'] | undefined
-  /** SolidityNode base URL. Defaults to the chain's solidity host, else `url`. */
+  /**
+   * SolidityNode base URL. Defaults to the explicit `url` when one is given,
+   * else the chain's `solidity` host, else the full host.
+   */
   solidityUrl?: string | undefined
   /** The timeout (in ms) for the HTTP request. @default 10_000 */
   timeout?: TransportConfig['timeout'] | undefined
@@ -211,6 +215,9 @@ export function normalizeTronError(
 /**
  * Creates an HTTP transport that connects to a TRON node's REST API.
  *
+ * Each node role resolves its base URL as `config.<role>Url` → the explicit
+ * `url` → the chain's host for that role → the full host.
+ *
  * @param url FullNode base URL. Defaults to the chain's `full` RPC URL.
  */
 export function http(
@@ -231,10 +238,16 @@ export function http(
     const timeout = timeout_ ?? config.timeout ?? 10_000
     const fullUrl = url || chain?.rpcUrls.default.full.http[0]
     if (!fullUrl) throw new UrlRequiredError()
+    // An explicit `url` names ONE node the caller chose (a private node, a
+    // proxy), which serves every role; only a chain-derived full host defers
+    // to the chain's own solidity / event hosts.
     const solidityUrl =
-      config.solidityUrl || chain?.rpcUrls.default.solidity.http[0] || fullUrl
+      config.solidityUrl ||
+      url ||
+      chain?.rpcUrls.default.solidity.http[0] ||
+      fullUrl
     const eventUrl =
-      config.eventUrl || chain?.rpcUrls.default.event?.http[0] || fullUrl
+      config.eventUrl || url || chain?.rpcUrls.default.event?.http[0] || fullUrl
 
     // Merge through the platform's `Headers` rather than object spread: all
     // three legal `HeadersInit` forms survive (a spread silently turns a
