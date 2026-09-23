@@ -418,6 +418,39 @@ describe('hashTypedData validation', () => {
       ).not.toThrow()
   })
 
+  // A `string` field is hashed through `TextEncoder`, which ToString-coerces
+  // anything: `null` → "null", `['a','b']` → "a,b" (the same digest as the
+  // string "a,b"), `{}` → "[object Object]". ethers and viem throw on these,
+  // so a signature over the coerced digest cannot be cross-verified. Only a
+  // real string is accepted.
+  test.each([
+    ['null', null],
+    ['a number', 42],
+    ['an array', ['a', 'b']],
+    ['an object', {}],
+    ['a Uint8Array', new Uint8Array([1, 2])],
+  ])('rejects %s for a string field', (_label, memo) => {
+    expect(() =>
+      hashTypedData({
+        domain,
+        types: { X: [{ name: 'memo', type: 'string' }] },
+        primaryType: 'X',
+        message: { memo },
+      }),
+    ).toThrow(/Invalid string value/)
+  })
+
+  test('accepts the empty string for a string field', () => {
+    expect(() =>
+      hashTypedData({
+        domain,
+        types: { X: [{ name: 'memo', type: 'string' }] },
+        primaryType: 'X',
+        message: { memo: '' },
+      }),
+    ).not.toThrow()
+  })
+
   // A `number` past 2^53 arrives already rounded, so encoding it would sign a
   // value the caller never wrote; a fraction/NaN would otherwise leak a raw
   // RangeError. Only safe-integer numbers (or bigint / decimal string) pass.

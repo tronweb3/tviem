@@ -314,6 +314,19 @@ function validateField(
     return
   }
 
+  // `string`: a real string only. `encodeField` hashes through `TextEncoder`,
+  // which ToString-coerces anything — `null` → "null", `['a','b']` → "a,b"
+  // (the digest of the string "a,b"), `{}` → "[object Object]" — so a
+  // non-string would sign a plausible digest for a value the caller never
+  // wrote, and one ethers/viem (which throw here) can never reproduce.
+  if (type === 'string') {
+    if (typeof value !== 'string')
+      throw new BaseError(
+        `Invalid string value: expected a string, got ${kindOf(value)}.`,
+      )
+    return
+  }
+
   // `(u)intN` / `trcToken`: the value must fit the declared width.
   // `encodeField` always encodes a full 32-byte word, so narrower widths are
   // only enforced here.
@@ -400,10 +413,10 @@ function validateField(
  * a defined struct (or `EIP712Domain`), no declared struct — referenced or
  * not — may shadow a primitive type, the domain must be an object whose
  * fields all belong to the effective `EIP712Domain` struct and match its
- * types, integer values must fit their declared width, and `bytes`/`bytesN`
- * values must be whole-byte hex or a `Uint8Array` — a `bytesN` exactly `N`
- * bytes — so malformed input fails loudly instead of producing a silently
- * wrong digest.
+ * types, `bool`/`string` values must be a real boolean/string, integer
+ * values must fit their declared width, and `bytes`/`bytesN` values must be
+ * whole-byte hex or a `Uint8Array` — a `bytesN` exactly `N` bytes — so
+ * malformed input fails loudly instead of producing a silently wrong digest.
  */
 function validateTypedData(parameters: HashTypedDataParameters): void {
   const { domain, types, primaryType, message } = parameters
