@@ -6,7 +6,10 @@ import {
   InvalidAbiEncodingTypeError,
 } from '../../../src/errors/abi.js'
 import { BaseError } from '../../../src/errors/base.js'
-import { InvalidHexValueError } from '../../../src/errors/encoding.js'
+import {
+  InvalidHexValueError,
+  MissingHexPrefixError,
+} from '../../../src/errors/encoding.js'
 import { decodeAbiParameters } from '../../../src/utils/abi/decodeAbiParameters.js'
 import { decodeFunctionResult } from '../../../src/utils/abi/decodeFunctionResult.js'
 import { encodeAbiParameters } from '../../../src/utils/abi/encodeAbiParameters.js'
@@ -166,6 +169,47 @@ describe('payload shape validation', () => {
     expect(error).toBeInstanceOf(BaseError)
     // Before the guard this silently returned 15n (255 >> 4).
     expect(error?.message).toContain('odd length')
+  })
+
+  // java-tron returns `constant_result[0]`, `contractResult[0]` and
+  // `parameter.value.data` as BARE hex. `hexToBytes` slices two characters
+  // off unconditionally, so a bare payload loses its first byte: every word
+  // reads one byte late, and where the data holds more words than the params
+  // consume, the shifted value surfaces with no error. The `Hex` type shields
+  // TypeScript callers; plain JS and an `as Hex` cast are not shielded.
+  test('rejects a bare (unprefixed) hex payload instead of dropping its first byte', () => {
+    // Two words, 1 and 2. Before the guard this decoded 256n: the first word
+    // was read one byte late, so its `…01` became `…0100`.
+    const bare = `${word(1)}${word(2)}` as `0x${string}`
+    const error = caught(() => decodeAbiParameters(uint256, bare))
+    expect(error).toBeInstanceOf(MissingHexPrefixError)
+    expect(error).toBeInstanceOf(BaseError)
+    expect(error?.message).toContain('not 0x-prefixed')
+    // Neither an upper-case prefix nor the empty string is `Hex`.
+    expect(
+      caught(() =>
+        decodeAbiParameters(uint256, `0X${word(255)}` as `0x${string}`),
+      ),
+    ).toBeInstanceOf(MissingHexPrefixError)
+    expect(
+      caught(() => decodeAbiParameters(uint256, '' as `0x${string}`)),
+    ).toBeInstanceOf(MissingHexPrefixError)
+  })
+
+  test('the prefix guard reaches callers that decode node data (decodeFunctionResult)', () => {
+    // Before the guard decodeFunctionResult converted first, and its
+    // alignment check reported a 31- or 63-byte payload — naming the wrong
+    // fault for a value that was simply never prefixed.
+    for (const data of [word(255), `${word(1)}${word(2)}`]) {
+      const error = caught(() =>
+        decodeFunctionResult({
+          abi: balanceOfAbi,
+          functionName: 'balanceOf',
+          data: data as `0x${string}`,
+        }),
+      )
+      expect(error).toBeInstanceOf(MissingHexPrefixError)
+    }
   })
 
   test('tolerates whole trailing bytes past the encoding', () => {

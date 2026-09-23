@@ -17,6 +17,8 @@ import {
   type InvalidBytesBooleanErrorType,
   InvalidHexValueError,
   type InvalidHexValueErrorType,
+  MissingHexPrefixError,
+  type MissingHexPrefixErrorType,
 } from '../../errors/encoding.js'
 import type { ErrorType } from '../../errors/utils.js'
 import type { Address } from '../../types/address.js'
@@ -27,6 +29,7 @@ import {
   type Cursor,
   createCursor,
 } from '../cursor.js'
+import { isHex } from '../data/isHex.js'
 import {
   bytesToBigInt,
   bytesToBool,
@@ -60,6 +63,7 @@ export type DecodeAbiParametersErrorType =
   | InvalidAbiDecodingTypeErrorType
   | InvalidBytesBooleanErrorType
   | InvalidHexValueErrorType
+  | MissingHexPrefixErrorType
   | PositionOutOfBoundsErrorType
   | ToBase58ErrorType
   | ErrorType
@@ -90,6 +94,17 @@ export function decodeAbiParameters<
   params: params,
   data: Hex | ByteArray,
 ): DecodeAbiParametersReturnType<params> {
+  // A string payload must be `0x`-prefixed: `hexToBytes` slices two
+  // characters off unconditionally, so a BARE hex string — java-tron's
+  // dialect for `constant_result[0]`, `contractResult[0]` and
+  // `parameter.value.data` — loses its first byte, every word reads one byte
+  // late, and where the data holds more words than the params consume the
+  // shifted value surfaces with no error (two bare words `1`, `2` decoded
+  // `uint256` as 256n). The `Hex` type shields TypeScript callers; plain JS
+  // and an `as Hex` cast are not shielded. Only the prefix is checked here:
+  // non-hex characters are left for `hexToBytes` to name on its own terms.
+  if (typeof data === 'string' && !isHex(data, { strict: false }))
+    throw new MissingHexPrefixError(data)
   // The payload is bytes, so an odd nibble count is not a byte string at all.
   // `hexToBytes` would left-pad it, shifting every byte by four bits and
   // decoding a plausible-looking wrong value, so reject it before converting.

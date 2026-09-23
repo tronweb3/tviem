@@ -69,6 +69,25 @@ export class InvalidHexValueError extends BaseError {
   }
 }
 
+export type MissingHexPrefixErrorType = MissingHexPrefixError & {
+  name: 'MissingHexPrefixError'
+}
+/**
+ * A string that was to be read as bytes is not `0x`-prefixed hex. java-tron
+ * returns several byte fields as BARE hex (`constant_result`, `contractResult`,
+ * `parameter.value.data`); prefix them before decoding.
+ */
+export class MissingHexPrefixError extends BaseError {
+  constructor(value: string) {
+    super(`Value "${value}" is not 0x-prefixed hex.`, {
+      metaMessages: [
+        'java-tron returns byte fields such as `constant_result`, `contractResult` and `parameter.value.data` as bare hex: prefix the value with "0x" before decoding.',
+      ],
+      name: 'MissingHexPrefixError',
+    })
+  }
+}
+
 export type RlpDepthLimitExceededErrorType = RlpDepthLimitExceededError & {
   name: 'RlpDepthLimitExceededError'
 }

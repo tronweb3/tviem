@@ -8,7 +8,10 @@ import {
   AbiFunctionOutputsNotFoundError,
   type AbiFunctionOutputsNotFoundErrorType,
 } from '../../errors/abi.js'
-import { InvalidHexValueError } from '../../errors/encoding.js'
+import {
+  InvalidHexValueError,
+  MissingHexPrefixError,
+} from '../../errors/encoding.js'
 import type { ErrorType } from '../../errors/utils.js'
 import type {
   ContractFunctionArgs,
@@ -16,6 +19,7 @@ import type {
   ExtractAbiFunctionForArgs,
 } from '../../types/contract.js'
 import type { ByteArray, Hex } from '../../types/misc.js'
+import { isHex } from '../data/isHex.js'
 import { hexToBytes } from '../encoding/toBytes.js'
 import { bytesToHex } from '../encoding/toHex.js'
 import {
@@ -165,7 +169,12 @@ export function decodeFunctionResult<
   // odd-nibble guard has to precede the conversion for the same reason it
   // does in decodeAbiParameters — `hexToBytes` left-pads such a string
   // instead of rejecting it, which would turn "not a byte string" into a
-  // plausible byte count.
+  // plausible byte count. So does the prefix guard: `hexToBytes` drops the
+  // first two characters of a bare-hex string (java-tron's `constant_result`
+  // dialect), and the alignment check below would then report a payload one
+  // byte short — naming the wrong fault for a value that was never prefixed.
+  if (typeof data === 'string' && !isHex(data, { strict: false }))
+    throw new MissingHexPrefixError(data)
   if (typeof data === 'string' && data.length % 2 !== 0)
     throw new InvalidHexValueError(data as Hex)
   const bytes = typeof data === 'string' ? hexToBytes(data) : data

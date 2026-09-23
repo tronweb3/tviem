@@ -670,6 +670,8 @@ export {
   type InvalidHexBooleanErrorType,
   InvalidHexValueError,
   type InvalidHexValueErrorType,
+  MissingHexPrefixError,
+  type MissingHexPrefixErrorType,
   RlpDepthLimitExceededError,
   type RlpDepthLimitExceededErrorType,
   SizeOverflowError,
