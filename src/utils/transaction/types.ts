@@ -369,11 +369,15 @@ export type AssetIssueContract = {
   total_supply: Int64
   /** Staked-supply tranches (field 5, repeated). */
   frozen_supply?: AssetIssueFrozenSupply[] | undefined
-  /** TRX numerator of the ICO price ratio `trx_num/num` (field 6, `int32`). */
+  /**
+   * SUN side of the ICO price ratio `trx_num : num` (field 6, `int32`). In
+   * SUN, not TRX: the chain mints `amountSun * num / trx_num` tokens for a
+   * purchase of `amountSun` (`ParticipateAssetIssueActuator`).
+   */
   trx_num: number
   /** Number of token decimals (field 7, `int32`). */
   precision?: number | undefined
-  /** Token numerator of the ICO price ratio `trx_num/num` (field 8, `int32`). */
+  /** Token side of the ICO price ratio `trx_num : num` (field 8, `int32`). */
   num: number
   /** ICO start time, ms (field 9, `int64`). */
   start_time: Int64

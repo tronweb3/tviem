@@ -54,9 +54,19 @@ export type CreateTokenParameters = {
   abbr: FlexInput
   /** Total supply. */
   totalSupply: bigint
-  /** TRX numerator of the ICO price ratio `trxNum/num`. */
+  /**
+   * SUN side of the ICO price ratio `trxNum : num` — a buyer paying `amountSun`
+   * receives `amountSun * num / trxNum` tokens. In SUN, not TRX (1 TRX =
+   * 1_000_000 SUN), like `purchaseToken.amount`: to sell one token per TRX set
+   * `trxNum: 1_000_000, num: 1`, NOT `trxNum: 1`. Fixed at issuance and never
+   * changeable, and an account can issue only one TRC10, so a mispriced ratio
+   * cannot be corrected.
+   */
   trxNum: number
-  /** Token numerator of the ICO price ratio `trxNum/num`. */
+  /**
+   * Token side of the ICO price ratio `trxNum : num` — `num` tokens (in the
+   * token's smallest unit, i.e. scaled by `precision`) per `trxNum` SUN.
+   */
   num: number
   /** Number of token decimals (0..6). */
   precision?: number | undefined
