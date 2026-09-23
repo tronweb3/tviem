@@ -2,6 +2,14 @@ import { expect, test } from 'vitest'
 
 import { toEventSelector } from '../../../src/utils/hash/toEventSelector.js'
 
+// keccak256('$uint(address)') — the name must reach the hash as written, not
+// as `$uint256`, or the topic0 filter never matches the contract's logs.
+test('a name containing `$` next to uint hashes as written', () => {
+  expect(toEventSelector('event $uint(address)')).toEqual(
+    '0x6020a65bfb26381e79622ba7f34fb2097bc5a8e9ff6cbc0ed4f6653580091b1d',
+  )
+})
+
 test('creates event signature', () => {
   expect(toEventSelector('Transfer(address,address,uint256)')).toEqual(
     '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef',

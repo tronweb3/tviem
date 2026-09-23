@@ -61,8 +61,12 @@ export function normalizeSignature(
   if (!valid) throw new BaseError('Unable to normalize signature.')
 
   // Canonicalize bare integer aliases (`uint` → `uint256`, `int` → `int256`);
-  // the ABI signature that gets hashed always uses the sized form. `\b` keeps
-  // sized types (`uint8`) and look-alike names (`mint`) untouched, and names
-  // can never collide since `uint`/`int` are reserved words in Solidity.
-  return result.replace(/\b(u?int)\b/g, '$1256')
+  // the ABI signature that gets hashed always uses the sized form. The
+  // lookarounds keep sized types (`uint8`) and look-alike names (`mint`)
+  // untouched. They exclude `$` as well as `\w`: a Solidity identifier may
+  // contain `$`, which `\b` treats as a word break, so `a$int(` or `uint$(`
+  // would otherwise be rewritten to `a$int256(` / `uint256$(` and hash to a
+  // different selector. `uint`/`int` on their own can never be a name — they
+  // are reserved words.
+  return result.replace(/(?<![\w$])(u?int)(?![\w$])/g, '$1256')
 }

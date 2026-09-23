@@ -30,6 +30,17 @@ test('canonicalizes uint/int aliases in arrays and tuples only', () => {
   expect(normalizeSignature('bar(uint8 a, int32 b)')).toBe('bar(uint8,int32)')
 })
 
+// A Solidity identifier may contain `$`, which `\b` does not count as a word
+// character: a name whose `int`/`uint` sits next to a `$` must not be
+// rewritten to the sized alias — that changes the selector.
+test('leaves a name containing `$` next to int/uint untouched', () => {
+  expect(normalizeSignature('a$int(uint256)')).toBe('a$int(uint256)')
+  expect(normalizeSignature('function a$int(uint x)')).toBe('a$int(uint256)')
+  expect(normalizeSignature('event $uint(address)')).toBe('$uint(address)')
+  expect(normalizeSignature('uint$()')).toBe('uint$()')
+  expect(normalizeSignature('int$(uint)')).toBe('int$(uint256)')
+})
+
 test('processAccount(uint256 , address )', () => {
   expect(normalizeSignature('processAccount(uint256 , address )')).toBe(
     'processAccount(uint256,address)',

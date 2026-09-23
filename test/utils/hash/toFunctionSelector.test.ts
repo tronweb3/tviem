@@ -23,6 +23,21 @@ test('creates function signature', () => {
   expect(toFunctionSelector('function claimed()')).toEqual('0xe834a834')
 })
 
+// keccak256('a$int(uint256)') — the name is a valid Solidity identifier and
+// must reach the hash as written, not as `a$int256`.
+test('a name containing `$` next to int hashes as written', () => {
+  expect(toFunctionSelector('function a$int(uint256 x)')).toEqual('0x2f0649c0')
+  expect(
+    toFunctionSelector({
+      name: 'a$int',
+      type: 'function',
+      stateMutability: 'nonpayable',
+      inputs: [{ name: 'x', type: 'uint256' }],
+      outputs: [],
+    }),
+  ).toEqual('0x2f0649c0')
+})
+
 test('creates function signature from `AbiFunction`', () => {
   expect(
     toFunctionSelector({
