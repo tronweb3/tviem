@@ -62,7 +62,14 @@ export type PermissionInput = {
  * within each byte) allows contract type `n`.
  */
 export type ActivePermissionInput = PermissionInput & {
-  /** Permission id (the chain assigns ids from 2 upward when omitted). */
+  /**
+   * Permission id. Active permission ids are assigned BY POSITION: the chain
+   * stores `actives[i]` as id `i + 2` (owner is 0, witness 1) unconditionally.
+   * Omit it and the chain assigns it; if supplied it must equal the slot's
+   * `i + 2`, else the update is refused — a mismatched id would be signed but
+   * never stored, and reordered ids (`[{ id: 3 }, { id: 2 }]`) would bind each
+   * key set to the opposite id from what was written.
+   */
   id?: number | undefined
   /** Allowed contract types, as a 32-byte bitmap (hex or raw bytes). */
   operations: BytesInput
@@ -161,9 +168,21 @@ function toPermission(
 function toActivePermission(
   input: ActivePermissionInput,
   slot: string,
+  index: number,
 ): Permission {
   const permission = toPermission(input, slot, PermissionType.ACTIVE)
   const { id, operations } = input
+  // The chain stores actives by position: `AccountCapsule.updatePermissions`
+  // rewrites `actives[i].id = i + 2` unconditionally and the actuator never
+  // checks the supplied id, so a provided id that differs from its slot would
+  // be signed but never stored — and `[{ id: 3 }, { id: 2 }]` would bind the
+  // first key set to id 2 and the second to id 3, the reverse of what the ids
+  // say. Refuse the mismatch; an omitted id is fine (the chain assigns i + 2).
+  const expectedId = index + 2
+  if (id !== undefined && id !== expectedId)
+    throw new BaseError(
+      `Invalid ${slot} permission: \`id\` must be ${expectedId} (active permission ids are assigned by position — the chain stores actives[${index}] as id ${expectedId}). Got ${id}.`,
+    )
   if (operations === undefined || operations === null)
     throw new BaseError(
       `Invalid ${slot} permission: missing \`operations\` (the 32-byte bitmap of allowed contract types).`,
@@ -222,7 +241,7 @@ function assemble(
       ? { witness: toPermission(witness, 'witness', PermissionType.WITNESS) }
       : {}),
     actives: actives.map((active, i) =>
-      toActivePermission(active, `actives[${i}]`),
+      toActivePermission(active, `actives[${i}]`, i),
     ),
   }
 

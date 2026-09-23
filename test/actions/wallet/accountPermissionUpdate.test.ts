@@ -95,6 +95,66 @@ test('updates owner + active permissions byte-for-byte against the gold vector',
   expect(body.raw_data_hex).toBe(fixture?.rawDataHex)
 })
 
+// java-tron (AccountCapsule.updatePermissions) stores actives BY POSITION —
+// actives[i] is written with id i+2 unconditionally, and the actuator never
+// checks a provided id — so a caller-supplied id that differs from its slot is
+// signed but never stored. `[{id:3},{id:2}]` would bind the first key set to
+// id 2 and the second to id 3, the reverse of what the ids say. A provided id
+// must equal its slot's i+2, else it is refused.
+test('rejects an active permission id that does not match its position', async () => {
+  await expect(
+    offlineBuild({
+      owner: validOwner(),
+      actives: [{ ...validActive(), id: 5 }],
+    }),
+  ).rejects.toThrow('Invalid actives[0] permission: `id` must be 2')
+})
+
+test('rejects ids that would reorder the positional assignment', async () => {
+  await expect(
+    offlineBuild({
+      owner: validOwner(),
+      actives: [
+        { ...validActive(), id: 3 },
+        { ...validActive(), id: 2 },
+      ],
+    }),
+  ).rejects.toThrow('Invalid actives[0] permission: `id` must be 2')
+})
+
+test('rejects a wrong id at a later active slot too', async () => {
+  await expect(
+    offlineBuild({
+      owner: validOwner(),
+      actives: [
+        { ...validActive(), id: 2 },
+        { ...validActive(), id: 2 },
+      ],
+    }),
+  ).rejects.toThrow('Invalid actives[1] permission: `id` must be 3')
+})
+
+test('accepts an omitted id and a matching positional id alike', async () => {
+  await expect(
+    offlineBuild({ owner: validOwner(), actives: [validActive()] }),
+  ).resolves.toBeDefined()
+  await expect(
+    offlineBuild({
+      owner: validOwner(),
+      actives: [{ ...validActive(), id: 2 }],
+    }),
+  ).resolves.toBeDefined()
+  await expect(
+    offlineBuild({
+      owner: validOwner(),
+      actives: [
+        { ...validActive(), id: 2 },
+        { ...validActive(), id: 3 },
+      ],
+    }),
+  ).resolves.toBeDefined()
+})
+
 test('throws AccountNotFoundError when no account is available', async () => {
   const { transport } = writeMock()
   const client = createPublicClient({ transport })
