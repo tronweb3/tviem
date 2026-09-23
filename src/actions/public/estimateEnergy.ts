@@ -6,9 +6,13 @@ import {
   IntegerOutOfRangeError,
   type IntegerOutOfRangeErrorType,
 } from '../../errors/encoding.js'
+import { TronContractValidateError } from '../../errors/node.js'
 import {
   AccountNotFoundError,
   type AccountNotFoundErrorType,
+  type ContractFunctionRevertedErrorType,
+  TronRpcError,
+  type TronRpcErrorType,
 } from '../../errors/rpc.js'
 import type { ErrorType } from '../../errors/utils.js'
 import type { Address, AddressInput } from '../../types/address.js'
@@ -22,10 +26,7 @@ import {
   type AddressToHexErrorType,
   addressToHex,
 } from '../../utils/address/addressToHex.js'
-import {
-  type AssertRpcSuccessErrorType,
-  assertRpcSuccess,
-} from '../utils/normalizeResponse.js'
+import { decodeRevert } from '../utils/decodeRevert.js'
 
 export type EstimateEnergyParameters<
   abi extends Abi | readonly unknown[] = Abi,
@@ -90,16 +91,19 @@ export type EstimateEnergyReturnType = bigint
 
 export type EstimateEnergyErrorType =
   | AccountNotFoundErrorType
-  | AssertRpcSuccessErrorType
+  | ContractFunctionRevertedErrorType
   | EncodeFunctionDataErrorType
   | IntegerOutOfRangeErrorType
   | RequestErrorType
+  | TronRpcErrorType
   | AddressToHexErrorType
   | ErrorType
 
 /** Shape of the `estimateenergy` response body we consume. */
 type EstimateEnergyResponse = {
-  result?: { result?: boolean; message?: string } | undefined
+  result?:
+    | { result?: boolean; code?: string; message?: string | undefined }
+    | undefined
   energy_required?: number | undefined
 }
 
@@ -114,6 +118,13 @@ type EstimateEnergyResponse = {
  *
  * This only helps a caller choose a `feeLimit` bound for `writeContract`; it
  * never affects what is signed or broadcast.
+ *
+ * A call that fails to execute — a REVERT, out of energy, an invalid opcode —
+ * throws a {@link ContractFunctionRevertedError} carrying the node's reason,
+ * the same error `readContract` / `triggerConstantContract` throw, whichever
+ * of java-tron's two failure shapes reported it. Validate-stage rejections
+ * (energy estimation disabled, not a contract) keep the transport's
+ * `TronContractValidateError`.
  *
  * @param client The Client to use.
  * @param parameters Contract address / ABI / function / args / caller.
@@ -161,22 +172,64 @@ export async function estimateEnergy<
 
   const data = encodeFunctionData({ abi, functionName, args })
 
-  const response = await client.request<EstimateEnergyResponse>({
-    node: confirmed ? 'solidity' : 'full',
-    method: 'POST',
-    path: 'estimateenergy',
-    body: {
-      owner_address: addressToHex(owner),
-      contract_address: addressToHex(address),
-      data: data.slice(2),
-      ...(callValue !== undefined ? { call_value: Number(callValue) } : {}),
-      ...(callTokenValue !== undefined
-        ? { call_token_value: Number(callTokenValue) }
-        : {}),
-      ...(tokenId !== undefined ? { token_id: Number(tokenId) } : {}),
-    },
-  })
+  // java-tron (Wallet.estimateEnergy) reports a failed estimate through the
+  // nested `result` object in two shapes, both hex-encoding the message and
+  // neither carrying `result: false` (proto3 omits the default):
+  //   - the first run fails at the max fee limit → `{ code: CONTRACT_EXE_ERROR,
+  //     message }`, which the transport's Form 2 check throws as a
+  //     TronContractValidateError before this action sees the body;
+  //   - the confirmation run after the binary search fails → `{ message }`
+  //     ONLY (`txRetBuilder` is cleared per run and `code` is set nowhere on
+  //     that path).
+  // Both are the contract failing to execute for this caller — the same thing
+  // `triggerconstantcontract` reports via `message` — so both surface as the
+  // ContractFunctionRevertedError the sibling actions throw. Other codes
+  // (CONTRACT_VALIDATE_ERROR: estimation disabled, not a contract) are node
+  // rejections, not reverts, and pass through.
+  let response: EstimateEnergyResponse
+  try {
+    response = await client.request<EstimateEnergyResponse>({
+      node: confirmed ? 'solidity' : 'full',
+      method: 'POST',
+      path: 'estimateenergy',
+      body: {
+        owner_address: addressToHex(owner),
+        contract_address: addressToHex(address),
+        data: data.slice(2),
+        ...(callValue !== undefined ? { call_value: Number(callValue) } : {}),
+        ...(callTokenValue !== undefined
+          ? { call_token_value: Number(callTokenValue) }
+          : {}),
+        ...(tokenId !== undefined ? { token_id: Number(tokenId) } : {}),
+      },
+    })
+  } catch (err) {
+    if (
+      err instanceof TronContractValidateError &&
+      err.code === 'CONTRACT_EXE_ERROR'
+    )
+      throw decodeRevert(
+        undefined,
+        (err.response as EstimateEnergyResponse | undefined)?.result?.message,
+        { functionName },
+      )
+    throw err
+  }
 
-  assertRpcSuccess(response, { path: 'estimateenergy' })
-  return BigInt(response?.energy_required ?? 0)
+  if (response?.result?.message || response?.result?.result === false)
+    throw decodeRevert(undefined, response.result.message, { functionName })
+
+  // A success body always says `result: true`; `energy_required` is omitted
+  // only when it is 0 (proto3 default). A body with neither is not an
+  // estimate — returning `0n` for it would hand the caller a fee limit that
+  // means nothing.
+  if (
+    response?.energy_required === undefined &&
+    response?.result?.result !== true
+  )
+    throw new TronRpcError(
+      'Malformed estimateenergy response: missing `energy_required`.',
+      { metaMessages: ['Path: estimateenergy'] },
+    )
+  return BigInt(response.energy_required ?? 0)
 }

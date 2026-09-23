@@ -3,7 +3,12 @@ import { estimateEnergy } from '../../../src/actions/public/estimateEnergy.js'
 import { createClient } from '../../../src/clients/createClient.js'
 import { createPublicClient } from '../../../src/clients/createPublicClient.js'
 import { IntegerOutOfRangeError } from '../../../src/errors/encoding.js'
-import { AccountNotFoundError } from '../../../src/errors/rpc.js'
+import { TronContractValidateError } from '../../../src/errors/node.js'
+import {
+  AccountNotFoundError,
+  ContractFunctionRevertedError,
+  TronRpcError,
+} from '../../../src/errors/rpc.js'
 import type { Address } from '../../../src/types/address.js'
 import { createMockTransport } from '../../mock/createMockTransport.js'
 
@@ -185,4 +190,94 @@ test('confirmed: true estimates against the SolidityNode', async () => {
 
   await client.estimateEnergy({ ...call, account: caller, confirmed: true })
   expect(calls[0]?.node).toBe('solidity')
+})
+
+// ---------------------------------------------------------------------------
+// Failure bodies. java-tron's `estimateEnergy` (Wallet.java) reports a failed
+// estimate through the nested `result` object, hex-encoding the message:
+//   - first run fails at the max fee limit → `{ code: CONTRACT_EXE_ERROR,
+//     message }` (the transport's Form 2 check throws for this shape);
+//   - the post-binary-search confirmation run fails → `{ message }` ONLY
+//     (`txRetBuilder` is cleared per run and `code` is never set there).
+// proto3 omits the `result: false` default, so neither shape carries
+// `result: false`, and neither carries `energy_required`.
+// ---------------------------------------------------------------------------
+
+/** UTF-8 → hex, as java-tron prints `Return.message`. */
+const hexMsg = (s: string) => Buffer.from(s, 'utf8').toString('hex')
+
+function clientWith(response: unknown) {
+  const { transport } = createMockTransport({
+    responses: { estimateenergy: { response } },
+  })
+  return createPublicClient({ transport })
+}
+
+test('a confirmation-run failure ({ result: { message } }) throws ContractFunctionRevertedError', async () => {
+  const client = clientWith({
+    result: { message: hexMsg('REVERT opcode executed') },
+  })
+  const err = (await client
+    .estimateEnergy({ ...call, account: caller })
+    .catch((e) => e)) as ContractFunctionRevertedError
+  expect(err).toBeInstanceOf(ContractFunctionRevertedError)
+  expect(err.reason).toBe('REVERT opcode executed')
+  expect(err.shortMessage).toContain('"transfer"')
+})
+
+test('a first-run failure ({ result: { code: CONTRACT_EXE_ERROR, message } }) throws ContractFunctionRevertedError', async () => {
+  const client = clientWith({
+    result: {
+      code: 'CONTRACT_EXE_ERROR',
+      message: hexMsg("Not enough energy for 'SSTORE' operation executing"),
+    },
+  })
+  const err = (await client
+    .estimateEnergy({ ...call, account: caller })
+    .catch((e) => e)) as ContractFunctionRevertedError
+  expect(err).toBeInstanceOf(ContractFunctionRevertedError)
+  expect(err.reason).toBe("Not enough energy for 'SSTORE' operation executing")
+})
+
+test('an explicit { result: { result: false, message } } throws ContractFunctionRevertedError', async () => {
+  const client = clientWith({
+    result: { result: false, message: hexMsg('REVERT opcode executed') },
+  })
+  const err = (await client
+    .estimateEnergy({ ...call, account: caller })
+    .catch((e) => e)) as ContractFunctionRevertedError
+  expect(err).toBeInstanceOf(ContractFunctionRevertedError)
+  expect(err.reason).toBe('REVERT opcode executed')
+})
+
+test('a validate-stage rejection is not a revert: TronContractValidateError passes through', async () => {
+  const client = clientWith({
+    result: {
+      code: 'CONTRACT_VALIDATE_ERROR',
+      message: hexMsg('this node does not support estimate energy'),
+    },
+  })
+  const err = (await client
+    .estimateEnergy({ ...call, account: caller })
+    .catch((e) => e)) as TronContractValidateError
+  expect(err).toBeInstanceOf(TronContractValidateError)
+  expect(err.code).toBe('CONTRACT_VALIDATE_ERROR')
+})
+
+test('a body with neither an estimate nor a verdict is malformed, not 0n', async () => {
+  const client = clientWith({})
+  const err = (await client
+    .estimateEnergy({ ...call, account: caller })
+    .catch((e) => e)) as TronRpcError
+  expect(err).toBeInstanceOf(TronRpcError)
+  expect(err.shortMessage).toMatch(/Malformed estimateenergy response/)
+})
+
+// proto3 omits a zero `energy_required`; a body that does report
+// `result: true` without one is the node saying "0", not a malformed body.
+test('a success body without energy_required estimates 0n', async () => {
+  const client = clientWith({ result: { result: true } })
+  await expect(
+    client.estimateEnergy({ ...call, account: caller }),
+  ).resolves.toBe(0n)
 })
