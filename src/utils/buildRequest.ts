@@ -9,8 +9,7 @@ import { stringify } from './stringify.js'
 
 /**
  * Wraps a raw transport `request` (the innermost `config.request`) with retry,
- * exponential backoff (honoring `Retry-After`), in-flight de-duplication and
- * error passthrough.
+ * exponential backoff, in-flight de-duplication and error passthrough.
  *
  * TRON error-body normalization happens inside `config.request` (see
  * `http.ts` `normalizeTronError`), so by the time an error reaches here it is
@@ -64,25 +63,7 @@ export function buildRequest<
             }
           },
           {
-            delay: ({ count, error }) => {
-              const backoff = ~~(1 << count) * retryDelay
-              // If we find a Retry-After header, retry after the given time.
-              // RFC 9110 allows two forms: delay-seconds and HTTP-date.
-              if (error && error instanceof HttpRequestError) {
-                const retryAfter = error.headers?.get('Retry-After')
-                if (retryAfter) {
-                  if (/^\s*\d+\s*$/.test(retryAfter))
-                    return Number.parseInt(retryAfter, 10) * 1000
-                  // Backoff is the floor: a past (or garbage-parsed) date must
-                  // not turn into a zero-delay hammer on a rate-limited server.
-                  const date = Date.parse(retryAfter)
-                  if (!Number.isNaN(date))
-                    return Math.max(backoff, date - Date.now())
-                }
-              }
-              // Otherwise, retry with an exponential backoff.
-              return backoff
-            },
+            delay: ({ count }) => ~~(1 << count) * retryDelay,
             retryCount,
             signal: sharedSignal,
             shouldRetry: ({ error }) => shouldRetryTron(error),
