@@ -1,5 +1,6 @@
 import type { AccountKey, TronAccount } from '../../accounts/types.js'
 import type { Client } from '../../clients/createClient.js'
+import { BaseError } from '../../errors/base.js'
 import {
   AccountNotFoundError,
   type AccountNotFoundErrorType,
@@ -94,6 +95,19 @@ function assemble(
   parameters: VoteProposalParameters,
 ): { account: TronAccount; contract: RawContract } {
   const { proposalId, isApproval } = parameters
+
+  // `is_add_approval` is a proto3 bool: absent encodes as `false` = "revoke
+  // approval", and the codec's boolean guard only runs on a PRESENT value, so
+  // an untyped-JS caller who omits `isApproval` (or misspells the key) would
+  // build and sign a revocation with no error — the opposite of an approval.
+  // The two directions are opposite votes with no safe default, so refuse a
+  // non-boolean here, the same way `proposalId` is refused below.
+  if (typeof isApproval !== 'boolean')
+    throw new BaseError(
+      `Invalid isApproval: expected a boolean (\`true\` adds approval, \`false\` removes it — opposite votes, so there is no default), got ${
+        typeof isApproval === 'string' ? `"${isApproval}"` : String(isApproval)
+      }.`,
+    )
 
   // Resolve the owner/signing account (per-call, else hoisted on the Client).
   const source = parameters.account ?? client.account

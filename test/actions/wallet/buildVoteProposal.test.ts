@@ -61,7 +61,23 @@ test('a stringly-typed isApproval is refused, not signed as approval', async () 
       isApproval: 'false' as never,
       blockHeader: tviemHeader,
     }),
-  ).rejects.toThrow('Invalid is_add_approval: expected a boolean, got "false"')
+  ).rejects.toThrow('Invalid isApproval: expected a boolean')
+})
+
+// `is_add_approval` is a proto3 bool: an absent value is `false` = "revoke
+// approval", and the codec's boolean guard only runs on a PRESENT value, so an
+// untyped-JS caller who omits `isApproval` (or misspells the key) would build
+// and sign a revocation with no error. Refuse a non-boolean before building —
+// the same reason `proposalId: undefined` is refused.
+test('an omitted isApproval is refused, not signed as a revocation', async () => {
+  const client = makeTviemClient()
+
+  await expect(
+    client.buildVoteProposal({
+      proposalId: 1n,
+      blockHeader: tviemHeader,
+    } as never),
+  ).rejects.toThrow('Invalid isApproval: expected a boolean')
 })
 
 // IEEE-754 has already rounded any number past 2^53
