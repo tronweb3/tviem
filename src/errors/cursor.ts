@@ -35,3 +35,23 @@ export class RecursiveReadLimitExceededError extends BaseError {
     )
   }
 }
+
+export type ReadSizeLimitExceededErrorType = ReadSizeLimitExceededError & {
+  name: 'ReadSizeLimitExceededError'
+}
+/**
+ * Total bytes read from a cursor exceeded its input-proportional budget. The
+ * recursive-read cap bounds how many times a position is re-read, not the
+ * bytes each re-read materializes — so a payload whose dynamic elements share
+ * one offset (duplicate / overlapping offsets) could re-decode a single large
+ * blob many times, amounting to arbitrary work from a small input. This bounds
+ * total reads to O(input).
+ */
+export class ReadSizeLimitExceededError extends BaseError {
+  constructor({ limit, size }: { limit: number; size: number }) {
+    super(
+      `Read size limit of \`${limit}\` bytes exceeded (read \`${size}\` bytes). The payload re-reads the same data far more than its size — likely duplicate ABI offsets.`,
+      { name: 'ReadSizeLimitExceededError' },
+    )
+  }
+}

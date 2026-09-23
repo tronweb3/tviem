@@ -795,3 +795,42 @@ Version: @tronweb3/tviem@${version}`,
     )
   })
 })
+
+describe('args: readSizeLimit', () => {
+  test('default is derived from the input and passes normal (single-pass) reads', () => {
+    const cursor = createCursor(new Uint8Array(generateBytes(420)))
+    // Reading every byte once is well within an input-proportional budget.
+    for (let i = 0; i < 420; i += 10) {
+      cursor.setPosition(i)
+      cursor.readBytes(10)
+    }
+  })
+
+  test('throws once cumulative reads exceed the budget', () => {
+    // The re-read *count* cap does not bound the total bytes materialized: a
+    // handful of large re-reads of the same region can amount to arbitrary
+    // work. A size budget catches that.
+    const cursor = createCursor(new Uint8Array(generateBytes(64)), {
+      readSizeLimit: 100,
+    })
+    cursor.readBytes(32) // 32
+    cursor.setPosition(0)
+    cursor.readBytes(32) // 64
+    cursor.setPosition(0)
+    cursor.readBytes(32) // 96
+    cursor.setPosition(0)
+    expect(() => cursor.readBytes(32)).toThrowError(
+      expect.objectContaining({ name: 'ReadSizeLimitExceededError' }),
+    )
+  })
+
+  test('an infinite recursiveReadLimit also lifts the size budget', () => {
+    const cursor = createCursor(new Uint8Array(generateBytes(64)), {
+      recursiveReadLimit: Number.POSITIVE_INFINITY,
+    })
+    for (let i = 0; i < 100; i++) {
+      cursor.setPosition(0)
+      cursor.readBytes(32)
+    }
+  })
+})

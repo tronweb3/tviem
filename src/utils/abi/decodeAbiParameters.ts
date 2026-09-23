@@ -10,7 +10,10 @@ import {
   InvalidAbiDecodingTypeError,
   type InvalidAbiDecodingTypeErrorType,
 } from '../../errors/abi.js'
-import type { PositionOutOfBoundsErrorType } from '../../errors/cursor.js'
+import type {
+  PositionOutOfBoundsErrorType,
+  ReadSizeLimitExceededErrorType,
+} from '../../errors/cursor.js'
 import {
   IntegerOutOfRangeError,
   type IntegerOutOfRangeErrorType,
@@ -65,6 +68,7 @@ export type DecodeAbiParametersErrorType =
   | InvalidHexValueErrorType
   | MissingHexPrefixErrorType
   | PositionOutOfBoundsErrorType
+  | ReadSizeLimitExceededErrorType
   | ToBase58ErrorType
   | ErrorType
 

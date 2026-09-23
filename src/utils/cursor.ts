@@ -3,6 +3,8 @@ import {
   type NegativeOffsetErrorType,
   PositionOutOfBoundsError,
   type PositionOutOfBoundsErrorType,
+  ReadSizeLimitExceededError,
+  type ReadSizeLimitExceededErrorType,
   RecursiveReadLimitExceededError,
   type RecursiveReadLimitExceededErrorType,
 } from '../errors/cursor.js'
@@ -16,8 +18,11 @@ export type Cursor = {
   positionReadCount: Map<number, number>
   recursiveReadCount: number
   recursiveReadLimit: number
+  readSizeLimit: number
+  totalReadSize: number
   remaining: number
   assertReadLimit(position?: number): void
+  assertReadSize(size: number): void
   assertPosition(position: number): void
   decrementPosition(offset: number): void
   getReadCount(position?: number): number
@@ -58,6 +63,7 @@ type CursorIncrementPositionErrorType = NegativeOffsetErrorType | ErrorType
 
 type StaticCursorErrorType =
   | NegativeOffsetErrorType
+  | ReadSizeLimitExceededErrorType
   | RecursiveReadLimitExceededErrorType
 
 const staticCursor: Cursor = {
@@ -67,11 +73,29 @@ const staticCursor: Cursor = {
   positionReadCount: new Map(),
   recursiveReadCount: 0,
   recursiveReadLimit: Number.POSITIVE_INFINITY,
+  readSizeLimit: Number.POSITIVE_INFINITY,
+  totalReadSize: 0,
   assertReadLimit() {
     if (this.recursiveReadCount >= this.recursiveReadLimit)
       throw new RecursiveReadLimitExceededError({
         count: this.recursiveReadCount + 1,
         limit: this.recursiveReadLimit,
+      })
+  },
+  // The recursive-read cap counts re-reads; this caps the BYTES they
+  // materialize. A dynamic `bytes` / `string` element hexifies `readBytes(L)`
+  // with L from the data, and many array offsets can point at one blob, so the
+  // same L bytes are rebuilt N times — arbitrary work the count cap never sees.
+  // Charged per read and bounded to a multiple of the input, so valid data
+  // (each region read ~once) always passes and only duplicate-offset payloads
+  // trip it.
+  assertReadSize(size) {
+    if (this.readSizeLimit === Number.POSITIVE_INFINITY) return
+    this.totalReadSize += size
+    if (this.totalReadSize > this.readSizeLimit)
+      throw new ReadSizeLimitExceededError({
+        limit: this.readSizeLimit,
+        size: this.totalReadSize,
       })
   },
   assertPosition(position) {
@@ -162,6 +186,7 @@ const staticCursor: Cursor = {
   },
   readByte() {
     this.assertReadLimit()
+    this.assertReadSize(1)
     this._touch()
     const value = this.inspectByte()
     this.position++
@@ -169,6 +194,7 @@ const staticCursor: Cursor = {
   },
   readBytes(length, size) {
     this.assertReadLimit()
+    this.assertReadSize(length)
     this._touch()
     const value = this.inspectBytes(length)
     this.position += size ?? length
@@ -176,6 +202,7 @@ const staticCursor: Cursor = {
   },
   readUint8() {
     this.assertReadLimit()
+    this.assertReadSize(1)
     this._touch()
     const value = this.inspectUint8()
     this.position += 1
@@ -183,6 +210,7 @@ const staticCursor: Cursor = {
   },
   readUint16() {
     this.assertReadLimit()
+    this.assertReadSize(2)
     this._touch()
     const value = this.inspectUint16()
     this.position += 2
@@ -190,6 +218,7 @@ const staticCursor: Cursor = {
   },
   readUint24() {
     this.assertReadLimit()
+    this.assertReadSize(3)
     this._touch()
     const value = this.inspectUint24()
     this.position += 3
@@ -197,6 +226,7 @@ const staticCursor: Cursor = {
   },
   readUint32() {
     this.assertReadLimit()
+    this.assertReadSize(4)
     this._touch()
     const value = this.inspectUint32()
     this.position += 4
@@ -219,7 +249,15 @@ const staticCursor: Cursor = {
   },
 }
 
-type CursorConfig = { recursiveReadLimit?: number | undefined }
+type CursorConfig = {
+  recursiveReadLimit?: number | undefined
+  readSizeLimit?: number | undefined
+}
+
+// Total bytes read may exceed the input a bounded number of times: valid ABI
+// data reads each region ~once (ratio ≈ 1), so this leaves generous headroom
+// while still capping the duplicate-offset blowup at O(input).
+const READ_SIZE_LIMIT_FACTOR = 8
 
 export type CreateCursorErrorType =
   | CursorErrorType
@@ -228,7 +266,7 @@ export type CreateCursorErrorType =
 
 export function createCursor(
   bytes: ByteArray,
-  { recursiveReadLimit = 8_192 }: CursorConfig = {},
+  { recursiveReadLimit = 8_192, readSizeLimit }: CursorConfig = {},
 ): Cursor {
   const cursor: Cursor = Object.create(staticCursor)
   cursor.bytes = bytes
@@ -238,6 +276,15 @@ export function createCursor(
     bytes.byteLength,
   )
   cursor.positionReadCount = new Map()
+  cursor.recursiveReadCount = 0
   cursor.recursiveReadLimit = recursiveReadLimit
+  cursor.totalReadSize = 0
+  // An explicit limit wins; otherwise derive it from the input, except when
+  // recursion tracking is itself disabled (the "no limits" escape hatch).
+  cursor.readSizeLimit =
+    readSizeLimit ??
+    (recursiveReadLimit === Number.POSITIVE_INFINITY
+      ? Number.POSITIVE_INFINITY
+      : bytes.length * READ_SIZE_LIMIT_FACTOR)
   return cursor
 }

@@ -170,6 +170,7 @@ exports[`package exports surface (freeze guard) > root + subpath export names ar
     "PermissionType",
     "PermissionTypeName",
     "PositionOutOfBoundsError",
+    "ReadSizeLimitExceededError",
     "RecursiveReadLimitExceededError",
     "ResourceCode",
     "ResourceCodeName",

@@ -6,6 +6,7 @@ import {
   InvalidAbiEncodingTypeError,
 } from '../../../src/errors/abi.js'
 import { BaseError } from '../../../src/errors/base.js'
+import { ReadSizeLimitExceededError } from '../../../src/errors/cursor.js'
 import {
   InvalidHexValueError,
   MissingHexPrefixError,
@@ -342,5 +343,61 @@ describe('malformed ABI parameters', () => {
     )
     expect(error).toBeInstanceOf(InvalidAbiEncodingTypeError)
     expect(error).toBeInstanceOf(BaseError)
+  })
+})
+
+// A dynamic `bytes` / `string` element decodes as `bytesToHex(readBytes(L))`,
+// O(L) work with L taken from the data. Many array element offsets can point
+// at the SAME blob (duplicate / overlapping offsets), so one L-byte payload is
+// re-materialized N times: total work N*L though the input is only ~N*32 + L.
+// The cursor's re-read *count* cap (recursiveReadLimit) bounds how many times a
+// position is re-read, not the bytes each re-read materializes, so a ~600KB
+// payload could drive multi-GB allocation before it fired. An input-proportional
+// read-size budget bounds total work to O(input) and catches exactly the
+// duplicate-offset shape (distinct offsets grow the input in step, so they stay
+// within budget).
+describe('read-size amplification (duplicate offsets)', () => {
+  const w = word // 64-char hex word
+
+  /** `bytes[]` whose N element offsets all point at one L-byte blob. */
+  const duplicateOffsetBytesArray = (n: number, byteLen: number) => {
+    const payloadWords = Math.ceil(byteLen / 32)
+    const parts = [w(32), w(n)] // outer offset, outer length
+    const blobRel = n * 32 // relative to startOfData; blob follows the slots
+    for (let i = 0; i < n; i++) parts.push(w(blobRel))
+    parts.push(w(byteLen))
+    for (let i = 0; i < payloadWords; i++) parts.push(w(0xab))
+    return `0x${parts.join('')}` as `0x${string}`
+  }
+
+  /** `bytes[]` of N DISTINCT elements, each `byteLen` bytes. */
+  const distinctBytesArray = (n: number, byteLen: number) => {
+    const elemWords = 1 + Math.ceil(byteLen / 32)
+    const parts = [w(32), w(n)]
+    for (let i = 0; i < n; i++) parts.push(w(n * 32 + i * elemWords * 32))
+    for (let i = 0; i < n; i++) {
+      parts.push(w(byteLen))
+      for (let j = 0; j < Math.ceil(byteLen / 32); j++) parts.push(w(0xcd))
+    }
+    return `0x${parts.join('')}` as `0x${string}`
+  }
+
+  test('refuses a duplicate-offset bytes[] that re-decodes one blob many times', () => {
+    const error = caught(() =>
+      decodeAbiParameters(
+        [{ type: 'bytes[]' }],
+        duplicateOffsetBytesArray(100, 3200),
+      ),
+    )
+    expect(error).toBeInstanceOf(ReadSizeLimitExceededError)
+  })
+
+  test('still decodes a valid bytes[] whose elements are distinct', () => {
+    const [arr] = decodeAbiParameters(
+      [{ type: 'bytes[]' }],
+      distinctBytesArray(50, 96),
+    ) as [readonly `0x${string}`[]]
+    expect(arr.length).toBe(50)
+    expect(arr[0]).toBe(`0x${'cd'.padStart(64, '0').repeat(3)}`)
   })
 })

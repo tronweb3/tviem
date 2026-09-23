@@ -650,6 +650,8 @@ export {
   type NegativeOffsetErrorType,
   PositionOutOfBoundsError,
   type PositionOutOfBoundsErrorType,
+  ReadSizeLimitExceededError,
+  type ReadSizeLimitExceededErrorType,
   RecursiveReadLimitExceededError,
   type RecursiveReadLimitExceededErrorType,
 } from './errors/cursor.js'
