@@ -86,7 +86,11 @@ export function fromBytes<
 export type BytesToBigIntOpts = {
   /** Whether or not the number of a signed representation. */
   signed?: boolean | undefined
-  /** Size of the bytes. */
+  /**
+   * Upper bound (in bytes) on the input; a longer input throws
+   * `SizeOverflowError`. Never a width to pad to — a shorter input decodes as
+   * itself, exactly as `hexToBigInt` treats its `size`.
+   */
   size?: number | undefined
 }
 
@@ -106,13 +110,24 @@ export type BytesToBigIntErrorType =
  * import { bytesToBigInt } from '@tronweb3/tviem'
  * const data = bytesToBigInt(new Uint8Array([1, 164]))
  * // 420n
+ *
+ * @example
+ * import { bytesToBigInt } from '@tronweb3/tviem'
+ * const data = bytesToBigInt(new Uint8Array([1, 164]), { size: 4 })
+ * // 420n — `size` bounds the input, it does not pad it
  */
 export function bytesToBigInt(
   bytes: ByteArray,
   opts: BytesToBigIntOpts = {},
 ): bigint {
   if (typeof opts.size !== 'undefined') assertSize(bytes, { size: opts.size })
-  const hex = bytesToHex(bytes, opts)
+  // `size` is checked above and again by `hexToBigInt` as an upper bound; it
+  // is NOT forwarded to `bytesToHex`, whose `size` right-pads to a fixed width
+  // (bytes semantics). Padded, a short input read as a big-endian integer is
+  // multiplied by 256^(size - length): `[1, 164]` at `size: 4` came back as
+  // 27525120 rather than 420, and `[0xff]` at `size: 32, signed` as a huge
+  // negative rather than -1n.
+  const hex = bytesToHex(bytes)
   return hexToBigInt(hex, opts)
 }
 
@@ -170,13 +185,19 @@ export type BytesToNumberErrorType =
  * import { bytesToNumber } from '@tronweb3/tviem'
  * const data = bytesToNumber(new Uint8Array([1, 164]))
  * // 420
+ *
+ * @example
+ * import { bytesToNumber } from '@tronweb3/tviem'
+ * const data = bytesToNumber(new Uint8Array([1, 164]), { size: 4 })
+ * // 420 — `size` bounds the input, it does not pad it
  */
 export function bytesToNumber(
   bytes: ByteArray,
   opts: BytesToNumberOpts = {},
 ): number {
   if (typeof opts.size !== 'undefined') assertSize(bytes, { size: opts.size })
-  const hex = bytesToHex(bytes, opts)
+  // See `bytesToBigInt`: `size` is a bound, never forwarded as a pad width.
+  const hex = bytesToHex(bytes)
   return hexToNumber(hex, opts)
 }
 

@@ -8,6 +8,7 @@ import {
   bytesToString,
   fromBytes,
 } from '../../../src/utils/encoding/fromBytes.js'
+import { hexToBigInt } from '../../../src/utils/encoding/fromHex.js'
 import {
   boolToBytes,
   hexToBytes,
@@ -42,6 +43,22 @@ describe('converts bytes to number', () => {
         size: 32,
       }),
     ).toEqual(420)
+  })
+
+  // `size` is an upper bound on the input, as in `hexToNumber` — never a
+  // width to pad to. Padding a short input on the right (bytes semantics)
+  // before reading it as a big-endian integer multiplied it by
+  // 256^(size - length).
+  test('args: size — a short input decodes as itself, not right-padded', () => {
+    expect(bytesToNumber(new Uint8Array([1, 164]), { size: 4 })).toEqual(420)
+    expect(
+      fromBytes(new Uint8Array([1, 164]), { size: 4, to: 'number' }),
+    ).toEqual(420)
+    expect(bytesToNumber(new Uint8Array([1, 164]), { size: 32 })).toEqual(420)
+    // Signed: two's complement over the input's own width, as hexToNumber.
+    expect(
+      bytesToNumber(new Uint8Array([0xff]), { signed: true, size: 32 }),
+    ).toEqual(-1)
   })
 
   test('error: size overflow', () => {
@@ -103,6 +120,23 @@ describe('converts bytes to bigint', () => {
         size: 32,
       }),
     ).toEqual(420n)
+  })
+
+  // See the number case: `size` bounds the input, it never pads it.
+  test('args: size — a short input decodes as itself, not right-padded', () => {
+    expect(bytesToBigInt(new Uint8Array([1, 164]), { size: 4 })).toEqual(420n)
+    expect(
+      fromBytes(new Uint8Array([1, 164]), { size: 4, to: 'bigint' }),
+    ).toEqual(420n)
+    expect(bytesToBigInt(new Uint8Array([1, 164]), { size: 32 })).toEqual(420n)
+    // Signed: two's complement over the input's own width — exactly what the
+    // hex counterpart returns for the same bytes and options.
+    expect(
+      bytesToBigInt(new Uint8Array([0xff]), { signed: true, size: 32 }),
+    ).toEqual(-1n)
+    expect(
+      bytesToBigInt(new Uint8Array([0xff]), { signed: true, size: 32 }),
+    ).toEqual(hexToBigInt('0xff', { signed: true, size: 32 }))
   })
 
   test('error: size overflow', () => {
