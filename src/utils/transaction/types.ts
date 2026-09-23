@@ -46,14 +46,20 @@ export type ResourceCodeOfErrorType = BaseErrorType | ErrorType
  * enum does not carry ('TRON_POWER', a typo, wrong case) yields `undefined`,
  * which the protobuf writer drops — silently building a transaction for the
  * proto3-default resource (BANDWIDTH) instead of the one the caller named.
+ *
+ * Membership is an own-property test, not an `undefined` test: `ResourceCode`
+ * is a plain object literal, so `'constructor'`, `'toString'`, `'__proto__'`
+ * and the other inherited `Object.prototype` names index to a function (or
+ * the prototype itself), never `undefined`. Those would pass a truthiness
+ * guard and only fail deep inside serialization, as an int64 error naming
+ * the wrong layer.
  */
 export function resourceCodeOf(name: ResourceCodeName): ResourceCode {
-  const code = ResourceCode[name]
-  if (code === undefined)
+  if (!Object.hasOwn(ResourceCode, name))
     throw new BaseError(
       `Invalid staking resource "${name}". Expected one of: ${ResourceCodeName.join(', ')}.`,
     )
-  return code
+  return ResourceCode[name]
 }
 
 /** `Permission.PermissionType` (wire values). */

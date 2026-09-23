@@ -45,6 +45,20 @@ test('builds the canonical freeze in TronWeb JSON shape, unsigned', async () => 
   expect(calls.map((c) => c.path)).toEqual(['getnowblock'])
 })
 
+// The untyped-JS guard must fire at the action boundary with the documented
+// message, not surface as an int64 error from inside serialization.
+test('an inherited Object.prototype member name is refused as a staking resource', async () => {
+  const { transport } = buildMock()
+  const client = createWalletClient({ account: pk1, transport })
+
+  await expect(
+    buildFreezeBalanceV2(client, {
+      frozenBalance: 1000000n,
+      resource: 'constructor' as never,
+    }),
+  ).rejects.toThrow(/Invalid staking resource "constructor"/)
+})
+
 test('a custom blockHeader is used verbatim and skips the getnowblock fetch', async () => {
   const { transport, calls } = buildMock()
   const client = createWalletClient({ account: pk1, transport })
