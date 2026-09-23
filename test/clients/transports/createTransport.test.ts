@@ -1,5 +1,6 @@
 import { expect, test, vi } from 'vitest'
 import { createTransport } from '../../../src/clients/transports/createTransport.js'
+import { HttpRequestError } from '../../../src/errors/request.js'
 import type { TronRequestFn } from '../../../src/types/transport.js'
 
 function setup(request: TronRequestFn) {
@@ -16,7 +17,7 @@ test('returns the { config, request, value } envelope with defaults', () => {
     key: 'mock',
     name: 'Mock',
     type: 'mock',
-    retryCount: 3,
+    retryCount: 0,
     retryDelay: 150,
     timeout: 10_000,
   })
@@ -29,6 +30,17 @@ test('config.request is the raw request; transport.request is wrapped', () => {
   const transport = setup(inner as unknown as TronRequestFn)
   expect(transport.config.request).toBe(inner)
   expect(transport.request).not.toBe(inner)
+})
+
+test('transport.request does not retry by default', async () => {
+  const inner = vi.fn(async () => {
+    throw new HttpRequestError({ status: 500, url: 'u' })
+  })
+  const transport = setup(inner as unknown as TronRequestFn)
+  await expect(
+    transport.request({ path: 'getnowblock' }),
+  ).rejects.toBeInstanceOf(HttpRequestError)
+  expect(inner).toHaveBeenCalledTimes(1)
 })
 
 test('transport.request routes through to the raw request', async () => {

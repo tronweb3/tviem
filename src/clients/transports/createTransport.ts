@@ -14,7 +14,7 @@ export type TransportConfig<type extends string = string> = {
   request: TronRequestFn
   /** The base delay (in ms) between retries. */
   retryDelay?: number | undefined
-  /** The max number of times to retry. */
+  /** The max number of times to retry. Defaults to `0` (no retries). */
   retryCount?: number | undefined
   /** The timeout (in ms) for requests. */
   timeout?: number | undefined
@@ -52,7 +52,7 @@ export function createTransport<
     key,
     name,
     request,
-    retryCount = 3,
+    retryCount = 0,
     retryDelay = 150,
     timeout = 10_000,
     type,

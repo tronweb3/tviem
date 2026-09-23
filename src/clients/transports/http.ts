@@ -51,7 +51,7 @@ export type HttpTransportConfig = {
   eventUrl?: string | undefined
   /** Return the raw node body without error normalization. */
   raw?: boolean | undefined
-  /** The max number of times to retry. */
+  /** The max number of times to retry. Defaults to `0` (no retries). */
   retryCount?: TransportConfig['retryCount'] | undefined
   /** The base delay (in ms) between retries. */
   retryDelay?: TransportConfig['retryDelay'] | undefined

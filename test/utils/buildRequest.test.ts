@@ -18,6 +18,15 @@ test('resolves the underlying request', async () => {
   expect(inner).toHaveBeenCalledTimes(1)
 })
 
+test('does not retry by default', async () => {
+  const inner = vi.fn(async () => {
+    throw new HttpRequestError({ status: 500, url: 'u' })
+  })
+  const request = buildRequest(inner, { retryDelay: 0, uid: 'k' })
+  await expect(request(args)).rejects.toBeInstanceOf(HttpRequestError)
+  expect(inner).toHaveBeenCalledTimes(1)
+})
+
 test('retries retryable errors then succeeds', async () => {
   let calls = 0
   const inner = vi.fn(async () => {

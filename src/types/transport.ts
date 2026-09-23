@@ -33,7 +33,7 @@ export type TronRequestArgs = {
 export type TronRequestOptions = {
   /** Deduplicate concurrent identical requests. */
   dedupe?: boolean | undefined
-  /** Max number of retries. */
+  /** Max number of retries. Defaults to `0` (no retries). */
   retryCount?: number | undefined
   /** Base delay (in ms) between retries. */
   retryDelay?: number | undefined

@@ -26,7 +26,7 @@ export function buildRequest<
     const {
       dedupe = false,
       retryDelay = 150,
-      retryCount = 3,
+      retryCount = 0,
       signal,
       uid,
     } = {
