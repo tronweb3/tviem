@@ -4,6 +4,7 @@ import { signTransaction } from '../../../src/accounts/utils/signTransaction.js'
 import { getSignWeight } from '../../../src/actions/public/getSignWeight.js'
 import { createPublicClient } from '../../../src/clients/createPublicClient.js'
 import { BaseError } from '../../../src/errors/base.js'
+import { TronContractValidateError } from '../../../src/errors/node.js'
 import { TransactionTamperedError } from '../../../src/errors/rpc.js'
 import type { TronHexAddress } from '../../../src/types/address.js'
 import { toBase58 } from '../../../src/utils/address/toBase58.js'
@@ -49,14 +50,14 @@ const permission = {
   ],
 }
 
-test('returns weight/permission/approved + the LOCAL tx (recovering NOT_ENOUGH_PERMISSION)', async () => {
+test('returns weight/permission/approved + the LOCAL tx (NOT_ENOUGH_PERMISSION while collecting)', async () => {
   const { transport, bodyOf } = createMockTransport({
     responses: {
       getsignweight: {
-        // A `result: { code, message }` body is rejected by the generic
-        // normalizer; getSignWeight recovers it (a normal collecting state).
+        // A real node reports the collecting state as `code` alone — no
+        // `message` — so the transport's Form 2 check never fires on it.
         response: {
-          result: { code: 'NOT_ENOUGH_PERMISSION', message: 'not enough' },
+          result: { code: 'NOT_ENOUGH_PERMISSION' },
           permission,
           approved_list: ['TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC'],
           current_weight: 1,
@@ -88,6 +89,64 @@ test('returns weight/permission/approved + the LOCAL tx (recovering NOT_ENOUGH_P
   expect(
     (bodyOf('getsignweight') as { raw_data_hex: string }).raw_data_hex,
   ).toBe(tx.raw_data_hex)
+})
+
+// java-tron (TransactionUtil.getTransactionSignWeight) sets the transaction
+// echo BEFORE its try block, so every failure branch — SIGNATURE_FORMAT_ERROR,
+// COMPUTE_ADDRESS_ERROR, PERMISSION_ERROR, OTHER_ERROR — still echoes it, and
+// those are the only branches that carry a `message`. An echoed transaction
+// therefore never marks a body as a verdict: a failure must throw, not read
+// as "no signatures yet" (`currentWeight: 0n`) to a UI polling for weight.
+test.each([
+  ['PERMISSION_ERROR', 'Permission denied!'],
+  ['SIGNATURE_FORMAT_ERROR', 'Signature size is 65'],
+  ['COMPUTE_ADDRESS_ERROR', 'recover address error'],
+  ['OTHER_ERROR', 'Invalid transaction: no valid contract'],
+])('a %s body still echoing the transaction throws, not { currentWeight: 0n }', async (code, message) => {
+  const { transport } = createMockTransport({
+    responses: {
+      getsignweight: {
+        response: {
+          result: { code, message },
+          transaction: {
+            transaction: { txID: tx.txID, raw_data_hex: tx.raw_data_hex },
+          },
+        },
+      },
+    },
+  })
+  const client = createPublicClient({ transport })
+  const err = (await getSignWeight(client, { transaction: tx }).catch(
+    (e) => e,
+  )) as TronContractValidateError
+  expect(err).toBeInstanceOf(TronContractValidateError)
+  expect(err.code).toBe(code)
+  expect(err.shortMessage).toBe(message)
+})
+
+// A real node never pairs NOT_ENOUGH_PERMISSION with a `message`, but a proxy
+// or mock that does is still recovered: the code, not the presence of a
+// message or an echo, says whether the body is a verdict.
+test('a NOT_ENOUGH_PERMISSION body carrying a message is still recovered', async () => {
+  const { transport } = createMockTransport({
+    responses: {
+      getsignweight: {
+        response: {
+          result: { code: 'NOT_ENOUGH_PERMISSION', message: 'not enough' },
+          permission,
+          approved_list: ['TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC'],
+          current_weight: 1,
+          transaction: {
+            transaction: { txID: tx.txID, raw_data_hex: tx.raw_data_hex },
+          },
+        },
+      },
+    },
+  })
+  const client = createPublicClient({ transport })
+  const result = await getSignWeight(client, { transaction: tx })
+  expect(result.currentWeight).toBe(1n)
+  expect(result.result?.code).toBe('NOT_ENOUGH_PERMISSION')
 })
 
 test('throws TransactionTamperedError when the node echoes different bytes', async () => {

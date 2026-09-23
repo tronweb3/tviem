@@ -43,7 +43,12 @@ export type GetSignWeightReturnType = {
   approvedList: Address[]
   /** The evaluated permission (threshold, keys, operations). */
   permission?: SignWeightPermission | undefined
-  /** The node's result status (e.g. `NOT_ENOUGH_PERMISSION` while collecting). */
+  /**
+   * The node's verdict: `NOT_ENOUGH_PERMISSION` while signatures are still
+   * being collected, or `ENOUGH_PERMISSION` (proto3 omits it, as the default,
+   * so `result` is then empty or absent). Failure codes never land here — they
+   * throw.
+   */
   result?:
     | { code?: string | undefined; message?: string | undefined }
     | undefined
@@ -135,6 +140,13 @@ export function formatPermission(
  * signing accepts, is weighed like any other, and an inconsistent triple is
  * refused before any request.
  *
+ * A failure verdict — `PERMISSION_ERROR` (a key outside the permission, a
+ * wrong `Permission_id`), `SIGNATURE_FORMAT_ERROR`, `COMPUTE_ADDRESS_ERROR`,
+ * `OTHER_ERROR` — throws the transport's `TronContractValidateError`, carrying
+ * the node's `code` and message. It is never read as zero weight: java-tron
+ * echoes the transaction on those branches too, so the echo cannot tell a
+ * failure from a verdict; only the code can.
+ *
  * @param client The Client to use.
  * @param parameters `transaction` — the built transaction to weigh.
  * @returns `{ currentWeight, approvedList, permission, result, transaction }`.
@@ -164,8 +176,11 @@ export async function getSignWeight(
   // by the node and reported back as a tampered echo.
   const transaction = canonicalizeTransaction(snapshot)
 
-  // A `NOT_ENOUGH_PERMISSION` result is a normal collecting state that the
-  // generic normalizer rejects; recover the body when that happens.
+  // `NOT_ENOUGH_PERMISSION` is a normal collecting state. A real node reports
+  // it as `code` alone, which the transport passes through; should a `message`
+  // ride along (a proxy, a mock), the transport's Form 2 check rejects the
+  // body and it is recovered here — by code only. Every other code is a
+  // failure and is rethrown, echoed transaction or not.
   let response: RawSignWeight
   try {
     response = await client.request<RawSignWeight>({
@@ -182,7 +197,9 @@ export async function getSignWeight(
       },
     })
   } catch (error) {
-    const recovered = recoverEchoedResultBody(error)
+    const recovered = recoverEchoedResultBody(error, {
+      okCodes: ['ENOUGH_PERMISSION', 'NOT_ENOUGH_PERMISSION'],
+    })
     if (!recovered) throw error
     response = recovered as RawSignWeight
   }

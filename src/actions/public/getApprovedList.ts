@@ -28,7 +28,11 @@ export type GetApprovedListParameters = {
 export type GetApprovedListReturnType = {
   /** Addresses (Base58Check) that have already signed. */
   approvedList: Address[]
-  /** The node's result status. */
+  /**
+   * The node's verdict: `SUCCESS` (proto3 omits it, as the default, so
+   * `result` is then empty or absent). Failure codes never land here — they
+   * throw.
+   */
   result?:
     | { code?: string | undefined; message?: string | undefined }
     | undefined
@@ -70,6 +74,12 @@ type RawApprovedList = {
  * integrity-checked first and `raw_data` is sent as the canonical rendering of
  * the checked bytes (see {@link canonicalizeTransaction}).
  *
+ * A failure verdict — `SIGNATURE_FORMAT_ERROR`, `COMPUTE_ADDRESS_ERROR`,
+ * `OTHER_ERROR` — throws the transport's `TronContractValidateError`,
+ * carrying the node's `code` and message. It is never read as an empty
+ * approval list: java-tron echoes the transaction on those branches too, so
+ * the echo cannot tell a failure from a verdict; only the code can.
+ *
  * @param client The Client to use.
  * @param parameters `transaction` — the built transaction to inspect.
  * @returns `{ approvedList, result, transaction }`.
@@ -99,6 +109,11 @@ export async function getApprovedList(
   // by the node and reported back as a tampered echo.
   const transaction = canonicalizeTransaction(snapshot)
 
+  // A real node reports `SUCCESS` as `code` alone (or omits it), which the
+  // transport passes through; should a `message` ride along (a proxy, a mock),
+  // the transport's Form 2 check rejects the body and it is recovered here —
+  // by code only. Every other code is a failure and is rethrown, echoed
+  // transaction or not.
   let response: RawApprovedList
   try {
     response = await client.request<RawApprovedList>({
@@ -115,7 +130,7 @@ export async function getApprovedList(
       },
     })
   } catch (error) {
-    const recovered = recoverEchoedResultBody(error)
+    const recovered = recoverEchoedResultBody(error, { okCodes: ['SUCCESS'] })
     if (!recovered) throw error
     response = recovered as RawApprovedList
   }

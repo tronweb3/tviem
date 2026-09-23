@@ -4,6 +4,7 @@ import { signTransaction } from '../../../src/accounts/utils/signTransaction.js'
 import { getApprovedList } from '../../../src/actions/public/getApprovedList.js'
 import { createPublicClient } from '../../../src/clients/createPublicClient.js'
 import { BaseError } from '../../../src/errors/base.js'
+import { TronContractValidateError } from '../../../src/errors/node.js'
 import { TransactionTamperedError } from '../../../src/errors/rpc.js'
 import type { TronHexAddress } from '../../../src/types/address.js'
 import { toBase58 } from '../../../src/utils/address/toBase58.js'
@@ -58,6 +59,59 @@ test('returns the approved list (Base58) and the LOCAL transaction', async () =>
   // the echo was checked against, not the caller's live object.
   expect(result.transaction).toEqual(tx)
   expect(result.transaction).not.toBe(tx)
+})
+
+// java-tron (Wallet.getTransactionApprovedList) sets the transaction echo
+// BEFORE its try block, so every failure branch — SIGNATURE_FORMAT_ERROR,
+// COMPUTE_ADDRESS_ERROR, OTHER_ERROR — still echoes it, and those are the
+// only branches that carry a `message`. A failure must throw, not read as
+// "nobody has signed" (`approvedList: []`).
+test.each([
+  ['OTHER_ERROR', 'Invalid transaction: no valid contract'],
+  ['SIGNATURE_FORMAT_ERROR', 'Signature size is 65'],
+  ['COMPUTE_ADDRESS_ERROR', 'recover address error'],
+])('a %s body still echoing the transaction throws, not { approvedList: [] }', async (code, message) => {
+  const { transport } = createMockTransport({
+    responses: {
+      getapprovedlist: {
+        response: {
+          result: { code, message },
+          transaction: {
+            transaction: { txID: tx.txID, raw_data_hex: tx.raw_data_hex },
+          },
+        },
+      },
+    },
+  })
+  const client = createPublicClient({ transport })
+  const err = (await getApprovedList(client, { transaction: tx }).catch(
+    (e) => e,
+  )) as TronContractValidateError
+  expect(err).toBeInstanceOf(TronContractValidateError)
+  expect(err.code).toBe(code)
+  expect(err.shortMessage).toBe(message)
+})
+
+// A real node never pairs SUCCESS with a `message`, but a proxy or mock that
+// does is still recovered: the code alone says whether the body is a verdict.
+test('a SUCCESS body carrying a message is still recovered', async () => {
+  const { transport } = createMockTransport({
+    responses: {
+      getapprovedlist: {
+        response: {
+          result: { code: 'SUCCESS', message: 'ok' },
+          approved_list: ['TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC'],
+          transaction: {
+            transaction: { txID: tx.txID, raw_data_hex: tx.raw_data_hex },
+          },
+        },
+      },
+    },
+  })
+  const client = createPublicClient({ transport })
+  const result = await getApprovedList(client, { transaction: tx })
+  expect(result.approvedList).toEqual(['TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC'])
+  expect(result.result?.code).toBe('SUCCESS')
 })
 
 test('throws TransactionTamperedError when the node echoes a different txID', async () => {
